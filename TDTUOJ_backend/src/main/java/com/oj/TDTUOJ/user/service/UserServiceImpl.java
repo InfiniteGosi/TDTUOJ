@@ -143,7 +143,10 @@ public class UserServiceImpl implements UserService {
         if (direction == null || direction.isBlank()) direction = "asc";
 
         Sort sort = Sort.by(Sort.Direction.fromString(direction), sortField);
-        Pageable pageable = new UserPageRequest(limit, offset, sort);
+
+        //Pageable pageable = new UserPageRequest(limit, offset, sort);
+        int page = offset / limit;
+        Pageable pageable = PageRequest.of(page, limit, sort);
 
         Page<User> userPage;
 

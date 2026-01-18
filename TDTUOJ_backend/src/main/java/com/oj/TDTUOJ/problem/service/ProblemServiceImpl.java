@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -46,7 +47,11 @@ public class ProblemServiceImpl implements ProblemService {
         if (direction == null || direction.isBlank()) direction = "asc";
 
         Sort sort = Sort.by(Sort.Direction.fromString(direction), sortField);
-        Pageable pageable = new ProblemPageRequest(limit, offset, sort);
+
+
+        //Pageable pageable = new ProblemPageRequest(limit, offset, sort);
+        int page = offset / limit;
+        Pageable pageable = PageRequest.of(page, limit, sort);
 
         Page<Problem> problemPage;
 
