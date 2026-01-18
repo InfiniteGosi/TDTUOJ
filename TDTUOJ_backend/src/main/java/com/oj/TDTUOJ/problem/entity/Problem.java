@@ -12,7 +12,7 @@ import java.util.Set;
 
 @Entity
 @Data
-@Table(name = "problem")
+@Table(name = "problems")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder

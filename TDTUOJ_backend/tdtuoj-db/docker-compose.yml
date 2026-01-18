@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:12
+    container_name: tdtuoj
+    environment:
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_USER: admin
+      POSTGRES_DB: tdtuoj
+    ports:
+      - "5431:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
