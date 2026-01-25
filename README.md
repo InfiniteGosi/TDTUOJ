@@ -1,2 +1,3 @@
-switch to PostgresSQL
-add slug to problem
+implement get problem by slug in React
+implement view/update/deactivate users
+submission features

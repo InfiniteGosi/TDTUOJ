@@ -2,7 +2,7 @@ package com.oj.TDTUOJ.problem.controller;
 
 import com.oj.TDTUOJ.problem.dto.ProblemDTO;
 import com.oj.TDTUOJ.problem.service.ProblemService;
-import com.oj.TDTUOJ.response.Response;
+import com.oj.TDTUOJ.common.response.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,9 +27,14 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.getAllProblems(limit, offset, sortField, direction, title));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("id/{id}")
     public ResponseEntity<Response<ProblemDTO>> getProblemById(@PathVariable Long id) {
         return ResponseEntity.ok(problemService.getProblemById(id));
+    }
+
+    @GetMapping("slug/{slug}")
+    public ResponseEntity<Response<ProblemDTO>> getProblemBySlug(@PathVariable String slug) {
+        return ResponseEntity.ok(problemService.getProblemBySlug(slug));
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")

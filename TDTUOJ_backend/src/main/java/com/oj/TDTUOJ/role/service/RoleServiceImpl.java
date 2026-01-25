@@ -1,8 +1,8 @@
 package com.oj.TDTUOJ.role.service;
 
-import com.oj.TDTUOJ.exceptions.BadRequestException;
-import com.oj.TDTUOJ.exceptions.NotFoundException;
-import com.oj.TDTUOJ.response.Response;
+import com.oj.TDTUOJ.common.exceptions.BadRequestException;
+import com.oj.TDTUOJ.common.exceptions.NotFoundException;
+import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.role.dto.RoleDTO;
 import com.oj.TDTUOJ.role.entity.Role;
 import com.oj.TDTUOJ.role.repository.RoleRepository;

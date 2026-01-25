@@ -24,6 +24,9 @@ public class Problem {
     @Column(unique = true)
     private String title;
 
+    @Column(unique = true)
+    private String slug;
+
     private String statementFileUrl; // S3 URL to problem statement (.md file)
 
     private Integer point;

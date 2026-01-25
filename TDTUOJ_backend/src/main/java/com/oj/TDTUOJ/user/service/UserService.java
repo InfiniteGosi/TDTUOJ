@@ -1,11 +1,9 @@
 package com.oj.TDTUOJ.user.service;
 
-import com.oj.TDTUOJ.response.Response;
+import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.user.dto.UserDTO;
 import com.oj.TDTUOJ.user.entity.User;
 import org.springframework.data.domain.Page;
-
-import java.util.List;
 
 public interface UserService {
     User getCurrentLoggedInUser();

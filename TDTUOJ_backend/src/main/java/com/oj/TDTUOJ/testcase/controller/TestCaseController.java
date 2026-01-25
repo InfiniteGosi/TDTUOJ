@@ -1,6 +1,6 @@
 package com.oj.TDTUOJ.testcase.controller;
 
-import com.oj.TDTUOJ.response.Response;
+import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.testcase.dto.TestCaseDTO;
 import com.oj.TDTUOJ.testcase.service.TestCaseService;
 import jakarta.validation.Valid;

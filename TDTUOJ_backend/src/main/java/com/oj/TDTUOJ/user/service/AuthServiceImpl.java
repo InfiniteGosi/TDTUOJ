@@ -1,11 +1,11 @@
 package com.oj.TDTUOJ.user.service;
 
-import com.oj.TDTUOJ.exceptions.BadRequestException;
-import com.oj.TDTUOJ.exceptions.NotFoundException;
-import com.oj.TDTUOJ.response.Response;
+import com.oj.TDTUOJ.common.exceptions.BadRequestException;
+import com.oj.TDTUOJ.common.exceptions.NotFoundException;
+import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.role.entity.Role;
 import com.oj.TDTUOJ.role.repository.RoleRepository;
-import com.oj.TDTUOJ.security.JwtUtils;
+import com.oj.TDTUOJ.common.security.JwtUtils;
 import com.oj.TDTUOJ.user.dto.LoginRequest;
 import com.oj.TDTUOJ.user.dto.LoginResponse;
 import com.oj.TDTUOJ.user.dto.RegistrationRequest;

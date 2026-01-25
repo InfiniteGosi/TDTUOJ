@@ -17,6 +17,8 @@ public class ProblemDTO {
 
     private String title;
 
+    private String slug;
+
     private String statementFileUrl; // S3 URL to problem statement (.md file)
 
     private Integer point;

@@ -1,11 +1,11 @@
 package com.oj.TDTUOJ.testcase.service;
 
-import com.oj.TDTUOJ.aws.AwsS3Service;
-import com.oj.TDTUOJ.exceptions.BadRequestException;
-import com.oj.TDTUOJ.exceptions.NotFoundException;
+import com.oj.TDTUOJ.common.aws.AwsS3Service;
+import com.oj.TDTUOJ.common.exceptions.BadRequestException;
+import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.problem.entity.Problem;
 import com.oj.TDTUOJ.problem.repository.ProblemRepository;
-import com.oj.TDTUOJ.response.Response;
+import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.testcase.dto.TestCaseDTO;
 import com.oj.TDTUOJ.testcase.entity.TestCase;
 import com.oj.TDTUOJ.testcase.repository.TestCaseRepository;

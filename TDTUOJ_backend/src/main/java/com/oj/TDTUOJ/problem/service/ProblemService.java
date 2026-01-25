@@ -1,7 +1,7 @@
 package com.oj.TDTUOJ.problem.service;
 
 import com.oj.TDTUOJ.problem.dto.ProblemDTO;
-import com.oj.TDTUOJ.response.Response;
+import com.oj.TDTUOJ.common.response.Response;
 import org.springframework.data.domain.Page;
 
 
@@ -15,4 +15,6 @@ public interface ProblemService {
                                               String sortField,
                                               String direction,
                                               String name);
+
+    Response<ProblemDTO> getProblemBySlug(String slug);
 }

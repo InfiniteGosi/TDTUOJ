@@ -1,6 +1,6 @@
 package com.oj.TDTUOJ.role.service;
 
-import com.oj.TDTUOJ.response.Response;
+import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.role.dto.RoleDTO;
 
 import java.util.List;

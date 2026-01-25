@@ -1,6 +1,6 @@
 package com.oj.TDTUOJ.user.controller;
 
-import com.oj.TDTUOJ.response.Response;
+import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.user.dto.UserDTO;
 import com.oj.TDTUOJ.user.service.UserService;
 import lombok.RequiredArgsConstructor;

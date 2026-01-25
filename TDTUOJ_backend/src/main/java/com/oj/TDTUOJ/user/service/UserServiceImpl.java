@@ -1,10 +1,9 @@
 package com.oj.TDTUOJ.user.service;
 
-import com.oj.TDTUOJ.aws.AwsS3Service;
-import com.oj.TDTUOJ.exceptions.BadRequestException;
-import com.oj.TDTUOJ.exceptions.NotFoundException;
-import com.oj.TDTUOJ.response.Response;
-import com.oj.TDTUOJ.role.dto.RoleDTO;
+import com.oj.TDTUOJ.common.aws.AwsS3Service;
+import com.oj.TDTUOJ.common.exceptions.BadRequestException;
+import com.oj.TDTUOJ.common.exceptions.NotFoundException;
+import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.role.entity.Role;
 import com.oj.TDTUOJ.role.repository.RoleRepository;
 import com.oj.TDTUOJ.user.dto.UserDTO;
@@ -13,7 +12,6 @@ import com.oj.TDTUOJ.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,9 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -54,7 +50,7 @@ public class UserServiceImpl implements UserService {
 
         return Response.<UserDTO>builder()
                 .statusCode(HttpStatus.OK.value())
-                .message("Success")
+                .message("Current user retrieved successfully")
                 .data(userDTO)
                 .build();
     }
@@ -125,7 +121,7 @@ public class UserServiceImpl implements UserService {
 
         return Response.<UserDTO>builder()
                 .statusCode(HttpStatus.OK.value())
-                .message("Success")
+                .message("User retrieved successfully")
                 .data(userDTO)
                 .build();
     }

@@ -63,7 +63,7 @@ export default class ApiService {
   static async registerUser(registrationData) {
     const resp = await axios.post(
       `${this.BASE_URL}/auth/register`,
-      registrationData
+      registrationData,
     );
     return resp.data;
   }
@@ -109,7 +109,12 @@ export default class ApiService {
   }
 
   static async getProblemById(id) {
-    const resp = await axios.get(`${this.BASE_URL}/problems/${id}`);
+    const resp = await axios.get(`${this.BASE_URL}/problems/id/${id}`);
+    return resp.data;
+  }
+
+  static async getProblemBySlug(slug) {
+    const resp = await axios.get(`${this.BASE_URL}/problems/slug/${slug}`);
     return resp.data;
   }
 
@@ -155,7 +160,7 @@ export default class ApiService {
         source_code: sourceCode,
         stdin: stdin,
         expected_output: expectedOutput,
-      }
+      },
     );
 
     return resp.data;

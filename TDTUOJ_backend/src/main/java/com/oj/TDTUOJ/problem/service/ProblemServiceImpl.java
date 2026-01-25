@@ -1,11 +1,12 @@
 package com.oj.TDTUOJ.problem.service;
 
-import com.oj.TDTUOJ.aws.AwsS3Service;
-import com.oj.TDTUOJ.exceptions.NotFoundException;
+import com.oj.TDTUOJ.common.aws.AwsS3Service;
+import com.oj.TDTUOJ.common.exceptions.NotFoundException;
+import com.oj.TDTUOJ.common.utils.ProblemSlugUtils;
 import com.oj.TDTUOJ.problem.dto.ProblemDTO;
 import com.oj.TDTUOJ.problem.entity.Problem;
 import com.oj.TDTUOJ.problem.repository.ProblemRepository;
-import com.oj.TDTUOJ.response.Response;
+import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.testcase.dto.TestCaseDTO;
 import com.oj.TDTUOJ.testcase.entity.TestCase;
 import com.oj.TDTUOJ.testcase.repository.TestCaseRepository;
@@ -31,8 +32,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ProblemServiceImpl implements ProblemService {
     private final ProblemRepository problemRepository;
+
     private final TestCaseRepository testCaseRepository;
+
     private final ModelMapper modelMapper;
+
     private final AwsS3Service awsS3Service;
 
     @Override
@@ -73,6 +77,21 @@ public class ProblemServiceImpl implements ProblemService {
 
     @Override
     @Transactional
+    public Response<ProblemDTO> getProblemBySlug(String slug) {
+        Problem problem = problemRepository.findBySlug(slug)
+                .orElseThrow(() -> new NotFoundException("Problem not found"));
+
+        ProblemDTO problemDTO = modelMapper.map(problem, ProblemDTO.class);
+
+        return Response.<ProblemDTO>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Problem retrieved successfully")
+                .data(problemDTO)
+                .build();
+    }
+
+    @Override
+    @Transactional
     public Response<ProblemDTO> getProblemById(Long id) {
         Problem problem = problemRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Problem not found"));
@@ -90,7 +109,7 @@ public class ProblemServiceImpl implements ProblemService {
     @Override
     public Response<ProblemDTO> createProblem(ProblemDTO problemDTO) {
         try {
-            // 1. Validate required fields
+            // Validate required fields
             if (problemDTO.getStatementFile() == null || problemDTO.getStatementFile().isEmpty()) {
                 throw new IllegalArgumentException("Problem statement file is required");
             }
@@ -99,37 +118,40 @@ public class ProblemServiceImpl implements ProblemService {
                 throw new IllegalArgumentException("At least one test case is required");
             }
 
-            // 2. Check if problem title already exists
+            // Check if problem title already exists
             if (problemRepository.existsByTitle(problemDTO.getTitle())) {
                 throw new IllegalArgumentException("Problem with title '" + problemDTO.getTitle() + "' already exists");
             }
 
-            // 3. Create Problem entity
+            String baseSlug = ProblemSlugUtils.generateSlug(problemDTO.getTitle());
+            String uniqueSlug = generateUniqueSlug(baseSlug);
+
+            // Create Problem entity
             Problem problem = Problem.builder()
                     .title(problemDTO.getTitle())
+                    .slug(uniqueSlug)
                     .point(problemDTO.getPoint())
                     .timeLimit(problemDTO.getTimeLimit())
                     .memoryLimit(problemDTO.getMemoryLimit())
                     .testCases(new ArrayList<>())
                     .build();
 
-            // 4. Save problem first to get ID (needed for S3 folder structure)
+            // Save problem first to get ID (needed for S3 folder structure)
             problem = problemRepository.save(problem);
 
-            // 5. Create base folder name: problemId-problemTitle (sanitize title for S3)
+            // Create base folder name: problemId-problemTitle (sanitize title for S3)
             String sanitizedTitle = problemDTO.getTitle()
                     .replaceAll("[^a-zA-Z0-9-_]", "-")  // Replace special chars with hyphen
                     .replaceAll("-+", "-")               // Replace multiple hyphens with single
                     .toLowerCase();
             String basePath = String.format("problems/%d-%s", problem.getId(), sanitizedTitle);
 
-            // 6. Upload problem statement file to S3
+            // Upload problem statement file to S3
             String statementKey = String.format("%s/statement.md", basePath);
             URL statementUrl = awsS3Service.uploadFile(statementKey, problemDTO.getStatementFile());
             problem.setStatementFileUrl(statementUrl.toString());
 
-
-            // 7. Process and upload test cases
+            // Process and upload test cases
             List<TestCase> testCases = new ArrayList<>();
             int testCaseIndex = 0;
 
@@ -163,10 +185,9 @@ public class ProblemServiceImpl implements ProblemService {
 
             testCaseRepository.saveAll(testCases);
             problem.setTestCases(testCases);
-
             problem = problemRepository.save(problem);
 
-            // 9. Map to DTO for response
+            // Map to DTO for response
             ProblemDTO responseProblemDTO = modelMapper.map(problem, ProblemDTO.class);
 
             return Response.<ProblemDTO>builder()
@@ -189,31 +210,38 @@ public class ProblemServiceImpl implements ProblemService {
     @Override
     public Response<ProblemDTO> updateProblem(ProblemDTO problemDTO) {
         try {
-            // 1. Find existing problem
+            // Find existing problem
             Problem problem = problemRepository.findById(problemDTO.getId())
                     .orElseThrow(() -> new NotFoundException("Problem not found with id: " + problemDTO.getId()));
 
-            // 2. Check if title is being changed and if new title already exists
+            // Check if title is being changed and if new title already exists
             if (!problem.getTitle().equals(problemDTO.getTitle())) {
                 if (problemRepository.existsByTitle(problemDTO.getTitle())) {
                     throw new IllegalArgumentException("Problem with title '" + problemDTO.getTitle() + "' already exists");
                 }
             }
 
-            // 3. Store old sanitized title for potential S3 path change
+            // Store old sanitized title for potential S3 path change
             String oldSanitizedTitle = problem.getTitle()
                     .replaceAll("[^a-zA-Z0-9-_]", "-")
                     .replaceAll("-+", "-")
                     .toLowerCase();
             String oldBasePath = String.format("problems/%d-%s", problem.getId(), oldSanitizedTitle);
 
-            // 4. Update basic problem properties
+            // Update basic problem properties
+            if (!problem.getTitle().equals(problemDTO.getTitle())) {
+                String baseSlug = ProblemSlugUtils.generateSlug(problemDTO.getTitle());
+                String uniqueSlug = generateUniqueSlugExcludingCurrent(baseSlug, problemDTO.getId());
+                problem.setSlug(uniqueSlug);
+            }
             problem.setTitle(problemDTO.getTitle());
             problem.setPoint(problemDTO.getPoint());
             problem.setTimeLimit(problemDTO.getTimeLimit());
             problem.setMemoryLimit(problemDTO.getMemoryLimit());
 
-            // 5. Create new base path with updated title
+
+
+            // Create new base path with updated title
             String newSanitizedTitle = problemDTO.getTitle()
                     .replaceAll("[^a-zA-Z0-9-_]", "-")
                     .replaceAll("-+", "-")
@@ -222,7 +250,7 @@ public class ProblemServiceImpl implements ProblemService {
 
             boolean pathChanged = !oldBasePath.equals(newBasePath);
 
-            // 6. Update statement file if provided
+            // Update statement file if provided
             if (problemDTO.getStatementFile() != null && !problemDTO.getStatementFile().isEmpty()) {
                 // Delete old statement file from S3
                 if (problem.getStatementFileUrl() != null) {
@@ -255,7 +283,7 @@ public class ProblemServiceImpl implements ProblemService {
                 }
             }
 
-            // 7. Handle test cases update
+            // Handle test cases update
             if (problemDTO.getTestCases() != null && !problemDTO.getTestCases().isEmpty()) {
                 // Load existing test cases from DB
                 List<TestCase> existingTestCases = testCaseRepository.findTestCasesByProblemId(problem.getId());
@@ -332,7 +360,7 @@ public class ProblemServiceImpl implements ProblemService {
                         problem.getId(), updatedTestCases.size(), existingMap.size());
             }
 
-            // 8. If title changed, clean up old directory structure
+            // If title changed, clean up old directory structure
             if (pathChanged) {
                 try {
                     awsS3Service.deleteFolder(oldBasePath);
@@ -343,11 +371,11 @@ public class ProblemServiceImpl implements ProblemService {
                 }
             }
 
-            // 9. Save updated problem
+            // Save updated problem
             problem = problemRepository.save(problem);
             log.info("Problem {} updated successfully", problem.getId());
 
-            // 10. Map to DTO for response
+            // Map to DTO for response
             ProblemDTO responseProblemDTO = modelMapper.map(problem, ProblemDTO.class);
 
             return Response.<ProblemDTO>builder()
@@ -374,20 +402,20 @@ public class ProblemServiceImpl implements ProblemService {
     @Transactional
     public Response<?> deleteProblem(Long id) {
         try {
-            // 1. Find the problem
+            // Find the problem
             Problem problem = problemRepository.findById(id)
                     .orElseThrow(() -> new NotFoundException("Problem not found with id: " + id));
 
             log.info("Deleting problem: {} (ID: {})", problem.getTitle(), id);
 
-            // 2. Create sanitized title for S3 path
+            // Create sanitized title for S3 path
             String sanitizedTitle = problem.getTitle()
                     .replaceAll("[^a-zA-Z0-9-_]", "-")
                     .replaceAll("-+", "-")
                     .toLowerCase();
             String basePath = String.format("problems/%d-%s", problem.getId(), sanitizedTitle);
 
-            // 3. Delete all test case files from S3
+            // Delete all test case files from S3
             List<TestCase> testCases = problem.getTestCases();
             if (testCases != null && !testCases.isEmpty()) {
                 log.info("Deleting {} test case files from S3", testCases.size());
@@ -415,7 +443,7 @@ public class ProblemServiceImpl implements ProblemService {
                 }
             }
 
-            // 4. Delete statement file from S3
+            // Delete statement file from S3
             if (problem.getStatementFileUrl() != null) {
                 try {
                     String statementKey = extractS3KeyFromUrl(problem.getStatementFileUrl());
@@ -426,7 +454,7 @@ public class ProblemServiceImpl implements ProblemService {
                 }
             }
 
-            // 5. Delete entire problem folder from S3 (cleanup any remaining files)
+            // Delete entire problem folder from S3 (cleanup any remaining files)
             try {
                 awsS3Service.deleteFolder(basePath);
                 log.info("Deleted problem folder: {}", basePath);
@@ -435,13 +463,13 @@ public class ProblemServiceImpl implements ProblemService {
                 // Continue with database deletion even if S3 cleanup fails
             }
 
-            // 6. Delete test cases from database (cascade should handle this, but explicit is safer)
+            // Delete test cases from database (cascade should handle this, but explicit is safer)
             if (testCases != null && !testCases.isEmpty()) {
                 testCaseRepository.deleteAll(testCases);
                 log.info("Deleted {} test cases from database", testCases.size());
             }
 
-            // 7. Delete problem from database
+            // Delete problem from database
             problemRepository.delete(problem);
             log.info("Problem {} deleted successfully from database", id);
 
@@ -461,36 +489,35 @@ public class ProblemServiceImpl implements ProblemService {
 
     private String extractS3KeyFromUrl(String url) {
         try {
-            // Handle different S3 URL formats:
-            // 1. Virtual-hosted style: https://bucket-name.s3.region.amazonaws.com/key
-            // 2. Path style: https://s3.region.amazonaws.com/bucket-name/key
-            // 3. S3 console URL: https://bucket-name.s3.amazonaws.com/key
-
             URL s3Url = new URL(url);
-            String path = s3Url.getPath();
-
-            // Remove leading slash if present
-            String key = path.startsWith("/") ? path.substring(1) : path;
-
-            // If the key starts with bucket name (path-style), remove it
-            // This is a simplified approach - adjust based on your actual S3 URL format
-            if (key.contains("/")) {
-                String[] parts = key.split("/", 2);
-                // If first part looks like a bucket name and there's more path
-                if (parts.length > 1 && !parts[0].contains(".")) {
-                    return parts[1]; // Return the actual key without bucket name
-                }
-            }
-
-            return key;
+            String key = s3Url.getPath();
+            return key.startsWith("/") ? key.substring(1) : key;
         } catch (Exception e) {
-            log.error("Failed to extract S3 key from URL: {}", url, e);
-            // Fallback: try to extract just the path after the domain
-            int lastSlashIndex = url.lastIndexOf('/');
-            if (lastSlashIndex != -1 && lastSlashIndex < url.length() - 1) {
-                return url.substring(url.indexOf('/', 8)); // Skip protocol https://
-            }
-            return url; // Last resort fallback
+            throw new RuntimeException("Invalid S3 URL: " + url, e);
         }
+    }
+
+    private String generateUniqueSlug(String baseSlug) {
+        String slug = baseSlug;
+        int counter = 1;
+
+        while (problemRepository.existsBySlug(slug)) {
+            slug = baseSlug + "-" + counter;
+            counter++;
+        }
+
+        return slug;
+    }
+
+    private String generateUniqueSlugExcludingCurrent(String baseSlug, Long excludeId) {
+        String slug = baseSlug;
+        int counter = 1;
+
+        while (problemRepository.existsBySlugAndIdNot(slug, excludeId)) {
+            slug = baseSlug + "-" + counter;
+            counter++;
+        }
+
+        return slug;
     }
 }
