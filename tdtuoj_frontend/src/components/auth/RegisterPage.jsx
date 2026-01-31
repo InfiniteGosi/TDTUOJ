@@ -8,7 +8,7 @@ const RegisterPage = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -18,16 +18,47 @@ const RegisterPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const validateUsername = (username) => {
+    // Check length
+    if (username.length < 3 || username.length > 20) {
+      showMessage("Username must be between 3 and 20 characters", "error");
+      return false;
+    }
+
+    // Check for valid characters (alphanumeric, underscore, hyphen only)
+    const usernameRegex = /^[a-zA-Z0-9_-]+$/;
+    if (!usernameRegex.test(username)) {
+      showMessage(
+        "Username can only contain letters, numbers, underscores, and hyphens",
+        "error",
+      );
+      return false;
+    }
+
+    // Check if starts with letter or number (optional, good practice)
+    if (!/^[a-zA-Z0-9]/.test(username)) {
+      showMessage("Username must start with a letter or number", "error");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (
-      !formData.name ||
+      !formData.username ||
       !formData.email ||
       !formData.password ||
       !formData.confirmPassword
     ) {
       showMessage("All fields are required", "error");
+      return;
+    }
+
+    // Validate username format
+    if (!validateUsername(formData.username)) {
       return;
     }
 
@@ -37,7 +68,7 @@ const RegisterPage = () => {
     }
 
     const registrationData = {
-      name: formData.name,
+      username: formData.username,
       email: formData.email,
       password: formData.password,
     };
@@ -46,7 +77,7 @@ const RegisterPage = () => {
       const response = await ApiService.registerUser(registrationData);
       if (response.statusCode === 200) {
         setFormData({
-          name: "",
+          username: "",
           email: "",
           password: "",
           confirmPassword: "",
@@ -58,7 +89,7 @@ const RegisterPage = () => {
     } catch (exception) {
       showMessage(
         exception.response?.data?.message || exception.message,
-        "error"
+        "error",
       );
     }
   };
@@ -75,23 +106,30 @@ const RegisterPage = () => {
         <div className="register-content-food">
           <form className="register-form-food" onSubmit={handleSubmit}>
             <div className="register-form-group">
-              <label htmlFor="name" className="register-label-food">
-                Full Name
+              <label htmlFor="username" className="register-label-food">
+                Username
               </label>
               <input
                 type="text"
-                id="name"
-                name="name"
-                value={formData.name}
+                id="username"
+                name="username"
+                value={formData.username}
                 onChange={handleChange}
                 required
-                placeholder="Your Full Name"
+                placeholder="Your Username"
                 className="register-input-food"
+                minLength={3}
+                maxLength={20}
+                pattern="[a-zA-Z0-9_-]+"
+                title="Username can only contain letters, numbers, underscores, and hyphens"
               />
+              <small className="register-input-hint">
+                3-20 characters, letters, numbers, underscores, and hyphens only
+              </small>
             </div>
 
             <div className="register-form-group">
-              <label htmlFor="name" className="register-label-food">
+              <label htmlFor="email" className="register-label-food">
                 Email
               </label>
               <input
@@ -107,7 +145,7 @@ const RegisterPage = () => {
             </div>
 
             <div className="register-form-group">
-              <label htmlFor="name" className="register-label-food">
+              <label htmlFor="password" className="register-label-food">
                 Password
               </label>
               <input
@@ -123,7 +161,7 @@ const RegisterPage = () => {
             </div>
 
             <div className="register-form-group">
-              <label htmlFor="name" className="register-label-food">
+              <label htmlFor="confirmPassword" className="register-label-food">
                 Confirm Password
               </label>
               <input

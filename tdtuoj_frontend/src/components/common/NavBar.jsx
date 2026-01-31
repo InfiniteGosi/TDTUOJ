@@ -1,6 +1,7 @@
 import ApiService from "../../services/ApiService";
 import { Link, useNavigate } from "react-router-dom";
 import { useConfirmDialog } from "./ConfirmDialog";
+import { useState } from "react";
 
 const NavBar = () => {
   const isAuthenticated = ApiService.isAuthenticated();
@@ -8,12 +9,34 @@ const NavBar = () => {
   const isCreator = ApiService.isCreator();
   const navigate = useNavigate();
   const { ConfirmDialog, showConfirm } = useConfirmDialog();
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
   const handleLogout = () => {
     showConfirm("Logout", "Are you sure you want to logout?", () => {
       ApiService.logout();
       navigate("/login");
     });
+  };
+
+  const handleViewProfile = async (e) => {
+    e.preventDefault(); // Prevent default Link behavior
+
+    if (isLoadingProfile) return; // Prevent multiple clicks
+
+    setIsLoadingProfile(true);
+    try {
+      const response = await ApiService.getOwnProfile();
+      if (response.statusCode === 200) {
+        const username = response.data.username;
+        navigate(`/users/${username}`);
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      // Fallback to /users if error occurs
+      navigate("/users");
+    } finally {
+      setIsLoadingProfile(false);
+    }
   };
 
   return (
@@ -58,6 +81,11 @@ const NavBar = () => {
                 </Link>
               </li>
               <li className="nav-item">
+                <Link className="nav-link" to="/users">
+                  Users
+                </Link>
+              </li>
+              <li className="nav-item">
                 <Link className="nav-link" to="/status">
                   Status
                 </Link>
@@ -98,9 +126,13 @@ const NavBar = () => {
                       aria-labelledby="profileDropdown"
                     >
                       <li>
-                        <Link className="dropdown-item" to="/profile">
-                          View Profile
-                        </Link>
+                        <button
+                          className="dropdown-item"
+                          onClick={handleViewProfile}
+                          disabled={isLoadingProfile}
+                        >
+                          {isLoadingProfile ? "Loading..." : "View Profile"}
+                        </button>
                       </li>
                       <li>
                         <button

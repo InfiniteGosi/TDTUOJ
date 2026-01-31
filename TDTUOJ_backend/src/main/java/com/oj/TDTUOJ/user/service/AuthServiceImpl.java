@@ -33,12 +33,17 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Response<?> register(RegistrationRequest registrationRequest) {
-        // Step 1: Reject if email already exists
+        // Reject if username already exists
+        if (userRepository.existsByUsername(registrationRequest.getUsername())) {
+            throw new BadRequestException("Username already exists");
+        }
+
+        // Reject if email already exists
         if (userRepository.existsByEmail(registrationRequest.getEmail())) {
             throw new BadRequestException("Email already exists");
         }
-
-        // Step 2: Collect roles from request, or fallback to CUSTOMER role
+        
+        // Collect roles from request, or fallback to PARTICIPANT role
         Set<Role> userRoles;
         if (registrationRequest.getRoles() != null && !registrationRequest.getRoles().isEmpty()) {
             userRoles = registrationRequest.getRoles().stream()
@@ -54,9 +59,9 @@ public class AuthServiceImpl implements AuthService {
             userRoles = roles;
         }
 
-        // Step 3: Build User entity with encoded password and default values
+        // Build User entity with encoded password and default values
         User user = User.builder()
-                .name(registrationRequest.getName())
+                .username(registrationRequest.getUsername())
                 .password(passwordEncoder.encode(registrationRequest.getPassword()))
                 .email(registrationRequest.getEmail())
                 .roles(userRoles)

@@ -127,6 +127,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Response<UserDTO> getUserByUserName(String slug) {
+        return null;
+    }
+
+    @Override
     public Response<Page<UserDTO>> getAllUsers(Integer limit,
                                                Integer offset,
                                                String sortField,

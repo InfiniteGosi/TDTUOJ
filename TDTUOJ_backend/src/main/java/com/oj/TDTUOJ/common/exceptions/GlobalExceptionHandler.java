@@ -3,6 +3,8 @@ package com.oj.TDTUOJ.common.exceptions;
 import com.oj.TDTUOJ.common.response.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -56,6 +58,24 @@ public class GlobalExceptionHandler {
         Response<?> response = Response.builder()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .message(ex.getMessage())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Response<?>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        // Get the first validation error message
+        String errorMessage = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .findFirst()
+                .map(FieldError::getDefaultMessage)
+                .orElse("Validation failed");
+
+        Response<?> response = Response.builder()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .message(errorMessage)
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
