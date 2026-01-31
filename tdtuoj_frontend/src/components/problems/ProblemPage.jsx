@@ -83,8 +83,8 @@ const ProblemPage = () => {
     return () => clearTimeout(delaySearch);
   }, [searchQuery]);
 
-  const handleOnClick = (id) => {
-    navigate(`/problems/${id}`);
+  const handleOnClick = (slug) => {
+    navigate(`/problems/${slug}`);
   };
 
   const handlePageChange = (newOffset) => {
@@ -108,8 +108,8 @@ const ProblemPage = () => {
     handlePageChange(
       Math.min(
         (pagination.totalPages - 1) * pagination.limit,
-        pagination.offset + pagination.limit
-      )
+        pagination.offset + pagination.limit,
+      ),
     );
 
   const canGoPrevious = pagination.currentPage > 0;
@@ -271,7 +271,7 @@ const ProblemPage = () => {
                       _hover={{ bg: "purple.50", cursor: "pointer" }}
                       transition="all 0.2s"
                       bg={index % 2 === 0 ? "white" : "gray.50"}
-                      onClick={() => handleOnClick(problem.id)}
+                      onClick={() => handleOnClick(problem.slug)}
                     >
                       {/* Problem ID */}
                       <Table.Cell textAlign="center">
@@ -387,7 +387,7 @@ const ProblemPage = () => {
                     Showing {pagination.offset + 1}-
                     {Math.min(
                       pagination.offset + pagination.limit,
-                      pagination.totalElements
+                      pagination.totalElements,
                     )}{" "}
                     of {pagination.totalElements}
                   </Text>

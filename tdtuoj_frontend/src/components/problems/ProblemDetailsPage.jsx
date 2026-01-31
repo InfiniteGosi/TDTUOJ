@@ -105,7 +105,7 @@ const ResizablePane = ({
 };
 
 const ProblemDetailsPage = () => {
-  const { id } = useParams();
+  const { slug } = useParams();
   const [problem, setProblem] = useState(null);
   const [statement, setStatement] = useState("");
   const [testCases, setTestCases] = useState([]);
@@ -117,19 +117,19 @@ const ProblemDetailsPage = () => {
 
   const fetchProblem = async () => {
     try {
-      const response = await ApiService.getProblemById(id);
+      const response = await ApiService.getProblemBySlug(slug);
       if (response.statusCode === 200) {
         setProblem(response.data);
 
         const statementRes = await ApiService.fetchFileContent(
-          response.data.statementFileUrl
+          response.data.statementFileUrl,
         );
         setStatement(statementRes);
 
         const testCasePromises = response.data.testCases.map(async (tc) => {
           const input = await ApiService.fetchFileContent(tc.inputFileUrl);
           const output = await ApiService.fetchFileContent(
-            tc.expectedOutputFileUrl
+            tc.expectedOutputFileUrl,
           );
           return {
             id: tc.id,
@@ -171,7 +171,7 @@ const ProblemDetailsPage = () => {
               languageId,
               code,
               testCase.input,
-              testCase.output
+              testCase.output,
             );
 
             const passed = result.status?.id === 3; // Status 3 = Accepted
@@ -200,7 +200,7 @@ const ProblemDetailsPage = () => {
               memory: null,
             };
           }
-        })
+        }),
       );
 
       const allPassed = testResults.every((result) => result.passed);
@@ -218,7 +218,7 @@ const ProblemDetailsPage = () => {
       } else {
         showMessage(
           `${passedCount}/${testCases.length} test cases passed`,
-          "warning"
+          "warning",
         );
       }
     } catch (error) {
@@ -231,7 +231,7 @@ const ProblemDetailsPage = () => {
 
   useEffect(() => {
     fetchProblem();
-  }, [id]);
+  }, [slug]);
 
   if (loading) {
     return (
