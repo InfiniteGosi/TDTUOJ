@@ -38,6 +38,8 @@ public class User {
 
     private Boolean isActive;
 
+    private String profileUrl;
+
     private Integer point;
 
     private Integer rating;

@@ -61,8 +61,6 @@ const ProblemPage = () => {
           totalPages: response.data.page.totalPages,
           currentPage: response.data.page.number,
         }));
-
-        console.log(response.data.content.length);
       }
     } catch (error) {
       showMessage(error.response?.data?.message || error.message, "error");

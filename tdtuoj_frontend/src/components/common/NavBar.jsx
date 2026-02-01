@@ -1,7 +1,7 @@
 import ApiService from "../../services/ApiService";
 import { Link, useNavigate } from "react-router-dom";
 import { useConfirmDialog } from "./ConfirmDialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const NavBar = () => {
   const isAuthenticated = ApiService.isAuthenticated();
@@ -10,6 +10,25 @@ const NavBar = () => {
   const navigate = useNavigate();
   const { ConfirmDialog, showConfirm } = useConfirmDialog();
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
+
+  // Fetch user profile on mount if authenticated
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (isAuthenticated) {
+        try {
+          const response = await ApiService.getOwnProfile();
+          if (response.statusCode === 200) {
+            setUserProfile(response.data);
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     showConfirm("Logout", "Are you sure you want to logout?", () => {
@@ -19,9 +38,9 @@ const NavBar = () => {
   };
 
   const handleViewProfile = async (e) => {
-    e.preventDefault(); // Prevent default Link behavior
+    e.preventDefault();
 
-    if (isLoadingProfile) return; // Prevent multiple clicks
+    if (isLoadingProfile) return;
 
     setIsLoadingProfile(true);
     try {
@@ -32,12 +51,25 @@ const NavBar = () => {
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
-      // Fallback to /users if error occurs
       navigate("/users");
     } finally {
       setIsLoadingProfile(false);
     }
   };
+
+  // Get first letter of username for avatar placeholder
+  const getInitials = (username) => {
+    return username ? username.charAt(0).toUpperCase() : "U";
+  };
+
+  // Get primary role
+  // const getPrimaryRole = (roles) => {
+  //   if (!roles || roles.length === 0) return "User";
+  //   const roleNames = roles.map((r) => r.name);
+  //   if (roleNames.includes("ADMIN")) return "Admin";
+  //   if (roleNames.includes("CREATOR")) return "Creator";
+  //   return "Participant";
+  // };
 
   return (
     <>
@@ -111,39 +143,87 @@ const NavBar = () => {
                     </li>
                   )}
 
-                  {/* Profile dropdown */}
-                  <li className="nav-item dropdown">
-                    <button
-                      className="btn btn-dark nav-link dropdown-toggle"
-                      id="profileDropdown"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false"
-                    >
-                      Profile
-                    </button>
-                    <ul
-                      className="dropdown-menu dropdown-menu-end"
-                      aria-labelledby="profileDropdown"
-                    >
-                      <li>
-                        <button
-                          className="dropdown-item"
-                          onClick={handleViewProfile}
-                          disabled={isLoadingProfile}
+                  {/* User Profile Dropdown */}
+                  {userProfile && (
+                    <li className="nav-item dropdown">
+                      <button
+                        className="nav-link dropdown-toggle d-flex align-items-center btn btn-dark border-0"
+                        id="profileDropdown"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        style={{ cursor: "pointer" }}
+                      >
+                        {/* Avatar */}
+                        <div
+                          className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            fontSize: "16px",
+                            fontWeight: "bold",
+                          }}
                         >
-                          {isLoadingProfile ? "Loading..." : "View Profile"}
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          className="dropdown-item text-danger"
-                          onClick={handleLogout}
-                        >
-                          Logout
-                        </button>
-                      </li>
-                    </ul>
-                  </li>
+                          {userProfile.profileUrl ? (
+                            <img
+                              src={userProfile.profileUrl}
+                              alt="Profile"
+                              className="rounded-circle"
+                              style={{
+                                width: "40px",
+                                height: "40px",
+                                objectFit: "cover",
+                              }}
+                            />
+                          ) : (
+                            getInitials(userProfile.username)
+                          )}
+                        </div>
+
+                        {/* User Info */}
+                        <div className="d-flex flex-column text-start">
+                          <span
+                            className="fw-semibold text-white"
+                            style={{ fontSize: "14px", lineHeight: "1.2" }}
+                          >
+                            {userProfile.name || userProfile.username}
+                          </span>
+                          {/* <span
+                            className="text-muted"
+                            style={{ fontSize: "12px", lineHeight: "1.2" }}
+                          >
+                            {getPrimaryRole(userProfile.roles)}
+                          </span> */}
+                        </div>
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      <ul
+                        className="dropdown-menu dropdown-menu-end"
+                        aria-labelledby="profileDropdown"
+                      >
+                        <li>
+                          <button
+                            className="dropdown-item"
+                            onClick={handleViewProfile}
+                            disabled={isLoadingProfile}
+                          >
+                            {isLoadingProfile ? "Loading..." : "View Profile"}
+                          </button>
+                        </li>
+                        <li>
+                          <hr className="dropdown-divider" />
+                        </li>
+                        <li>
+                          <button
+                            className="dropdown-item text-danger"
+                            onClick={handleLogout}
+                          >
+                            Logout
+                          </button>
+                        </li>
+                      </ul>
+                    </li>
+                  )}
                 </>
               ) : (
                 <>

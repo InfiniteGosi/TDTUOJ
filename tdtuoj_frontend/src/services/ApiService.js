@@ -108,8 +108,11 @@ export default class ApiService {
     }
   }
 
-  static async getProblemByUsername(username) {
-    const resp = await axios.get(`${this.BASE_URL}/users/${username}`);
+  static async getUserByUsername(username) {
+    console.log(`${this.BASE_URL}/users/${username}`);
+    const resp = await axios.get(`${this.BASE_URL}/users/${username}`, {
+      headers: this.getHeader(),
+    });
     return resp.data;
   }
 

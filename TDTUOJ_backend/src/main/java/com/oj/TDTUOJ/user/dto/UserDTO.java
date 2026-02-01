@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Set;
@@ -31,9 +32,13 @@ public class UserDTO {
 
     private Boolean isActive;
 
+    private String profileUrl;
+
     private Integer point;
 
     private Integer rating;
 
     private Set<RoleDTO> roles;
+
+    private MultipartFile profileImage;
 }

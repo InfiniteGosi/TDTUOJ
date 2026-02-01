@@ -3,7 +3,8 @@ package com.oj.TDTUOJ.common.enums;
 public enum SubmissionVerdict {
     AC,
     WA,
+    CE, // Compilation Error
     TLE,
     MLE,
-    RTE
+    SF // Segmentation Fault
 }
