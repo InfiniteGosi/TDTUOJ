@@ -87,7 +87,6 @@ public class UserServiceImpl implements UserService {
             user.setEmail(userDTO.getEmail());
         }
 
-
         // Update roles (admin can change roles)
         Set<Role> userRoles;
         if (userDTO.getRoles() != null && !userDTO.getRoles().isEmpty()) {
@@ -116,7 +115,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public Response<UserDTO> getUserById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
-
         UserDTO userDTO = modelMapper.map(user, UserDTO.class);
 
         return Response.<UserDTO>builder()
@@ -127,8 +125,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Response<UserDTO> getUserByUserName(String slug) {
-        return null;
+    public Response<UserDTO> getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new NotFoundException("User not found"));
+        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+
+        return Response.<UserDTO>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("User retrieved successfully")
+                .data(userDTO)
+                .build();
     }
 
     @Override
@@ -136,7 +141,7 @@ public class UserServiceImpl implements UserService {
                                                Integer offset,
                                                String sortField,
                                                String direction,
-                                               String name) {
+                                               String username) {
         // Handle defaults
         if (limit == null || limit <= 0) limit = 20;
         if (offset == null || offset < 0) offset = 0;
@@ -151,8 +156,8 @@ public class UserServiceImpl implements UserService {
 
         Page<User> userPage;
 
-        if (name != null && !name.isBlank()) {
-            userPage = userRepository.findByNameContainingIgnoreCase(name, pageable);
+        if (username != null && !username.isBlank()) {
+            userPage = userRepository.findByUsernameContainingIgnoreCase(username, pageable);
         } else {
             userPage = userRepository.findAll(pageable);
         }

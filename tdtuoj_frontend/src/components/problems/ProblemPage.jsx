@@ -53,14 +53,16 @@ const ProblemPage = () => {
       });
 
       if (response.statusCode === 200) {
-        console.log(response.data);
         setProblems(response.data.content);
+
         setPagination((prev) => ({
           ...prev,
-          totalElements: response.data.totalElements,
-          totalPages: response.data.totalPages,
-          currentPage: response.data.number,
+          totalElements: response.data.page.totalElements,
+          totalPages: response.data.page.totalPages,
+          currentPage: response.data.page.number,
         }));
+
+        console.log(response.data.content.length);
       }
     } catch (error) {
       showMessage(error.response?.data?.message || error.message, "error");

@@ -80,7 +80,6 @@ const AdminProblemFormPage = () => {
 
         if (response.statusCode === 200 && response.data) {
           const problem = response.data;
-          console.log("Fetched problem:", problem);
 
           // Fetch statement file
           let statementContent = "";
@@ -92,7 +91,6 @@ const AdminProblemFormPage = () => {
               }?t=${Date.now()}`;
               const statementResponse = await fetch(statementUrl);
               statementContent = await statementResponse.text();
-              console.log("Loaded statement length:", statementContent.length);
             } catch (err) {
               console.error("Error fetching statement:", err);
               showMessage("Failed to load problem statement", "warning");
@@ -109,7 +107,6 @@ const AdminProblemFormPage = () => {
           });
 
           // Fetch and populate test cases
-          console.log("Test cases from API:", problem.testCases);
           if (problem.testCases && problem.testCases.length > 0) {
             const loadedTestCases = await Promise.all(
               problem.testCases.map(async (tc, index) => {
@@ -122,10 +119,6 @@ const AdminProblemFormPage = () => {
                     const inputUrl = `${tc.inputFileUrl}?t=${Date.now()}`;
                     const inputResponse = await fetch(inputUrl);
                     input = await inputResponse.text();
-                    console.log(
-                      `Test case ${index} input loaded:`,
-                      input.substring(0, 50)
-                    );
                   }
                   if (tc.expectedOutputFileUrl) {
                     // Add timestamp to prevent caching
@@ -134,23 +127,18 @@ const AdminProblemFormPage = () => {
                     }?t=${Date.now()}`;
                     const outputResponse = await fetch(outputUrl);
                     expectedOutput = await outputResponse.text();
-                    console.log(
-                      `Test case ${index} output loaded:`,
-                      expectedOutput.substring(0, 50)
-                    );
                   }
                 } catch (err) {
                   console.error(
                     `Error fetching test case ${index} files:`,
-                    err
+                    err,
                   );
                 }
 
                 return { id: tc.id, input, expectedOutput };
-              })
+              }),
             );
 
-            console.log("All loaded test cases:", loadedTestCases);
             setTestCases(loadedTestCases);
           } else {
             setTestCases([{ input: "", expectedOutput: "" }]);
@@ -191,7 +179,7 @@ const AdminProblemFormPage = () => {
 
   const handleTestCaseChange = (index, field, value) => {
     setTestCases((prev) =>
-      prev.map((tc, i) => (i === index ? { ...tc, [field]: value } : tc))
+      prev.map((tc, i) => (i === index ? { ...tc, [field]: value } : tc)),
     );
   };
 
@@ -230,7 +218,7 @@ const AdminProblemFormPage = () => {
       if (!testCases[i].expectedOutput.trim()) {
         showMessage(
           `Expected output is required for test case ${i + 1}`,
-          "error"
+          "error",
         );
         return false;
       }
@@ -259,7 +247,7 @@ const AdminProblemFormPage = () => {
       const statementFile = stringToFile(
         problemData.statement,
         "statement.md",
-        "text/markdown"
+        "text/markdown",
       );
       formData.append("statementFile", statementFile);
 
@@ -273,12 +261,12 @@ const AdminProblemFormPage = () => {
         const inputFile = stringToFile(
           testCase.input,
           `input_${index}.txt`,
-          "text/plain"
+          "text/plain",
         );
         const outputFile = stringToFile(
           testCase.expectedOutput,
           `output_${index}.txt`,
-          "text/plain"
+          "text/plain",
         );
 
         formData.append(`testCases[${index}].inputFile`, inputFile);
@@ -300,7 +288,7 @@ const AdminProblemFormPage = () => {
         showMessage(
           response.message ||
             `Problem ${id ? "updated" : "created"} successfully!`,
-          "success"
+          "success",
         );
 
         if (id) {
@@ -318,7 +306,7 @@ const AdminProblemFormPage = () => {
       } else {
         showMessage(
           response.message || `Failed to ${id ? "update" : "create"} problem`,
-          "error"
+          "error",
         );
       }
     } catch (err) {
@@ -664,7 +652,7 @@ const AdminProblemFormPage = () => {
                             handleTestCaseChange(
                               index,
                               "expectedOutput",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           placeholder="Enter expected output..."

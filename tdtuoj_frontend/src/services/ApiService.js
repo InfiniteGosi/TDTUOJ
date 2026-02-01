@@ -81,6 +81,39 @@ export default class ApiService {
     return resp.data;
   }
 
+  static async getAllUsers({
+    limit = 10,
+    offset = 0,
+    sortField = "id",
+    direction = "asc",
+    username = "",
+  } = {}) {
+    const url = `${this.BASE_URL}/users`;
+
+    try {
+      const resp = await axios.get(url, {
+        headers: this.getHeader(),
+        params: {
+          limit,
+          offset,
+          sortField,
+          direction,
+          username,
+        },
+      });
+      return resp.data;
+    } catch (error) {
+      console.error("Error fetching problems:", error);
+      throw error;
+    }
+  }
+
+  static async getProblemByUsername(username) {
+    const resp = await axios.get(`${this.BASE_URL}/users/${username}`);
+    return resp.data;
+  }
+
+  /******************* Problems **************************** */
   static async getAllProblems({
     limit = 10,
     offset = 0,

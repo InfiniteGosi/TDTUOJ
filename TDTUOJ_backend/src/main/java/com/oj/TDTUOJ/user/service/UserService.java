@@ -19,11 +19,11 @@ public interface UserService {
 
     Response<UserDTO> getUserById(Long userId);
 
-    Response<UserDTO> getUserByUserName(String slug);
+    Response<UserDTO> getUserByUsername(String username);
 
     Response<Page<UserDTO>> getAllUsers(Integer limit,
                                         Integer offset,
                                         String sortField,
                                         String direction,
-                                        String title);
+                                        String username);
 }

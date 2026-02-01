@@ -22,10 +22,9 @@ public class AdminUserController {
             @RequestParam(defaultValue = "0") Integer offset,
             @RequestParam(defaultValue = "id") String sortField,
             @RequestParam(defaultValue = "asc") String direction,
-            @RequestParam(required = false) String name) {
+            @RequestParam(required = false) String username) {
 
-
-        return ResponseEntity.ok(userService.getAllUsers(limit, offset, sortField, direction, name));
+        return ResponseEntity.ok(userService.getAllUsers(limit, offset, sortField, direction, username));
     }
 
     @GetMapping("/{userId}")

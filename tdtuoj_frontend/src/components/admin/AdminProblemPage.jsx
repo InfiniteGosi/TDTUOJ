@@ -59,7 +59,6 @@ const AdminProblemPage = () => {
       });
 
       if (response.statusCode === 200) {
-        console.log(response.data);
         setProblems(response.data.content);
         setPagination((prev) => ({
           ...prev,
@@ -111,7 +110,7 @@ const AdminProblemPage = () => {
         } catch (error) {
           showMessage(error.response?.data?.message || error.message, "error");
         }
-      }
+      },
     );
   };
 
@@ -136,8 +135,8 @@ const AdminProblemPage = () => {
     handlePageChange(
       Math.min(
         (pagination.totalPages - 1) * pagination.limit,
-        pagination.offset + pagination.limit
-      )
+        pagination.offset + pagination.limit,
+      ),
     );
 
   const canGoPrevious = pagination.currentPage > 0;
@@ -451,7 +450,7 @@ const AdminProblemPage = () => {
                     Showing {pagination.offset + 1}-
                     {Math.min(
                       pagination.offset + pagination.limit,
-                      pagination.totalElements
+                      pagination.totalElements,
                     )}{" "}
                     of {pagination.totalElements}
                   </Text>

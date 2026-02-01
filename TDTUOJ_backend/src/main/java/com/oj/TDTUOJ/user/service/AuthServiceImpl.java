@@ -42,7 +42,7 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.existsByEmail(registrationRequest.getEmail())) {
             throw new BadRequestException("Email already exists");
         }
-        
+
         // Collect roles from request, or fallback to PARTICIPANT role
         Set<Role> userRoles;
         if (registrationRequest.getRoles() != null && !registrationRequest.getRoles().isEmpty()) {

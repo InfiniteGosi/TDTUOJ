@@ -6,6 +6,7 @@ import HomePage from "./components/home/HomePage";
 import RegisterPage from "./components/auth/RegisterPage";
 import LoginPage from "./components/auth/LoginPage";
 import ProblemPage from "./components/problems/ProblemPage";
+import UserPage from "./components/users/UserPage";
 import ProblemDetailsPage from "./components/problems/ProblemDetailsPage";
 import AdminLayout from "./components/admin/AdminLayout";
 import { AdminRoute, ParticipantRoute } from "./services/Guard";
@@ -24,6 +25,7 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/home" element={<HomePage />} />
               <Route path="/problems" element={<ProblemPage />} />
+              <Route path="/users" element={<UserPage />} />
               <Route path="/problems/:slug" element={<ProblemDetailsPage />} />
               <Route
                 path="/admin"
