@@ -13,6 +13,7 @@ import AdminLayout from "./components/admin/AdminLayout";
 import { AdminRoute, ParticipantRoute } from "./services/Guard";
 import AdminProblemPage from "./components/admin/AdminProblemPage";
 import AdminProblemFormPage from "./components/admin/AdminProblemFormPage";
+import EditProfilePage from "./components/profile/EditProfilePage";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
               <Route path="/users" element={<UserPage />} />
               <Route path="/problems/:slug" element={<ProblemDetailsPage />} />
               <Route path="users/:username" element={<ProfilePage />} />
+              <Route path="/profile" element={<EditProfilePage to="/home" />} />
               <Route
                 path="/admin"
                 element={<AdminRoute element={<AdminLayout />} />}

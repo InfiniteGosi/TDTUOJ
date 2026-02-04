@@ -57,19 +57,14 @@ const NavBar = () => {
     }
   };
 
+  const handleEditProfile = () => {
+    navigate("/profile");
+  };
+
   // Get first letter of username for avatar placeholder
   const getInitials = (username) => {
     return username ? username.charAt(0).toUpperCase() : "U";
   };
-
-  // Get primary role
-  // const getPrimaryRole = (roles) => {
-  //   if (!roles || roles.length === 0) return "User";
-  //   const roleNames = roles.map((r) => r.name);
-  //   if (roleNames.includes("ADMIN")) return "Admin";
-  //   if (roleNames.includes("CREATOR")) return "Creator";
-  //   return "Participant";
-  // };
 
   return (
     <>
@@ -128,21 +123,6 @@ const NavBar = () => {
             <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
               {isAuthenticated ? (
                 <>
-                  {isCreator && (
-                    <li className="nav-item">
-                      <Link className="nav-link" to="/creator">
-                        Creator
-                      </Link>
-                    </li>
-                  )}
-                  {isAdmin && (
-                    <li className="nav-item">
-                      <Link className="nav-link" to="/admin">
-                        Admin
-                      </Link>
-                    </li>
-                  )}
-
                   {/* User Profile Dropdown */}
                   {userProfile && (
                     <li className="nav-item dropdown">
@@ -187,12 +167,6 @@ const NavBar = () => {
                           >
                             {userProfile.name || userProfile.username}
                           </span>
-                          {/* <span
-                            className="text-muted"
-                            style={{ fontSize: "12px", lineHeight: "1.2" }}
-                          >
-                            {getPrimaryRole(userProfile.roles)}
-                          </span> */}
                         </div>
                       </button>
 
@@ -210,6 +184,33 @@ const NavBar = () => {
                             {isLoadingProfile ? "Loading..." : "View Profile"}
                           </button>
                         </li>
+                        <li>
+                          <button
+                            className="dropdown-item"
+                            onClick={handleEditProfile}
+                          >
+                            Settings
+                          </button>
+                        </li>
+
+                        {/* Admin Link */}
+                        {isAdmin && (
+                          <li>
+                            <Link className="dropdown-item" to="/admin">
+                              Admin Panel
+                            </Link>
+                          </li>
+                        )}
+
+                        {/* Creator Link */}
+                        {isCreator && (
+                          <li>
+                            <Link className="dropdown-item" to="/creator">
+                              Creator Dashboard
+                            </Link>
+                          </li>
+                        )}
+
                         <li>
                           <hr className="dropdown-divider" />
                         </li>

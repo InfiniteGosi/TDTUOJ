@@ -25,8 +25,6 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { MessageDisplay, showMessage } = useMessage();
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -50,18 +48,6 @@ const ProfilePage = () => {
       fetchUserProfile();
     }
   }, [username]);
-
-  // handler for saving avatar
-  const handleSaveAvatar = async (previewUrl, imageFile) => {
-    try {
-      // Here you would upload to your backend
-      // For now, just update the local state
-      setUser({ ...user, profileUrl: previewUrl });
-      showMessage("Avatar updated successfully!", "success");
-    } catch (error) {
-      showMessage("Failed to update avatar", "error");
-    }
-  };
 
   const getRoleBadgeColor = (roleName) => {
     switch (roleName) {
@@ -193,13 +179,7 @@ const ProfilePage = () => {
               <Box bg="white" borderRadius="lg" boxShadow="sm" p={6}>
                 <VStack gap={4}>
                   {/* Avatar */}
-                  <Box
-                    position="relative"
-                    onMouseEnter={() => setIsHoveringAvatar(true)}
-                    onMouseLeave={() => setIsHoveringAvatar(false)}
-                    cursor="pointer"
-                    onClick={() => setIsUploadModalOpen(true)}
-                  >
+                  <Box position="relative" cursor="pointer">
                     <Box position="relative">
                       {user.profileUrl ? (
                         <img
@@ -229,38 +209,6 @@ const ProfilePage = () => {
                           borderColor="purple.500"
                         >
                           {getInitials(user.username)}
-                        </Box>
-                      )}
-
-                      {/* Overlay on hover */}
-                      {isHoveringAvatar && (
-                        <Box
-                          position="absolute"
-                          top={0}
-                          left={0}
-                          right={0}
-                          bottom={0}
-                          bg="blackAlpha.600"
-                          borderRadius="full"
-                          display="flex"
-                          flexDirection="column"
-                          alignItems="center"
-                          justifyContent="center"
-                          transition="all 0.5s"
-                        >
-                          <svg
-                            width="40"
-                            height="40"
-                            viewBox="0 0 24 24"
-                            fill="white"
-                            style={{ marginBottom: "8px" }}
-                          >
-                            <path d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z" />
-                            <path d="M21 5h-3.17l-1.24-1.35A1.99 1.99 0 0015.12 3H8.88c-.56 0-1.1.24-1.48.65L6.17 5H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V7a2 2 0 00-2-2zm-9 13a5.5 5.5 0 110-11 5.5 5.5 0 010 11z" />
-                          </svg>
-                          <Text color="white" fontSize="sm" fontWeight="medium">
-                            Edit
-                          </Text>
                         </Box>
                       )}
                     </Box>
@@ -592,14 +540,6 @@ const ProfilePage = () => {
           </GridItem>
         </Grid>
       </Container>
-
-      {/* Avatar Upload Modal */}
-      <AvatarUploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        currentAvatar={user.profileUrl}
-        onSave={handleSaveAvatar}
-      />
     </Box>
   );
 };

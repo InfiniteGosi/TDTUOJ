@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,7 +36,9 @@ public class AdminUserController {
     @PutMapping(value = "/{userId}")
     public ResponseEntity<Response<?>> updateUser(
             @PathVariable Long userId,
-            @RequestBody UserDTO userDTO) {
+            @ModelAttribute UserDTO userDTO,
+            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) {
+        userDTO.setProfileImage(imageFile);
         return ResponseEntity.ok(userService.updateUserAsAdmin(userId, userDTO));
     }
 }

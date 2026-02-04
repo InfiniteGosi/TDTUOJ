@@ -20,9 +20,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -57,21 +60,72 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Response<?> updateOwnAccount(UserDTO userDTO) {
-        return null;
-    }
+        User user = getCurrentLoggedInUser();
+        String profileUrl = user.getProfileUrl();
+        MultipartFile imageFile = userDTO.getProfileImage();
 
-    @Override
-    public Response<?> deactivateOwnAccount() {
-        return null;
+        // Check if a new profile image is uploaded
+        if (imageFile != null && !imageFile.isEmpty()) {
+            // Delete old image in S3 if it exists
+            if (profileUrl != null && !profileUrl.isEmpty()) {
+                String keyName = profileUrl.substring(profileUrl.lastIndexOf("/") + 1);
+                awsS3Service.deleteFile("profile/" + keyName);
+            }
+
+            // Upload new image to S3 with a unique name
+            String originalName = imageFile.getOriginalFilename();
+            String safeName = originalName != null ? originalName.replaceAll("\\s+", "_") : "image";
+            String imageName = user.getUsername() + "_" + safeName;
+
+            URL newImageUrl = awsS3Service.uploadFile("profile/" + imageName, imageFile);
+            user.setProfileUrl(newImageUrl.toString());
+        }
+
+        // Update non-null fields
+        if (userDTO.getName() != null) user.setName(userDTO.getName());
+        if (userDTO.getAbout() != null) user.setAbout(userDTO.getAbout());
+
+        // Update password if provided
+        if (userDTO.getPassword() != null) user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+
+        userRepository.save(user);
+        return Response.builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Account updated successfully")
+                .build();
     }
 
     @Override
     public Response<?> updateUserAsAdmin(Long userId, UserDTO userDTO) {
-        log.info("Inside update as admin");
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
+        String profileUrl = user.getProfileUrl();
+        MultipartFile imageFile = userDTO.getProfileImage();
+
+        log.info("Hello" + imageFile.getOriginalFilename());
+
+        // Check if a new profile image is uploaded
+        if (imageFile != null && !imageFile.isEmpty()) {
+            // Delete old image in S3 if it exists
+            if (profileUrl != null && !profileUrl.isEmpty()) {
+                String keyName = profileUrl.substring(profileUrl.lastIndexOf("/") + 1);
+                awsS3Service.deleteFile("profile/" + keyName);
+            }
+
+            // Upload new image to S3 with a unique name
+            String originalName = imageFile.getOriginalFilename();
+            String safeName = originalName != null ? originalName.replaceAll("\\s+", "_") : "image";
+            String imageName = user.getUsername() + "_" + safeName;
+
+            URL newImageUrl = awsS3Service.uploadFile("profile/" + imageName, imageFile);
+            log.info(newImageUrl.toString());
+            user.setProfileUrl(newImageUrl.toString());
+        }
+
+        // Update non-null fields
         if (userDTO.getName() != null) user.setName(userDTO.getName());
+        if (userDTO.getAbout() != null) user.setAbout(userDTO.getAbout());
         if (userDTO.getIsActive() != null) user.setIsActive(userDTO.getIsActive());
 
         // Update password if provided
@@ -168,6 +222,18 @@ public class UserServiceImpl implements UserService {
                 .statusCode(HttpStatus.OK.value())
                 .message("Users retrieved successfully")
                 .data(pageDTO)
+                .build();
+    }
+
+    @Override
+    public Response<?> deactivateOwnAccount() {
+        User user = getCurrentLoggedInUser();
+        user.setIsActive(false);
+        userRepository.save(user);
+
+        return Response.builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Account deactivated successfully")
                 .build();
     }
 }
