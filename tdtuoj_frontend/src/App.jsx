@@ -14,6 +14,7 @@ import { AdminRoute, ParticipantRoute } from "./services/Guard";
 import AdminProblemPage from "./components/admin/AdminProblemPage";
 import AdminProblemFormPage from "./components/admin/AdminProblemFormPage";
 import EditProfilePage from "./components/profile/EditProfilePage";
+import ChangePasswordPage from "./components/profile/ChangePasswordPage";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
               <Route path="/problems/:slug" element={<ProblemDetailsPage />} />
               <Route path="users/:username" element={<ProfilePage />} />
               <Route path="/profile" element={<EditProfilePage to="/home" />} />
+              <Route path="/change-password" element={<ChangePasswordPage />} />
               <Route
                 path="/admin"
                 element={<AdminRoute element={<AdminLayout />} />}

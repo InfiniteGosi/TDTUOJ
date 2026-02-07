@@ -91,6 +91,20 @@ export default class ApiService {
     return resp.data;
   }
 
+  static async changePassword(passwordData) {
+    const resp = await axios.put(
+      `${this.BASE_URL}/users/change-password`,
+      passwordData,
+      {
+        headers: {
+          ...this.getHeader(),
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    return resp.data;
+  }
+
   static async deactivateProfile() {
     const resp = await axios.delete(`${this.BASE_URL}/users/deactivate`, {
       headers: this.getHeader(),

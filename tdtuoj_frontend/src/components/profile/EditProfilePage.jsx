@@ -13,7 +13,7 @@ import {
   Textarea,
   Spinner,
 } from "@chakra-ui/react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Lock } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useMessage } from "../common/MessageDisplay";
 import { useConfirmDialog } from "../common/ConfirmDialog";
@@ -29,13 +29,10 @@ const EditProfilePage = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
 
-  // Form state
+  // Form state (removed password fields)
   const [formData, setFormData] = useState({
     name: "",
     about: "",
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
   });
 
   // Profile image state
@@ -52,9 +49,6 @@ const EditProfilePage = () => {
           setFormData({
             name: response.data.name || "",
             about: response.data.about || "",
-            currentPassword: "",
-            newPassword: "",
-            confirmPassword: "",
           });
           setPreviewImage(response.data.profileUrl || "");
         }
@@ -97,30 +91,10 @@ const EditProfilePage = () => {
         try {
           setSaving(true);
 
-          // Validate password fields if changing password
-          if (formData.newPassword) {
-            if (formData.newPassword !== formData.confirmPassword) {
-              showMessage("New passwords do not match", "error");
-              setSaving(false);
-              return;
-            }
-            if (!formData.currentPassword) {
-              showMessage("Please enter your current password", "error");
-              setSaving(false);
-              return;
-            }
-          }
-
-          // Create FormData object
+          // Create FormData object (NO PASSWORD FIELDS)
           const formDataToSend = new FormData();
           formDataToSend.append("name", formData.name);
           formDataToSend.append("about", formData.about);
-
-          // Add password fields only if changing password
-          if (formData.newPassword) {
-            formDataToSend.append("currentPassword", formData.currentPassword);
-            formDataToSend.append("newPassword", formData.newPassword);
-          }
 
           // Add profile image if changed
           if (profileImage) {
@@ -131,7 +105,7 @@ const EditProfilePage = () => {
 
           if (response.statusCode === 200) {
             showMessage("Profile updated successfully!", "success");
-            navigate(`/users/${user.username}`);
+            window.location.href = `/users/${user.username}`;
           }
         } catch (error) {
           showMessage(
@@ -360,50 +334,35 @@ const EditProfilePage = () => {
             </VStack>
           </Box>
 
-          {/* Change Password */}
-          <Box bg="white" borderRadius="lg" boxShadow="sm" p={6}>
-            <Heading size="md" mb={4} color="gray.800">
-              Change Password
-            </Heading>
-            <VStack gap={4} align="stretch">
-              <Field.Root>
-                <Field.Label>Current Password</Field.Label>
-                <Input
-                  name="currentPassword"
-                  type="password"
-                  value={formData.currentPassword}
-                  onChange={handleInputChange}
-                  placeholder="Enter current password"
-                />
-              </Field.Root>
-
-              <Field.Root>
-                <Field.Label>New Password</Field.Label>
-                <Input
-                  name="newPassword"
-                  type="password"
-                  value={formData.newPassword}
-                  onChange={handleInputChange}
-                  placeholder="Enter new password"
-                />
-              </Field.Root>
-
-              <Field.Root>
-                <Field.Label>Confirm New Password</Field.Label>
-                <Input
-                  name="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  placeholder="Confirm new password"
-                />
-              </Field.Root>
-
-              <Text fontSize="xs" color="gray.500">
-                Leave password fields empty if you don't want to change your
-                password
-              </Text>
-            </VStack>
+          {/* Security Section - Link to Change Password */}
+          <Box
+            bg="white"
+            borderRadius="lg"
+            boxShadow="sm"
+            p={6}
+            cursor="pointer"
+            _hover={{ bg: "gray.50" }}
+            transition="all 0.2s"
+            onClick={() => navigate("/change-password")}
+          >
+            <HStack justify="space-between">
+              <HStack gap={3}>
+                <Box p={2} bg="purple.100" borderRadius="md" color="purple.600">
+                  <Lock size={24} />
+                </Box>
+                <VStack align="start" gap={0}>
+                  <Heading size="md" color="gray.800">
+                    Password & Security
+                  </Heading>
+                  <Text fontSize="sm" color="gray.600">
+                    Change your password or update security settings
+                  </Text>
+                </VStack>
+              </HStack>
+              <Button variant="ghost" colorScheme="purple">
+                Change →
+              </Button>
+            </HStack>
           </Box>
 
           {/* Action Buttons */}

@@ -1,8 +1,10 @@
 package com.oj.TDTUOJ.user.controller;
 
 import com.oj.TDTUOJ.common.response.Response;
+import com.oj.TDTUOJ.user.dto.ChangePasswordRequest;
 import com.oj.TDTUOJ.user.dto.UserDTO;
 import com.oj.TDTUOJ.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
@@ -49,5 +51,13 @@ public class UserController {
     @DeleteMapping("/deactivate")
     public ResponseEntity<Response<?>> deactivateOwnAccount() {
         return ResponseEntity.ok(userService.deactivateOwnAccount());
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<Response<?>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request) {
+
+        Response<?> response = userService.changePassword(request);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 }

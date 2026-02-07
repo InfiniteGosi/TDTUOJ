@@ -6,6 +6,7 @@ import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.role.entity.Role;
 import com.oj.TDTUOJ.role.repository.RoleRepository;
+import com.oj.TDTUOJ.user.dto.ChangePasswordRequest;
 import com.oj.TDTUOJ.user.dto.UserDTO;
 import com.oj.TDTUOJ.user.entity.User;
 import com.oj.TDTUOJ.user.repository.UserRepository;
@@ -85,13 +86,44 @@ public class UserServiceImpl implements UserService {
         if (userDTO.getName() != null) user.setName(userDTO.getName());
         if (userDTO.getAbout() != null) user.setAbout(userDTO.getAbout());
 
-        // Update password if provided
-        if (userDTO.getPassword() != null) user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-
         userRepository.save(user);
         return Response.builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Account updated successfully")
+                .build();
+    }
+
+    @Override
+    public Response<?> changePassword(ChangePasswordRequest request) {
+        User user = getCurrentLoggedInUser();
+
+        // Validate that new password matches confirmation
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new BadRequestException("New passwords do not match");
+        }
+
+        // Verify current password
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        // Don't allow same password
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new BadRequestException("New password must be different from current password");
+        }
+
+        // Validate password strength (optional)
+        if (request.getNewPassword().length() < 6) {
+            throw new BadRequestException("Password must be at least 6 characters long");
+        }
+
+        // Update password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return Response.builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Password changed successfully")
                 .build();
     }
 
