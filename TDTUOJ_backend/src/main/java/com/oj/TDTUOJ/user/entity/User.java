@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -53,4 +54,7 @@ public class User {
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 }

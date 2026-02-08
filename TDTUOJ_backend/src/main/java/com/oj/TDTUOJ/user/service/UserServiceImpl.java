@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -60,6 +61,65 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Response<UserDTO> getUserById(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+
+        return Response.<UserDTO>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("User retrieved successfully")
+                .data(userDTO)
+                .build();
+    }
+
+    @Override
+    public Response<UserDTO> getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new NotFoundException("User not found"));
+        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+
+        return Response.<UserDTO>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("User retrieved successfully")
+                .data(userDTO)
+                .build();
+    }
+
+    @Override
+    public Response<Page<UserDTO>> getAllUsers(Integer limit,
+                                               Integer offset,
+                                               String sortField,
+                                               String direction,
+                                               String username) {
+        // Handle defaults
+        if (limit == null || limit <= 0) limit = 20;
+        if (offset == null || offset < 0) offset = 0;
+        if (sortField == null || sortField.isBlank()) sortField = "id";
+        if (direction == null || direction.isBlank()) direction = "asc";
+
+        Sort sort = Sort.by(Sort.Direction.fromString(direction), sortField);
+
+        //Pageable pageable = new UserPageRequest(limit, offset, sort);
+        int page = offset / limit;
+        Pageable pageable = PageRequest.of(page, limit, sort);
+
+        Page<User> userPage;
+
+        if (username != null && !username.isBlank()) {
+            userPage = userRepository.findByUsernameContainingIgnoreCase(username, pageable);
+        } else {
+            userPage = userRepository.findAll(pageable);
+        }
+
+        Page<UserDTO> pageDTO = userPage.map(user -> modelMapper.map(user, UserDTO.class));
+
+        return Response.<Page<UserDTO>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Users retrieved successfully")
+                .data(pageDTO)
+                .build();
+    }
+
+    @Override
     public Response<?> updateOwnAccount(UserDTO userDTO) {
         User user = getCurrentLoggedInUser();
         String profileUrl = user.getProfileUrl();
@@ -86,7 +146,9 @@ public class UserServiceImpl implements UserService {
         if (userDTO.getName() != null) user.setName(userDTO.getName());
         if (userDTO.getAbout() != null) user.setAbout(userDTO.getAbout());
 
+        user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
+
         return Response.builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Account updated successfully")
@@ -119,6 +181,8 @@ public class UserServiceImpl implements UserService {
 
         // Update password
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+
+        user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
         return Response.builder()
@@ -190,70 +254,13 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setRoles(userRoles);
+
+        user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 
         return Response.builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("User updated successfully by admin")
-                .build();
-    }
-
-    @Override
-    public Response<UserDTO> getUserById(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
-        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
-
-        return Response.<UserDTO>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("User retrieved successfully")
-                .data(userDTO)
-                .build();
-    }
-
-    @Override
-    public Response<UserDTO> getUserByUsername(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new NotFoundException("User not found"));
-        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
-
-        return Response.<UserDTO>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("User retrieved successfully")
-                .data(userDTO)
-                .build();
-    }
-
-    @Override
-    public Response<Page<UserDTO>> getAllUsers(Integer limit,
-                                               Integer offset,
-                                               String sortField,
-                                               String direction,
-                                               String username) {
-        // Handle defaults
-        if (limit == null || limit <= 0) limit = 20;
-        if (offset == null || offset < 0) offset = 0;
-        if (sortField == null || sortField.isBlank()) sortField = "id";
-        if (direction == null || direction.isBlank()) direction = "asc";
-
-        Sort sort = Sort.by(Sort.Direction.fromString(direction), sortField);
-
-        //Pageable pageable = new UserPageRequest(limit, offset, sort);
-        int page = offset / limit;
-        Pageable pageable = PageRequest.of(page, limit, sort);
-
-        Page<User> userPage;
-
-        if (username != null && !username.isBlank()) {
-            userPage = userRepository.findByUsernameContainingIgnoreCase(username, pageable);
-        } else {
-            userPage = userRepository.findAll(pageable);
-        }
-
-        Page<UserDTO> pageDTO = userPage.map(user -> modelMapper.map(user, UserDTO.class));
-
-        return Response.<Page<UserDTO>>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("Users retrieved successfully")
-                .data(pageDTO)
                 .build();
     }
 

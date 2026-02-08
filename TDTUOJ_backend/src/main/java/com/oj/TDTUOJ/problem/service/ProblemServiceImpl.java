@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -185,6 +186,8 @@ public class ProblemServiceImpl implements ProblemService {
 
             testCaseRepository.saveAll(testCases);
             problem.setTestCases(testCases);
+
+            problem.setCreatedAt(LocalDateTime.now());
             problem = problemRepository.save(problem);
 
             // Map to DTO for response
@@ -372,6 +375,7 @@ public class ProblemServiceImpl implements ProblemService {
             }
 
             // Save updated problem
+            problem.setUpdatedAt(LocalDateTime.now());
             problem = problemRepository.save(problem);
             log.info("Problem {} updated successfully", problem.getId());
 

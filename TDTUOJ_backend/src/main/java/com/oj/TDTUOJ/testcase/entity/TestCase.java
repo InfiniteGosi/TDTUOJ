@@ -22,6 +22,15 @@ public class TestCase {
 
     private String expectedOutputFileUrl;
 
+    @Builder.Default
+    private boolean isSample = false;
+
+    private Double timeLimit;  // in seconds
+
+    private Integer memoryLimit; // in KB
+
+    private Integer points;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "problem_id")
     private Problem problem;

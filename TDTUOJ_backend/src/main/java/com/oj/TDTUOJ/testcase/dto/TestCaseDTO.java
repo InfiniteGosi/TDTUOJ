@@ -16,6 +16,14 @@ public class TestCaseDTO {
 
     private String expectedOutputFileUrl; // e.g. https://s3.amazonaws.com/problems/1/testcases/output/1.txt
 
+    private boolean isSample;
+
+    private Double timeLimit;  // in seconds
+
+    private Integer memoryLimit; // in KB
+
+    private Integer points;
+
     @NotNull(message = "Problem ID is required")
     private Long problemId;
 

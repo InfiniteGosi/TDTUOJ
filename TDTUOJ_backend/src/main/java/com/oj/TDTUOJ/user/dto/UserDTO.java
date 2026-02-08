@@ -11,6 +11,7 @@ import jakarta.persistence.ManyToMany;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -41,4 +42,8 @@ public class UserDTO {
     private Set<RoleDTO> roles;
 
     private MultipartFile profileImage;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 }
