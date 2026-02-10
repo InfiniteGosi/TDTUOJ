@@ -25,7 +25,7 @@ public class UserController {
             @RequestParam(defaultValue = "id") String sortField,
             @RequestParam(defaultValue = "asc") String direction,
             @RequestParam(required = false) String username) {
-        
+        System.out.println("____________________________________________");
         return ResponseEntity.ok(userService.getAllUsers(limit, offset, sortField, direction, username));
     }
 

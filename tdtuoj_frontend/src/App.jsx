@@ -15,6 +15,7 @@ import AdminProblemPage from "./components/admin/AdminProblemPage";
 import AdminProblemFormPage from "./components/admin/AdminProblemFormPage";
 import EditProfilePage from "./components/profile/EditProfilePage";
 import ChangePasswordPage from "./components/profile/ChangePasswordPage";
+import AdminUserPage from "./components/admin/AdminUserPage";
 
 function App() {
   return (
@@ -43,7 +44,11 @@ function App() {
                   path="problems/edit/:id"
                   element={<AdminProblemFormPage />}
                 />
+
+                <Route path="users" element={<AdminUserPage />} />
               </Route>
+
+              <Route path="*" element={<Navigate to={"/home"} />} />
             </Routes>
           </div>
           <Footer />

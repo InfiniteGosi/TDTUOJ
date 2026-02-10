@@ -53,8 +53,17 @@ export default class ApiService {
 
   static getHeader() {
     const token = this.getToken();
+
+    // Only include Authorization header if token exists
+    if (token) {
+      return {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      };
+    }
+
+    // Return headers without Authorization if no token
     return {
-      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     };
   }

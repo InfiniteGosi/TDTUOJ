@@ -56,6 +56,7 @@ public class SecurityConfig {
                         // Public endpoints (accessible without authentication)
                         .requestMatchers("/api/auth/**",
                                 "/api/problems/**",
+                                "/api/users/**",
                                 "/api/contests/**",
                                 "/api/status/**",
                                 "/api/files/**",
