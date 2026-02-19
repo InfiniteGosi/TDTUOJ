@@ -33,6 +33,7 @@ const AdminUserPage = () => {
   const { ConfirmDialog } = useConfirmDialog();
   const { MessageDisplay, showMessage } = useMessage();
   const [users, setUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -74,6 +75,20 @@ const AdminUserPage = () => {
   };
 
   useEffect(() => {
+    const init = async () => {
+      try {
+        const meResponse = await ApiService.getOwnProfile();
+        if (meResponse.statusCode === 200) {
+          setCurrentUser(meResponse.data);
+        }
+      } catch (error) {
+        // non-critical, silently ignore
+      }
+    };
+    init();
+  }, []);
+
+  useEffect(() => {
     fetchUsers();
   }, [pagination.limit, pagination.offset, sortField, direction]);
 
@@ -91,8 +106,8 @@ const AdminUserPage = () => {
     navigate("/admin/users/register");
   };
 
-  const handleEditUser = (username) => {
-    navigate(`/admin/users/edit/${username}`);
+  const handleEditUser = (userId) => {
+    navigate(`/admin/users/edit/${userId}`);
   };
 
   const handlePageChange = (newOffset) => {
@@ -313,109 +328,142 @@ const AdminUserPage = () => {
 
               <Table.Body>
                 {users.length > 0 ? (
-                  users.map((user, index) => (
-                    <Table.Row
-                      key={user.id}
-                      _hover={{ bg: "purple.50" }}
-                      transition="all 0.2s"
-                      bg={index % 2 === 0 ? "white" : "gray.50"}
-                    >
-                      {/* User ID */}
-                      <Table.Cell textAlign="center">
-                        <Badge
-                          colorScheme="purple"
-                          fontSize="md"
-                          px={3}
-                          py={1}
-                          borderRadius="md"
-                          fontWeight="bold"
-                        >
-                          #{user.id}
-                        </Badge>
-                      </Table.Cell>
+                  users.map((user, index) => {
+                    const isSelf = currentUser?.id === user.id;
+                    return (
+                      <Table.Row
+                        key={user.id}
+                        _hover={{ bg: "purple.50" }}
+                        transition="all 0.2s"
+                        bg={index % 2 === 0 ? "white" : "gray.50"}
+                      >
+                        {/* User ID */}
+                        <Table.Cell textAlign="center">
+                          <Badge
+                            colorScheme="purple"
+                            fontSize="md"
+                            px={3}
+                            py={1}
+                            borderRadius="md"
+                            fontWeight="bold"
+                          >
+                            #{user.id}
+                          </Badge>
+                        </Table.Cell>
 
-                      {/* User Info with Avatar */}
-                      <Table.Cell>
-                        <HStack gap={3}>
-                          <Avatar.Root size="md" bg="purple.400" color="white">
-                            {user.profileUrl && (
-                              <Avatar.Image src={user.profileUrl} />
-                            )}
-                            <Avatar.Fallback>
-                              {(user.name || user.username)
-                                .charAt(0)
-                                .toUpperCase()}
-                            </Avatar.Fallback>
-                          </Avatar.Root>
-                          <VStack align="start" gap={0}>
-                            <Text
-                              fontSize="md"
-                              fontWeight="semibold"
-                              color="gray.800"
+                        {/* User Info with Avatar */}
+                        <Table.Cell>
+                          <HStack gap={3}>
+                            <Avatar.Root
+                              size="md"
+                              bg="purple.400"
+                              color="white"
                             >
-                              {user.username}
-                            </Text>
-                            {user.name && (
-                              <Text fontSize="sm" color="gray.500">
-                                {user.name}
-                              </Text>
-                            )}
-                          </VStack>
-                        </HStack>
-                      </Table.Cell>
+                              {user.profileUrl && (
+                                <Avatar.Image src={user.profileUrl} />
+                              )}
+                              <Avatar.Fallback>
+                                {(user.name || user.username)
+                                  .charAt(0)
+                                  .toUpperCase()}
+                              </Avatar.Fallback>
+                            </Avatar.Root>
+                            <VStack align="start" gap={0}>
+                              <HStack gap={2}>
+                                <Text
+                                  fontSize="md"
+                                  fontWeight="semibold"
+                                  color="gray.800"
+                                >
+                                  {user.username}
+                                </Text>
+                                {isSelf && (
+                                  <Badge
+                                    colorScheme="orange"
+                                    fontSize="xs"
+                                    px={2}
+                                    py={0.5}
+                                    borderRadius="md"
+                                  >
+                                    It&apos;s you
+                                  </Badge>
+                                )}
+                              </HStack>
+                              {user.name && (
+                                <Text fontSize="sm" color="gray.500">
+                                  {user.name}
+                                </Text>
+                              )}
+                            </VStack>
+                          </HStack>
+                        </Table.Cell>
 
-                      {/* Email */}
-                      <Table.Cell>
-                        <Text fontSize="sm" color="gray.600">
-                          {user.email}
-                        </Text>
-                      </Table.Cell>
+                        {/* Email */}
+                        <Table.Cell>
+                          <Text fontSize="sm" color="gray.600">
+                            {user.email}
+                          </Text>
+                        </Table.Cell>
 
-                      {/* Roles */}
-                      <Table.Cell>
-                        <HStack gap={1} flexWrap="wrap">
-                          {user.roles?.map((role) => (
+                        {/* Roles */}
+                        <Table.Cell>
+                          <HStack gap={1} flexWrap="wrap">
+                            {user.roles?.map((role) => (
+                              <Badge
+                                key={role.id}
+                                colorScheme={getRoleBadgeColor(role.name)}
+                                fontSize="xs"
+                                px={2}
+                                py={1}
+                                borderRadius="md"
+                              >
+                                {role.name}
+                              </Badge>
+                            ))}
+                          </HStack>
+                        </Table.Cell>
+
+                        {/* Active Status */}
+                        <Table.Cell textAlign="center">
+                          <Badge
+                            colorScheme={user.isActive ? "green" : "red"}
+                            fontSize="sm"
+                            px={3}
+                            py={1}
+                            borderRadius="md"
+                          >
+                            {user.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </Table.Cell>
+
+                        {/* Action Buttons */}
+                        <Table.Cell textAlign="center">
+                          {isSelf ? (
                             <Badge
-                              key={role.id}
-                              colorScheme={getRoleBadgeColor(role.name)}
+                              colorScheme="gray"
                               fontSize="xs"
-                              px={2}
-                              py={1}
+                              px={3}
+                              py={1.5}
                               borderRadius="md"
+                              color="gray.500"
                             >
-                              {role.name}
+                              It&apos;s you
                             </Badge>
-                          ))}
-                        </HStack>
-                      </Table.Cell>
-
-                      {/* Active Status */}
-                      <Table.Cell textAlign="center">
-                        <Badge
-                          colorScheme={user.isActive ? "green" : "red"}
-                          fontSize="sm"
-                          px={3}
-                          py={1}
-                          borderRadius="md"
-                        >
-                          {user.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                      </Table.Cell>
-
-                      {/* Action Buttons */}
-                      <Table.Cell textAlign="center">
-                        <IconButton
-                          size="sm"
-                          colorScheme="blue"
-                          variant="ghost"
-                          onClick={() => handleEditUser(user.id)}
-                          title="Edit User"
-                        >
-                          <Edit size={18} />
-                        </IconButton>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))
+                          ) : (
+                            <IconButton
+                              size="sm"
+                              colorScheme="blue"
+                              variant="ghost"
+                              onClick={() => handleEditUser(user.id)}
+                              title="Edit User"
+                            >
+                              <Edit size={18} />
+                            </IconButton>
+                          )}
+                        </Table.Cell>
+                      </Table.Row>
+                    );
+                  })
                 ) : (
                   <Table.Row>
                     <Table.Cell colSpan={6} textAlign="center" py={10}>

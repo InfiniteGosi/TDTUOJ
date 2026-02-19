@@ -149,9 +149,25 @@ export default class ApiService {
   }
 
   static async getUserByUsername(username) {
-    console.log(`${this.BASE_URL}/users/${username}`);
     const resp = await axios.get(`${this.BASE_URL}/users/${username}`, {
       headers: this.getHeader(),
+    });
+    return resp.data;
+  }
+
+  static async getUserByUserIdAsAdmin(userId) {
+    const resp = await axios.get(`${this.BASE_URL}/admin/users/${userId}`, {
+      headers: this.getHeader(),
+    });
+    return resp.data;
+  }
+
+  static async updateUserAsAdmin(formData) {
+    const resp = await axios.put(`${this.BASE_URL}/admin/users`, formData, {
+      headers: {
+        ...this.getHeader(),
+        "Content-Type": "multipart/form-data",
+      },
     });
     return resp.data;
   }

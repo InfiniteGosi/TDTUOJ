@@ -5,6 +5,7 @@ import com.oj.TDTUOJ.user.dto.UserDTO;
 import com.oj.TDTUOJ.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -33,12 +34,11 @@ public class AdminUserController {
         return ResponseEntity.ok(userService.getUserById(userId));
     }
 
-    @PutMapping(value = "/{userId}")
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Response<?>> updateUser(
-            @PathVariable Long userId,
             @ModelAttribute UserDTO userDTO,
             @RequestPart(value = "imageFile", required = false) MultipartFile imageFile) {
         userDTO.setProfileImage(imageFile);
-        return ResponseEntity.ok(userService.updateUserAsAdmin(userId, userDTO));
+        return ResponseEntity.ok(userService.updateUserAsAdmin(userDTO));
     }
 }

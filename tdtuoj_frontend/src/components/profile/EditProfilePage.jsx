@@ -17,7 +17,7 @@ import { ArrowLeft, Lock } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useMessage } from "../common/MessageDisplay";
 import { useConfirmDialog } from "../common/ConfirmDialog";
-import AvatarUploadModal from "./AvatarUploadModal";
+import AvatarUploadModal from "../common/AvatarUploadModal";
 
 const EditProfilePage = () => {
   const [user, setUser] = useState(null);

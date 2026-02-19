@@ -18,7 +18,7 @@ public interface UserService {
     Response<?> deactivateOwnAccount();
 
     // For admins
-    Response<?> updateUserAsAdmin(Long userId, UserDTO userDTO);
+    Response<?> updateUserAsAdmin(UserDTO userDTO);
 
     Response<UserDTO> getUserById(Long userId);
 

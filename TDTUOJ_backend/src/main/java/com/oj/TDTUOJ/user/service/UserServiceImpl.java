@@ -26,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -156,6 +157,80 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Response<?> updateUserAsAdmin(UserDTO userDTO) {
+        User user = userRepository.findById(userDTO.getId())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        String profileUrl = user.getProfileUrl();
+        MultipartFile imageFile = userDTO.getProfileImage();
+
+        // Check if a new profile image is uploaded
+        if (imageFile != null && !imageFile.isEmpty()) {
+            // Delete old image in S3 if it exists
+            if (profileUrl != null && !profileUrl.isEmpty()) {
+                String keyName = profileUrl.substring(profileUrl.lastIndexOf("/") + 1);
+                awsS3Service.deleteFile("profile/" + keyName);
+            }
+
+            // Upload new image to S3 with a unique name
+            String originalName = imageFile.getOriginalFilename();
+            String safeName = originalName != null ? originalName.replaceAll("\\s+", "_") : "image";
+            String imageName = user.getUsername() + "_" + safeName;
+
+            URL newImageUrl = awsS3Service.uploadFile("profile/" + imageName, imageFile);
+            log.info(newImageUrl.toString());
+            user.setProfileUrl(newImageUrl.toString());
+        }
+
+        // Update non-null fields
+        if (userDTO.getName() != null) user.setName(userDTO.getName());
+        if (userDTO.getAbout() != null) user.setAbout(userDTO.getAbout());
+        if (userDTO.getIsActive() != null) user.setIsActive(userDTO.getIsActive());
+
+        // Update password if provided
+        if (userDTO.getPassword() != null && !userDTO.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        }
+
+        // Update email if changed
+        if (userDTO.getEmail() != null && !userDTO.getEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(userDTO.getEmail())) {
+                throw new BadRequestException("Email already exists");
+            }
+            user.setEmail(userDTO.getEmail());
+        }
+
+        // Update roles — prefer roleNames (from multipart form), fall back to roles set (from JSON)
+        Set<Role> userRoles;
+        List<String> roleNames = userDTO.getRoleNames();
+
+        if (roleNames != null && !roleNames.isEmpty()) {
+            userRoles = roleNames.stream()
+                    .map(name -> roleRepository.findByName(name.toUpperCase())
+                            .orElseThrow(() -> new NotFoundException("Role not found: " + name.toUpperCase())))
+                    .collect(Collectors.toSet());
+        } else if (userDTO.getRoles() != null && !userDTO.getRoles().isEmpty()) {
+            userRoles = userDTO.getRoles().stream()
+                    .map(roleDTO -> roleRepository.findByName(roleDTO.getName().toUpperCase())
+                            .orElseThrow(() -> new NotFoundException("Role not found: " + roleDTO.getName().toUpperCase())))
+                    .collect(Collectors.toSet());
+        } else {
+            Role defaultRole = roleRepository.findByName("PARTICIPANT")
+                    .orElseThrow(() -> new NotFoundException("PARTICIPANT role not found"));
+            userRoles = new HashSet<>(Set.of(defaultRole));
+        }
+
+        user.setRoles(userRoles);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        return Response.builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("User updated successfully by admin")
+                .build();
+    }
+
+    @Override
     public Response<?> changePassword(ChangePasswordRequest request) {
         User user = getCurrentLoggedInUser();
 
@@ -188,79 +263,6 @@ public class UserServiceImpl implements UserService {
         return Response.builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Password changed successfully")
-                .build();
-    }
-
-    @Override
-    public Response<?> updateUserAsAdmin(Long userId, UserDTO userDTO) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-
-        String profileUrl = user.getProfileUrl();
-        MultipartFile imageFile = userDTO.getProfileImage();
-
-        log.info("Hello" + imageFile.getOriginalFilename());
-
-        // Check if a new profile image is uploaded
-        if (imageFile != null && !imageFile.isEmpty()) {
-            // Delete old image in S3 if it exists
-            if (profileUrl != null && !profileUrl.isEmpty()) {
-                String keyName = profileUrl.substring(profileUrl.lastIndexOf("/") + 1);
-                awsS3Service.deleteFile("profile/" + keyName);
-            }
-
-            // Upload new image to S3 with a unique name
-            String originalName = imageFile.getOriginalFilename();
-            String safeName = originalName != null ? originalName.replaceAll("\\s+", "_") : "image";
-            String imageName = user.getUsername() + "_" + safeName;
-
-            URL newImageUrl = awsS3Service.uploadFile("profile/" + imageName, imageFile);
-            log.info(newImageUrl.toString());
-            user.setProfileUrl(newImageUrl.toString());
-        }
-
-        // Update non-null fields
-        if (userDTO.getName() != null) user.setName(userDTO.getName());
-        if (userDTO.getAbout() != null) user.setAbout(userDTO.getAbout());
-        if (userDTO.getIsActive() != null) user.setIsActive(userDTO.getIsActive());
-
-        // Update password if provided
-        if (userDTO.getPassword() != null) {
-            user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        }
-
-        // Update email if changed
-        if (userDTO.getEmail() != null && !userDTO.getEmail().equals(user.getEmail())) {
-            if (userRepository.existsByEmail(userDTO.getEmail())) {
-                throw new BadRequestException("Email already exists");
-            }
-            user.setEmail(userDTO.getEmail());
-        }
-
-        // Update roles (admin can change roles)
-        Set<Role> userRoles;
-        if (userDTO.getRoles() != null && !userDTO.getRoles().isEmpty()) {
-            userRoles = userDTO.getRoles().stream()
-                    .map(roleDTO -> roleRepository.findByName(roleDTO.getName().toUpperCase())
-                            .orElseThrow(() -> new NotFoundException("Role with name: " + roleDTO.getName().toUpperCase() + " not found")))
-                    .collect(Collectors.toSet());
-        } else {
-            // Default role assignment when none provided
-            Role defaultRole = roleRepository.findByName("PARTICIPANT")
-                    .orElseThrow(() -> new NotFoundException("PARTICIPANT role not found"));
-            Set<Role> roles = new HashSet<>();
-            roles.add(defaultRole);
-            userRoles = roles;
-        }
-
-        user.setRoles(userRoles);
-
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
-
-        return Response.builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("User updated successfully by admin")
                 .build();
     }
 

@@ -41,6 +41,8 @@ public class UserDTO {
 
     private Set<RoleDTO> roles;
 
+    private List<String> roleNames;
+
     private MultipartFile profileImage;
 
     private LocalDateTime createdAt;

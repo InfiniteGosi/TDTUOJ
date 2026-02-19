@@ -17,7 +17,7 @@ import {
 import { Trophy, Star, Calendar, Mail, User, Award } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useMessage } from "../common/MessageDisplay";
-import AvatarUploadModal from "./AvatarUploadModal";
+import AvatarUploadModal from "../common/AvatarUploadModal";
 
 const ProfilePage = () => {
   const { username } = useParams();
