@@ -7,9 +7,12 @@ import com.oj.TDTUOJ.problem.dto.ProblemDTO;
 import com.oj.TDTUOJ.problem.entity.Problem;
 import com.oj.TDTUOJ.problem.repository.ProblemRepository;
 import com.oj.TDTUOJ.common.response.Response;
+import com.oj.TDTUOJ.problemTag.dto.TagDTO;
 import com.oj.TDTUOJ.testcase.dto.TestCaseDTO;
 import com.oj.TDTUOJ.testcase.entity.TestCase;
 import com.oj.TDTUOJ.testcase.repository.TestCaseRepository;
+import com.oj.TDTUOJ.user.entity.User;
+import com.oj.TDTUOJ.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -26,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,6 +39,8 @@ public class ProblemServiceImpl implements ProblemService {
     private final ProblemRepository problemRepository;
 
     private final TestCaseRepository testCaseRepository;
+
+    private final UserRepository userRepository;
 
     private final ModelMapper modelMapper;
 
@@ -67,7 +73,7 @@ public class ProblemServiceImpl implements ProblemService {
             problemPage = problemRepository.findAll(pageable);
         }
 
-        Page<ProblemDTO> pageDTO = problemPage.map(problem -> modelMapper.map(problem, ProblemDTO.class));
+        Page<ProblemDTO> pageDTO = problemPage.map(this::mapToResponseDTO);
 
         return Response.<Page<ProblemDTO>>builder()
                 .statusCode(HttpStatus.OK.value())
@@ -82,7 +88,7 @@ public class ProblemServiceImpl implements ProblemService {
         Problem problem = problemRepository.findBySlug(slug)
                 .orElseThrow(() -> new NotFoundException("Problem not found"));
 
-        ProblemDTO problemDTO = modelMapper.map(problem, ProblemDTO.class);
+        ProblemDTO problemDTO = mapToResponseDTO(problem);
 
         return Response.<ProblemDTO>builder()
                 .statusCode(HttpStatus.OK.value())
@@ -97,8 +103,7 @@ public class ProblemServiceImpl implements ProblemService {
         Problem problem = problemRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Problem not found"));
 
-        ProblemDTO problemDTO = modelMapper.map(problem, ProblemDTO.class);
-
+        ProblemDTO problemDTO = mapToResponseDTO(problem);
 
         return Response.<ProblemDTO>builder()
                 .statusCode(HttpStatus.OK.value())
@@ -127,6 +132,9 @@ public class ProblemServiceImpl implements ProblemService {
             String baseSlug = ProblemSlugUtils.generateSlug(problemDTO.getTitle());
             String uniqueSlug = generateUniqueSlug(baseSlug);
 
+            User author = userRepository.findById(problemDTO.getAuthorId())
+                    .orElseThrow(() -> new NotFoundException("Author not found with id: " + problemDTO.getAuthorId()));
+
             // Create Problem entity
             Problem problem = Problem.builder()
                     .title(problemDTO.getTitle())
@@ -134,6 +142,8 @@ public class ProblemServiceImpl implements ProblemService {
                     .point(problemDTO.getPoint())
                     .timeLimit(problemDTO.getTimeLimit())
                     .memoryLimit(problemDTO.getMemoryLimit())
+                    .author(author)
+                    .problemDifficulty(problemDTO.getProblemDifficulty())
                     .testCases(new ArrayList<>())
                     .build();
 
@@ -191,7 +201,7 @@ public class ProblemServiceImpl implements ProblemService {
             problem = problemRepository.save(problem);
 
             // Map to DTO for response
-            ProblemDTO responseProblemDTO = modelMapper.map(problem, ProblemDTO.class);
+            ProblemDTO responseProblemDTO = mapToResponseDTO(problem);
 
             return Response.<ProblemDTO>builder()
                     .statusCode(HttpStatus.CREATED.value())
@@ -212,6 +222,8 @@ public class ProblemServiceImpl implements ProblemService {
 
     @Override
     public Response<ProblemDTO> updateProblem(ProblemDTO problemDTO) {
+        log.info(problemDTO.toString());
+
         try {
             // Find existing problem
             Problem problem = problemRepository.findById(problemDTO.getId())
@@ -241,8 +253,6 @@ public class ProblemServiceImpl implements ProblemService {
             problem.setPoint(problemDTO.getPoint());
             problem.setTimeLimit(problemDTO.getTimeLimit());
             problem.setMemoryLimit(problemDTO.getMemoryLimit());
-
-
 
             // Create new base path with updated title
             String newSanitizedTitle = problemDTO.getTitle()
@@ -374,13 +384,24 @@ public class ProblemServiceImpl implements ProblemService {
                 }
             }
 
+            // Update author if provided
+            if (problemDTO.getAuthorId() != null) {
+                User author = userRepository.findById(problemDTO.getAuthorId())
+                        .orElseThrow(() -> new NotFoundException("Author not found with id: " + problemDTO.getAuthorId()));
+                problem.setAuthor(author);
+            }
+
+            // Update difficulty if provided
+            if (problemDTO.getProblemDifficulty() != null) {
+                problem.setProblemDifficulty(problemDTO.getProblemDifficulty());
+            }
+
             // Save updated problem
             problem.setUpdatedAt(LocalDateTime.now());
             problem = problemRepository.save(problem);
-            log.info("Problem {} updated successfully", problem.getId());
 
             // Map to DTO for response
-            ProblemDTO responseProblemDTO = modelMapper.map(problem, ProblemDTO.class);
+            ProblemDTO responseProblemDTO = mapToResponseDTO(problem);
 
             return Response.<ProblemDTO>builder()
                     .statusCode(HttpStatus.OK.value())
@@ -523,5 +544,57 @@ public class ProblemServiceImpl implements ProblemService {
         }
 
         return slug;
+    }
+
+    private ProblemDTO mapToResponseDTO(Problem problem) {
+        ProblemDTO dto = new ProblemDTO();
+        dto.setId(problem.getId());
+        dto.setTitle(problem.getTitle());
+        dto.setSlug(problem.getSlug());
+        dto.setIsPublic(problem.getIsPublic());
+        dto.setAuthorId(problem.getAuthor() != null ? problem.getAuthor().getId() : null);
+        dto.setAuthorUserName(problem.getAuthor() != null ? problem.getAuthor().getUsername() : null);
+        dto.setProblemDifficulty(problem.getProblemDifficulty());
+        dto.setStatementFileUrl(problem.getStatementFileUrl());
+        dto.setPoint(problem.getPoint());
+        dto.setTimeLimit(problem.getTimeLimit());
+        dto.setMemoryLimit(problem.getMemoryLimit());
+        dto.setCreatedAt(problem.getCreatedAt());
+        dto.setUpdatedAt(problem.getUpdatedAt());
+
+        // Map test cases
+        if (problem.getTestCases() != null) {
+            List<TestCaseDTO> testCaseDTOs = problem.getTestCases().stream()
+                    .map(this::mapTestCaseToDTO)
+                    .collect(Collectors.toList());
+            dto.setTestCases(testCaseDTOs);
+        }
+
+        // Map tags
+        if (problem.getTags() != null) {
+            Set<TagDTO> tagDTOs = problem.getTags().stream()
+                    .map(tag -> {
+                        TagDTO tagDTO = new TagDTO();
+                        tagDTO.setId(tag.getId());
+                        tagDTO.setName(tag.getName());
+                        return tagDTO;
+                    })
+                    .collect(Collectors.toSet());
+            dto.setTags(tagDTOs);
+        }
+
+        return dto;
+    }
+
+    private TestCaseDTO mapTestCaseToDTO(TestCase testCase) {
+        TestCaseDTO dto = new TestCaseDTO();
+        dto.setId(testCase.getId());
+        dto.setInputFileUrl(testCase.getInputFileUrl());
+        dto.setExpectedOutputFileUrl(testCase.getExpectedOutputFileUrl());
+        dto.setIsSample(testCase.isSample());
+        dto.setTimeLimit(testCase.getTimeLimit());
+        dto.setMemoryLimit(testCase.getMemoryLimit());
+        dto.setPoints(testCase.getPoints());
+        return dto;
     }
 }

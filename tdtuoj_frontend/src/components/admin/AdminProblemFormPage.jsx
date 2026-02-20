@@ -11,6 +11,8 @@ import {
   Heading,
   Card,
   IconButton,
+  NativeSelect,
+  Badge,
 } from "@chakra-ui/react";
 import {
   Plus,
@@ -20,6 +22,7 @@ import {
   Edit2,
   Eye,
   ArrowLeft,
+  User,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useMessage } from "../common/MessageDisplay";
@@ -48,6 +51,19 @@ Output
 101
 \`\`\``;
 
+const DIFFICULTY_OPTIONS = [
+  { value: "", label: "Select difficulty..." },
+  { value: "EASY", label: "Easy" },
+  { value: "MEDIUM", label: "Medium" },
+  { value: "HARD", label: "Hard" },
+];
+
+const DIFFICULTY_COLORS = {
+  EASY: "#38a169",
+  MEDIUM: "#d69e2e",
+  HARD: "#e53e3e",
+};
+
 const AdminProblemFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -55,7 +71,9 @@ const AdminProblemFormPage = () => {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
-  const [dataVersion, setDataVersion] = useState(0); // Track data refresh
+  const [dataVersion, setDataVersion] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [authorInfo, setAuthorInfo] = useState({ id: null, username: null });
 
   const [problemData, setProblemData] = useState({
     title: "",
@@ -63,11 +81,28 @@ const AdminProblemFormPage = () => {
     timeLimit: "",
     memoryLimit: "",
     statement: "",
+    problemDifficulty: "",
   });
 
   const [testCases, setTestCases] = useState([
     { input: "", expectedOutput: "" },
   ]);
+
+  // Fetch current logged-in user on mount
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const profile = await ApiService.getOwnProfile();
+        if (profile?.data?.id) {
+          setCurrentUserId(profile.data.id);
+        }
+      } catch (err) {
+        console.error("Failed to fetch current user:", err);
+        showMessage("Failed to fetch user profile", "error");
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   // Fetch problem data if editing
   useEffect(() => {
@@ -81,14 +116,17 @@ const AdminProblemFormPage = () => {
         if (response.statusCode === 200 && response.data) {
           const problem = response.data;
 
+          // Store author info for display
+          setAuthorInfo({
+            id: problem.authorId || null,
+            username: problem.authorUserName || null,
+          });
+
           // Fetch statement file
           let statementContent = "";
           if (problem.statementFileUrl) {
             try {
-              // Add timestamp to prevent caching
-              const statementUrl = `${
-                problem.statementFileUrl
-              }?t=${Date.now()}`;
+              const statementUrl = `${problem.statementFileUrl}?t=${Date.now()}`;
               const statementResponse = await fetch(statementUrl);
               statementContent = await statementResponse.text();
             } catch (err) {
@@ -97,16 +135,15 @@ const AdminProblemFormPage = () => {
             }
           }
 
-          // Set problem data
           setProblemData({
             title: problem.title || "",
             point: problem.point || "",
             timeLimit: problem.timeLimit || "",
             memoryLimit: problem.memoryLimit || "",
             statement: statementContent,
+            problemDifficulty: problem.problemDifficulty || "",
           });
 
-          // Fetch and populate test cases
           if (problem.testCases && problem.testCases.length > 0) {
             const loadedTestCases = await Promise.all(
               problem.testCases.map(async (tc, index) => {
@@ -115,16 +152,12 @@ const AdminProblemFormPage = () => {
 
                 try {
                   if (tc.inputFileUrl) {
-                    // Add timestamp to prevent caching
                     const inputUrl = `${tc.inputFileUrl}?t=${Date.now()}`;
                     const inputResponse = await fetch(inputUrl);
                     input = await inputResponse.text();
                   }
                   if (tc.expectedOutputFileUrl) {
-                    // Add timestamp to prevent caching
-                    const outputUrl = `${
-                      tc.expectedOutputFileUrl
-                    }?t=${Date.now()}`;
+                    const outputUrl = `${tc.expectedOutputFileUrl}?t=${Date.now()}`;
                     const outputResponse = await fetch(outputUrl);
                     expectedOutput = await outputResponse.text();
                   }
@@ -161,7 +194,7 @@ const AdminProblemFormPage = () => {
     };
 
     fetchProblemData();
-  }, [id, dataVersion]); // Re-fetch when dataVersion changes
+  }, [id, dataVersion]);
 
   const handleProblemChange = (field, value) => {
     setProblemData((prev) => ({ ...prev, [field]: value }));
@@ -209,6 +242,10 @@ const AdminProblemFormPage = () => {
       showMessage("Problem statement is required", "error");
       return false;
     }
+    if (!problemData.problemDifficulty) {
+      showMessage("Problem difficulty is required", "error");
+      return false;
+    }
 
     for (let i = 0; i < testCases.length; i++) {
       if (!testCases[i].input.trim()) {
@@ -228,6 +265,11 @@ const AdminProblemFormPage = () => {
   };
 
   const handleSubmit = async () => {
+    if (!currentUserId) {
+      showMessage("User profile not loaded. Please try again.", "error");
+      return;
+    }
+
     if (!validateForm()) {
       return;
     }
@@ -237,13 +279,13 @@ const AdminProblemFormPage = () => {
     try {
       const formData = new FormData();
 
-      // Add problem data
       formData.append("title", problemData.title);
       formData.append("point", problemData.point);
       formData.append("timeLimit", problemData.timeLimit);
       formData.append("memoryLimit", problemData.memoryLimit);
+      formData.append("authorId", currentUserId);
+      formData.append("problemDifficulty", problemData.problemDifficulty);
 
-      // Convert statement to .md file
       const statementFile = stringToFile(
         problemData.statement,
         "statement.md",
@@ -251,9 +293,7 @@ const AdminProblemFormPage = () => {
       );
       formData.append("statementFile", statementFile);
 
-      // Convert test cases to .txt files
       testCases.forEach((testCase, index) => {
-        // Include test case ID if it exists (for updates)
         if (testCase.id) {
           formData.append(`testCases[${index}].id`, testCase.id);
         }
@@ -276,11 +316,9 @@ const AdminProblemFormPage = () => {
       let response;
 
       if (id) {
-        // Update existing problem - add id to formData
         formData.append("id", id);
         response = await ApiService.updateProblem(formData);
       } else {
-        // Create new problem
         response = await ApiService.createProblem(formData);
       }
 
@@ -292,13 +330,10 @@ const AdminProblemFormPage = () => {
         );
 
         if (id) {
-          // If updating, refresh the data to show the latest changes
-          // Wait a bit for S3 to propagate changes
           setTimeout(() => {
             setDataVersion((prev) => prev + 1);
           }, 1000);
         } else {
-          // If creating, navigate to problems list or reset form
           setTimeout(() => {
             navigate("/admin/problems");
           }, 1500);
@@ -381,9 +416,42 @@ const AdminProblemFormPage = () => {
           <VStack gap={6} align="stretch">
             {/* Problem Details Section */}
             <Box borderBottomWidth="1px" pb={6}>
-              <Heading size="xl" color="gray.700" mb={4}>
-                Problem Details
-              </Heading>
+              <HStack justify="space-between" align="center" mb={4}>
+                <Heading size="xl" color="gray.700">
+                  Problem Details
+                </Heading>
+
+                {/* Author info — only shown when editing */}
+                {id && authorInfo.id && (
+                  <HStack
+                    gap={2}
+                    bg="purple.50"
+                    border="1px solid"
+                    borderColor="purple.200"
+                    borderRadius="lg"
+                    px={4}
+                    py={2}
+                  >
+                    <User size={16} color="#667eea" />
+                    <Text fontSize="sm" color="gray.600">
+                      Author:
+                    </Text>
+                    <Badge
+                      colorScheme="purple"
+                      variant="subtle"
+                      fontSize="sm"
+                      px={2}
+                      py={0.5}
+                      borderRadius="md"
+                    >
+                      {authorInfo.username}
+                    </Badge>
+                    <Text fontSize="xs" color="gray.400">
+                      (ID: {authorInfo.id})
+                    </Text>
+                  </HStack>
+                )}
+              </HStack>
 
               <VStack gap={4} align="stretch">
                 <Box>
@@ -467,6 +535,52 @@ const AdminProblemFormPage = () => {
                       min={1}
                       size="lg"
                     />
+                  </Box>
+
+                  <Box flex={1}>
+                    <Text
+                      fontSize="sm"
+                      fontWeight="medium"
+                      color="gray.700"
+                      mb={2}
+                    >
+                      Difficulty *
+                    </Text>
+                    <NativeSelect.Root size="lg">
+                      <NativeSelect.Field
+                        value={problemData.problemDifficulty}
+                        onChange={(e) =>
+                          handleProblemChange(
+                            "problemDifficulty",
+                            e.target.value,
+                          )
+                        }
+                        color={
+                          problemData.problemDifficulty
+                            ? DIFFICULTY_COLORS[problemData.problemDifficulty]
+                            : "gray.500"
+                        }
+                        fontWeight={
+                          problemData.problemDifficulty ? "semibold" : "normal"
+                        }
+                      >
+                        {DIFFICULTY_OPTIONS.map((opt) => (
+                          <option
+                            key={opt.value}
+                            value={opt.value}
+                            style={{
+                              color: opt.value
+                                ? DIFFICULTY_COLORS[opt.value]
+                                : "inherit",
+                              fontWeight: opt.value ? "600" : "normal",
+                            }}
+                          >
+                            {opt.label}
+                          </option>
+                        ))}
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
                   </Box>
                 </HStack>
 

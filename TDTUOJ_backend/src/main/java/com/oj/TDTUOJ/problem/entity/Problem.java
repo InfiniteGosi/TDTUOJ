@@ -44,7 +44,7 @@ public class Problem {
     @JsonIgnore  // Prevent circular reference
     private User author;
 
-    @Enumerated(EnumType.STRING) // ✅ Added this!
+    @Enumerated(EnumType.STRING) // Added this!
     @Column(name = "problem_difficulty", length = 20)
     private ProblemDifficulty problemDifficulty;
 

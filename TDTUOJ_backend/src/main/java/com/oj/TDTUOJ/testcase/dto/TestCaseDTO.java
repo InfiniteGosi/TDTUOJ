@@ -16,7 +16,7 @@ public class TestCaseDTO {
 
     private String expectedOutputFileUrl; // e.g. https://s3.amazonaws.com/problems/1/testcases/output/1.txt
 
-    private boolean isSample;
+    private Boolean isSample;
 
     private Double timeLimit;  // in seconds
 

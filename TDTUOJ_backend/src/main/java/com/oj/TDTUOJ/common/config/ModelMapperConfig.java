@@ -20,24 +20,8 @@ public class ModelMapperConfig {
                 .setFieldAccessLevel(org.modelmapper.config.Configuration.AccessLevel.PRIVATE)
                 .setMatchingStrategy(MatchingStrategies.STANDARD);
 
-        // Configure Problem -> ProblemDTO mapping
-        TypeMap<Problem, ProblemDTO> problemTypeMap =
-                modelMapper.createTypeMap(Problem.class, ProblemDTO.class);
-
-        // Custom mappings
-        problemTypeMap.addMappings(mapper -> {
-            // Map author fields
-            mapper.map(src -> src.getAuthor() != null ? src.getAuthor().getId() : null,
-                    ProblemDTO::setAuthorId);
-            mapper.map(src -> src.getAuthor() != null ? src.getAuthor().getUsername() : null,
-                    ProblemDTO::setAuthorUsername);
-            mapper.map(src -> src.getAuthor() != null ? src.getAuthor().getName() : null,
-                    ProblemDTO::setAuthorName);
-        });
-
-        // Configure Tag -> TagDTO mapping
-        TypeMap<Tag, TagDTO> tagTypeMap =
-                modelMapper.createTypeMap(Tag.class, TagDTO.class);
+        // Tag -> TagDTO (still using ModelMapper since Tag has no lazy-loaded fields)
+        modelMapper.createTypeMap(Tag.class, TagDTO.class);
 
         return modelMapper;
     }

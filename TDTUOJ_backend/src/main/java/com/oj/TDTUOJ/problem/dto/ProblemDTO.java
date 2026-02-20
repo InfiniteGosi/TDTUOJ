@@ -27,9 +27,7 @@ public class ProblemDTO {
 
     private Long authorId;
 
-    private String authorUsername;
-
-    private String authorName;
+    private String authorUserName;
 
     private ProblemDifficulty problemDifficulty;
 
