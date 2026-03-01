@@ -1,10 +1,12 @@
 package com.oj.TDTUOJ.problemTag.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.oj.TDTUOJ.problem.entity.Problem;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Data
@@ -20,7 +22,5 @@ public class Tag {
     @Column(unique = true)
     private String name;
 
-    @Column(unique = true)
-    private String slug;
-
+    private Boolean isActive;
 }

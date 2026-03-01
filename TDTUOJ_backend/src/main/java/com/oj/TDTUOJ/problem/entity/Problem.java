@@ -6,10 +6,7 @@ import com.oj.TDTUOJ.problemTag.entity.Tag;
 import com.oj.TDTUOJ.testcase.entity.TestCase;
 import com.oj.TDTUOJ.user.entity.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -67,6 +64,8 @@ public class Problem {
     )
     @JsonIgnore
     @Builder.Default
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<Tag> tags = new HashSet<>();
 
     @CreationTimestamp

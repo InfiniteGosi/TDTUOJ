@@ -43,6 +43,8 @@ public class ProblemDTO {
 
     private Set<TagDTO> tags;
 
+    private List<String> tagNames;
+
     private MultipartFile statementFile;
 
     private LocalDateTime createdAt;

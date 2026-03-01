@@ -19,13 +19,13 @@ public class RoleController {
     private final RoleService roleService;
 
     @PostMapping
-    public ResponseEntity<Response<RoleDTO>> createRole(@RequestBody @Valid RoleDTO roleDTo) {
-        return ResponseEntity.ok(roleService.createRole(roleDTo));
+    public ResponseEntity<Response<RoleDTO>> createRole(@RequestBody @Valid RoleDTO roleDTO) {
+        return ResponseEntity.ok(roleService.createRole(roleDTO));
     }
 
     @PutMapping
-    public ResponseEntity<Response<RoleDTO>> updateRole(@RequestBody @Valid RoleDTO roleDTo) {
-        return ResponseEntity.ok(roleService.updateRole(roleDTo));
+    public ResponseEntity<Response<RoleDTO>> updateRole(@RequestBody @Valid RoleDTO roleDTO) {
+        return ResponseEntity.ok(roleService.updateRole(roleDTO));
     }
 
     @GetMapping

@@ -244,6 +244,78 @@ export default class ApiService {
     return resp.data;
   }
 
+  /******************* Tags **************************** */
+
+  static async getTagById(id) {
+    const resp = await axios.get(`${this.BASE_URL}/problem-tags/${id}`);
+    return resp.data;
+  }
+
+  static async getAllTags({
+    limit = 10,
+    offset = 0,
+    sortField = "id",
+    direction = "asc",
+    name = "",
+  } = {}) {
+    const url = `${this.BASE_URL}/problem-tags`;
+
+    try {
+      const resp = await axios.get(url, {
+        headers: this.getHeader(),
+        params: {
+          limit,
+          offset,
+          sortField,
+          direction,
+          name,
+        },
+      });
+      return resp.data;
+    } catch (error) {
+      console.error("Error fetching tags:", error);
+      throw error;
+    }
+  }
+
+  static async createTag(data) {
+    const resp = await axios.post(`${this.BASE_URL}/problem-tags`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return resp.data;
+  }
+
+  static async upddateTag(data) {
+    const resp = await axios.put(`${this.BASE_URL}/problem-tags`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return resp.data;
+  }
+
+  static async deleteTag(id) {
+    const resp = await axios.delete(`${this.BASE_URL}/problem-tags/${id}`, {
+      headers: this.getHeader(),
+    });
+    return resp.data;
+  }
+
+  static async toggleTagActive(id) {
+    console.log(localStorage.getItem("token"));
+    const resp = await axios.patch(
+      `${this.BASE_URL}/problem-tags/${id}/toggle-active`,
+      {
+        headers: this.getHeader(),
+      },
+    );
+    return resp.data;
+  }
+
+  /******************* Judge0 **************************** */
+
   static async executeCode(languageId, sourceCode, stdin, expectedOutput) {
     const resp = await axios.post(
       `${this.JUDGE0_BASE_URL}/submissions/?base64_encoded=false&wait=true`,

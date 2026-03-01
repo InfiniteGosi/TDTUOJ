@@ -8,11 +8,14 @@ import com.oj.TDTUOJ.problem.entity.Problem;
 import com.oj.TDTUOJ.problem.repository.ProblemRepository;
 import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.problemTag.dto.TagDTO;
+import com.oj.TDTUOJ.problemTag.entity.Tag;
+import com.oj.TDTUOJ.problemTag.repository.TagRepository;
 import com.oj.TDTUOJ.testcase.dto.TestCaseDTO;
 import com.oj.TDTUOJ.testcase.entity.TestCase;
 import com.oj.TDTUOJ.testcase.repository.TestCaseRepository;
 import com.oj.TDTUOJ.user.entity.User;
 import com.oj.TDTUOJ.user.repository.UserRepository;
+import io.micrometer.core.instrument.Tags;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -26,10 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,6 +45,7 @@ public class ProblemServiceImpl implements ProblemService {
     private final ModelMapper modelMapper;
 
     private final AwsS3Service awsS3Service;
+    private final TagRepository tagRepository;
 
     @Override
     public Response<Page<ProblemDTO>> getAllProblems(Integer limit,
@@ -395,6 +396,29 @@ public class ProblemServiceImpl implements ProblemService {
             if (problemDTO.getProblemDifficulty() != null) {
                 problem.setProblemDifficulty(problemDTO.getProblemDifficulty());
             }
+
+            Set<Tag> problemTags;
+            List<String> tagNames = problemDTO.getTagNames();
+
+            if (tagNames != null && !tagNames.isEmpty()) {
+                problemTags = tagNames.stream()
+                        .map(name -> tagRepository.findByName(name.toUpperCase())
+                                .orElseThrow(() -> new NotFoundException("Tag not found: " + name.toUpperCase())))
+                        .collect(Collectors.toSet());
+            }
+            else if (problemDTO.getTags() != null && !problemDTO.getTags().isEmpty()) {
+                problemTags = problemDTO.getTags().stream()
+                        .map(roleDTO -> tagRepository.findByName(roleDTO.getName().toUpperCase())
+                                .orElseThrow(() -> new NotFoundException("Tag not found: " + roleDTO.getName().toUpperCase())))
+                        .collect(Collectors.toSet());
+            }
+            else {
+                Tag defaultTag = tagRepository.findByName("Array")
+                        .orElseThrow(() -> new NotFoundException("Tag not found"));
+                problemTags = new HashSet<>(Set.of(defaultTag));
+            }
+
+            problem.setTags(problemTags);
 
             // Save updated problem
             problem.setUpdatedAt(LocalDateTime.now());

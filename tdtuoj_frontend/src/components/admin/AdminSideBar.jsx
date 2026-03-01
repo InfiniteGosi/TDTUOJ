@@ -2,7 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faList,
-  faUtensils,
+  faTags,
   faShoppingBag,
   faCreditCard,
   faUser,
@@ -33,13 +33,15 @@ const AdminSidebar = () => {
           </li>
           <li>
             <NavLink
-              to="/admin/menu-items"
+              to="/admin/problem-tags"
               className={
-                location.pathname.includes("/admin/menu-items") ? "active" : ""
+                location.pathname.includes("/admin/problem-tags")
+                  ? "active"
+                  : ""
               }
             >
-              <FontAwesomeIcon icon={faUtensils} />
-              <span>Menu Items</span>
+              <FontAwesomeIcon icon={faTags} />
+              <span>Prolem Tags</span>
             </NavLink>
           </li>
           <li>

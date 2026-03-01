@@ -14,7 +14,7 @@ public interface ProblemService {
                                               Integer offset,
                                               String sortField,
                                               String direction,
-                                              String name);
+                                              String title);
 
     Response<ProblemDTO> getProblemBySlug(String slug);
 }

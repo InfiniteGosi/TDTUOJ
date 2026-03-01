@@ -17,6 +17,7 @@ import EditProfilePage from "./components/profile/EditProfilePage";
 import ChangePasswordPage from "./components/profile/ChangePasswordPage";
 import AdminUserPage from "./components/admin/AdminUserPage";
 import AdminEditUserPage from "./components/admin/AdminEditUserPage";
+import AdminProblemTagPage from "./components/admin/AdminProblemTagPage";
 
 function App() {
   return (
@@ -45,6 +46,8 @@ function App() {
                   path="problems/edit/:id"
                   element={<AdminProblemFormPage />}
                 />
+
+                <Route path="problem-tags" element={<AdminProblemTagPage />} />
 
                 <Route path="users" element={<AdminUserPage />} />
                 <Route
