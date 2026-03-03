@@ -281,15 +281,17 @@ export default class ApiService {
   static async createTag(data) {
     const resp = await axios.post(`${this.BASE_URL}/problem-tags`, data, {
       headers: {
+        ...this.getHeader(),
         "Content-Type": "application/json",
       },
     });
     return resp.data;
   }
 
-  static async upddateTag(data) {
+  static async updateTag(data) {
     const resp = await axios.put(`${this.BASE_URL}/problem-tags`, data, {
       headers: {
+        ...this.getHeader(),
         "Content-Type": "application/json",
       },
     });
@@ -298,18 +300,18 @@ export default class ApiService {
 
   static async deleteTag(id) {
     const resp = await axios.delete(`${this.BASE_URL}/problem-tags/${id}`, {
-      headers: this.getHeader(),
+      headers: {
+        ...this.getHeader(),
+      },
     });
     return resp.data;
   }
 
   static async toggleTagActive(id) {
-    console.log(localStorage.getItem("token"));
     const resp = await axios.patch(
-      `${this.BASE_URL}/problem-tags/${id}/toggle-active`,
-      {
-        headers: this.getHeader(),
-      },
+      `${this.BASE_URL}/problem-tags/toggle-active/${id}`,
+      null, // ← empty body
+      { headers: this.getHeader() }, // ← config as 3rd argument
     );
     return resp.data;
   }

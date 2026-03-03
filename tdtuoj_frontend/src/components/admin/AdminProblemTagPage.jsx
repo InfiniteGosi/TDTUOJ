@@ -29,6 +29,7 @@ import {
 import ApiService from "../../services/ApiService";
 import { useConfirmDialog } from "../common/ConfirmDialog";
 import { useMessage } from "../common/MessageDisplay";
+import TagFormDialog from "./TagFormDialog";
 
 const AdminProblemTagPage = () => {
   const { ConfirmDialog, showConfirm } = useConfirmDialog();
@@ -37,6 +38,8 @@ const AdminProblemTagPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [togglingIds, setTogglingIds] = useState(new Set());
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingTag, setEditingTag] = useState(null);
   const [pagination, setPagination] = useState({
     limit: 10,
     offset: 0,
@@ -85,6 +88,23 @@ const AdminProblemTagPage = () => {
     }, 500);
     return () => clearTimeout(delaySearch);
   }, [searchQuery]);
+
+  const handleAddTag = () => {
+    setEditingTag(null);
+    setIsFormOpen(true);
+  };
+
+  const handleEditTag = (tag) => {
+    setEditingTag(tag);
+    setIsFormOpen(true);
+  };
+
+  const handleFormSuccess = (message) => {
+    showMessage(message, "success");
+    setIsFormOpen(false);
+    setEditingTag(null);
+    fetchTags();
+  };
 
   const handleToggleActive = async (id) => {
     setTogglingIds((prev) => new Set(prev).add(id));
@@ -184,7 +204,7 @@ const AdminProblemTagPage = () => {
                 {pagination.totalElements === 1 ? "tag" : "tags"}
               </Badge>
             </HStack>
-            <Button colorPalette="purple" size="lg">
+            <Button colorPalette="purple" size="lg" onClick={handleAddTag}>
               <Plus size={20} />
               Add Tag
             </Button>
@@ -192,6 +212,17 @@ const AdminProblemTagPage = () => {
 
           <MessageDisplay />
           <ConfirmDialog />
+
+          <TagFormDialog
+            isOpen={isFormOpen}
+            tag={editingTag}
+            onSuccess={handleFormSuccess}
+            onError={(msg) => showMessage(msg, "error")}
+            onClose={() => {
+              setIsFormOpen(false);
+              setEditingTag(null);
+            }}
+          />
 
           {/* Search and Filters */}
           <HStack gap={4}>
@@ -379,6 +410,7 @@ const AdminProblemTagPage = () => {
                             size="sm"
                             colorPalette="green"
                             variant="ghost"
+                            onClick={() => handleEditTag(tag)}
                             title="Edit Tag"
                           >
                             <Edit size={18} />

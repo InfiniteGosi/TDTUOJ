@@ -50,7 +50,7 @@ public class TagController {
         return ResponseEntity.ok(tagService.deleteTag(id));
     }
 
-    @PatchMapping("/{id}/toggle-active")
+    @PatchMapping("/toggle-active/{id}")
     public ResponseEntity<Response<TagDTO>> toggleTagActive(@PathVariable Long id) {
         return ResponseEntity.ok(tagService.toggleTagActive(id));
     }
