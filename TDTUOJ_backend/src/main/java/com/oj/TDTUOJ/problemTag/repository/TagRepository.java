@@ -8,7 +8,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface TagRepository extends JpaRepository<Tag, Long> {
-    Boolean existsByName(String name);
+    boolean existsByName(String name);
+
     Optional<Tag> findByName(String name);
+
+    /**
+     * Case-insensitive name lookup — used when resolving tag names submitted
+     * by the frontend so that "array", "Array", and "ARRAY" all resolve to
+     * the same stored tag regardless of how it was saved.
+     */
+    Optional<Tag> findByNameIgnoreCase(String name);
+
     Page<Tag> findByNameContainingIgnoreCase(String name, Pageable pageable);
 }

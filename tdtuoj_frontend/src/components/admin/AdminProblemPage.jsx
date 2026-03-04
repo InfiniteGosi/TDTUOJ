@@ -11,7 +11,8 @@ import {
   Spinner,
   Input,
   Button,
-  IconButton,
+  Wrap,
+  WrapItem,
 } from "@chakra-ui/react";
 import { Table } from "@chakra-ui/react";
 import {
@@ -25,6 +26,9 @@ import {
   Plus,
   Edit,
   Trash2,
+  Tag as TagIcon,
+  X,
+  AlertTriangle,
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useConfirmDialog } from "../common/ConfirmDialog";
@@ -45,7 +49,29 @@ const AdminProblemPage = () => {
   });
   const [sortField, setSortField] = useState("id");
   const [direction, setDirection] = useState("asc");
+
+  // Tag filter state
+  const [availableTags, setAvailableTags] = useState([]);
+  const [selectedTagNames, setSelectedTagNames] = useState([]);
+  const [tagSearchQuery, setTagSearchQuery] = useState("");
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
+
   const navigate = useNavigate();
+
+  // Fetch only active tags for the filter dropdown
+  const fetchActiveTags = async () => {
+    try {
+      const response = await ApiService.getAllTags({ limit: 200, offset: 0 });
+      if (response.statusCode === 200) {
+        const active = (response.data.content || []).filter(
+          (t) => t.isActive === true,
+        );
+        setAvailableTags(active);
+      }
+    } catch (err) {
+      console.error("Failed to fetch tags:", err);
+    }
+  };
 
   const fetchProblems = async () => {
     try {
@@ -56,6 +82,7 @@ const AdminProblemPage = () => {
         sortField,
         direction,
         title: searchQuery,
+        tags: selectedTagNames,
       });
 
       if (response.statusCode === 200) {
@@ -75,26 +102,50 @@ const AdminProblemPage = () => {
   };
 
   useEffect(() => {
-    fetchProblems();
-  }, [pagination.limit, pagination.offset, sortField, direction]);
+    fetchActiveTags();
+  }, []);
 
-  // Debounced search
   useEffect(() => {
-    const delaySearch = setTimeout(() => {
+    fetchProblems();
+  }, [
+    pagination.limit,
+    pagination.offset,
+    sortField,
+    direction,
+    selectedTagNames,
+  ]);
+
+  // Debounced title search
+  useEffect(() => {
+    const delay = setTimeout(() => {
       setPagination((prev) => ({ ...prev, offset: 0 }));
       fetchProblems();
     }, 500);
-
-    return () => clearTimeout(delaySearch);
+    return () => clearTimeout(delay);
   }, [searchQuery]);
 
-  const handleAddProblem = () => {
-    navigate("/admin/problems/new");
+  const toggleTag = (tagName) => {
+    setSelectedTagNames((prev) =>
+      prev.includes(tagName)
+        ? prev.filter((n) => n !== tagName)
+        : [...prev, tagName],
+    );
+    setPagination((prev) => ({ ...prev, offset: 0 }));
   };
 
-  const handleEditProblem = (id) => {
-    navigate(`/admin/problems/edit/${id}`);
+  const clearTagFilters = () => {
+    setSelectedTagNames([]);
+    setPagination((prev) => ({ ...prev, offset: 0 }));
   };
+
+  const filteredDropdownTags = availableTags.filter(
+    (t) =>
+      t.name.toLowerCase().includes(tagSearchQuery.toLowerCase()) &&
+      !selectedTagNames.includes(t.name),
+  );
+
+  const handleAddProblem = () => navigate("/admin/problems/new");
+  const handleEditProblem = (id) => navigate(`/admin/problems/edit/${id}`);
 
   const handleDeleteProblem = (id) => {
     showConfirm(
@@ -114,17 +165,14 @@ const AdminProblemPage = () => {
     );
   };
 
-  const handlePageChange = (newOffset) => {
+  const handlePageChange = (newOffset) =>
     setPagination((prev) => ({ ...prev, offset: newOffset }));
-  };
-
-  const handleLimitChange = (newLimit) => {
+  const handleLimitChange = (newLimit) =>
     setPagination((prev) => ({
       ...prev,
       limit: parseInt(newLimit),
       offset: 0,
     }));
-  };
 
   const goToFirstPage = () => handlePageChange(0);
   const goToLastPage = () =>
@@ -141,6 +189,10 @@ const AdminProblemPage = () => {
 
   const canGoPrevious = pagination.currentPage > 0;
   const canGoNext = pagination.currentPage < pagination.totalPages - 1;
+
+  // Returns the inactive tags on a problem (disabled or orphaned after deletion sync)
+  const getInactiveTags = (problem) =>
+    (problem.tags || []).filter((t) => t.isActive === false);
 
   if (loading && problems.length === 0) {
     return (
@@ -159,7 +211,7 @@ const AdminProblemPage = () => {
     <Box minH="100vh" bg="gray.50" py={8}>
       <Container maxW="container.xl">
         <VStack align="stretch" gap={6}>
-          {/* Header with Add Button */}
+          {/* Header */}
           <HStack justify="space-between" align="center">
             <HStack gap={3}>
               <Heading size="2xl" color="gray.800">
@@ -189,72 +241,193 @@ const AdminProblemPage = () => {
           <MessageDisplay />
           <ConfirmDialog />
 
-          {/* Search and Filters */}
-          <HStack gap={4}>
-            <Box flex={1} bg="white" p={4} borderRadius="lg" boxShadow="sm">
-              <Box position="relative" w="full">
-                <Box
-                  position="absolute"
-                  left={3}
-                  top="50%"
-                  transform="translateY(-50%)"
-                  zIndex={2}
-                >
-                  <Search size={20} color="#9CA3AF" />
+          {/* Search, Sort, and Tag Filter Row */}
+          <VStack align="stretch" gap={3}>
+            <HStack gap={4}>
+              {/* Title search */}
+              <Box flex={1} bg="white" p={4} borderRadius="lg" boxShadow="sm">
+                <Box position="relative" w="full">
+                  <Box
+                    position="absolute"
+                    left={3}
+                    top="50%"
+                    transform="translateY(-50%)"
+                    zIndex={2}
+                  >
+                    <Search size={20} color="#9CA3AF" />
+                  </Box>
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by problem title..."
+                    size="lg"
+                    pl={10}
+                    borderColor="gray.300"
+                    _hover={{ borderColor: "purple.400" }}
+                    _focus={{
+                      borderColor: "purple.500",
+                      boxShadow: "0 0 0 1px #805AD5",
+                    }}
+                  />
                 </Box>
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by problem title..."
-                  size="lg"
-                  pl={10}
-                  borderColor="gray.300"
-                  _hover={{ borderColor: "purple.400" }}
-                  _focus={{
-                    borderColor: "purple.500",
-                    boxShadow: "0 0 0 1px #805AD5",
-                  }}
-                />
               </Box>
-            </Box>
 
+              {/* Sort */}
+              <Box bg="white" p={4} borderRadius="lg" boxShadow="sm">
+                <HStack gap={2}>
+                  <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                    Sort:
+                  </Text>
+                  <select
+                    value={sortField}
+                    onChange={(e) => setSortField(e.target.value)}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #E2E8F0",
+                      fontSize: "14px",
+                      width: "120px",
+                    }}
+                  >
+                    <option value="id">ID</option>
+                    <option value="title">Title</option>
+                    <option value="point">Points</option>
+                  </select>
+                  <select
+                    value={direction}
+                    onChange={(e) => setDirection(e.target.value)}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #E2E8F0",
+                      fontSize: "14px",
+                      width: "100px",
+                    }}
+                  >
+                    <option value="asc">Asc</option>
+                    <option value="desc">Desc</option>
+                  </select>
+                </HStack>
+              </Box>
+            </HStack>
+
+            {/* Tag filter */}
             <Box bg="white" p={4} borderRadius="lg" boxShadow="sm">
-              <HStack gap={2}>
-                <Text fontSize="sm" fontWeight="medium" color="gray.700">
-                  Sort:
-                </Text>
-                <select
-                  value={sortField}
-                  onChange={(e) => setSortField(e.target.value)}
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid #E2E8F0",
-                    fontSize: "14px",
-                    width: "120px",
-                  }}
-                >
-                  <option value="id">ID</option>
-                  <option value="title">Title</option>
-                  <option value="point">Points</option>
-                </select>
-                <select
-                  value={direction}
-                  onChange={(e) => setDirection(e.target.value)}
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid #E2E8F0",
-                    fontSize: "14px",
-                    width: "100px",
-                  }}
-                >
-                  <option value="asc">Asc</option>
-                  <option value="desc">Desc</option>
-                </select>
+              <HStack gap={3} align="flex-start" flexWrap="wrap">
+                <HStack gap={1} minW="fit-content" mt={1}>
+                  <TagIcon size={16} color="#805AD5" />
+                  <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                    Filter by tags:
+                  </Text>
+                </HStack>
+
+                {/* Selected tag chips */}
+                <Wrap flex={1}>
+                  {selectedTagNames.map((name) => (
+                    <WrapItem key={name}>
+                      <Badge
+                        colorScheme="purple"
+                        px={2}
+                        py={1}
+                        borderRadius="full"
+                        display="flex"
+                        alignItems="center"
+                        gap={1}
+                        cursor="pointer"
+                        onClick={() => toggleTag(name)}
+                      >
+                        {name}
+                        <X size={12} />
+                      </Badge>
+                    </WrapItem>
+                  ))}
+
+                  {/* Tag picker */}
+                  <WrapItem position="relative">
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      colorScheme="purple"
+                      leftIcon={<Plus size={12} />}
+                      onClick={() => setShowTagDropdown((v) => !v)}
+                    >
+                      Add tag
+                    </Button>
+
+                    {showTagDropdown && (
+                      <Box
+                        position="absolute"
+                        top="110%"
+                        left={0}
+                        zIndex={20}
+                        bg="white"
+                        border="1px solid"
+                        borderColor="gray.200"
+                        borderRadius="lg"
+                        boxShadow="lg"
+                        w="220px"
+                        maxH="260px"
+                        overflowY="auto"
+                      >
+                        <Box p={2} borderBottomWidth="1px">
+                          <Input
+                            size="sm"
+                            placeholder="Search tags..."
+                            value={tagSearchQuery}
+                            onChange={(e) => setTagSearchQuery(e.target.value)}
+                            autoFocus
+                          />
+                        </Box>
+                        {filteredDropdownTags.length === 0 ? (
+                          <Box p={3}>
+                            <Text
+                              fontSize="sm"
+                              color="gray.400"
+                              textAlign="center"
+                            >
+                              No active tags found
+                            </Text>
+                          </Box>
+                        ) : (
+                          filteredDropdownTags.map((tag) => (
+                            <Box
+                              key={tag.id}
+                              px={3}
+                              py={2}
+                              cursor="pointer"
+                              _hover={{ bg: "purple.50" }}
+                              onClick={() => {
+                                toggleTag(tag.name);
+                                setTagSearchQuery("");
+                                setShowTagDropdown(false);
+                              }}
+                            >
+                              <Text fontSize="sm" color="gray.700">
+                                {tag.name}
+                              </Text>
+                            </Box>
+                          ))
+                        )}
+                      </Box>
+                    )}
+                  </WrapItem>
+
+                  {selectedTagNames.length > 0 && (
+                    <WrapItem>
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        colorScheme="gray"
+                        onClick={clearTagFilters}
+                      >
+                        Clear all
+                      </Button>
+                    </WrapItem>
+                  )}
+                </Wrap>
               </HStack>
             </Box>
-          </HStack>
+          </VStack>
 
           {/* Table Card */}
           <Box
@@ -263,6 +436,8 @@ const AdminProblemPage = () => {
             boxShadow="md"
             overflow="hidden"
             position="relative"
+            // Close tag dropdown when clicking outside
+            onClick={() => showTagDropdown && setShowTagDropdown(false)}
           >
             {loading && (
               <Box
@@ -284,27 +459,32 @@ const AdminProblemPage = () => {
             <Table.Root variant="line" size="lg">
               <Table.Header bg="purple.50">
                 <Table.Row>
-                  <Table.ColumnHeader textAlign="center" w="10%">
+                  <Table.ColumnHeader textAlign="center" w="8%">
                     <Text fontWeight="bold" color="purple.700">
                       ID
                     </Text>
                   </Table.ColumnHeader>
-                  <Table.ColumnHeader w="40%">
+                  <Table.ColumnHeader w="30%">
                     <Text fontWeight="bold" color="purple.700">
                       Problem
                     </Text>
                   </Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="center" w="15%">
+                  <Table.ColumnHeader w="25%">
+                    <Text fontWeight="bold" color="purple.700">
+                      Tags
+                    </Text>
+                  </Table.ColumnHeader>
+                  <Table.ColumnHeader textAlign="center" w="12%">
                     <Text fontWeight="bold" color="purple.700">
                       Points
                     </Text>
                   </Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="center" w="15%">
+                  <Table.ColumnHeader textAlign="center" w="12%">
                     <Text fontWeight="bold" color="purple.700">
                       Time Limit
                     </Text>
                   </Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="center" w="20%">
+                  <Table.ColumnHeader textAlign="center" w="13%">
                     <Text fontWeight="bold" color="purple.700">
                       Actions
                     </Text>
@@ -314,87 +494,157 @@ const AdminProblemPage = () => {
 
               <Table.Body>
                 {problems.length > 0 ? (
-                  problems.map((problem, index) => (
-                    <Table.Row
-                      key={problem.id}
-                      _hover={{ bg: "purple.50" }}
-                      transition="all 0.2s"
-                      bg={index % 2 === 0 ? "white" : "gray.50"}
-                    >
-                      {/* Problem ID */}
-                      <Table.Cell textAlign="center">
-                        <Badge
-                          colorScheme="purple"
-                          fontSize="md"
-                          px={3}
-                          py={1}
-                          borderRadius="md"
-                          fontWeight="bold"
-                        >
-                          #{problem.id}
-                        </Badge>
-                      </Table.Cell>
+                  problems.map((problem, index) => {
+                    const inactiveTags = getInactiveTags(problem);
+                    const hasInactiveTags = inactiveTags.length > 0;
 
-                      {/* Problem Title */}
-                      <Table.Cell>
-                        <Text
-                          fontSize="lg"
-                          fontWeight="semibold"
-                          color="gray.800"
-                        >
-                          {problem.title}
-                        </Text>
-                      </Table.Cell>
-
-                      {/* Points */}
-                      <Table.Cell textAlign="center">
-                        <HStack justify="center" gap={2}>
-                          <Trophy size={18} color="#805AD5" />
-                          <Text
+                    return (
+                      <Table.Row
+                        key={problem.id}
+                        _hover={{ bg: "purple.50" }}
+                        transition="all 0.2s"
+                        bg={index % 2 === 0 ? "white" : "gray.50"}
+                      >
+                        {/* ID */}
+                        <Table.Cell textAlign="center">
+                          <Badge
+                            colorScheme="purple"
                             fontSize="md"
+                            px={3}
+                            py={1}
+                            borderRadius="md"
                             fontWeight="bold"
-                            color="purple.600"
                           >
-                            {problem.point}
+                            #{problem.id}
+                          </Badge>
+                        </Table.Cell>
+
+                        {/* Title */}
+                        <Table.Cell>
+                          <HStack gap={2} align="center">
+                            <Text
+                              fontSize="lg"
+                              fontWeight="semibold"
+                              color="gray.800"
+                            >
+                              {problem.title}
+                            </Text>
+                            {hasInactiveTags && (
+                              <Box
+                                color="orange.400"
+                                cursor="help"
+                                title={`This problem has ${inactiveTags.length} disabled tag${inactiveTags.length > 1 ? "s" : ""}: ${inactiveTags.map((t) => t.name).join(", ")}. Consider editing the problem to remove or replace them.`}
+                              >
+                                <AlertTriangle size={16} />
+                              </Box>
+                            )}
+                          </HStack>
+                        </Table.Cell>
+
+                        {/* Tags */}
+                        <Table.Cell>
+                          <Wrap gap={1}>
+                            {(problem.tags || [])
+                              .slice()
+                              .sort(
+                                (a, b) =>
+                                  (b.isActive ? 1 : 0) - (a.isActive ? 1 : 0),
+                              )
+                              .map((tag) => (
+                                <WrapItem key={tag.id}>
+                                  <Badge
+                                    colorScheme={
+                                      tag.isActive === false ? "gray" : "purple"
+                                    }
+                                    variant={
+                                      tag.isActive === false
+                                        ? "outline"
+                                        : "subtle"
+                                    }
+                                    fontSize="xs"
+                                    px={2}
+                                    py={0.5}
+                                    borderRadius="full"
+                                    opacity={tag.isActive === false ? 0.6 : 1}
+                                    textDecoration={
+                                      tag.isActive === false
+                                        ? "line-through"
+                                        : "none"
+                                    }
+                                    title={
+                                      tag.isActive === false
+                                        ? "This tag is disabled — it won't appear in filters"
+                                        : tag.name
+                                    }
+                                  >
+                                    {tag.name}
+                                  </Badge>
+                                </WrapItem>
+                              ))}
+                            {(!problem.tags || problem.tags.length === 0) && (
+                              <Text
+                                fontSize="xs"
+                                color="gray.400"
+                                fontStyle="italic"
+                              >
+                                No tags
+                              </Text>
+                            )}
+                          </Wrap>
+                        </Table.Cell>
+
+                        {/* Points */}
+                        <Table.Cell textAlign="center">
+                          <HStack justify="center" gap={2}>
+                            <Trophy size={18} color="#805AD5" />
+                            <Text
+                              fontSize="md"
+                              fontWeight="bold"
+                              color="purple.600"
+                            >
+                              {problem.point}
+                            </Text>
+                          </HStack>
+                        </Table.Cell>
+
+                        {/* Time Limit */}
+                        <Table.Cell textAlign="center">
+                          <Text fontSize="sm" color="gray.600">
+                            {problem.timeLimit}ms
                           </Text>
-                        </HStack>
-                      </Table.Cell>
+                        </Table.Cell>
 
-                      {/* Time Limit */}
-                      <Table.Cell textAlign="center">
-                        <Text fontSize="sm" color="gray.600">
-                          {problem.timeLimit}ms
-                        </Text>
-                      </Table.Cell>
-
-                      {/* Action Buttons */}
-                      <Table.Cell textAlign="center">
-                        <HStack justify="center" gap={2}>
-                          <IconButton
-                            size="sm"
-                            colorScheme="green"
-                            variant="ghost"
-                            onClick={() => handleEditProblem(problem.id)}
-                            title="Edit Problem"
-                          >
-                            <Edit size={18} />
-                          </IconButton>
-                          <IconButton
-                            size="sm"
-                            colorScheme="red"
-                            variant="ghost"
-                            onClick={() => handleDeleteProblem(problem.id)}
-                            title="Delete Problem"
-                          >
-                            <Trash2 size={18} />
-                          </IconButton>
-                        </HStack>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))
+                        {/* Actions */}
+                        <Table.Cell textAlign="center">
+                          <HStack justify="center" gap={2}>
+                            <Button
+                              size="sm"
+                              colorScheme="green"
+                              variant="ghost"
+                              onClick={() => handleEditProblem(problem.id)}
+                              title="Edit Problem"
+                              px={2}
+                            >
+                              <Edit size={18} />
+                            </Button>
+                            <Button
+                              size="sm"
+                              colorScheme="red"
+                              variant="ghost"
+                              onClick={() => handleDeleteProblem(problem.id)}
+                              title="Delete Problem"
+                              px={2}
+                            >
+                              <Trash2 size={18} />
+                            </Button>
+                          </HStack>
+                        </Table.Cell>
+                      </Table.Row>
+                    );
+                  })
                 ) : (
                   <Table.Row>
-                    <Table.Cell colSpan={5} textAlign="center" py={10}>
+                    <Table.Cell colSpan={6} textAlign="center" py={10}>
                       <VStack gap={3}>
                         <Book size={48} color="#CBD5E0" />
                         <Text
@@ -402,13 +652,13 @@ const AdminProblemPage = () => {
                           color="gray.500"
                           fontWeight="medium"
                         >
-                          {searchQuery
-                            ? "No problems match your search"
+                          {searchQuery || selectedTagNames.length > 0
+                            ? "No problems match your filters"
                             : "No problems found"}
                         </Text>
                         <Text fontSize="sm" color="gray.400">
-                          {searchQuery
-                            ? "Try adjusting your search terms"
+                          {searchQuery || selectedTagNames.length > 0
+                            ? "Try adjusting your search or tag filters"
                             : "Click 'Add Problem' to create your first problem!"}
                         </Text>
                       </VStack>
@@ -422,7 +672,6 @@ const AdminProblemPage = () => {
             {pagination.totalPages > 0 && (
               <Box borderTopWidth="1px" p={4} bg="gray.50">
                 <HStack justify="space-between" align="center">
-                  {/* Items per page */}
                   <HStack gap={2}>
                     <Text fontSize="sm" color="gray.600">
                       Items per page:
@@ -445,9 +694,8 @@ const AdminProblemPage = () => {
                     </select>
                   </HStack>
 
-                  {/* Page info */}
                   <Text fontSize="sm" color="gray.600">
-                    Showing {pagination.offset + 1}-
+                    Showing {pagination.offset + 1}–
                     {Math.min(
                       pagination.offset + pagination.limit,
                       pagination.totalElements,
@@ -455,7 +703,6 @@ const AdminProblemPage = () => {
                     of {pagination.totalElements}
                   </Text>
 
-                  {/* Pagination controls */}
                   <HStack gap={1}>
                     <Button
                       size="sm"

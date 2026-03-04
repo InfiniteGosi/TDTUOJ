@@ -10,9 +10,10 @@ import {
   Text,
   Heading,
   Card,
-  IconButton,
   NativeSelect,
   Badge,
+  Wrap,
+  WrapItem,
 } from "@chakra-ui/react";
 import {
   Plus,
@@ -23,6 +24,9 @@ import {
   Eye,
   ArrowLeft,
   User,
+  Tag as TagIcon,
+  X,
+  AlertTriangle,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useMessage } from "../common/MessageDisplay";
@@ -88,49 +92,69 @@ const AdminProblemFormPage = () => {
     { input: "", expectedOutput: "" },
   ]);
 
-  // Fetch current logged-in user on mount
+  // Tag state
+  const [availableTags, setAvailableTags] = useState([]); // all active tags from server
+  const [selectedTags, setSelectedTags] = useState([]); // {id, name, isActive} objects currently on the problem
+  const [tagSearchQuery, setTagSearchQuery] = useState("");
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
+
+  // Fetch active tags for picker
+  const fetchActiveTags = async () => {
+    try {
+      const response = await ApiService.getAllTags({ limit: 200, offset: 0 });
+      if (response.statusCode === 200) {
+        const active = (response.data.content || []).filter(
+          (t) => t.isActive === true,
+        );
+        setAvailableTags(active);
+      }
+    } catch (err) {
+      console.error("Failed to fetch tags:", err);
+    }
+  };
+
+  // Fetch current logged-in user
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         const profile = await ApiService.getOwnProfile();
-        if (profile?.data?.id) {
-          setCurrentUserId(profile.data.id);
-        }
+        if (profile?.data?.id) setCurrentUserId(profile.data.id);
       } catch (err) {
-        console.error("Failed to fetch current user:", err);
         showMessage("Failed to fetch user profile", "error");
       }
     };
     fetchCurrentUser();
+    fetchActiveTags();
   }, []);
 
-  // Fetch problem data if editing
+  // Fetch problem data when editing
   useEffect(() => {
     const fetchProblemData = async () => {
       if (!id) return;
-
       setLoadingData(true);
       try {
         const response = await ApiService.getProblemById(id);
-
         if (response.statusCode === 200 && response.data) {
           const problem = response.data;
 
-          // Store author info for display
           setAuthorInfo({
             id: problem.authorId || null,
             username: problem.authorUserName || null,
           });
 
-          // Fetch statement file
+          // Load existing tags (may include inactive ones that were assigned before being disabled)
+          if (problem.tags && problem.tags.length > 0) {
+            setSelectedTags(problem.tags);
+          }
+
           let statementContent = "";
           if (problem.statementFileUrl) {
             try {
-              const statementUrl = `${problem.statementFileUrl}?t=${Date.now()}`;
-              const statementResponse = await fetch(statementUrl);
+              const statementResponse = await fetch(
+                `${problem.statementFileUrl}?t=${Date.now()}`,
+              );
               statementContent = await statementResponse.text();
             } catch (err) {
-              console.error("Error fetching statement:", err);
               showMessage("Failed to load problem statement", "warning");
             }
           }
@@ -145,21 +169,20 @@ const AdminProblemFormPage = () => {
           });
 
           if (problem.testCases && problem.testCases.length > 0) {
-            const loadedTestCases = await Promise.all(
+            const loaded = await Promise.all(
               problem.testCases.map(async (tc, index) => {
                 let input = "";
                 let expectedOutput = "";
-
                 try {
                   if (tc.inputFileUrl) {
-                    const inputUrl = `${tc.inputFileUrl}?t=${Date.now()}`;
-                    const inputResponse = await fetch(inputUrl);
-                    input = await inputResponse.text();
+                    input = await (
+                      await fetch(`${tc.inputFileUrl}?t=${Date.now()}`)
+                    ).text();
                   }
                   if (tc.expectedOutputFileUrl) {
-                    const outputUrl = `${tc.expectedOutputFileUrl}?t=${Date.now()}`;
-                    const outputResponse = await fetch(outputUrl);
-                    expectedOutput = await outputResponse.text();
+                    expectedOutput = await (
+                      await fetch(`${tc.expectedOutputFileUrl}?t=${Date.now()}`)
+                    ).text();
                   }
                 } catch (err) {
                   console.error(
@@ -167,12 +190,10 @@ const AdminProblemFormPage = () => {
                     err,
                   );
                 }
-
                 return { id: tc.id, input, expectedOutput };
               }),
             );
-
-            setTestCases(loadedTestCases);
+            setTestCases(loaded);
           } else {
             setTestCases([{ input: "", expectedOutput: "" }]);
           }
@@ -182,12 +203,12 @@ const AdminProblemFormPage = () => {
           showMessage("Failed to load problem", "error");
         }
       } catch (err) {
-        console.error("Error fetching problem:", err);
-        const errorMessage =
+        showMessage(
           err.response?.data?.message ||
-          err.message ||
-          "Failed to load problem";
-        showMessage(errorMessage, "error");
+            err.message ||
+            "Failed to load problem",
+          "error",
+        );
       } finally {
         setLoadingData(false);
       }
@@ -196,30 +217,56 @@ const AdminProblemFormPage = () => {
     fetchProblemData();
   }, [id, dataVersion]);
 
-  const handleProblemChange = (field, value) => {
-    setProblemData((prev) => ({ ...prev, [field]: value }));
+  // ─── Tag helpers ────────────────────────────────────────────────────────────
+
+  const inactiveTags = selectedTags.filter((t) => t.isActive === false);
+  const hasInactiveTags = inactiveTags.length > 0;
+
+  const addTag = (tag) => {
+    if (!selectedTags.find((t) => t.id === tag.id)) {
+      setSelectedTags((prev) => [...prev, tag]);
+    }
+    setTagSearchQuery("");
+    setShowTagDropdown(false);
   };
 
-  const addTestCase = () => {
-    setTestCases((prev) => [...prev, { input: "", expectedOutput: "" }]);
+  const removeTag = (tagId) => {
+    setSelectedTags((prev) => prev.filter((t) => t.id !== tagId));
   };
+
+  const removeAllInactiveTags = () => {
+    setSelectedTags((prev) => prev.filter((t) => t.isActive !== false));
+  };
+
+  // Tags available in the dropdown = active tags not yet selected
+  const filteredDropdownTags = availableTags.filter(
+    (t) =>
+      !selectedTags.find((s) => s.id === t.id) &&
+      t.name.toLowerCase().includes(tagSearchQuery.toLowerCase()),
+  );
+
+  // ─── Form helpers ────────────────────────────────────────────────────────────
+
+  const handleProblemChange = (field, value) =>
+    setProblemData((prev) => ({ ...prev, [field]: value }));
+
+  const addTestCase = () =>
+    setTestCases((prev) => [...prev, { input: "", expectedOutput: "" }]);
 
   const removeTestCase = (index) => {
-    if (testCases.length > 1) {
+    if (testCases.length > 1)
       setTestCases((prev) => prev.filter((_, i) => i !== index));
-    }
   };
 
-  const handleTestCaseChange = (index, field, value) => {
+  const handleTestCaseChange = (index, field, value) =>
     setTestCases((prev) =>
       prev.map((tc, i) => (i === index ? { ...tc, [field]: value } : tc)),
     );
-  };
 
-  const stringToFile = (content, filename, mimeType) => {
-    const blob = new Blob([content], { type: mimeType });
-    return new File([blob], filename, { type: mimeType });
-  };
+  const stringToFile = (content, filename, mimeType) =>
+    new File([new Blob([content], { type: mimeType })], filename, {
+      type: mimeType,
+    });
 
   const validateForm = () => {
     if (!problemData.title.trim()) {
@@ -246,7 +293,13 @@ const AdminProblemFormPage = () => {
       showMessage("Problem difficulty is required", "error");
       return false;
     }
-
+    if (hasInactiveTags) {
+      showMessage(
+        "Please remove disabled tags before saving. Disabled tags cannot be assigned to problems.",
+        "error",
+      );
+      return false;
+    }
     for (let i = 0; i < testCases.length; i++) {
       if (!testCases[i].input.trim()) {
         showMessage(`Input is required for test case ${i + 1}`, "error");
@@ -260,7 +313,6 @@ const AdminProblemFormPage = () => {
         return false;
       }
     }
-
     return true;
   };
 
@@ -269,52 +321,44 @@ const AdminProblemFormPage = () => {
       showMessage("User profile not loaded. Please try again.", "error");
       return;
     }
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
 
     try {
       const formData = new FormData();
-
       formData.append("title", problemData.title);
       formData.append("point", problemData.point);
       formData.append("timeLimit", problemData.timeLimit);
       formData.append("memoryLimit", problemData.memoryLimit);
       formData.append("authorId", currentUserId);
       formData.append("problemDifficulty", problemData.problemDifficulty);
-
-      const statementFile = stringToFile(
-        problemData.statement,
-        "statement.md",
-        "text/markdown",
+      formData.append(
+        "statementFile",
+        stringToFile(problemData.statement, "statement.md", "text/markdown"),
       );
-      formData.append("statementFile", statementFile);
 
-      testCases.forEach((testCase, index) => {
-        if (testCase.id) {
-          formData.append(`testCases[${index}].id`, testCase.id);
-        }
+      // Pass active tag IDs via tagNames field (names used server-side for lookup)
+      const activeSelectedTags = selectedTags.filter(
+        (t) => t.isActive !== false,
+      );
+      activeSelectedTags.forEach((tag) => {
+        formData.append("tagNames", tag.name);
+      });
 
-        const inputFile = stringToFile(
-          testCase.input,
-          `input_${index}.txt`,
-          "text/plain",
+      testCases.forEach((tc, index) => {
+        if (tc.id) formData.append(`testCases[${index}].id`, tc.id);
+        formData.append(
+          `testCases[${index}].inputFile`,
+          stringToFile(tc.input, `input_${index}.txt`, "text/plain"),
         );
-        const outputFile = stringToFile(
-          testCase.expectedOutput,
-          `output_${index}.txt`,
-          "text/plain",
+        formData.append(
+          `testCases[${index}].expectedOutputFile`,
+          stringToFile(tc.expectedOutput, `output_${index}.txt`, "text/plain"),
         );
-
-        formData.append(`testCases[${index}].inputFile`, inputFile);
-        formData.append(`testCases[${index}].expectedOutputFile`, outputFile);
       });
 
       let response;
-
       if (id) {
         formData.append("id", id);
         response = await ApiService.updateProblem(formData);
@@ -328,15 +372,10 @@ const AdminProblemFormPage = () => {
             `Problem ${id ? "updated" : "created"} successfully!`,
           "success",
         );
-
         if (id) {
-          setTimeout(() => {
-            setDataVersion((prev) => prev + 1);
-          }, 1000);
+          setTimeout(() => setDataVersion((v) => v + 1), 1000);
         } else {
-          setTimeout(() => {
-            navigate("/admin/problems");
-          }, 1500);
+          setTimeout(() => navigate("/admin/problems"), 1500);
         }
       } else {
         showMessage(
@@ -345,13 +384,13 @@ const AdminProblemFormPage = () => {
         );
       }
     } catch (err) {
-      console.error(`Error ${id ? "updating" : "creating"} problem:`, err);
-      const errorMessage =
+      showMessage(
         err.response?.data?.message ||
-        err.response?.data?.error ||
-        err.message ||
-        `Failed to ${id ? "update" : "create"} problem`;
-      showMessage(errorMessage, "error");
+          err.response?.data?.error ||
+          err.message ||
+          `Failed to ${id ? "update" : "create"} problem`,
+        "error",
+      );
     } finally {
       setLoading(false);
     }
@@ -392,6 +431,7 @@ const AdminProblemFormPage = () => {
       bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
       py={8}
       px={4}
+      onClick={() => showTagDropdown && setShowTagDropdown(false)}
     >
       <Box maxW="1200px" mx="auto">
         <Card.Root bg="white" borderRadius="xl" p={8} boxShadow="2xl">
@@ -414,14 +454,12 @@ const AdminProblemFormPage = () => {
           <MessageDisplay />
 
           <VStack gap={6} align="stretch">
-            {/* Problem Details Section */}
+            {/* Problem Details */}
             <Box borderBottomWidth="1px" pb={6}>
               <HStack justify="space-between" align="center" mb={4}>
                 <Heading size="xl" color="gray.700">
                   Problem Details
                 </Heading>
-
-                {/* Author info — only shown when editing */}
                 {id && authorInfo.id && (
                   <HStack
                     gap={2}
@@ -454,6 +492,7 @@ const AdminProblemFormPage = () => {
               </HStack>
 
               <VStack gap={4} align="stretch">
+                {/* Title */}
                 <Box>
                   <Text
                     fontSize="sm"
@@ -473,6 +512,7 @@ const AdminProblemFormPage = () => {
                   />
                 </Box>
 
+                {/* Numeric fields + difficulty */}
                 <HStack gap={4}>
                   <Box flex={1}>
                     <Text
@@ -494,7 +534,6 @@ const AdminProblemFormPage = () => {
                       size="lg"
                     />
                   </Box>
-
                   <Box flex={1}>
                     <Text
                       fontSize="sm"
@@ -515,7 +554,6 @@ const AdminProblemFormPage = () => {
                       size="lg"
                     />
                   </Box>
-
                   <Box flex={1}>
                     <Text
                       fontSize="sm"
@@ -536,7 +574,6 @@ const AdminProblemFormPage = () => {
                       size="lg"
                     />
                   </Box>
-
                   <Box flex={1}>
                     <Text
                       fontSize="sm"
@@ -584,7 +621,214 @@ const AdminProblemFormPage = () => {
                   </Box>
                 </HStack>
 
-                {/* Statement with Preview */}
+                {/* ── Tags section ─────────────────────────────────────────────── */}
+                <Box>
+                  <HStack justify="space-between" mb={2}>
+                    <HStack gap={1}>
+                      <TagIcon size={16} color="#805AD5" />
+                      <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                        Tags
+                      </Text>
+                    </HStack>
+                    {hasInactiveTags && (
+                      <Button
+                        size="xs"
+                        colorScheme="orange"
+                        variant="ghost"
+                        leftIcon={<Trash2 size={12} />}
+                        onClick={removeAllInactiveTags}
+                      >
+                        Remove all disabled tags
+                      </Button>
+                    )}
+                  </HStack>
+
+                  {/* Inactive tag warning banner */}
+                  {hasInactiveTags && (
+                    <Box
+                      mb={3}
+                      p={3}
+                      bg="orange.50"
+                      border="1px solid"
+                      borderColor="orange.200"
+                      borderRadius="md"
+                    >
+                      <HStack gap={2} align="flex-start">
+                        <Box color="orange.500" mt={0.5} flexShrink={0}>
+                          <AlertTriangle size={16} />
+                        </Box>
+                        <VStack align="flex-start" gap={0}>
+                          <Text
+                            fontSize="sm"
+                            fontWeight="semibold"
+                            color="orange.700"
+                          >
+                            {inactiveTags.length} disabled tag
+                            {inactiveTags.length > 1 ? "s" : ""} detected
+                          </Text>
+                          <Text fontSize="xs" color="orange.600">
+                            The following tag
+                            {inactiveTags.length > 1 ? "s have" : " has"} been
+                            disabled:{" "}
+                            <strong>
+                              {inactiveTags.map((t) => t.name).join(", ")}
+                            </strong>
+                            . Disabled tags won't appear in filters and cannot
+                            be saved. Please remove or replace them.
+                          </Text>
+                        </VStack>
+                      </HStack>
+                    </Box>
+                  )}
+
+                  <Box
+                    p={3}
+                    border="1px solid"
+                    borderColor={hasInactiveTags ? "orange.300" : "gray.300"}
+                    borderRadius="md"
+                    bg="gray.50"
+                    minH="52px"
+                    position="relative"
+                  >
+                    <Wrap gap={2}>
+                      {selectedTags.map((tag) => (
+                        <WrapItem key={tag.id}>
+                          <Badge
+                            colorScheme={
+                              tag.isActive === false ? "orange" : "purple"
+                            }
+                            variant={
+                              tag.isActive === false ? "outline" : "subtle"
+                            }
+                            px={2}
+                            py={1}
+                            borderRadius="full"
+                            display="flex"
+                            alignItems="center"
+                            gap={1}
+                            fontSize="sm"
+                            opacity={tag.isActive === false ? 0.8 : 1}
+                            title={
+                              tag.isActive === false
+                                ? "This tag is disabled — remove it before saving"
+                                : tag.name
+                            }
+                          >
+                            {tag.isActive === false && (
+                              <Box as="span" mr={1}>
+                                <AlertTriangle size={11} />
+                              </Box>
+                            )}
+                            <span
+                              style={{
+                                textDecoration:
+                                  tag.isActive === false
+                                    ? "line-through"
+                                    : "none",
+                              }}
+                            >
+                              {tag.name}
+                            </span>
+                            <Box
+                              as="span"
+                              cursor="pointer"
+                              ml={1}
+                              onClick={() => removeTag(tag.id)}
+                              _hover={{ opacity: 0.7 }}
+                            >
+                              <X size={12} />
+                            </Box>
+                          </Badge>
+                        </WrapItem>
+                      ))}
+
+                      {/* Add tag button + dropdown */}
+                      <WrapItem position="relative">
+                        <Button
+                          size="xs"
+                          variant="dashed"
+                          colorScheme="purple"
+                          leftIcon={<Plus size={12} />}
+                          border="1px dashed"
+                          borderColor="purple.300"
+                          color="purple.600"
+                          bg="white"
+                          _hover={{ bg: "purple.50" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowTagDropdown((v) => !v);
+                          }}
+                        >
+                          Add tag
+                        </Button>
+
+                        {showTagDropdown && (
+                          <Box
+                            position="absolute"
+                            top="110%"
+                            left={0}
+                            zIndex={30}
+                            bg="white"
+                            border="1px solid"
+                            borderColor="gray.200"
+                            borderRadius="lg"
+                            boxShadow="lg"
+                            w="220px"
+                            maxH="260px"
+                            overflowY="auto"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Box p={2} borderBottomWidth="1px">
+                              <Input
+                                size="sm"
+                                placeholder="Search active tags..."
+                                value={tagSearchQuery}
+                                onChange={(e) =>
+                                  setTagSearchQuery(e.target.value)
+                                }
+                                autoFocus
+                              />
+                            </Box>
+                            {filteredDropdownTags.length === 0 ? (
+                              <Box p={3}>
+                                <Text
+                                  fontSize="sm"
+                                  color="gray.400"
+                                  textAlign="center"
+                                >
+                                  {availableTags.length === 0
+                                    ? "No active tags available"
+                                    : "All active tags already added"}
+                                </Text>
+                              </Box>
+                            ) : (
+                              filteredDropdownTags.map((tag) => (
+                                <Box
+                                  key={tag.id}
+                                  px={3}
+                                  py={2}
+                                  cursor="pointer"
+                                  _hover={{ bg: "purple.50" }}
+                                  onClick={() => addTag(tag)}
+                                >
+                                  <Text fontSize="sm" color="gray.700">
+                                    {tag.name}
+                                  </Text>
+                                </Box>
+                              ))
+                            )}
+                          </Box>
+                        )}
+                      </WrapItem>
+                    </Wrap>
+                  </Box>
+                  <Text fontSize="xs" color="gray.500" mt={1}>
+                    Only active tags can be assigned. Inactive tags are shown
+                    with a warning and must be removed before saving.
+                  </Text>
+                </Box>
+
+                {/* Statement */}
                 <Box>
                   <HStack justify="space-between" mb={2}>
                     <Text fontSize="sm" fontWeight="medium" color="gray.700">
@@ -701,12 +945,11 @@ const AdminProblemFormPage = () => {
               </VStack>
             </Box>
 
-            {/* Test Cases Section */}
+            {/* Test Cases */}
             <Box>
               <Heading size="xl" color="gray.700" mb={4}>
                 Test Cases
               </Heading>
-
               <VStack gap={4} align="stretch">
                 {testCases.map((testCase, index) => (
                   <Card.Root key={index} bg="gray.50" p={4} borderRadius="lg">
@@ -715,17 +958,17 @@ const AdminProblemFormPage = () => {
                         Test Case {index + 1}
                       </Heading>
                       {testCases.length > 1 && (
-                        <IconButton
+                        <Button
                           onClick={() => removeTestCase(index)}
                           colorScheme="red"
                           variant="ghost"
                           size="sm"
+                          px={2}
                         >
                           <Trash2 size={20} />
-                        </IconButton>
+                        </Button>
                       )}
                     </HStack>
-
                     <HStack gap={4} align="flex-start">
                       <Box flex={1}>
                         <Text
@@ -750,7 +993,6 @@ const AdminProblemFormPage = () => {
                           Will be saved as {index}.txt
                         </Text>
                       </Box>
-
                       <Box flex={1}>
                         <Text
                           fontSize="sm"
@@ -796,14 +1038,24 @@ const AdminProblemFormPage = () => {
               </VStack>
             </Box>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <HStack justify="flex-end" pt={6} borderTopWidth="1px">
+              {hasInactiveTags && (
+                <Text fontSize="sm" color="orange.500">
+                  <AlertTriangle
+                    size={14}
+                    style={{ display: "inline", marginRight: 4 }}
+                  />
+                  Remove disabled tags before saving
+                </Text>
+              )}
               <Button
                 onClick={handleSubmit}
                 colorScheme="purple"
                 size="lg"
                 isLoading={loading}
                 loadingText={id ? "Updating..." : "Creating..."}
+                isDisabled={hasInactiveTags}
                 gap={2}
               >
                 <Upload size={20} />

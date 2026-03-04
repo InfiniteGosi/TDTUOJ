@@ -7,9 +7,10 @@ import {
   Button,
   HStack,
   VStack,
-  Badge,
+  Wrap,
+  WrapItem,
 } from "@chakra-ui/react";
-import { CheckCircle, XCircle, ChevronUp, ChevronDown } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { useMessage } from "../common/MessageDisplay";
 import ApiService from "../../services/ApiService";
 import ReactMarkdown from "react-markdown";
@@ -26,7 +27,7 @@ const T = {
   text: "#e8e8e8",
   textMuted: "#888",
   textDim: "#555",
-  accent: "#ffa116", // LeetCode orange
+  accent: "#ffa116",
   accentDim: "rgba(255,161,22,0.12)",
   green: "#2cbb5d",
   greenDim: "rgba(44,187,93,0.12)",
@@ -34,6 +35,8 @@ const T = {
   redDim: "rgba(239,71,67,0.12)",
   blue: "#3b82f6",
   blueDim: "rgba(59,130,246,0.1)",
+  purple: "#a78bfa",
+  purpleDim: "rgba(167,139,250,0.12)",
 };
 
 const DIFF_STYLE = {
@@ -103,7 +106,6 @@ const ResizablePane = ({
         {children[0]}
       </Box>
 
-      {/* Divider */}
       <Box
         width={isH ? "5px" : "100%"}
         height={!isH ? "5px" : "100%"}
@@ -173,6 +175,27 @@ const StatChip = ({ icon, value, color }) => (
   </Box>
 );
 
+// ─── Tag Chip ─────────────────────────────────────────────────────────────────
+// Only rendered for active tags. Styled to sit naturally beside the stat chips.
+const TagChip = ({ name }) => (
+  <Box
+    as="span"
+    display="inline-block"
+    px={2}
+    py="3px"
+    borderRadius="4px"
+    fontSize="xs"
+    fontWeight="500"
+    color={T.purple}
+    bg={T.purpleDim}
+    border={`1px solid ${T.purple}33`}
+    letterSpacing="0.02em"
+    whiteSpace="nowrap"
+  >
+    {name}
+  </Box>
+);
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const ProblemDetailsPage = () => {
   const { slug } = useParams();
@@ -182,7 +205,7 @@ const ProblemDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState(null);
-  const [activeTab, setActiveTab] = useState("description"); // "description" | "testcases" | "results"
+  const [activeTab, setActiveTab] = useState("description");
   const { MessageDisplay, showMessage } = useMessage();
   const codeEditorRef = useRef(null);
 
@@ -287,7 +310,9 @@ const ProblemDetailsPage = () => {
     fetchProblem();
   }, [slug]);
 
-  // ── Loading ──
+  // Only expose active tags to the UI
+  const activeTags = (problem?.tags || []).filter((t) => t.isActive !== false);
+
   if (loading) {
     return (
       <Box
@@ -307,7 +332,6 @@ const ProblemDetailsPage = () => {
     );
   }
 
-  // ── Tab definitions ──
   const tabs = [
     { id: "description", label: "Description" },
     { id: "testcases", label: `Test Cases (${testCases.length})` },
@@ -343,7 +367,6 @@ const ProblemDetailsPage = () => {
         gap={4}
         flexShrink={0}
       >
-        {/* Logo area */}
         <Text
           fontSize="lg"
           fontWeight="800"
@@ -353,13 +376,11 @@ const ProblemDetailsPage = () => {
         >
           {"<OJ/>"}
         </Text>
-
         <Box flex={1} />
-
         <MessageDisplay />
       </Box>
 
-      {/* ── Main 3-column split ── */}
+      {/* ── Main split ── */}
       <Box flex={1} overflow="hidden">
         <ResizablePane direction="horizontal" initialSizes={[42, 58]}>
           {/* ══ LEFT: Problem Panel ══ */}
@@ -378,6 +399,7 @@ const ProblemDetailsPage = () => {
               borderBottom={`1px solid ${T.border}`}
               flexShrink={0}
             >
+              {/* Title */}
               <Text
                 fontSize="xl"
                 fontWeight="700"
@@ -389,26 +411,55 @@ const ProblemDetailsPage = () => {
                 {problem?.title}
               </Text>
 
-              <HStack gap={2} flexWrap="wrap">
+              {/* Difficulty + stat chips + tags — all on the same wrapping row */}
+              <Wrap gap={2} align="center">
                 {problem?.problemDifficulty && (
-                  <DifficultyBadge difficulty={problem.problemDifficulty} />
+                  <WrapItem>
+                    <DifficultyBadge difficulty={problem.problemDifficulty} />
+                  </WrapItem>
                 )}
-                <StatChip
-                  icon="💎"
-                  value={`${problem?.point} pts`}
-                  color={T.accent}
-                />
-                <StatChip
-                  icon="⏱"
-                  value={`${problem?.timeLimit}ms`}
-                  color={T.blue}
-                />
-                <StatChip
-                  icon="💾"
-                  value={`${problem?.memoryLimit}MB`}
-                  color={T.textMuted}
-                />
-              </HStack>
+                <WrapItem>
+                  <StatChip
+                    icon="💎"
+                    value={`${problem?.point} pts`}
+                    color={T.accent}
+                  />
+                </WrapItem>
+                <WrapItem>
+                  <StatChip
+                    icon="⏱"
+                    value={`${problem?.timeLimit}ms`}
+                    color={T.blue}
+                  />
+                </WrapItem>
+                <WrapItem>
+                  <StatChip
+                    icon="💾"
+                    value={`${problem?.memoryLimit}MB`}
+                    color={T.textMuted}
+                  />
+                </WrapItem>
+
+                {/* Thin separator before tags (only when there are tags) */}
+                {activeTags.length > 0 && (
+                  <>
+                    <WrapItem>
+                      <Box
+                        w="1px"
+                        h="16px"
+                        bg={T.border}
+                        mx={1}
+                        display={{ base: "none", sm: "block" }}
+                      />
+                    </WrapItem>
+                    {activeTags.map((tag) => (
+                      <WrapItem key={tag.id}>
+                        <TagChip name={tag.name} />
+                      </WrapItem>
+                    ))}
+                  </>
+                )}
+              </Wrap>
             </Box>
 
             {/* Tab bar */}
@@ -464,7 +515,7 @@ const ProblemDetailsPage = () => {
 
             {/* Tab content */}
             <Box flex={1} overflowY="auto" px={5} py={5}>
-              {/* Description tab */}
+              {/* Description */}
               {activeTab === "description" && (
                 <Box
                   fontSize="sm"
@@ -524,7 +575,7 @@ const ProblemDetailsPage = () => {
                 </Box>
               )}
 
-              {/* Test cases tab */}
+              {/* Test cases */}
               {activeTab === "testcases" && (
                 <VStack align="stretch" gap={3}>
                   {testCases.map((tc, index) => (
@@ -555,64 +606,44 @@ const ProblemDetailsPage = () => {
                         gridTemplateColumns="1fr 1fr"
                         gap={3}
                       >
-                        <Box>
-                          <Text
-                            fontSize="xs"
-                            color={T.textDim}
-                            fontWeight="600"
-                            mb={1}
-                            letterSpacing="0.04em"
-                          >
-                            INPUT
-                          </Text>
-                          <Box
-                            bg={T.bg}
-                            p={2}
-                            borderRadius="6px"
-                            fontFamily="'JetBrains Mono', monospace"
-                            fontSize="xs"
-                            color="#c8c8c8"
-                            whiteSpace="pre-wrap"
-                            border={`1px solid ${T.border}`}
-                            minH="40px"
-                          >
-                            {tc.input}
+                        {[
+                          { label: "INPUT", val: tc.input, color: "#c8c8c8" },
+                          { label: "EXPECTED", val: tc.output, color: T.green },
+                        ].map(({ label, val, color }) => (
+                          <Box key={label}>
+                            <Text
+                              fontSize="xs"
+                              color={T.textDim}
+                              fontWeight="600"
+                              mb={1}
+                              letterSpacing="0.04em"
+                            >
+                              {label}
+                            </Text>
+                            <Box
+                              bg={T.bg}
+                              p={2}
+                              borderRadius="6px"
+                              fontFamily="'JetBrains Mono', monospace"
+                              fontSize="xs"
+                              color={color}
+                              whiteSpace="pre-wrap"
+                              border={`1px solid ${T.border}`}
+                              minH="40px"
+                            >
+                              {val}
+                            </Box>
                           </Box>
-                        </Box>
-                        <Box>
-                          <Text
-                            fontSize="xs"
-                            color={T.textDim}
-                            fontWeight="600"
-                            mb={1}
-                            letterSpacing="0.04em"
-                          >
-                            EXPECTED
-                          </Text>
-                          <Box
-                            bg={T.bg}
-                            p={2}
-                            borderRadius="6px"
-                            fontFamily="'JetBrains Mono', monospace"
-                            fontSize="xs"
-                            color={T.green}
-                            whiteSpace="pre-wrap"
-                            border={`1px solid ${T.border}`}
-                            minH="40px"
-                          >
-                            {tc.output}
-                          </Box>
-                        </Box>
+                        ))}
                       </Box>
                     </Box>
                   ))}
                 </VStack>
               )}
 
-              {/* Results tab */}
+              {/* Results */}
               {activeTab === "results" && results && (
                 <VStack align="stretch" gap={3}>
-                  {/* Summary bar */}
                   <Box
                     p={4}
                     borderRadius="8px"
@@ -649,7 +680,6 @@ const ProblemDetailsPage = () => {
                       border={`1px solid ${result.passed ? T.green + "44" : T.red + "44"}`}
                       overflow="hidden"
                     >
-                      {/* Case header */}
                       <Box
                         px={3}
                         py={2}
@@ -681,7 +711,6 @@ const ProblemDetailsPage = () => {
                         </Box>
                       </Box>
 
-                      {/* Expanded detail for failed cases */}
                       {!result.passed && (
                         <Box
                           p={3}

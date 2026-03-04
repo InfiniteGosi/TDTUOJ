@@ -1,6 +1,7 @@
 package com.oj.TDTUOJ.problem.service;
 
 import com.oj.TDTUOJ.common.aws.AwsS3Service;
+import com.oj.TDTUOJ.common.exceptions.BadRequestException;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.common.utils.ProblemSlugUtils;
 import com.oj.TDTUOJ.problem.dto.ProblemDTO;
@@ -37,49 +38,53 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ProblemServiceImpl implements ProblemService {
     private final ProblemRepository problemRepository;
-
     private final TestCaseRepository testCaseRepository;
-
     private final UserRepository userRepository;
-
     private final ModelMapper modelMapper;
-
     private final AwsS3Service awsS3Service;
     private final TagRepository tagRepository;
 
     @Override
-    public Response<Page<ProblemDTO>> getAllProblems(Integer limit,
-                                                     Integer offset,
-                                                     String sortField,
-                                                     String direction,
-                                                     String title) {
+    public Response<Page<ProblemDTO>> getAllProblems(Integer limit, Integer offset, String sortField,
+                                                     String direction, String title, List<String> tagNames) {
         if (limit == null || limit <= 0) limit = 20;
         if (offset == null || offset < 0) offset = 0;
         if (sortField == null || sortField.isBlank()) sortField = "id";
         if (direction == null || direction.isBlank()) direction = "asc";
 
         Sort sort = Sort.by(Sort.Direction.fromString(direction), sortField);
-
-
-        //Pageable pageable = new ProblemPageRequest(limit, offset, sort);
         int page = offset / limit;
         Pageable pageable = PageRequest.of(page, limit, sort);
 
-        Page<Problem> problemPage;
-
-        if (title != null && !title.isBlank()) {
-            problemPage = problemRepository.findByTitleContainingIgnoreCase(title, pageable);
+        // Strip out any inactive tag names from the filter to prevent filtering by disabled tags
+        List<String> activeTagNames = null;
+        if (tagNames != null && !tagNames.isEmpty()) {
+            activeTagNames = tagNames.stream()
+                    .map(name -> tagRepository.findByNameIgnoreCase(name).orElse(null))
+                    .filter(tag -> tag != null && Boolean.TRUE.equals(tag.getIsActive()))
+                    .map(Tag::getName)
+                    .collect(Collectors.toList());
         }
-        else {
+
+        boolean hasTitle = title != null && !title.isBlank();
+        boolean hasTags = activeTagNames != null && !activeTagNames.isEmpty();
+
+        Page<Problem> problemPage;
+        if (hasTitle && hasTags) {
+            problemPage = problemRepository.findByTitleContainingIgnoreCaseAndTagNames(
+                    title, activeTagNames, (long) activeTagNames.size(), pageable);
+        } else if (hasTitle) {
+            problemPage = problemRepository.findByTitleContainingIgnoreCase(title, pageable);
+        } else if (hasTags) {
+            problemPage = problemRepository.findByTagNames(activeTagNames, (long) activeTagNames.size(), pageable);
+        } else {
             problemPage = problemRepository.findAll(pageable);
         }
-
-        Page<ProblemDTO> pageDTO = problemPage.map(this::mapToResponseDTO);
 
         return Response.<Page<ProblemDTO>>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Problems retrieved successfully")
-                .data(pageDTO)
+                .data(problemPage.map(this::mapToResponseDTO))
                 .build();
     }
 
@@ -88,13 +93,10 @@ public class ProblemServiceImpl implements ProblemService {
     public Response<ProblemDTO> getProblemBySlug(String slug) {
         Problem problem = problemRepository.findBySlug(slug)
                 .orElseThrow(() -> new NotFoundException("Problem not found"));
-
-        ProblemDTO problemDTO = mapToResponseDTO(problem);
-
         return Response.<ProblemDTO>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Problem retrieved successfully")
-                .data(problemDTO)
+                .data(mapToResponseDTO(problem))
                 .build();
     }
 
@@ -103,40 +105,34 @@ public class ProblemServiceImpl implements ProblemService {
     public Response<ProblemDTO> getProblemById(Long id) {
         Problem problem = problemRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Problem not found"));
-
-        ProblemDTO problemDTO = mapToResponseDTO(problem);
-
         return Response.<ProblemDTO>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Problem retrieved successfully")
-                .data(problemDTO)
+                .data(mapToResponseDTO(problem))
                 .build();
     }
 
     @Override
+    @Transactional
     public Response<ProblemDTO> createProblem(ProblemDTO problemDTO) {
         try {
-            // Validate required fields
             if (problemDTO.getStatementFile() == null || problemDTO.getStatementFile().isEmpty()) {
                 throw new IllegalArgumentException("Problem statement file is required");
             }
-
             if (problemDTO.getTestCases() == null || problemDTO.getTestCases().isEmpty()) {
                 throw new IllegalArgumentException("At least one test case is required");
             }
-
-            // Check if problem title already exists
             if (problemRepository.existsByTitle(problemDTO.getTitle())) {
                 throw new IllegalArgumentException("Problem with title '" + problemDTO.getTitle() + "' already exists");
             }
 
-            String baseSlug = ProblemSlugUtils.generateSlug(problemDTO.getTitle());
-            String uniqueSlug = generateUniqueSlug(baseSlug);
-
+            String uniqueSlug = generateUniqueSlug(ProblemSlugUtils.generateSlug(problemDTO.getTitle()));
             User author = userRepository.findById(problemDTO.getAuthorId())
                     .orElseThrow(() -> new NotFoundException("Author not found with id: " + problemDTO.getAuthorId()));
 
-            // Create Problem entity
+            // Only active tags may be assigned at creation time
+            Set<Tag> problemTags = resolveTagsFromDTO(problemDTO);
+
             Problem problem = Problem.builder()
                     .title(problemDTO.getTitle())
                     .slug(uniqueSlug)
@@ -146,389 +142,243 @@ public class ProblemServiceImpl implements ProblemService {
                     .author(author)
                     .problemDifficulty(problemDTO.getProblemDifficulty())
                     .testCases(new ArrayList<>())
+                    .tags(problemTags)
                     .build();
 
-            // Save problem first to get ID (needed for S3 folder structure)
             problem = problemRepository.save(problem);
 
-            // Create base folder name: problemId-problemTitle (sanitize title for S3)
-            String sanitizedTitle = problemDTO.getTitle()
-                    .replaceAll("[^a-zA-Z0-9-_]", "-")  // Replace special chars with hyphen
-                    .replaceAll("-+", "-")               // Replace multiple hyphens with single
-                    .toLowerCase();
+            String sanitizedTitle = sanitize(problemDTO.getTitle());
             String basePath = String.format("problems/%d-%s", problem.getId(), sanitizedTitle);
 
-            // Upload problem statement file to S3
-            String statementKey = String.format("%s/statement.md", basePath);
-            URL statementUrl = awsS3Service.uploadFile(statementKey, problemDTO.getStatementFile());
-            problem.setStatementFileUrl(statementUrl.toString());
+            String statementKey = basePath + "/statement.md";
+            problem.setStatementFileUrl(awsS3Service.uploadFile(statementKey, problemDTO.getStatementFile()).toString());
 
-            // Process and upload test cases
             List<TestCase> testCases = new ArrayList<>();
-            int testCaseIndex = 0;
+            int idx = 0;
+            for (TestCaseDTO tc : problemDTO.getTestCases()) {
+                if (tc.getInputFile() == null || tc.getInputFile().isEmpty())
+                    throw new IllegalArgumentException("Input file is required for test case " + idx);
+                if (tc.getExpectedOutputFile() == null || tc.getExpectedOutputFile().isEmpty())
+                    throw new IllegalArgumentException("Expected output file is required for test case " + idx);
 
-            for (TestCaseDTO testCaseDTO : problemDTO.getTestCases()) {
-                // Validate test case files
-                if (testCaseDTO.getInputFile() == null || testCaseDTO.getInputFile().isEmpty()) {
-                    throw new IllegalArgumentException("Input file is required for test case " + testCaseIndex);
-                }
-                if (testCaseDTO.getExpectedOutputFile() == null || testCaseDTO.getExpectedOutputFile().isEmpty()) {
-                    throw new IllegalArgumentException("Expected output file is required for test case " + testCaseIndex);
-                }
-
-                // Upload input file
-                String inputKey = String.format("%s/testcases/inputs/%d.txt", basePath, testCaseIndex);
-                URL inputUrl = awsS3Service.uploadFile(inputKey, testCaseDTO.getInputFile());
-
-                // Upload expected output file
-                String outputKey = String.format("%s/testcases/outputs/%d.txt", basePath, testCaseIndex);
-                URL outputUrl = awsS3Service.uploadFile(outputKey, testCaseDTO.getExpectedOutputFile());
-
-                // Create TestCase entity
-                TestCase testCase = TestCase.builder()
+                URL inputUrl = awsS3Service.uploadFile(String.format("%s/testcases/inputs/%d.txt", basePath, idx), tc.getInputFile());
+                URL outputUrl = awsS3Service.uploadFile(String.format("%s/testcases/outputs/%d.txt", basePath, idx), tc.getExpectedOutputFile());
+                testCases.add(TestCase.builder()
                         .inputFileUrl(inputUrl.toString())
                         .expectedOutputFileUrl(outputUrl.toString())
                         .problem(problem)
-                        .build();
-
-                testCases.add(testCase);
-                testCaseIndex++;
+                        .build());
+                idx++;
             }
 
             testCaseRepository.saveAll(testCases);
             problem.setTestCases(testCases);
-
             problem.setCreatedAt(LocalDateTime.now());
             problem = problemRepository.save(problem);
-
-            // Map to DTO for response
-            ProblemDTO responseProblemDTO = mapToResponseDTO(problem);
 
             return Response.<ProblemDTO>builder()
                     .statusCode(HttpStatus.CREATED.value())
                     .message("Problem created successfully")
-                    .data(responseProblemDTO)
+                    .data(mapToResponseDTO(problem))
                     .build();
-        }
-        catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException ex) {
             log.error("Validation error while creating problem: {}", ex.getMessage());
             throw ex;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             log.error("Error creating problem: {}", ex.getMessage(), ex);
-            // Rollback will happen automatically due to @Transactional
             throw new RuntimeException("Failed to create problem: " + ex.getMessage(), ex);
         }
     }
 
     @Override
+    @Transactional
     public Response<ProblemDTO> updateProblem(ProblemDTO problemDTO) {
         log.info(problemDTO.toString());
-
         try {
-            // Find existing problem
             Problem problem = problemRepository.findById(problemDTO.getId())
                     .orElseThrow(() -> new NotFoundException("Problem not found with id: " + problemDTO.getId()));
 
-            // Check if title is being changed and if new title already exists
-            if (!problem.getTitle().equals(problemDTO.getTitle())) {
-                if (problemRepository.existsByTitle(problemDTO.getTitle())) {
-                    throw new IllegalArgumentException("Problem with title '" + problemDTO.getTitle() + "' already exists");
-                }
+            if (!problem.getTitle().equals(problemDTO.getTitle()) &&
+                    problemRepository.existsByTitle(problemDTO.getTitle())) {
+                throw new IllegalArgumentException("Problem with title '" + problemDTO.getTitle() + "' already exists");
             }
 
-            // Store old sanitized title for potential S3 path change
-            String oldSanitizedTitle = problem.getTitle()
-                    .replaceAll("[^a-zA-Z0-9-_]", "-")
-                    .replaceAll("-+", "-")
-                    .toLowerCase();
-            String oldBasePath = String.format("problems/%d-%s", problem.getId(), oldSanitizedTitle);
+            String oldBasePath = String.format("problems/%d-%s", problem.getId(), sanitize(problem.getTitle()));
 
-            // Update basic problem properties
             if (!problem.getTitle().equals(problemDTO.getTitle())) {
-                String baseSlug = ProblemSlugUtils.generateSlug(problemDTO.getTitle());
-                String uniqueSlug = generateUniqueSlugExcludingCurrent(baseSlug, problemDTO.getId());
-                problem.setSlug(uniqueSlug);
+                problem.setSlug(generateUniqueSlugExcludingCurrent(
+                        ProblemSlugUtils.generateSlug(problemDTO.getTitle()), problemDTO.getId()));
             }
             problem.setTitle(problemDTO.getTitle());
             problem.setPoint(problemDTO.getPoint());
             problem.setTimeLimit(problemDTO.getTimeLimit());
             problem.setMemoryLimit(problemDTO.getMemoryLimit());
 
-            // Create new base path with updated title
-            String newSanitizedTitle = problemDTO.getTitle()
-                    .replaceAll("[^a-zA-Z0-9-_]", "-")
-                    .replaceAll("-+", "-")
-                    .toLowerCase();
-            String newBasePath = String.format("problems/%d-%s", problem.getId(), newSanitizedTitle);
-
+            String newBasePath = String.format("problems/%d-%s", problem.getId(), sanitize(problemDTO.getTitle()));
             boolean pathChanged = !oldBasePath.equals(newBasePath);
 
-            // Update statement file if provided
+            // Statement file
             if (problemDTO.getStatementFile() != null && !problemDTO.getStatementFile().isEmpty()) {
-                // Delete old statement file from S3
                 if (problem.getStatementFileUrl() != null) {
-                    try {
-                        String oldKey = extractS3KeyFromUrl(problem.getStatementFileUrl());
-                        awsS3Service.deleteFile(oldKey);
-                        log.info("Deleted old statement file: {}", oldKey);
-                    } catch (Exception e) {
-                        log.warn("Failed to delete old statement file: {}", e.getMessage());
-                    }
+                    try { awsS3Service.deleteFile(extractS3Key(problem.getStatementFileUrl())); }
+                    catch (Exception e) { log.warn("Failed to delete old statement file: {}", e.getMessage()); }
                 }
-
-                // Upload new statement file
-                String statementKey = String.format("%s/statement.md", newBasePath);
-                URL statementUrl = awsS3Service.uploadFile(statementKey, problemDTO.getStatementFile());
-                problem.setStatementFileUrl(statementUrl.toString());
-                log.info("Uploaded new statement file to: {}", statementKey);
-
+                problem.setStatementFileUrl(
+                        awsS3Service.uploadFile(newBasePath + "/statement.md", problemDTO.getStatementFile()).toString());
             } else if (pathChanged && problem.getStatementFileUrl() != null) {
-                // If title changed but no new file provided, move existing file
-                try {
-                    String oldKey = extractS3KeyFromUrl(problem.getStatementFileUrl());
-                    String newKey = String.format("%s/statement.md", newBasePath);
-                    awsS3Service.moveFile(oldKey, newKey);
-                    problem.setStatementFileUrl(awsS3Service.getFileUrl(newKey).toString());
-                    log.info("Moved statement file from {} to {}", oldKey, newKey);
-                } catch (Exception e) {
-                    log.error("Failed to move statement file: {}", e.getMessage());
-                    throw new RuntimeException("Failed to move statement file: " + e.getMessage());
-                }
+                String oldKey = extractS3Key(problem.getStatementFileUrl());
+                String newKey = newBasePath + "/statement.md";
+                awsS3Service.moveFile(oldKey, newKey);
+                problem.setStatementFileUrl(awsS3Service.getFileUrl(newKey).toString());
             }
 
-            // Handle test cases update
+            // Test cases
             if (problemDTO.getTestCases() != null && !problemDTO.getTestCases().isEmpty()) {
-                // Load existing test cases from DB
-                List<TestCase> existingTestCases = testCaseRepository.findTestCasesByProblemId(problem.getId());
-
-                // Map for quick lookup
-                Map<Long, TestCase> existingMap = existingTestCases.stream()
+                List<TestCase> existing = testCaseRepository.findTestCasesByProblemId(problem.getId());
+                Map<Long, TestCase> existingMap = existing.stream()
                         .collect(Collectors.toMap(TestCase::getId, tc -> tc));
-
-                List<TestCase> updatedTestCases = new ArrayList<>();
-
-                int index = 0;
-                for (TestCaseDTO testCaseDTO : problemDTO.getTestCases()) {
-
+                List<TestCase> updated = new ArrayList<>();
+                int idx = 0;
+                for (TestCaseDTO tc : problemDTO.getTestCases()) {
                     TestCase testCase;
-                    if (testCaseDTO.getId() != null && existingMap.containsKey(testCaseDTO.getId())) {
-                        // Update existing
-                        testCase = existingMap.get(testCaseDTO.getId());
-
-                        // Delete old files if new ones are provided
-                        if (testCaseDTO.getInputFile() != null && !testCaseDTO.getInputFile().isEmpty()) {
-                            if (testCase.getInputFileUrl() != null) {
-                                awsS3Service.deleteFile(extractS3KeyFromUrl(testCase.getInputFileUrl()));
-                            }
-                            String inputKey = String.format("%s/testcases/inputs/%d.txt", newBasePath, index);
-                            URL inputUrl = awsS3Service.uploadFile(inputKey, testCaseDTO.getInputFile());
-                            testCase.setInputFileUrl(inputUrl.toString());
+                    if (tc.getId() != null && existingMap.containsKey(tc.getId())) {
+                        testCase = existingMap.get(tc.getId());
+                        if (tc.getInputFile() != null && !tc.getInputFile().isEmpty()) {
+                            if (testCase.getInputFileUrl() != null)
+                                awsS3Service.deleteFile(extractS3Key(testCase.getInputFileUrl()));
+                            testCase.setInputFileUrl(awsS3Service.uploadFile(
+                                    String.format("%s/testcases/inputs/%d.txt", newBasePath, idx), tc.getInputFile()).toString());
                         }
-
-                        if (testCaseDTO.getExpectedOutputFile() != null && !testCaseDTO.getExpectedOutputFile().isEmpty()) {
-                            if (testCase.getExpectedOutputFileUrl() != null) {
-                                awsS3Service.deleteFile(extractS3KeyFromUrl(testCase.getExpectedOutputFileUrl()));
-                            }
-                            String outputKey = String.format("%s/testcases/outputs/%d.txt", newBasePath, index);
-                            URL outputUrl = awsS3Service.uploadFile(outputKey, testCaseDTO.getExpectedOutputFile());
-                            testCase.setExpectedOutputFileUrl(outputUrl.toString());
+                        if (tc.getExpectedOutputFile() != null && !tc.getExpectedOutputFile().isEmpty()) {
+                            if (testCase.getExpectedOutputFileUrl() != null)
+                                awsS3Service.deleteFile(extractS3Key(testCase.getExpectedOutputFileUrl()));
+                            testCase.setExpectedOutputFileUrl(awsS3Service.uploadFile(
+                                    String.format("%s/testcases/outputs/%d.txt", newBasePath, idx), tc.getExpectedOutputFile()).toString());
                         }
-
-                        existingMap.remove(testCaseDTO.getId()); // Mark as processed
+                        existingMap.remove(tc.getId());
                     } else {
-                        // New testcase
-                        String inputKey = String.format("%s/testcases/inputs/%d.txt", newBasePath, index);
-                        URL inputUrl = awsS3Service.uploadFile(inputKey, testCaseDTO.getInputFile());
-
-                        String outputKey = String.format("%s/testcases/outputs/%d.txt", newBasePath, index);
-                        URL outputUrl = awsS3Service.uploadFile(outputKey, testCaseDTO.getExpectedOutputFile());
-
                         testCase = TestCase.builder()
-                                .inputFileUrl(inputUrl.toString())
-                                .expectedOutputFileUrl(outputUrl.toString())
+                                .inputFileUrl(awsS3Service.uploadFile(
+                                        String.format("%s/testcases/inputs/%d.txt", newBasePath, idx), tc.getInputFile()).toString())
+                                .expectedOutputFileUrl(awsS3Service.uploadFile(
+                                        String.format("%s/testcases/outputs/%d.txt", newBasePath, idx), tc.getExpectedOutputFile()).toString())
                                 .problem(problem)
                                 .build();
                     }
-
-                    updatedTestCases.add(testCase);
-                    index++;
+                    updated.add(testCase);
+                    idx++;
                 }
-
-                // Any leftover testcases in existingMap were not in DTO → delete them
                 for (TestCase toRemove : existingMap.values()) {
-                    if (toRemove.getInputFileUrl() != null) {
-                        awsS3Service.deleteFile(extractS3KeyFromUrl(toRemove.getInputFileUrl()));
-                    }
-                    if (toRemove.getExpectedOutputFileUrl() != null) {
-                        awsS3Service.deleteFile(extractS3KeyFromUrl(toRemove.getExpectedOutputFileUrl()));
-                    }
+                    if (toRemove.getInputFileUrl() != null)
+                        awsS3Service.deleteFile(extractS3Key(toRemove.getInputFileUrl()));
+                    if (toRemove.getExpectedOutputFileUrl() != null)
+                        awsS3Service.deleteFile(extractS3Key(toRemove.getExpectedOutputFileUrl()));
                     testCaseRepository.delete(toRemove);
                 }
-
-                // Save new + updated testcases
-                testCaseRepository.saveAll(updatedTestCases);
-                problem.setTestCases(updatedTestCases);
-
-                log.info("Problem {} testcases updated: {} kept/updated, {} removed",
-                        problem.getId(), updatedTestCases.size(), existingMap.size());
+                testCaseRepository.saveAll(updated);
+                problem.setTestCases(updated);
             }
 
-            // If title changed, clean up old directory structure
             if (pathChanged) {
-                try {
-                    awsS3Service.deleteFolder(oldBasePath);
-                    log.info("Deleted old folder structure: {}", oldBasePath);
-                } catch (Exception e) {
-                    log.warn("Failed to delete old folder structure {}: {}", oldBasePath, e.getMessage());
-                    // Don't fail the whole operation if cleanup fails
-                }
+                try { awsS3Service.deleteFolder(oldBasePath); }
+                catch (Exception e) { log.warn("Failed to delete old folder {}: {}", oldBasePath, e.getMessage()); }
             }
 
-            // Update author if provided
             if (problemDTO.getAuthorId() != null) {
-                User author = userRepository.findById(problemDTO.getAuthorId())
-                        .orElseThrow(() -> new NotFoundException("Author not found with id: " + problemDTO.getAuthorId()));
-                problem.setAuthor(author);
+                problem.setAuthor(userRepository.findById(problemDTO.getAuthorId())
+                        .orElseThrow(() -> new NotFoundException("Author not found with id: " + problemDTO.getAuthorId())));
             }
-
-            // Update difficulty if provided
             if (problemDTO.getProblemDifficulty() != null) {
                 problem.setProblemDifficulty(problemDTO.getProblemDifficulty());
             }
 
-            Set<Tag> problemTags;
-            List<String> tagNames = problemDTO.getTagNames();
-
-            if (tagNames != null && !tagNames.isEmpty()) {
-                problemTags = tagNames.stream()
-                        .map(name -> tagRepository.findByName(name.toUpperCase())
-                                .orElseThrow(() -> new NotFoundException("Tag not found: " + name.toUpperCase())))
-                        .collect(Collectors.toSet());
-            }
-            else if (problemDTO.getTags() != null && !problemDTO.getTags().isEmpty()) {
-                problemTags = problemDTO.getTags().stream()
-                        .map(roleDTO -> tagRepository.findByName(roleDTO.getName().toUpperCase())
-                                .orElseThrow(() -> new NotFoundException("Tag not found: " + roleDTO.getName().toUpperCase())))
-                        .collect(Collectors.toSet());
-            }
-            else {
-                Tag defaultTag = tagRepository.findByName("Array")
-                        .orElseThrow(() -> new NotFoundException("Tag not found"));
-                problemTags = new HashSet<>(Set.of(defaultTag));
+            // Update tags only when the caller explicitly provides them
+            if (problemDTO.getTagNames() != null || problemDTO.getTags() != null) {
+                problem.setTags(resolveTagsFromDTO(problemDTO));
             }
 
-            problem.setTags(problemTags);
-
-            // Save updated problem
             problem.setUpdatedAt(LocalDateTime.now());
             problem = problemRepository.save(problem);
-
-            // Map to DTO for response
-            ProblemDTO responseProblemDTO = mapToResponseDTO(problem);
 
             return Response.<ProblemDTO>builder()
                     .statusCode(HttpStatus.OK.value())
                     .message("Problem updated successfully")
-                    .data(responseProblemDTO)
+                    .data(mapToResponseDTO(problem))
                     .build();
-        }
-        catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | BadRequestException ex) {
             log.error("Validation error while updating problem: {}", ex.getMessage());
             throw ex;
-        }
-        catch (NotFoundException ex) {
+        } catch (NotFoundException ex) {
             log.error("Problem not found: {}", ex.getMessage());
             throw ex;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             log.error("Error updating problem: {}", ex.getMessage(), ex);
             throw new RuntimeException("Failed to update problem: " + ex.getMessage(), ex);
         }
+    }
+
+    /**
+     * Replaces the full tag set of a problem.
+     * Only active tags are accepted; inactive tags throw BadRequestException.
+     */
+    @Override
+    @Transactional
+    public Response<ProblemDTO> updateProblemTags(Long problemId, ProblemDTO problemDTO) {
+        Problem problem = problemRepository.findById(problemId)
+                .orElseThrow(() -> new NotFoundException("Problem not found with id: " + problemId));
+
+        Set<Tag> newTags = resolveTagsFromDTO(problemDTO);
+        problem.setTags(newTags);
+        problem.setUpdatedAt(LocalDateTime.now());
+        problem = problemRepository.save(problem);
+
+        log.info("Tags updated for problem {}: {}", problemId,
+                newTags.stream().map(Tag::getName).collect(Collectors.joining(", ")));
+
+        return Response.<ProblemDTO>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Problem tags updated successfully")
+                .data(mapToResponseDTO(problem))
+                .build();
     }
 
     @Override
     @Transactional
     public Response<?> deleteProblem(Long id) {
         try {
-            // Find the problem
             Problem problem = problemRepository.findById(id)
                     .orElseThrow(() -> new NotFoundException("Problem not found with id: " + id));
 
-            log.info("Deleting problem: {} (ID: {})", problem.getTitle(), id);
-
-            // Create sanitized title for S3 path
-            String sanitizedTitle = problem.getTitle()
-                    .replaceAll("[^a-zA-Z0-9-_]", "-")
-                    .replaceAll("-+", "-")
-                    .toLowerCase();
-            String basePath = String.format("problems/%d-%s", problem.getId(), sanitizedTitle);
-
-            // Delete all test case files from S3
+            String basePath = String.format("problems/%d-%s", problem.getId(), sanitize(problem.getTitle()));
             List<TestCase> testCases = problem.getTestCases();
-            if (testCases != null && !testCases.isEmpty()) {
-                log.info("Deleting {} test case files from S3", testCases.size());
 
-                for (TestCase testCase : testCases) {
+            if (testCases != null) {
+                for (TestCase tc : testCases) {
                     try {
-                        // Delete input file
-                        if (testCase.getInputFileUrl() != null) {
-                            String inputKey = extractS3KeyFromUrl(testCase.getInputFileUrl());
-                            awsS3Service.deleteFile(inputKey);
-                            log.info("Deleted input file: {}", inputKey);
-                        }
-
-                        // Delete expected output file
-                        if (testCase.getExpectedOutputFileUrl() != null) {
-                            String outputKey = extractS3KeyFromUrl(testCase.getExpectedOutputFileUrl());
-                            awsS3Service.deleteFile(outputKey);
-                            log.info("Deleted output file: {}", outputKey);
-                        }
+                        if (tc.getInputFileUrl() != null) awsS3Service.deleteFile(extractS3Key(tc.getInputFileUrl()));
+                        if (tc.getExpectedOutputFileUrl() != null) awsS3Service.deleteFile(extractS3Key(tc.getExpectedOutputFileUrl()));
                     } catch (Exception e) {
-                        log.warn("Failed to delete test case files for test case ID {}: {}",
-                                testCase.getId(), e.getMessage());
-                        // Continue with deletion even if some files fail
+                        log.warn("Failed to delete files for test case {}: {}", tc.getId(), e.getMessage());
                     }
                 }
             }
 
-            // Delete statement file from S3
             if (problem.getStatementFileUrl() != null) {
-                try {
-                    String statementKey = extractS3KeyFromUrl(problem.getStatementFileUrl());
-                    awsS3Service.deleteFile(statementKey);
-                    log.info("Deleted statement file: {}", statementKey);
-                } catch (Exception e) {
-                    log.warn("Failed to delete statement file: {}", e.getMessage());
-                }
+                try { awsS3Service.deleteFile(extractS3Key(problem.getStatementFileUrl())); }
+                catch (Exception e) { log.warn("Failed to delete statement file: {}", e.getMessage()); }
             }
 
-            // Delete entire problem folder from S3 (cleanup any remaining files)
-            try {
-                awsS3Service.deleteFolder(basePath);
-                log.info("Deleted problem folder: {}", basePath);
-            } catch (Exception e) {
-                log.warn("Failed to delete problem folder '{}': {}", basePath, e.getMessage());
-                // Continue with database deletion even if S3 cleanup fails
-            }
+            try { awsS3Service.deleteFolder(basePath); }
+            catch (Exception e) { log.warn("Failed to delete problem folder '{}': {}", basePath, e.getMessage()); }
 
-            // Delete test cases from database (cascade should handle this, but explicit is safer)
-            if (testCases != null && !testCases.isEmpty()) {
-                testCaseRepository.deleteAll(testCases);
-                log.info("Deleted {} test cases from database", testCases.size());
-            }
-
-            // Delete problem from database
+            if (testCases != null && !testCases.isEmpty()) testCaseRepository.deleteAll(testCases);
             problemRepository.delete(problem);
-            log.info("Problem {} deleted successfully from database", id);
 
             return Response.builder()
                     .statusCode(HttpStatus.OK.value())
                     .message("Problem deleted successfully")
                     .build();
-
         } catch (NotFoundException ex) {
-            log.error("Problem not found: {}", ex.getMessage());
             throw ex;
         } catch (Exception ex) {
             log.error("Error deleting problem: {}", ex.getMessage(), ex);
@@ -536,7 +386,58 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
-    private String extractS3KeyFromUrl(String url) {
+    // ─── Helpers ────────────────────────────────────────────────────────────────
+
+    /**
+     * Resolves a Set<Tag> from a ProblemDTO.
+     * Prefers tagNames over tags DTOs. Supports lookup by tag ID or name.
+     * Throws BadRequestException if any resolved tag is inactive.
+     */
+    private Set<Tag> resolveTagsFromDTO(ProblemDTO problemDTO) {
+        List<String> tagNames = problemDTO.getTagNames();
+
+        if (tagNames != null && !tagNames.isEmpty()) {
+            return tagNames.stream()
+                    .map(name -> {
+                        Tag tag = tagRepository.findByNameIgnoreCase(name)
+                                .orElseThrow(() -> new NotFoundException("Tag not found: " + name));
+                        if (!Boolean.TRUE.equals(tag.getIsActive())) {
+                            throw new BadRequestException("Tag '" + tag.getName() + "' is inactive and cannot be assigned to a problem");
+                        }
+                        return tag;
+                    })
+                    .collect(Collectors.toSet());
+        }
+
+        if (problemDTO.getTags() != null && !problemDTO.getTags().isEmpty()) {
+            return problemDTO.getTags().stream()
+                    .map(tagDTO -> {
+                        Tag tag;
+                        if (tagDTO.getId() != null) {
+                            tag = tagRepository.findById(tagDTO.getId())
+                                    .orElseThrow(() -> new NotFoundException("Tag not found with id: " + tagDTO.getId()));
+                        } else {
+                            tag = tagRepository.findByNameIgnoreCase(tagDTO.getName())
+                                    .orElseThrow(() -> new NotFoundException("Tag not found: " + tagDTO.getName()));
+                        }
+                        if (!Boolean.TRUE.equals(tag.getIsActive())) {
+                            throw new BadRequestException("Tag '" + tag.getName() + "' is inactive and cannot be assigned to a problem");
+                        }
+                        return tag;
+                    })
+                    .collect(Collectors.toSet());
+        }
+
+        return new HashSet<>();
+    }
+
+    private String sanitize(String title) {
+        return title.replaceAll("[^a-zA-Z0-9-_]", "-")
+                .replaceAll("-+", "-")
+                .toLowerCase();
+    }
+
+    private String extractS3Key(String url) {
         try {
             URL s3Url = new URL(url);
             String key = s3Url.getPath();
@@ -546,30 +447,32 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
+    // Keep old name as alias for compatibility
+    private String extractS3KeyFromUrl(String url) { return extractS3Key(url); }
+
     private String generateUniqueSlug(String baseSlug) {
         String slug = baseSlug;
         int counter = 1;
-
         while (problemRepository.existsBySlug(slug)) {
-            slug = baseSlug + "-" + counter;
-            counter++;
+            slug = baseSlug + "-" + counter++;
         }
-
         return slug;
     }
 
     private String generateUniqueSlugExcludingCurrent(String baseSlug, Long excludeId) {
         String slug = baseSlug;
         int counter = 1;
-
         while (problemRepository.existsBySlugAndIdNot(slug, excludeId)) {
-            slug = baseSlug + "-" + counter;
-            counter++;
+            slug = baseSlug + "-" + counter++;
         }
-
         return slug;
     }
 
+    /**
+     * Maps a Problem entity to a ProblemDTO for API responses.
+     * ALL tags (active and inactive) are included so the frontend can warn about
+     * tags that have been disabled or deleted after being assigned to a problem.
+     */
     private ProblemDTO mapToResponseDTO(Problem problem) {
         ProblemDTO dto = new ProblemDTO();
         dto.setId(problem.getId());
@@ -586,25 +489,23 @@ public class ProblemServiceImpl implements ProblemService {
         dto.setCreatedAt(problem.getCreatedAt());
         dto.setUpdatedAt(problem.getUpdatedAt());
 
-        // Map test cases
         if (problem.getTestCases() != null) {
-            List<TestCaseDTO> testCaseDTOs = problem.getTestCases().stream()
+            dto.setTestCases(problem.getTestCases().stream()
                     .map(this::mapTestCaseToDTO)
-                    .collect(Collectors.toList());
-            dto.setTestCases(testCaseDTOs);
+                    .collect(Collectors.toList()));
         }
 
-        // Map tags
         if (problem.getTags() != null) {
-            Set<TagDTO> tagDTOs = problem.getTags().stream()
+            // Return all tags; isActive=false signals a disabled tag to the frontend
+            dto.setTags(problem.getTags().stream()
                     .map(tag -> {
                         TagDTO tagDTO = new TagDTO();
                         tagDTO.setId(tag.getId());
                         tagDTO.setName(tag.getName());
+                        tagDTO.setIsActive(tag.getIsActive());
                         return tagDTO;
                     })
-                    .collect(Collectors.toSet());
-            dto.setTags(tagDTOs);
+                    .collect(Collectors.toSet()));
         }
 
         return dto;

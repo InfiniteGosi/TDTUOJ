@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/problems")
@@ -23,8 +25,9 @@ public class ProblemController {
             @RequestParam(defaultValue = "0") Integer offset,
             @RequestParam(defaultValue = "id") String sortField,
             @RequestParam(defaultValue = "asc") String direction,
-            @RequestParam(required = false) String title) {
-        return ResponseEntity.ok(problemService.getAllProblems(limit, offset, sortField, direction, title));
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) List<String> tags) {
+        return ResponseEntity.ok(problemService.getAllProblems(limit, offset, sortField, direction, title, tags));
     }
 
     @GetMapping("id/{id}")
@@ -49,6 +52,23 @@ public class ProblemController {
     public ResponseEntity<Response<ProblemDTO>> updateProblem(
             @ModelAttribute @Valid ProblemDTO problemDTO) {
         return ResponseEntity.ok(problemService.updateProblem(problemDTO));
+    }
+
+    /**
+     * Replace the tags of a problem.
+     * Accepts either tagNames (list of tag name strings) or tags (list of TagDTO with id or name).
+     *
+     * Example body:
+     * { "tagNames": ["Array", "Dynamic Programming"] }
+     * or
+     * { "tags": [{ "id": 1 }, { "id": 3 }] }
+     */
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{id}/tags")
+    public ResponseEntity<Response<ProblemDTO>> updateProblemTags(
+            @PathVariable Long id,
+            @RequestBody ProblemDTO problemDTO) {
+        return ResponseEntity.ok(problemService.updateProblemTags(id, problemDTO));
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")

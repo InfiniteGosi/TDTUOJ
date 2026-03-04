@@ -12,18 +12,15 @@ export default class ApiService {
     return localStorage.getItem("token");
   }
 
-  // Save role
   static saveRole(roles) {
     localStorage.setItem("roles", JSON.stringify(roles));
   }
 
-  // Get roles from local storage
   static getRoles() {
     const roles = localStorage.getItem("roles");
     return roles ? JSON.parse(roles) : null;
   }
 
-  // Check if the user has a specific role
   static hasRole(role) {
     const roles = this.getRoles();
     return roles ? roles.includes(role) : false;
@@ -53,22 +50,17 @@ export default class ApiService {
 
   static getHeader() {
     const token = this.getToken();
-
-    // Only include Authorization header if token exists
     if (token) {
       return {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       };
     }
-
-    // Return headers without Authorization if no token
-    return {
-      "Content-Type": "application/json",
-    };
+    return { "Content-Type": "application/json" };
   }
 
-  // Register user
+  // ─── Auth ────────────────────────────────────────────────────────────────────
+
   static async registerUser(registrationData) {
     const resp = await axios.post(
       `${this.BASE_URL}/auth/register`,
@@ -77,11 +69,12 @@ export default class ApiService {
     return resp.data;
   }
 
-  // Login user
   static async loginUser(loginData) {
     const resp = await axios.post(`${this.BASE_URL}/auth/login`, loginData);
     return resp.data;
   }
+
+  // ─── Users ───────────────────────────────────────────────────────────────────
 
   static async getOwnProfile() {
     const resp = await axios.get(`${this.BASE_URL}/users/account`, {
@@ -92,10 +85,7 @@ export default class ApiService {
 
   static async updateProfile(formData) {
     const resp = await axios.put(`${this.BASE_URL}/users/update`, formData, {
-      headers: {
-        ...this.getHeader(),
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { ...this.getHeader(), "Content-Type": "multipart/form-data" },
     });
     return resp.data;
   }
@@ -104,12 +94,7 @@ export default class ApiService {
     const resp = await axios.put(
       `${this.BASE_URL}/users/change-password`,
       passwordData,
-      {
-        headers: {
-          ...this.getHeader(),
-          "Content-Type": "application/json",
-        },
-      },
+      { headers: { ...this.getHeader(), "Content-Type": "application/json" } },
     );
     return resp.data;
   }
@@ -128,24 +113,11 @@ export default class ApiService {
     direction = "asc",
     username = "",
   } = {}) {
-    const url = `${this.BASE_URL}/users`;
-
-    try {
-      const resp = await axios.get(url, {
-        headers: this.getHeader(),
-        params: {
-          limit,
-          offset,
-          sortField,
-          direction,
-          username,
-        },
-      });
-      return resp.data;
-    } catch (error) {
-      console.error("Error fetching problems:", error);
-      throw error;
-    }
+    const resp = await axios.get(`${this.BASE_URL}/users`, {
+      headers: this.getHeader(),
+      params: { limit, offset, sortField, direction, username },
+    });
+    return resp.data;
   }
 
   static async getUserByUsername(username) {
@@ -164,40 +136,46 @@ export default class ApiService {
 
   static async updateUserAsAdmin(formData) {
     const resp = await axios.put(`${this.BASE_URL}/admin/users`, formData, {
-      headers: {
-        ...this.getHeader(),
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { ...this.getHeader(), "Content-Type": "multipart/form-data" },
     });
     return resp.data;
   }
 
-  /******************* Problems **************************** */
+  // ─── Problems ────────────────────────────────────────────────────────────────
+
+  /**
+   * Fetches a paginated list of problems.
+   *
+   * @param {object} options
+   * @param {number}   options.limit      - Page size (default 10)
+   * @param {number}   options.offset     - Row offset (default 0)
+   * @param {string}   options.sortField  - Field to sort by (default "id")
+   * @param {string}   options.direction  - "asc" | "desc" (default "asc")
+   * @param {string}   options.title      - Optional title search filter
+   * @param {string[]} options.tags       - Optional list of active tag names to filter by (AND semantics)
+   */
   static async getAllProblems({
     limit = 10,
     offset = 0,
     sortField = "id",
     direction = "asc",
     title = "",
+    tags = [],
   } = {}) {
-    const url = `${this.BASE_URL}/problems`;
+    // axios serialises repeated params as tags[]=… by default; Spring expects tags=a&tags=b
+    const params = new URLSearchParams();
+    params.append("limit", limit);
+    params.append("offset", offset);
+    params.append("sortField", sortField);
+    params.append("direction", direction);
+    if (title) params.append("title", title);
+    (tags || []).forEach((t) => params.append("tags", t));
 
-    try {
-      const resp = await axios.get(url, {
-        headers: this.getHeader(),
-        params: {
-          limit,
-          offset,
-          sortField,
-          direction,
-          title,
-        },
-      });
-      return resp.data;
-    } catch (error) {
-      console.error("Error fetching problems:", error);
-      throw error;
-    }
+    const resp = await axios.get(`${this.BASE_URL}/problems`, {
+      headers: this.getHeader(),
+      params,
+    });
+    return resp.data;
   }
 
   static async getProblemById(id) {
@@ -219,21 +197,31 @@ export default class ApiService {
 
   static async createProblem(formData) {
     const resp = await axios.post(`${this.BASE_URL}/problems`, formData, {
-      headers: {
-        ...this.getHeader(),
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { ...this.getHeader(), "Content-Type": "multipart/form-data" },
     });
     return resp.data;
   }
 
   static async updateProblem(formData) {
     const resp = await axios.put(`${this.BASE_URL}/problems`, formData, {
-      headers: {
-        ...this.getHeader(),
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { ...this.getHeader(), "Content-Type": "multipart/form-data" },
     });
+    return resp.data;
+  }
+
+  /**
+   * Replaces the tag set on a problem.
+   * Accepts either tagNames (string[]) or tags ({id, name}[]).
+   *
+   * @param {number|string} problemId
+   * @param {{ tagNames?: string[], tags?: {id:number,name:string}[] }} payload
+   */
+  static async updateProblemTags(problemId, payload) {
+    const resp = await axios.patch(
+      `${this.BASE_URL}/problems/${problemId}/tags`,
+      payload,
+      { headers: { ...this.getHeader(), "Content-Type": "application/json" } },
+    );
     return resp.data;
   }
 
@@ -244,7 +232,7 @@ export default class ApiService {
     return resp.data;
   }
 
-  /******************* Tags **************************** */
+  // ─── Tags ─────────────────────────────────────────────────────────────────────
 
   static async getTagById(id) {
     const resp = await axios.get(`${this.BASE_URL}/problem-tags/${id}`);
@@ -258,51 +246,30 @@ export default class ApiService {
     direction = "asc",
     name = "",
   } = {}) {
-    const url = `${this.BASE_URL}/problem-tags`;
-
-    try {
-      const resp = await axios.get(url, {
-        headers: this.getHeader(),
-        params: {
-          limit,
-          offset,
-          sortField,
-          direction,
-          name,
-        },
-      });
-      return resp.data;
-    } catch (error) {
-      console.error("Error fetching tags:", error);
-      throw error;
-    }
+    const resp = await axios.get(`${this.BASE_URL}/problem-tags`, {
+      headers: this.getHeader(),
+      params: { limit, offset, sortField, direction, name },
+    });
+    return resp.data;
   }
 
   static async createTag(data) {
     const resp = await axios.post(`${this.BASE_URL}/problem-tags`, data, {
-      headers: {
-        ...this.getHeader(),
-        "Content-Type": "application/json",
-      },
+      headers: { ...this.getHeader(), "Content-Type": "application/json" },
     });
     return resp.data;
   }
 
   static async updateTag(data) {
     const resp = await axios.put(`${this.BASE_URL}/problem-tags`, data, {
-      headers: {
-        ...this.getHeader(),
-        "Content-Type": "application/json",
-      },
+      headers: { ...this.getHeader(), "Content-Type": "application/json" },
     });
     return resp.data;
   }
 
   static async deleteTag(id) {
     const resp = await axios.delete(`${this.BASE_URL}/problem-tags/${id}`, {
-      headers: {
-        ...this.getHeader(),
-      },
+      headers: this.getHeader(),
     });
     return resp.data;
   }
@@ -310,13 +277,13 @@ export default class ApiService {
   static async toggleTagActive(id) {
     const resp = await axios.patch(
       `${this.BASE_URL}/problem-tags/toggle-active/${id}`,
-      null, // ← empty body
-      { headers: this.getHeader() }, // ← config as 3rd argument
+      null,
+      { headers: this.getHeader() },
     );
     return resp.data;
   }
 
-  /******************* Judge0 **************************** */
+  // ─── Judge0 ──────────────────────────────────────────────────────────────────
 
   static async executeCode(languageId, sourceCode, stdin, expectedOutput) {
     const resp = await axios.post(
@@ -324,11 +291,10 @@ export default class ApiService {
       {
         language_id: languageId,
         source_code: sourceCode,
-        stdin: stdin,
+        stdin,
         expected_output: expectedOutput,
       },
     );
-
     return resp.data;
   }
 
