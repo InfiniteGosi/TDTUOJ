@@ -2,9 +2,11 @@ package com.oj.TDTUOJ.testcase.repository;
 
 import com.oj.TDTUOJ.testcase.entity.TestCase;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 public interface TestCaseRepository extends JpaRepository<TestCase, Long> {
     List<TestCase> findTestCasesByProblemId(Long problemId);
 }

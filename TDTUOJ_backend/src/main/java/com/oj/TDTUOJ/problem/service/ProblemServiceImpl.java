@@ -1,6 +1,7 @@
 package com.oj.TDTUOJ.problem.service;
 
 import com.oj.TDTUOJ.common.aws.AwsS3Service;
+import com.oj.TDTUOJ.common.enums.ProblemDifficulty;
 import com.oj.TDTUOJ.common.exceptions.BadRequestException;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.common.utils.ProblemSlugUtils;
@@ -46,7 +47,8 @@ public class ProblemServiceImpl implements ProblemService {
 
     @Override
     public Response<Page<ProblemDTO>> getAllProblems(Integer limit, Integer offset, String sortField,
-                                                     String direction, String title, List<String> tagNames) {
+                                                     String direction, String title, List<String> tagNames,
+                                                     String difficulty) {
         if (limit == null || limit <= 0) limit = 20;
         if (offset == null || offset < 0) offset = 0;
         if (sortField == null || sortField.isBlank()) sortField = "id";
@@ -56,7 +58,15 @@ public class ProblemServiceImpl implements ProblemService {
         int page = offset / limit;
         Pageable pageable = PageRequest.of(page, limit, sort);
 
-        // Strip out any inactive tag names from the filter to prevent filtering by disabled tags
+        // Resolve difficulty enum (null = no filter)
+        ProblemDifficulty difficultyEnum = null;
+        if (difficulty != null && !difficulty.isBlank()) {
+            try {
+                difficultyEnum = ProblemDifficulty.valueOf(difficulty.toUpperCase());
+            } catch (IllegalArgumentException ignored) { /* invalid value → treat as no filter */ }
+        }
+
+        // Strip out any inactive tag names from the filter
         List<String> activeTagNames = null;
         if (tagNames != null && !tagNames.isEmpty()) {
             activeTagNames = tagNames.stream()
@@ -67,16 +77,27 @@ public class ProblemServiceImpl implements ProblemService {
         }
 
         boolean hasTitle = title != null && !title.isBlank();
-        boolean hasTags = activeTagNames != null && !activeTagNames.isEmpty();
+        boolean hasTags  = activeTagNames != null && !activeTagNames.isEmpty();
+        boolean hasDiff  = difficultyEnum != null;
 
         Page<Problem> problemPage;
-        if (hasTitle && hasTags) {
+        if (hasTitle && hasTags && hasDiff) {
+            problemPage = problemRepository.findByTitleAndTagsAndDifficulty(
+                    title, activeTagNames, (long) activeTagNames.size(), difficultyEnum, pageable);
+        } else if (hasTitle && hasTags) {
             problemPage = problemRepository.findByTitleContainingIgnoreCaseAndTagNames(
                     title, activeTagNames, (long) activeTagNames.size(), pageable);
+        } else if (hasTitle && hasDiff) {
+            problemPage = problemRepository.findByTitleContainingIgnoreCaseAndDifficulty(title, difficultyEnum, pageable);
+        } else if (hasTags && hasDiff) {
+            problemPage = problemRepository.findByTagNamesAndDifficulty(
+                    activeTagNames, (long) activeTagNames.size(), difficultyEnum, pageable);
         } else if (hasTitle) {
             problemPage = problemRepository.findByTitleContainingIgnoreCase(title, pageable);
         } else if (hasTags) {
             problemPage = problemRepository.findByTagNames(activeTagNames, (long) activeTagNames.size(), pageable);
+        } else if (hasDiff) {
+            problemPage = problemRepository.findByProblemDifficulty(difficultyEnum, pageable);
         } else {
             problemPage = problemRepository.findAll(pageable);
         }

@@ -26,8 +26,9 @@ public class ProblemController {
             @RequestParam(defaultValue = "id") String sortField,
             @RequestParam(defaultValue = "asc") String direction,
             @RequestParam(required = false) String title,
-            @RequestParam(required = false) List<String> tags) {
-        return ResponseEntity.ok(problemService.getAllProblems(limit, offset, sortField, direction, title, tags));
+            @RequestParam(required = false) List<String> tags,
+            @RequestParam(required = false) String difficulty) {
+        return ResponseEntity.ok(problemService.getAllProblems(limit, offset, sortField, direction, title, tags, difficulty));
     }
 
     @GetMapping("id/{id}")

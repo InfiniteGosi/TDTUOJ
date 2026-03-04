@@ -153,6 +153,7 @@ export default class ApiService {
    * @param {string}   options.direction  - "asc" | "desc" (default "asc")
    * @param {string}   options.title      - Optional title search filter
    * @param {string[]} options.tags       - Optional list of active tag names to filter by (AND semantics)
+   * @param {string}   options.difficulty - Optional difficulty: "EASY" | "MEDIUM" | "HARD"
    */
   static async getAllProblems({
     limit = 10,
@@ -161,6 +162,7 @@ export default class ApiService {
     direction = "asc",
     title = "",
     tags = [],
+    difficulty = "",
   } = {}) {
     // axios serialises repeated params as tags[]=… by default; Spring expects tags=a&tags=b
     const params = new URLSearchParams();
@@ -169,6 +171,7 @@ export default class ApiService {
     params.append("sortField", sortField);
     params.append("direction", direction);
     if (title) params.append("title", title);
+    if (difficulty) params.append("difficulty", difficulty);
     (tags || []).forEach((t) => params.append("tags", t));
 
     const resp = await axios.get(`${this.BASE_URL}/problems`, {
