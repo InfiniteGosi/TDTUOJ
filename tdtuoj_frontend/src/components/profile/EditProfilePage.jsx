@@ -105,7 +105,10 @@ const EditProfilePage = () => {
 
           if (response.statusCode === 200) {
             showMessage("Profile updated successfully!", "success");
-            window.location.href = `/users/${user.username}`;
+            // Delay navigation so the message is visible
+            setTimeout(() => {
+              window.location.href = `/users/${user.username}`;
+            }, 2000);
           }
         } catch (error) {
           showMessage(
