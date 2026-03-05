@@ -28,12 +28,12 @@ import {
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useConfirmDialog } from "../common/ConfirmDialog";
-import { useMessage } from "../common/MessageDisplay";
+import { useToast } from "../common/ToastMessage";
 import TagFormDialog from "./TagFormDialog";
 
 const AdminProblemTagPage = () => {
   const { ConfirmDialog, showConfirm } = useConfirmDialog();
-  const { MessageDisplay, showMessage } = useMessage();
+  const { showMessage } = useToast();
   const [tags, setTags] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -210,7 +210,6 @@ const AdminProblemTagPage = () => {
             </Button>
           </HStack>
 
-          <MessageDisplay />
           <ConfirmDialog />
 
           <TagFormDialog

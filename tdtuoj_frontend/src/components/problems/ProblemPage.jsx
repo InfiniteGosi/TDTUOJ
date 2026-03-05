@@ -29,7 +29,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
-import { useMessage } from "../common/MessageDisplay";
+import { useToast } from "../common/ToastMessage";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -339,7 +339,7 @@ const FilterPanel = ({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 const ProblemPage = () => {
-  const { MessageDisplay, showMessage } = useMessage();
+  const { showMessage } = useToast();
   const navigate = useNavigate();
 
   const [problems, setProblems] = useState([]);
@@ -492,8 +492,6 @@ const ProblemPage = () => {
               {pagination.totalElements === 1 ? "problem" : "problems"}
             </Badge>
           </HStack>
-
-          <MessageDisplay />
 
           {/* Search + Sort + Filters toggle */}
           <HStack gap={3} align="stretch">

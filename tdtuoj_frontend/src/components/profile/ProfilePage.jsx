@@ -16,7 +16,7 @@ import {
 } from "@chakra-ui/react";
 import { Trophy, Star, Calendar, Mail, User, Award } from "lucide-react";
 import ApiService from "../../services/ApiService";
-import { useMessage } from "../common/MessageDisplay";
+import { useToast } from "../common/ToastMessage";
 import AvatarUploadModal from "../common/AvatarUploadModal";
 
 const ProfilePage = () => {
@@ -24,7 +24,7 @@ const ProfilePage = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { MessageDisplay, showMessage } = useMessage();
+  const { showMessage } = useToast();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -169,8 +169,6 @@ const ProfilePage = () => {
   return (
     <Box minH="100vh" bg="gray.50" py={8}>
       <Container maxW="container.xl">
-        <MessageDisplay />
-
         <Grid templateColumns="repeat(12, 1fr)" gap={6}>
           {/* Left Sidebar - User Info */}
           <GridItem colSpan={{ base: 12, lg: 4 }}>

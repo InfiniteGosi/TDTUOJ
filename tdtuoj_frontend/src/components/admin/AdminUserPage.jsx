@@ -27,11 +27,11 @@ import {
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useConfirmDialog } from "../common/ConfirmDialog";
-import { useMessage } from "../common/MessageDisplay";
+import { useToast } from "../common/ToastMessage";
 
 const AdminUserPage = () => {
   const { ConfirmDialog } = useConfirmDialog();
-  const { MessageDisplay, showMessage } = useMessage();
+  const { showMessage } = useToast();
   const [users, setUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -195,7 +195,6 @@ const AdminUserPage = () => {
             </Button>
           </HStack>
 
-          <MessageDisplay />
           <ConfirmDialog />
 
           {/* Search and Filters */}

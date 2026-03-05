@@ -1,10 +1,10 @@
-import { useMessage } from "../common/MessageDisplay";
+import { useToast } from "../common/ToastMessage";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import ApiService from "../../services/ApiService";
 
 const LoginPage = () => {
-  const { MessageDisplay, showMessage } = useMessage();
+  const { showMessage } = useToast();
   const navigate = useNavigate();
   const { state } = useLocation();
   const redirectPath = state?.from?.pathName || "/home";
@@ -38,7 +38,7 @@ const LoginPage = () => {
     } catch (exception) {
       showMessage(
         exception.response?.data?.message || exception.message,
-        "error"
+        "error",
       );
     }
   };
@@ -86,9 +86,6 @@ const LoginPage = () => {
                 className="login-input-food"
               />
             </div>
-
-            {/* Render the ErrorDisplay component */}
-            <MessageDisplay />
 
             <div>
               <button type="submit" className="login-button-food">

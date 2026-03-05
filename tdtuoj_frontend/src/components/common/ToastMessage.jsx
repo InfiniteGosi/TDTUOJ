@@ -1,7 +1,14 @@
-import { useEffect, useState, useCallback, useRef } from "react";
-import { Alert, Box, CloseButton, Progress } from "@chakra-ui/react";
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  createContext,
+  useContext,
+} from "react";
+import ReactDOM from "react-dom";
+import { Alert, CloseButton, Progress } from "@chakra-ui/react";
 
-// Inject keyframes once into the document
 const injectKeyframes = () => {
   if (document.getElementById("toast-keyframes")) return;
   const style = document.createElement("style");
@@ -19,10 +26,11 @@ const injectKeyframes = () => {
   document.head.appendChild(style);
 };
 
-/**
- * Chakra v3 Alert-based Display with slide in/out animation + auto-dismiss
- */
-const MessageDisplay = ({ status = "error", message, onDismiss }) => {
+// ─── Context ────────────────────────────────────────────────────────────────
+const ToastContext = createContext(null);
+
+// ─── Inner toast UI (rendered via portal into document.body) ────────────────
+const ToastMessage = ({ status, message, onDismiss }) => {
   const [progress, setProgress] = useState(100);
   const [isExiting, setIsExiting] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -73,8 +81,7 @@ const MessageDisplay = ({ status = "error", message, onDismiss }) => {
 
   if (!isVisible && !isExiting) return null;
 
-  return (
-    // Outer wrapper: handles position + clipping
+  return ReactDOM.createPortal(
     <div
       style={{
         position: "fixed",
@@ -82,10 +89,9 @@ const MessageDisplay = ({ status = "error", message, onDismiss }) => {
         right: "20px",
         zIndex: 9999,
         minWidth: "320px",
-        overflow: "hidden", // prevents scrollbar flash during slide
+        overflow: "hidden",
       }}
     >
-      {/* Inner wrapper: this is what animates */}
       <div
         style={{
           animation: isExiting
@@ -136,51 +142,47 @@ const MessageDisplay = ({ status = "error", message, onDismiss }) => {
           />
         </Alert.Root>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 
-/**
- * Hook for managing and displaying Chakra v3 alerts with status
- */
-export const useMessage = () => {
-  const [alertData, setAlertData] = useState({
+// ─── Provider (place once at app root) ──────────────────────────────────────
+export const ToastProvider = ({ children }) => {
+  const [toast, setToast] = useState({
     message: null,
     status: "error",
     isShowing: false,
   });
 
   const showMessage = useCallback((message, status = "error") => {
-    setAlertData((prev) => {
+    setToast((prev) => {
       if (prev.isShowing) return prev;
       return { message, status, isShowing: true };
     });
   }, []);
 
   const dismissMessage = useCallback(() => {
-    setAlertData((prev) => ({
-      ...prev,
-      message: null,
-      isShowing: false,
-    }));
+    setToast({ message: null, status: "error", isShowing: false });
   }, []);
 
-  const MessageDisplayWrapper = useCallback(
-    () => (
-      <MessageDisplay
-        message={alertData.message}
-        status={alertData.status}
+  return (
+    <ToastContext.Provider value={{ showMessage, dismissMessage }}>
+      {children}
+      <ToastMessage
+        message={toast.message}
+        status={toast.status}
         onDismiss={dismissMessage}
       />
-    ),
-    [alertData.message, alertData.status, dismissMessage],
+    </ToastContext.Provider>
   );
-
-  return {
-    MessageDisplay: MessageDisplayWrapper,
-    showMessage,
-    dismissMessage,
-  };
 };
 
-export default MessageDisplay;
+// ─── Hook (use anywhere inside ToastProvider) ────────────────────────────────
+export const useToast = () => {
+  const context = useContext(ToastContext);
+  if (!context) throw new Error("useToast must be used inside <ToastProvider>");
+  return context;
+};
+
+export default ToastMessage;

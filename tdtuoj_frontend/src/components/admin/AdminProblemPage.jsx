@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useConfirmDialog } from "../common/ConfirmDialog";
-import { useMessage } from "../common/MessageDisplay";
+import { useToast } from "../common/ToastMessage";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -344,7 +344,7 @@ const FilterPanel = ({
 
 const AdminProblemPage = () => {
   const { ConfirmDialog, showConfirm } = useConfirmDialog();
-  const { MessageDisplay, showMessage } = useMessage();
+  const { showMessage } = useToast();
   const navigate = useNavigate();
 
   const [problems, setProblems] = useState([]);
@@ -531,7 +531,6 @@ const AdminProblemPage = () => {
             </Button>
           </HStack>
 
-          <MessageDisplay />
           <ConfirmDialog />
 
           {/* Search + Sort + Filters toggle */}

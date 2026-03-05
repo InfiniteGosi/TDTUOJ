@@ -25,10 +25,10 @@ import {
   ChevronsRight,
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
-import { useMessage } from "../common/MessageDisplay";
+import { useToast } from "../common/ToastMessage";
 
 const UserPage = () => {
-  const { MessageDisplay, showMessage } = useMessage();
+  const { showMessage } = useToast();
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -163,8 +163,6 @@ const UserPage = () => {
               {pagination.totalElements === 1 ? "user" : "users"}
             </Badge>
           </HStack>
-
-          <MessageDisplay />
 
           {/* Search and Filters */}
           <HStack gap={4}>

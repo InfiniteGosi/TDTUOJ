@@ -18,50 +18,68 @@ import ChangePasswordPage from "./components/profile/ChangePasswordPage";
 import AdminUserPage from "./components/admin/AdminUserPage";
 import AdminEditUserPage from "./components/admin/AdminEditUserPage";
 import AdminProblemTagPage from "./components/admin/AdminProblemTagPage";
+import { ToastProvider } from "./components/common/ToastMessage";
 
 function App() {
   return (
     <ChakraProvider value={defaultSystem}>
-      <BrowserRouter>
-        <div className="App">
-          <NavBar />
-          <div className="content">
-            <Routes>
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/home" element={<HomePage />} />
-              <Route path="/problems" element={<ProblemPage />} />
-              <Route path="/users" element={<UserPage />} />
-              <Route path="/problems/:slug" element={<ProblemDetailsPage />} />
-              <Route path="users/:username" element={<ProfilePage />} />
-              <Route path="/profile" element={<EditProfilePage to="/home" />} />
-              <Route path="/change-password" element={<ChangePasswordPage />} />
-              <Route
-                path="/admin"
-                element={<AdminRoute element={<AdminLayout />} />}
-              >
-                <Route path="problems" element={<AdminProblemPage />} />
-                <Route path="problems/new" element={<AdminProblemFormPage />} />
+      <ToastProvider>
+        <BrowserRouter>
+          <div className="App">
+            <NavBar />
+            <div className="content">
+              <Routes>
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/home" element={<HomePage />} />
+                <Route path="/problems" element={<ProblemPage />} />
+                <Route path="/users" element={<UserPage />} />
                 <Route
-                  path="problems/edit/:id"
-                  element={<AdminProblemFormPage />}
+                  path="/problems/:slug"
+                  element={<ProblemDetailsPage />}
                 />
-
-                <Route path="problem-tags" element={<AdminProblemTagPage />} />
-
-                <Route path="users" element={<AdminUserPage />} />
+                <Route path="users/:username" element={<ProfilePage />} />
                 <Route
-                  path="/admin/users/edit/:userId"
-                  element={<AdminEditUserPage />}
+                  path="/profile"
+                  element={<EditProfilePage to="/home" />}
                 />
-              </Route>
+                <Route
+                  path="/change-password"
+                  element={<ChangePasswordPage />}
+                />
+                <Route
+                  path="/admin"
+                  element={<AdminRoute element={<AdminLayout />} />}
+                >
+                  <Route path="problems" element={<AdminProblemPage />} />
+                  <Route
+                    path="problems/new"
+                    element={<AdminProblemFormPage />}
+                  />
+                  <Route
+                    path="problems/edit/:id"
+                    element={<AdminProblemFormPage />}
+                  />
 
-              <Route path="*" element={<Navigate to={"/home"} />} />
-            </Routes>
+                  <Route
+                    path="problem-tags"
+                    element={<AdminProblemTagPage />}
+                  />
+
+                  <Route path="users" element={<AdminUserPage />} />
+                  <Route
+                    path="/admin/users/edit/:userId"
+                    element={<AdminEditUserPage />}
+                  />
+                </Route>
+
+                <Route path="*" element={<Navigate to={"/home"} />} />
+              </Routes>
+            </div>
+            <Footer />
           </div>
-          <Footer />
-        </div>
-      </BrowserRouter>
+        </BrowserRouter>
+      </ToastProvider>
     </ChakraProvider>
   );
 }

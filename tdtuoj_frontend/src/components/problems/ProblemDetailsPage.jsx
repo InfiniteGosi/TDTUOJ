@@ -11,7 +11,7 @@ import {
   WrapItem,
 } from "@chakra-ui/react";
 import { CheckCircle, XCircle } from "lucide-react";
-import { useMessage } from "../common/MessageDisplay";
+import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
 import ReactMarkdown from "react-markdown";
 import CodeEditor from "../CodeEditor/CodeEditor";
@@ -206,7 +206,7 @@ const ProblemDetailsPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState(null);
   const [activeTab, setActiveTab] = useState("description");
-  const { MessageDisplay, showMessage } = useMessage();
+  const { showMessage } = useToast();
   const codeEditorRef = useRef(null);
 
   const fetchProblem = async () => {
@@ -377,7 +377,6 @@ const ProblemDetailsPage = () => {
           {"<OJ/>"}
         </Text>
         <Box flex={1} />
-        <MessageDisplay />
       </Box>
 
       {/* ── Main split ── */}

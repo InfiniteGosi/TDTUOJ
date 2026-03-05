@@ -29,7 +29,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { useMessage } from "../common/MessageDisplay";
+import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
 
 const STATEMENT_PLACEHOLDER = `## Two sum
@@ -71,7 +71,7 @@ const DIFFICULTY_COLORS = {
 const AdminProblemFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { MessageDisplay, showMessage } = useMessage();
+  const { showMessage } = useToast();
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
@@ -450,8 +450,6 @@ const AdminProblemFormPage = () => {
               Back to Problems
             </Button>
           </HStack>
-
-          <MessageDisplay />
 
           <VStack gap={6} align="stretch">
             {/* Problem Details */}

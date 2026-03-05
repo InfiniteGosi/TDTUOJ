@@ -1,10 +1,10 @@
-import { useMessage } from "../common/MessageDisplay";
+import { useToast } from "../common/ToastMessage";
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
 import ApiService from "../../services/ApiService";
 
 const RegisterPage = () => {
-  const { MessageDisplay, showMessage } = useMessage();
+  const { showMessage } = useToast();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -175,9 +175,6 @@ const RegisterPage = () => {
                 className="register-input-food"
               />
             </div>
-
-            {/* Render the ErrorDisplay component */}
-            <MessageDisplay />
 
             <div>
               <button type="submit" className="register-button-food">

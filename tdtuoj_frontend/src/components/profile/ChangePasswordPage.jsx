@@ -13,13 +13,13 @@ import {
 } from "@chakra-ui/react";
 import { ArrowLeft, Lock } from "lucide-react";
 import ApiService from "../../services/ApiService";
-import { useMessage } from "../common/MessageDisplay";
+import { useToast } from "../common/ToastMessage";
 import { useConfirmDialog } from "../common/ConfirmDialog";
 
 const ChangePasswordPage = () => {
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
-  const { MessageDisplay, showMessage } = useMessage();
+  const { showMessage } = useToast();
   const { ConfirmDialog, showConfirm } = useConfirmDialog();
 
   const [formData, setFormData] = useState({
@@ -99,8 +99,6 @@ const ChangePasswordPage = () => {
     <Box minH="100vh" bg="gray.50" py={8}>
       <Container maxW="container.sm">
         <VStack align="stretch" gap={6}>
-          <MessageDisplay />
-
           {/* Header */}
           <HStack gap={4} align="center">
             <Button

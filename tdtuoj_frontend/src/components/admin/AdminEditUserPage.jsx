@@ -18,9 +18,9 @@ import {
 } from "@chakra-ui/react";
 import { ArrowLeft, Lock, Shield, User } from "lucide-react";
 import ApiService from "../../services/ApiService";
-import { useMessage } from "../common/MessageDisplay";
 import { useConfirmDialog } from "../common/ConfirmDialog";
 import AvatarUploadModal from "../common/AvatarUploadModal";
+import { useToast } from "../common/ToastMessage";
 
 const AVAILABLE_ROLES = ["PARTICIPANT", "CREATOR", "ADMIN"];
 
@@ -54,7 +54,6 @@ const AdminEditUserPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
-  const { MessageDisplay, showMessage } = useMessage();
   const { ConfirmDialog, showConfirm } = useConfirmDialog();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
@@ -209,8 +208,6 @@ const AdminEditUserPage = () => {
     <Box minH="100vh" bg="gray.50" py={8}>
       <Container maxW="container.md">
         <VStack align="stretch" gap={6}>
-          <MessageDisplay />
-
           {/* Header */}
           <HStack gap={4} align="center">
             <Button

@@ -15,7 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { ArrowLeft, Lock } from "lucide-react";
 import ApiService from "../../services/ApiService";
-import { useMessage } from "../common/MessageDisplay";
+import { useToast } from "../common/ToastMessage";
 import { useConfirmDialog } from "../common/ConfirmDialog";
 import AvatarUploadModal from "../common/AvatarUploadModal";
 
@@ -24,7 +24,7 @@ const EditProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
-  const { MessageDisplay, showMessage } = useMessage();
+  const { showMessage } = useToast();
   const { ConfirmDialog, showConfirm } = useConfirmDialog();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
@@ -105,10 +105,9 @@ const EditProfilePage = () => {
 
           if (response.statusCode === 200) {
             showMessage("Profile updated successfully!", "success");
-            // Delay navigation so the message is visible
             setTimeout(() => {
-              window.location.href = `/users/${user.username}`;
-            }, 2000);
+              navigate(`/users/${user.username}`);
+            }, 1500);
           }
         } catch (error) {
           showMessage(
@@ -183,8 +182,6 @@ const EditProfilePage = () => {
     <Box minH="100vh" bg="gray.50" py={8}>
       <Container maxW="container.md">
         <VStack align="stretch" gap={6}>
-          <MessageDisplay />
-
           {/* Header */}
           <HStack gap={4} align="center">
             <Button
