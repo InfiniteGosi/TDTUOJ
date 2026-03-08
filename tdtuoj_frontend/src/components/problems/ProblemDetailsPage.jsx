@@ -10,7 +10,7 @@ import {
   Wrap,
   WrapItem,
 } from "@chakra-ui/react";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, Clock } from "lucide-react";
 import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
 import ReactMarkdown from "react-markdown";
@@ -333,6 +333,13 @@ const ProblemDetailsPage = () => {
       const sub = resp.data;
       const allPassed = sub.submissionVerdict === "AC";
 
+      // Update solved badge or attempted badge immediately on AC
+      if (allPassed && !problem?.solved) {
+        setProblem((prev) => ({ ...prev, solved: true, attempted: false }));
+      } else if (!allPassed) {
+        setProblem((prev) => ({ ...prev, attempted: true }));
+      }
+
       setResults({
         allPassed,
         passedCount: sub.testCasesPassed ?? 0,
@@ -468,6 +475,46 @@ const ProblemDetailsPage = () => {
                 {problem?.problemDifficulty && (
                   <WrapItem>
                     <DifficultyBadge difficulty={problem.problemDifficulty} />
+                  </WrapItem>
+                )}
+                {problem?.solved && (
+                  <WrapItem>
+                    <Box
+                      display="inline-flex"
+                      alignItems="center"
+                      gap={1}
+                      px={2}
+                      py="2px"
+                      borderRadius="4px"
+                      fontSize="xs"
+                      fontWeight="700"
+                      color={T.green}
+                      bg={T.greenDim}
+                      border={`1px solid ${T.green}44`}
+                    >
+                      <CheckCircle size={11} />
+                      <Text>Solved</Text>
+                    </Box>
+                  </WrapItem>
+                )}
+                {problem?.attempted && !problem?.solved && (
+                  <WrapItem>
+                    <Box
+                      display="inline-flex"
+                      alignItems="center"
+                      gap={1}
+                      px={2}
+                      py="2px"
+                      borderRadius="4px"
+                      fontSize="xs"
+                      fontWeight="700"
+                      color="#f97316"
+                      bg="rgba(249,115,22,0.12)"
+                      border="1px solid rgba(249,115,22,0.3)"
+                    >
+                      <Clock size={11} />
+                      <Text>Attempted</Text>
+                    </Box>
                   </WrapItem>
                 )}
                 <WrapItem>

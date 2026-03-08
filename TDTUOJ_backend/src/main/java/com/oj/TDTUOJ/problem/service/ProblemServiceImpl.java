@@ -2,6 +2,7 @@ package com.oj.TDTUOJ.problem.service;
 
 import com.oj.TDTUOJ.common.aws.AwsS3Service;
 import com.oj.TDTUOJ.common.enums.ProblemDifficulty;
+import com.oj.TDTUOJ.common.enums.SubmissionVerdict;
 import com.oj.TDTUOJ.common.exceptions.BadRequestException;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.common.utils.ProblemSlugUtils;
@@ -12,11 +13,13 @@ import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.problemTag.dto.TagDTO;
 import com.oj.TDTUOJ.problemTag.entity.Tag;
 import com.oj.TDTUOJ.problemTag.repository.TagRepository;
+import com.oj.TDTUOJ.submission.repository.SubmissionRepository;
 import com.oj.TDTUOJ.testcase.dto.TestCaseDTO;
 import com.oj.TDTUOJ.testcase.entity.TestCase;
 import com.oj.TDTUOJ.testcase.repository.TestCaseRepository;
 import com.oj.TDTUOJ.user.entity.User;
 import com.oj.TDTUOJ.user.repository.UserRepository;
+import com.oj.TDTUOJ.user.service.UserService;
 import io.micrometer.core.instrument.Tags;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +47,8 @@ public class ProblemServiceImpl implements ProblemService {
     private final ModelMapper modelMapper;
     private final AwsS3Service awsS3Service;
     private final TagRepository tagRepository;
+    private final SubmissionRepository submissionRepository;
+    private final UserService userService;
 
     @Override
     public Response<Page<ProblemDTO>> getAllProblems(Integer limit, Integer offset, String sortField,
@@ -527,6 +532,21 @@ public class ProblemServiceImpl implements ProblemService {
                         return tagDTO;
                     })
                     .collect(Collectors.toSet()));
+        }
+
+        try {
+            User currentUser = userService.getCurrentLoggedInUser();
+            
+            boolean solved = submissionRepository.existsByUserIdAndProblemIdAndSubmissionVerdict(
+                    currentUser.getId(), problem.getId(), SubmissionVerdict.AC);
+            boolean attempted = !solved && submissionRepository.existsByUserIdAndProblemId(
+                    currentUser.getId(), problem.getId());
+
+            dto.setSolved(solved);
+            dto.setAttempted(attempted);
+        } catch (Exception e) {
+            dto.setSolved(false);
+            dto.setAttempted(false);
         }
 
         return dto;

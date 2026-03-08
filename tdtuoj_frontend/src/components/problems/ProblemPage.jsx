@@ -27,6 +27,8 @@ import {
   X,
   ChevronDown,
   RotateCcw,
+  CheckCircle,
+  Clock,
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
@@ -789,17 +791,41 @@ const ProblemPage = () => {
 
                         {/* Solve */}
                         <Table.Cell textAlign="center">
-                          <Box
-                            display="inline-flex"
-                            p={2}
-                            borderRadius="md"
-                            bg="purple.100"
-                            color="purple.600"
-                            _hover={{ bg: "purple.200" }}
-                            transition="all 0.15s"
-                          >
-                            <Book size={18} />
-                          </Box>
+                          {problem.solved ? (
+                            <Box
+                              display="inline-flex"
+                              p={2}
+                              borderRadius="md"
+                              bg="green.100"
+                              color="green.600"
+                              transition="all 0.15s"
+                            >
+                              <CheckCircle size={18} />
+                            </Box>
+                          ) : problem.attempted ? (
+                            <Box
+                              display="inline-flex"
+                              p={2}
+                              borderRadius="md"
+                              bg="orange.100"
+                              color="orange.500"
+                              transition="all 0.15s"
+                            >
+                              <Clock size={18} />
+                            </Box>
+                          ) : (
+                            <Box
+                              display="inline-flex"
+                              p={2}
+                              borderRadius="md"
+                              bg="purple.100"
+                              color="purple.600"
+                              _hover={{ bg: "purple.200" }}
+                              transition="all 0.15s"
+                            >
+                              <Book size={18} />
+                            </Box>
+                          )}
                         </Table.Cell>
                       </Table.Row>
                     );

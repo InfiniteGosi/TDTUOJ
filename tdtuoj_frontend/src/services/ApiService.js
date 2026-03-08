@@ -182,12 +182,16 @@ export default class ApiService {
   }
 
   static async getProblemById(id) {
-    const resp = await axios.get(`${this.BASE_URL}/problems/id/${id}`);
+    const resp = await axios.get(`${this.BASE_URL}/problems/id/${id}`, {
+      headers: this.getHeader(),
+    });
     return resp.data;
   }
 
   static async getProblemBySlug(slug) {
-    const resp = await axios.get(`${this.BASE_URL}/problems/slug/${slug}`);
+    const resp = await axios.get(`${this.BASE_URL}/problems/slug/${slug}`, {
+      headers: this.getHeader(),
+    });
     return resp.data;
   }
 

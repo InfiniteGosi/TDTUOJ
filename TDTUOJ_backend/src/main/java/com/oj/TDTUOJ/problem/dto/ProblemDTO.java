@@ -39,6 +39,10 @@ public class ProblemDTO {
 
     private Integer memoryLimit; // in KB
 
+    private Boolean solved;
+
+    private Boolean attempted;
+
     private List<TestCaseDTO> testCases;
 
     private Set<TagDTO> tags;
