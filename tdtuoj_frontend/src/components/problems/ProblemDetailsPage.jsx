@@ -15,7 +15,32 @@ import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
 import ReactMarkdown from "react-markdown";
 import CodeEditor from "../CodeEditor/CodeEditor";
-import { LANGUAGE_IDS } from "../CodeEditor/constants";
+import hljs from "highlight.js/lib/core";
+import cpp from "highlight.js/lib/languages/cpp";
+import java from "highlight.js/lib/languages/java";
+import python from "highlight.js/lib/languages/python";
+import c from "highlight.js/lib/languages/c";
+import "highlight.js/styles/vs2015.css";
+
+hljs.registerLanguage("cpp", cpp);
+hljs.registerLanguage("java", java);
+hljs.registerLanguage("python", python);
+hljs.registerLanguage("c", c);
+
+const getHljsLanguage = (lang) => {
+  switch (lang) {
+    case "CPP":
+      return "cpp";
+    case "JAVA":
+      return "java";
+    case "PYTHON":
+      return "python";
+    case "C":
+      return "c";
+    default:
+      return "cpp";
+  }
+};
 
 // ─── Theme tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -37,6 +62,31 @@ const T = {
   blueDim: "rgba(59,130,246,0.1)",
   purple: "#a78bfa",
   purpleDim: "rgba(167,139,250,0.12)",
+};
+
+// Map editor language → backend SubmissionLanguage enum
+const mapEditorLanguageToSubmissionLanguage = (language) => {
+  switch (language) {
+    case "cpp":
+      return "CPP";
+    case "java":
+      return "JAVA";
+    case "python":
+      return "PYTHON";
+    case "c":
+      return "C";
+    default:
+      return "CPP";
+  }
+};
+
+const VERDICT_LABEL = {
+  AC: "Accepted",
+  WA: "Wrong Answer",
+  CE: "Compilation Error",
+  TLE: "Time Limit Exceeded",
+  MLE: "Memory Limit Exceeded",
+  SF: "Runtime Error",
 };
 
 const DIFF_STYLE = {
@@ -176,7 +226,6 @@ const StatChip = ({ icon, value, color }) => (
 );
 
 // ─── Tag Chip ─────────────────────────────────────────────────────────────────
-// Only rendered for active tags. Styled to sit naturally beside the stat chips.
 const TagChip = ({ name }) => (
   <Box
     as="span"
@@ -206,6 +255,13 @@ const ProblemDetailsPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState(null);
   const [activeTab, setActiveTab] = useState("description");
+  const [viewingSubmission, setViewingSubmission] = useState(null);
+  const [verdictFilter, setVerdictFilter] = useState(null);
+
+  const [submissions, setSubmissions] = useState([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+  const [submissionsLoaded, setSubmissionsLoaded] = useState(false);
+
   const { showMessage } = useToast();
   const codeEditorRef = useRef(null);
 
@@ -234,10 +290,29 @@ const ProblemDetailsPage = () => {
     }
   };
 
+  const fetchSubmissions = async () => {
+    if (!problem?.id) return;
+    setLoadingSubmissions(true);
+    try {
+      const resp = await ApiService.getMySubmissions({
+        limit: 20,
+        offset: 0,
+        problemId: problem.id,
+      });
+      if (resp.statusCode === 200 && resp.data) {
+        setSubmissions(resp.data.content || []);
+        setSubmissionsLoaded(true);
+      }
+    } catch (error) {
+      showMessage(error.response?.data?.message || error.message, "error");
+    } finally {
+      setLoadingSubmissions(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!codeEditorRef.current) return;
     const { code, language } = codeEditorRef.current.getCodeAndLanguage();
-    const languageId = LANGUAGE_IDS[language];
     if (!code?.trim()) {
       showMessage("Please write some code before submitting", "warning");
       return;
@@ -247,60 +322,40 @@ const ProblemDetailsPage = () => {
     setResults(null);
 
     try {
-      const testResults = await Promise.all(
-        testCases.map(async (tc, index) => {
-          try {
-            const result = await ApiService.executeCode(
-              languageId,
-              code,
-              tc.input,
-              tc.output,
-            );
-            const passed = result.status?.id === 3;
-            return {
-              testCaseNumber: index + 1,
-              passed,
-              input: tc.input,
-              expectedOutput: tc.output,
-              actualOutput: result.stdout || result.stderr || "No output",
-              status: result.status?.description || "Unknown",
-              error: result.stderr || result.compile_output || null,
-              time: result.time,
-              memory: result.memory,
-            };
-          } catch (error) {
-            return {
-              testCaseNumber: index + 1,
-              passed: false,
-              input: tc.input,
-              expectedOutput: tc.output,
-              actualOutput: "Execution error",
-              status: "Error",
-              error: error.message,
-              time: null,
-              memory: null,
-            };
-          }
-        }),
-      );
+      const resp = await ApiService.createSubmission({
+        sourceCode: code,
+        submissionLanguage: mapEditorLanguageToSubmissionLanguage(language),
+        problemId: problem.id,
+        isPublic: true,
+        contestId: null,
+      });
 
-      const allPassed = testResults.every((r) => r.passed);
-      const passedCount = testResults.filter((r) => r.passed).length;
+      const sub = resp.data;
+      const allPassed = sub.submissionVerdict === "AC";
+
       setResults({
         allPassed,
-        passedCount,
-        totalCount: testCases.length,
-        testResults,
+        passedCount: sub.testCasesPassed ?? 0,
+        totalCount: sub.totalTestCases ?? testCases.length,
+        verdict: sub.submissionVerdict,
+        errorMessage: sub.errorMessage,
+        executionTime: sub.executionTime,
+        memoryUsed: sub.memoryUsed,
       });
+
       setActiveTab("results");
       showMessage(
         allPassed
           ? "All test cases passed! 🎉"
-          : `${passedCount}/${testCases.length} test cases passed`,
+          : `${sub.testCasesPassed}/${sub.totalTestCases} test cases passed — ${sub.submissionVerdict}`,
         allPassed ? "success" : "warning",
       );
+
+      if (submissionsLoaded) {
+        await fetchSubmissions();
+      }
     } catch (error) {
-      showMessage(error.message || "Failed to submit code", "error");
+      showMessage(error.response?.data?.message || error.message, "error");
     } finally {
       setSubmitting(false);
     }
@@ -310,7 +365,6 @@ const ProblemDetailsPage = () => {
     fetchProblem();
   }, [slug]);
 
-  // Only expose active tags to the UI
   const activeTags = (problem?.tags || []).filter((t) => t.isActive !== false);
 
   if (loading) {
@@ -335,6 +389,7 @@ const ProblemDetailsPage = () => {
   const tabs = [
     { id: "description", label: "Description" },
     { id: "testcases", label: `Test Cases (${testCases.length})` },
+    { id: "submissions", label: "Submissions" },
     ...(results
       ? [
           {
@@ -398,7 +453,6 @@ const ProblemDetailsPage = () => {
               borderBottom={`1px solid ${T.border}`}
               flexShrink={0}
             >
-              {/* Title */}
               <Text
                 fontSize="xl"
                 fontWeight="700"
@@ -410,7 +464,6 @@ const ProblemDetailsPage = () => {
                 {problem?.title}
               </Text>
 
-              {/* Difficulty + stat chips + tags — all on the same wrapping row */}
               <Wrap gap={2} align="center">
                 {problem?.problemDifficulty && (
                   <WrapItem>
@@ -427,7 +480,7 @@ const ProblemDetailsPage = () => {
                 <WrapItem>
                   <StatChip
                     icon="⏱"
-                    value={`${problem?.timeLimit}ms`}
+                    value={`${problem?.timeLimit}s`}
                     color={T.blue}
                   />
                 </WrapItem>
@@ -438,8 +491,6 @@ const ProblemDetailsPage = () => {
                     color={T.textMuted}
                   />
                 </WrapItem>
-
-                {/* Thin separator before tags (only when there are tags) */}
                 {activeTags.length > 0 && (
                   <>
                     <WrapItem>
@@ -492,7 +543,12 @@ const ProblemDetailsPage = () => {
                   }
                   transition="all 0.15s"
                   _hover={{ color: T.text }}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={async () => {
+                    setActiveTab(tab.id);
+                    if (tab.id === "submissions" && !submissionsLoaded) {
+                      await fetchSubmissions();
+                    }
+                  }}
                   style={{ outline: "none" }}
                 >
                   {tab.label}
@@ -514,7 +570,7 @@ const ProblemDetailsPage = () => {
 
             {/* Tab content */}
             <Box flex={1} overflowY="auto" px={5} py={5}>
-              {/* Description */}
+              {/* ── Description ── */}
               {activeTab === "description" && (
                 <Box
                   fontSize="sm"
@@ -574,7 +630,7 @@ const ProblemDetailsPage = () => {
                 </Box>
               )}
 
-              {/* Test cases */}
+              {/* ── Test Cases ── */}
               {activeTab === "testcases" && (
                 <VStack align="stretch" gap={3}>
                   {testCases.map((tc, index) => (
@@ -640,9 +696,378 @@ const ProblemDetailsPage = () => {
                 </VStack>
               )}
 
-              {/* Results */}
+              {/* ── Submissions ── */}
+              {activeTab === "submissions" && (
+                <Box height="100%" display="flex" flexDirection="column">
+                  {/* ── Submission detail view (like NeetCode's "← All Submissions" panel) ── */}
+                  {viewingSubmission ? (
+                    <Box display="flex" flexDirection="column" height="100%">
+                      {/* Back button */}
+                      <Box
+                        as="button"
+                        onClick={() => setViewingSubmission(null)}
+                        display="flex"
+                        alignItems="center"
+                        gap={2}
+                        mb={4}
+                        color={T.textMuted}
+                        bg="transparent"
+                        border="none"
+                        cursor="pointer"
+                        fontSize="sm"
+                        _hover={{ color: T.text }}
+                        style={{ outline: "none" }}
+                        flexShrink={0}
+                      >
+                        <Text>←</Text>
+                        <Text>All Submissions</Text>
+                      </Box>
+
+                      {/* Code header */}
+                      <HStack gap={3} mb={3} flexShrink={0}>
+                        <Text
+                          fontSize="sm"
+                          fontWeight="600"
+                          color={T.textMuted}
+                        >
+                          Code
+                        </Text>
+                        <Box w="1px" h="14px" bg={T.border} />
+                        <Text
+                          fontSize="sm"
+                          fontWeight="600"
+                          color={T.textMuted}
+                          fontFamily="'JetBrains Mono', monospace"
+                        >
+                          {viewingSubmission.submissionLanguage}
+                        </Text>
+                        <Box flex={1} />
+                        <Text
+                          fontSize="xs"
+                          fontWeight="600"
+                          color={
+                            viewingSubmission.submissionVerdict === "AC"
+                              ? T.green
+                              : T.red
+                          }
+                        >
+                          {VERDICT_LABEL[viewingSubmission.submissionVerdict] ??
+                            viewingSubmission.submissionVerdict}
+                        </Text>
+                        {viewingSubmission.executionTime != null && (
+                          <Text fontSize="xs" color={T.textMuted}>
+                            {viewingSubmission.executionTime} s
+                          </Text>
+                        )}
+                        {viewingSubmission.memoryUsed != null && (
+                          <Text fontSize="xs" color={T.textMuted}>
+                            {viewingSubmission.memoryUsed} KB
+                          </Text>
+                        )}
+                      </HStack>
+
+                      {/* Code block with syntax highlighting */}
+                      <Box
+                        overflowY="auto"
+                        borderRadius="8px"
+                        border={`1px solid ${T.border}`}
+                        bg="#1E1E1E" // atom-one-dark background
+                      >
+                        <Box
+                          display="flex"
+                          fontFamily="'JetBrains Mono', 'Fira Code', monospace"
+                          fontSize="xs"
+                          lineHeight="1.8"
+                        >
+                          {/* Line numbers column */}
+                          <Box
+                            px={3}
+                            py={4}
+                            borderRight={`1px solid ${T.border}`}
+                            color={T.textDim}
+                            userSelect="none"
+                            textAlign="right"
+                            flexShrink={0}
+                            bg="#1a1a1a"
+                            minW="50px"
+                          >
+                            {(viewingSubmission.sourceCode || "")
+                              .split("\n")
+                              .map((_, i) => (
+                                <Box key={i} lineHeight="1.8" fontSize="xs">
+                                  {i + 1}
+                                </Box>
+                              ))}
+                          </Box>
+
+                          {/* Highlighted code */}
+                          <Box
+                            as="pre"
+                            m={0}
+                            p={4}
+                            flex={1}
+                            overflow="auto"
+                            css={{
+                              "& code.hljs": {
+                                background: "transparent",
+                                padding: 0,
+                                fontSize: "0.75rem",
+                                fontFamily:
+                                  "'JetBrains Mono', 'Fira Code', monospace",
+                                lineHeight: "1.8",
+                              },
+                            }}
+                            dangerouslySetInnerHTML={{
+                              __html: `<code class="hljs language-${getHljsLanguage(viewingSubmission.submissionLanguage)}">${
+                                hljs.highlight(
+                                  viewingSubmission.sourceCode ||
+                                    "// No source code available",
+                                  {
+                                    language: getHljsLanguage(
+                                      viewingSubmission.submissionLanguage,
+                                    ),
+                                  },
+                                ).value
+                              }</code>`,
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    </Box>
+                  ) : (
+                    /* ── Submission list view ── */
+                    <VStack align="stretch" gap={3}>
+                      {/* Filter chips */}
+                      {submissions.length > 0 && (
+                        <HStack gap={2} flexWrap="wrap">
+                          {/* "All" chip */}
+                          <Box
+                            as="button"
+                            onClick={() => setVerdictFilter(null)}
+                            px={3}
+                            py="4px"
+                            borderRadius="20px"
+                            fontSize="xs"
+                            fontWeight="600"
+                            cursor="pointer"
+                            bg="transparent"
+                            border="none"
+                            color={
+                              verdictFilter === null ? T.text : T.textMuted
+                            }
+                            borderBottom={`2px solid ${verdictFilter === null ? T.accent : "transparent"}`}
+                            style={{ outline: "none" }}
+                          >
+                            All
+                          </Box>
+
+                          {/* Per-verdict chips */}
+                          {[
+                            ...new Set(
+                              submissions.map((s) => s.submissionVerdict),
+                            ),
+                          ]
+                            .filter(Boolean)
+                            .map((v) => (
+                              <Box
+                                key={v}
+                                as="button"
+                                onClick={() =>
+                                  setVerdictFilter((prev) =>
+                                    prev === v ? null : v,
+                                  )
+                                }
+                                px={3}
+                                py="4px"
+                                borderRadius="20px"
+                                fontSize="xs"
+                                fontWeight="600"
+                                cursor="pointer"
+                                border="none"
+                                style={{ outline: "none" }}
+                                color={v === "AC" ? T.green : T.red}
+                                bg={
+                                  verdictFilter === v
+                                    ? v === "AC"
+                                      ? T.greenDim
+                                      : T.redDim
+                                    : "transparent"
+                                }
+                                borderBottom={`2px solid ${
+                                  verdictFilter === v
+                                    ? v === "AC"
+                                      ? T.green
+                                      : T.red
+                                    : "transparent"
+                                }`}
+                                transition="all 0.15s"
+                              >
+                                {VERDICT_LABEL[v] ?? v}
+                              </Box>
+                            ))}
+                        </HStack>
+                      )}
+
+                      {loadingSubmissions && (
+                        <HStack justify="center" py={4}>
+                          <Spinner size="sm" color={T.accent} />
+                          <Text fontSize="sm" color={T.textMuted}>
+                            Loading submissions...
+                          </Text>
+                        </HStack>
+                      )}
+
+                      {!loadingSubmissions && submissions.length === 0 && (
+                        <Text fontSize="sm" color={T.textMuted}>
+                          You have no submissions for this problem yet.
+                        </Text>
+                      )}
+
+                      {/* Table header */}
+                      {!loadingSubmissions && submissions.length > 0 && (
+                        <Box
+                          display="grid"
+                          gridTemplateColumns="1fr 100px 100px 60px"
+                          px={3}
+                          py={2}
+                          borderBottom={`1px solid ${T.border}`}
+                        >
+                          {["Submission", "Language", "Time / Mem", "Code"].map(
+                            (h) => (
+                              <Text
+                                key={h}
+                                fontSize="xs"
+                                fontWeight="700"
+                                color={T.textMuted}
+                                letterSpacing="0.05em"
+                              >
+                                {h}
+                              </Text>
+                            ),
+                          )}
+                        </Box>
+                      )}
+
+                      {/* Rows — filtered */}
+                      {!loadingSubmissions &&
+                        submissions
+                          .filter((s) =>
+                            verdictFilter
+                              ? s.submissionVerdict === verdictFilter
+                              : true,
+                          )
+                          .map((sub) => (
+                            <Box
+                              key={sub.id}
+                              display="grid"
+                              gridTemplateColumns="1fr 100px 100px 60px"
+                              alignItems="center"
+                              px={3}
+                              py={3}
+                              borderRadius="8px"
+                              border={`1px solid ${T.border}`}
+                              bg={T.bg}
+                              _hover={{ borderColor: T.borderBright }}
+                              transition="border-color 0.15s"
+                            >
+                              {/* Verdict + date */}
+                              <Box>
+                                <Text
+                                  fontSize="sm"
+                                  fontWeight="600"
+                                  color={
+                                    sub.submissionVerdict === "AC"
+                                      ? T.green
+                                      : T.red
+                                  }
+                                >
+                                  {VERDICT_LABEL[sub.submissionVerdict] ??
+                                    sub.submissionVerdict}
+                                </Text>
+                                <HStack gap={2} mt="2px">
+                                  {sub.submissionDate && (
+                                    <Text fontSize="xs" color={T.textMuted}>
+                                      {new Date(
+                                        sub.submissionDate,
+                                      ).toLocaleDateString()}
+                                    </Text>
+                                  )}
+                                  {sub.testCasesPassed != null &&
+                                    sub.totalTestCases != null && (
+                                      <Text fontSize="xs" color={T.textMuted}>
+                                        · {sub.testCasesPassed}/
+                                        {sub.totalTestCases} tests
+                                      </Text>
+                                    )}
+                                </HStack>
+                              </Box>
+
+                              {/* Language */}
+                              <Text
+                                fontSize="xs"
+                                color={T.textMuted}
+                                fontFamily="'JetBrains Mono', monospace"
+                              >
+                                {sub.submissionLanguage}
+                              </Text>
+
+                              {/* Time + memory */}
+                              <Box>
+                                {sub.executionTime != null && (
+                                  <Text fontSize="xs" color={T.textMuted}>
+                                    {sub.executionTime} s
+                                  </Text>
+                                )}
+                                {sub.memoryUsed != null && (
+                                  <Text fontSize="xs" color={T.textMuted}>
+                                    {sub.memoryUsed} KB
+                                  </Text>
+                                )}
+                              </Box>
+
+                              {/* View code */}
+                              <Box
+                                as="button"
+                                onClick={() => setViewingSubmission(sub)}
+                                fontSize="xs"
+                                fontWeight="600"
+                                color={T.accent}
+                                bg="transparent"
+                                border="none"
+                                cursor="pointer"
+                                textAlign="left"
+                                _hover={{ textDecoration: "underline" }}
+                                style={{ outline: "none" }}
+                              >
+                                View
+                              </Box>
+                            </Box>
+                          ))}
+
+                      {/* Empty state after filtering */}
+                      {!loadingSubmissions &&
+                        submissions.length > 0 &&
+                        submissions.filter((s) =>
+                          verdictFilter
+                            ? s.submissionVerdict === verdictFilter
+                            : true,
+                        ).length === 0 && (
+                          <Text fontSize="sm" color={T.textMuted}>
+                            No{" "}
+                            {VERDICT_LABEL[verdictFilter]?.label ??
+                              verdictFilter}{" "}
+                            submissions.
+                          </Text>
+                        )}
+                    </VStack>
+                  )}
+                </Box>
+              )}
+
+              {/* ── Results ── */}
               {activeTab === "results" && results && (
                 <VStack align="stretch" gap={3}>
+                  {/* Summary card */}
                   <Box
                     p={4}
                     borderRadius="8px"
@@ -663,130 +1088,49 @@ const ProblemDetailsPage = () => {
                         fontSize="sm"
                         color={results.allPassed ? T.green : T.red}
                       >
-                        {results.allPassed ? "Accepted" : "Wrong Answer"}
+                        {VERDICT_LABEL[results.verdict] ?? results.verdict}
                       </Text>
                       <Text fontSize="xs" color={T.textMuted}>
                         {results.passedCount} / {results.totalCount} test cases
                         passed
                       </Text>
+                      {(results.executionTime != null ||
+                        results.memoryUsed != null) && (
+                        <Text fontSize="xs" color={T.textMuted}>
+                          {results.executionTime != null &&
+                            `${results.executionTime} s`}
+                          {results.executionTime != null &&
+                            results.memoryUsed != null &&
+                            " · "}
+                          {results.memoryUsed != null &&
+                            `${results.memoryUsed} KB`}
+                        </Text>
+                      )}
                     </Box>
                   </Box>
 
-                  {results.testResults.map((result) => (
-                    <Box
-                      key={result.testCaseNumber}
-                      borderRadius="8px"
-                      border={`1px solid ${result.passed ? T.green + "44" : T.red + "44"}`}
-                      overflow="hidden"
-                    >
+                  {/* CE / runtime error details */}
+                  {results.errorMessage && (
+                    <Box>
+                      <Text fontSize="xs" color={T.red} fontWeight="600" mb={1}>
+                        {results.verdict === "CE"
+                          ? "COMPILATION ERROR"
+                          : "ERROR"}
+                      </Text>
                       <Box
-                        px={3}
-                        py={2}
-                        bg={result.passed ? T.greenDim : T.redDim}
-                        display="flex"
-                        alignItems="center"
-                        gap={2}
+                        bg={T.redDim}
+                        p={3}
+                        borderRadius="6px"
+                        fontFamily="'JetBrains Mono', monospace"
+                        fontSize="xs"
+                        color={T.red}
+                        whiteSpace="pre-wrap"
+                        border={`1px solid ${T.red}33`}
                       >
-                        {result.passed ? (
-                          <CheckCircle size={14} color={T.green} />
-                        ) : (
-                          <XCircle size={14} color={T.red} />
-                        )}
-                        <Text
-                          fontSize="xs"
-                          fontWeight="600"
-                          color={result.passed ? T.green : T.red}
-                        >
-                          Case {result.testCaseNumber}
-                        </Text>
-                        <Box
-                          ml="auto"
-                          fontSize="xs"
-                          color={T.textMuted}
-                          fontFamily="'JetBrains Mono', monospace"
-                        >
-                          {result.time &&
-                            `${result.time}s · ${result.memory}KB`}
-                        </Box>
+                        {results.errorMessage}
                       </Box>
-
-                      {!result.passed && (
-                        <Box
-                          p={3}
-                          display="grid"
-                          gridTemplateColumns="1fr 1fr 1fr"
-                          gap={2}
-                        >
-                          {[
-                            {
-                              label: "INPUT",
-                              val: result.input,
-                              color: "#c8c8c8",
-                            },
-                            {
-                              label: "EXPECTED",
-                              val: result.expectedOutput,
-                              color: T.green,
-                            },
-                            {
-                              label: "YOUR OUTPUT",
-                              val: result.actualOutput,
-                              color: T.red,
-                            },
-                          ].map(({ label, val, color }) => (
-                            <Box key={label}>
-                              <Text
-                                fontSize="xs"
-                                color={T.textDim}
-                                fontWeight="600"
-                                mb={1}
-                                letterSpacing="0.04em"
-                              >
-                                {label}
-                              </Text>
-                              <Box
-                                bg={T.bg}
-                                p={2}
-                                borderRadius="6px"
-                                fontFamily="'JetBrains Mono', monospace"
-                                fontSize="xs"
-                                color={color}
-                                whiteSpace="pre-wrap"
-                                border={`1px solid ${T.border}`}
-                                minH="36px"
-                              >
-                                {val}
-                              </Box>
-                            </Box>
-                          ))}
-                          {result.error && (
-                            <Box gridColumn="1 / -1">
-                              <Text
-                                fontSize="xs"
-                                color={T.red}
-                                fontWeight="600"
-                                mb={1}
-                              >
-                                ERROR
-                              </Text>
-                              <Box
-                                bg={T.redDim}
-                                p={2}
-                                borderRadius="6px"
-                                fontFamily="'JetBrains Mono', monospace"
-                                fontSize="xs"
-                                color={T.red}
-                                whiteSpace="pre-wrap"
-                                border={`1px solid ${T.red}33`}
-                              >
-                                {result.error}
-                              </Box>
-                            </Box>
-                          )}
-                        </Box>
-                      )}
                     </Box>
-                  ))}
+                  )}
                 </VStack>
               )}
             </Box>

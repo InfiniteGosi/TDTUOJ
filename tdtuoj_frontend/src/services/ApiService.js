@@ -286,6 +286,27 @@ export default class ApiService {
     return resp.data;
   }
 
+  // ─── Submissions ─────────────────────────────────────────────────────────────
+  static async createSubmission(data) {
+    // data should match SubmissionDTO (problemId, sourceCode, language, etc.)
+    const resp = await axios.post(`${this.BASE_URL}/submissions`, data, {
+      headers: this.getHeader(),
+    });
+    return resp.data; // your backend wraps in Response<SubmissionDTO>
+  }
+
+  static async getMySubmissions({
+    limit = 20,
+    offset = 0,
+    problemId = null,
+  } = {}) {
+    const resp = await axios.get(`${this.BASE_URL}/submissions/me`, {
+      headers: this.getHeader(),
+      params: { limit, offset, problemId },
+    });
+    return resp.data; // Response<Page<SubmissionDTO>>
+  }
+
   // ─── Judge0 ──────────────────────────────────────────────────────────────────
 
   static async executeCode(languageId, sourceCode, stdin, expectedOutput) {

@@ -12,4 +12,5 @@ public interface AwsS3Service {
     URL getPresignedUrl(String keyName, Duration duration);
     void deleteFolder(String folderPath);
     void moveFile(String sourceKey, String destinationKey);
+    String readFileContent(String fileUrl);
 }

@@ -539,7 +539,7 @@ const AdminProblemFormPage = () => {
                       color="gray.700"
                       mb={2}
                     >
-                      Time Limit (ms) *
+                      Time Limit (s) *
                     </Text>
                     <Input
                       type="number"

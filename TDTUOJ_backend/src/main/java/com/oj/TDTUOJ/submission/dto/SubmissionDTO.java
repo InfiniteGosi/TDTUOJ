@@ -1,42 +1,30 @@
-package com.oj.TDTUOJ.submission.entity;
+package com.oj.TDTUOJ.submission.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.oj.TDTUOJ.common.enums.SubmissionLanguage;
 import com.oj.TDTUOJ.common.enums.SubmissionStatus;
 import com.oj.TDTUOJ.common.enums.SubmissionVerdict;
-import com.oj.TDTUOJ.problem.entity.Problem;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Entity
 @Data
-@Table(name = "submissions")
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class Submission {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class SubmissionDTO {
     private Long id;
 
-    @Column(columnDefinition = "TEXT")
     private String sourceCode;
 
     private Double memoryUsed;
 
     private Integer executionTime;
 
-    @Enumerated(EnumType.STRING)
     private SubmissionStatus submissionStatus;
 
-    @Enumerated(EnumType.STRING)
     private SubmissionVerdict submissionVerdict;
 
-    @Enumerated(EnumType.STRING)
     private SubmissionLanguage submissionLanguage;
 
     private LocalDateTime submissionDate;
@@ -45,15 +33,12 @@ public class Submission {
 
     private Integer totalTestCases;
 
-    @Column(columnDefinition = "TEXT")
     private String errorMessage;
 
     private Boolean isPublic;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "problemId")
-    private Problem problem;
-
+    private Long problemId;
+    
     private Long userId;
 
     private Long contestId;

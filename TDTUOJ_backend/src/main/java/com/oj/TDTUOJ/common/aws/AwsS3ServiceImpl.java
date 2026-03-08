@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -243,6 +244,29 @@ public class AwsS3ServiceImpl implements AwsS3Service {
             throw new RuntimeException("AWS S3 error while moving file from '" + sourceKey + "' to '" + destinationKey + "': " + ex.awsErrorDetails().errorMessage(), ex);
         } catch (Exception ex) {
             throw new RuntimeException("Unexpected error while moving file from '" + sourceKey + "' to '" + destinationKey + "': " + ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public String readFileContent(String fileUrl) {
+        try {
+            String key = fileUrl.substring(fileUrl.indexOf(".amazonaws.com/") + ".amazonaws.com/".length());
+
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .build();
+
+            ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(getObjectRequest);
+
+            log.info("File '{}' read successfully from bucket '{}'", key, bucketName);
+
+            return objectBytes.asUtf8String();
+
+        } catch (S3Exception ex) {
+            throw new RuntimeException("AWS S3 error while reading file '" + fileUrl + "': " + ex.awsErrorDetails().errorMessage(), ex);
+        } catch (Exception ex) {
+            throw new RuntimeException("Unexpected error while reading file '" + fileUrl + "': " + ex.getMessage(), ex);
         }
     }
 }

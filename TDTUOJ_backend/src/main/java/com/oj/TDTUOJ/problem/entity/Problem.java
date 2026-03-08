@@ -3,6 +3,7 @@ package com.oj.TDTUOJ.problem.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.oj.TDTUOJ.common.enums.ProblemDifficulty;
 import com.oj.TDTUOJ.problemTag.entity.Tag;
+import com.oj.TDTUOJ.submission.entity.Submission;
 import com.oj.TDTUOJ.testcase.entity.TestCase;
 import com.oj.TDTUOJ.user.entity.User;
 import jakarta.persistence.*;
@@ -55,6 +56,9 @@ public class Problem {
 
     @OneToMany(mappedBy = "problem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<TestCase> testCases;
+
+    @OneToMany(mappedBy = "problem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Submission> submissions;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
