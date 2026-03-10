@@ -141,20 +141,17 @@ export default class ApiService {
     return resp.data;
   }
 
-  // ─── Problems ────────────────────────────────────────────────────────────────
+  static async getUserActivity(username) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/users/${username}/activity`,
+      {
+        headers: this.getHeader(),
+      },
+    );
+    return resp.data;
+  }
 
-  /**
-   * Fetches a paginated list of problems.
-   *
-   * @param {object} options
-   * @param {number}   options.limit      - Page size (default 10)
-   * @param {number}   options.offset     - Row offset (default 0)
-   * @param {string}   options.sortField  - Field to sort by (default "id")
-   * @param {string}   options.direction  - "asc" | "desc" (default "asc")
-   * @param {string}   options.title      - Optional title search filter
-   * @param {string[]} options.tags       - Optional list of active tag names to filter by (AND semantics)
-   * @param {string}   options.difficulty - Optional difficulty: "EASY" | "MEDIUM" | "HARD"
-   */
+  // ─── Problems ────────────────────────────────────────────────────────────────
   static async getAllProblems({
     limit = 10,
     offset = 0,
@@ -164,7 +161,6 @@ export default class ApiService {
     tags = [],
     difficulty = "",
   } = {}) {
-    // axios serialises repeated params as tags[]=… by default; Spring expects tags=a&tags=b
     const params = new URLSearchParams();
     params.append("limit", limit);
     params.append("offset", offset);
@@ -216,13 +212,6 @@ export default class ApiService {
     return resp.data;
   }
 
-  /**
-   * Replaces the tag set on a problem.
-   * Accepts either tagNames (string[]) or tags ({id, name}[]).
-   *
-   * @param {number|string} problemId
-   * @param {{ tagNames?: string[], tags?: {id:number,name:string}[] }} payload
-   */
   static async updateProblemTags(problemId, payload) {
     const resp = await axios.patch(
       `${this.BASE_URL}/problems/${problemId}/tags`,
@@ -328,6 +317,14 @@ export default class ApiService {
 
   static async getLanguage(id) {
     const resp = await axios.get(`${this.JUDGE0_BASE_URL}/languages/${id}`);
+    return resp.data;
+  }
+
+  // ─── LLM ──────────────────────────────────────────────────────────────────
+  static async getHint(data) {
+    const resp = await axios.post(`${this.BASE_URL}/hints`, data, {
+      headers: this.getHeader(),
+    });
     return resp.data;
   }
 }

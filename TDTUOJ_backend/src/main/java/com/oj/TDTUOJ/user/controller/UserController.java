@@ -1,8 +1,13 @@
 package com.oj.TDTUOJ.user.controller;
 
+import com.oj.TDTUOJ.UserDailyActivity.dto.UserDailyActivityDTO;
+import com.oj.TDTUOJ.UserDailyActivity.service.UserActivityService;
+import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.user.dto.ChangePasswordRequest;
 import com.oj.TDTUOJ.user.dto.UserDTO;
+import com.oj.TDTUOJ.user.entity.User;
+import com.oj.TDTUOJ.user.repository.UserRepository;
 import com.oj.TDTUOJ.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,11 +17,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/users")
 public class UserController {
     private final UserService userService;
+
+    private final UserActivityService userActivityService;
 
     @GetMapping
     public ResponseEntity<Response<Page<UserDTO>>> getAllUsers(
@@ -58,5 +68,11 @@ public class UserController {
 
         Response<?> response = userService.changePassword(request);
         return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    @GetMapping("/{username}/activity")
+    public ResponseEntity<Response<List<UserDailyActivityDTO>>> getUserActivity(
+            @PathVariable String username) {
+        return ResponseEntity.ok(userActivityService.getActivityForYearByUsername(username));
     }
 }

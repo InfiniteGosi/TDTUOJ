@@ -536,7 +536,7 @@ public class ProblemServiceImpl implements ProblemService {
 
         try {
             User currentUser = userService.getCurrentLoggedInUser();
-            
+
             boolean solved = submissionRepository.existsByUserIdAndProblemIdAndSubmissionVerdict(
                     currentUser.getId(), problem.getId(), SubmissionVerdict.AC);
             boolean attempted = !solved && submissionRepository.existsByUserIdAndProblemId(

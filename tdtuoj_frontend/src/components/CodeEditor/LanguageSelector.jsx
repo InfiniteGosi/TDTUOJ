@@ -34,12 +34,19 @@ const LanguageSelector = ({ language, onSelect }) => {
 
   return (
     <Box>
-      <Text mb={2} fontSize="sm" color="gray.700" fontWeight="medium">
+      <Text mb={2} fontSize="sm" color="gray.400" fontWeight="medium">
         Language:
       </Text>
       <Menu.Root>
         <Menu.Trigger asChild>
-          <Button variant="outline" size="sm" disabled={loading}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={loading}
+            color="gray.200"
+            borderColor="gray.600"
+            _hover={{ borderColor: "gray.400" }}
+          >
             {loading ? "Loading..." : names[language] || language}
           </Button>
         </Menu.Trigger>

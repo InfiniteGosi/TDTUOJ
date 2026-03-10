@@ -281,8 +281,16 @@ const AdminProblemFormPage = () => {
       showMessage("Time limit must be greater than 0", "error");
       return false;
     }
-    if (!problemData.memoryLimit || problemData.memoryLimit <= 0) {
-      showMessage("Memory limit must be greater than 0", "error");
+    if (problemData.timeLimit > 10) {
+      showMessage("Time limit cannot exceed 10 seconds", "error");
+      return false;
+    }
+    if (problemData.memoryLimit < 16) {
+      showMessage("Memory limit must be at least 16MB", "error");
+      return false;
+    }
+    if (problemData.memoryLimit > 1024) {
+      showMessage("Memory limit cannot exceed 1024MB", "error");
       return false;
     }
     if (!problemData.statement.trim()) {
@@ -539,7 +547,10 @@ const AdminProblemFormPage = () => {
                       color="gray.700"
                       mb={2}
                     >
-                      Time Limit (s) *
+                      Time Limit (s) *{" "}
+                      <Box as="span" fontSize="xs" color="gray.400">
+                        (max 10s)
+                      </Box>
                     </Text>
                     <Input
                       type="number"
@@ -547,8 +558,9 @@ const AdminProblemFormPage = () => {
                       onChange={(e) =>
                         handleProblemChange("timeLimit", e.target.value)
                       }
-                      placeholder="1000"
+                      placeholder="2"
                       min={1}
+                      max={10}
                       size="lg"
                     />
                   </Box>
@@ -559,7 +571,10 @@ const AdminProblemFormPage = () => {
                       color="gray.700"
                       mb={2}
                     >
-                      Memory Limit (MB) *
+                      Memory Limit (MB) *{" "}
+                      <Box as="span" fontSize="xs" color="gray.400">
+                        (max 1024MB)
+                      </Box>
                     </Text>
                     <Input
                       type="number"
@@ -568,7 +583,8 @@ const AdminProblemFormPage = () => {
                         handleProblemChange("memoryLimit", e.target.value)
                       }
                       placeholder="256"
-                      min={1}
+                      min={16}
+                      max={1024}
                       size="lg"
                     />
                   </Box>

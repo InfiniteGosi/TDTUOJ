@@ -12,28 +12,33 @@ import {
   Button,
   Grid,
   GridItem,
-  SimpleGrid,
 } from "@chakra-ui/react";
 import { Trophy, Star, Calendar, Mail, User, Award } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
-import AvatarUploadModal from "../common/AvatarUploadModal";
 
 const ProfilePage = () => {
   const { username } = useParams();
   const [user, setUser] = useState(null);
+  const [activity, setActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { showMessage } = useToast();
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    if (!username) return;
+
+    const fetchAll = async () => {
       try {
         setLoading(true);
-        const response = await ApiService.getUserByUsername(username);
-        if (response.statusCode === 200) {
-          setUser(response.data);
-        }
+        const [userResponse, activityResponse] = await Promise.all([
+          ApiService.getUserByUsername(username),
+          ApiService.getUserActivity(username),
+        ]);
+
+        if (userResponse.statusCode === 200) setUser(userResponse.data);
+        if (activityResponse.statusCode === 200)
+          setActivity(activityResponse.data);
       } catch (exception) {
         showMessage(
           exception.response?.data?.message || exception.message,
@@ -44,9 +49,7 @@ const ProfilePage = () => {
       }
     };
 
-    if (username) {
-      fetchUserProfile();
-    }
+    fetchAll();
   }, [username]);
 
   const getRoleBadgeColor = (roleName) => {
@@ -62,26 +65,27 @@ const ProfilePage = () => {
     }
   };
 
-  const getInitials = (username) => {
-    return username ? username.substring(0, 2).toUpperCase() : "U";
-  };
+  const getInitials = (username) =>
+    username ? username.substring(0, 2).toUpperCase() : "U";
 
-  // Generate contribution data (mock data for now - replace with actual submission data later)
   const generateContributionData = () => {
-    const weeks = 52;
-    const days = 7;
+    const activityMap = {};
+    activity.forEach((a) => {
+      activityMap[a.activityDate] = a.submissionsCount;
+    });
+
     const data = [];
     const today = new Date();
 
-    for (let week = weeks - 1; week >= 0; week--) {
-      for (let day = 0; day < days; day++) {
+    for (let week = 51; week >= 0; week--) {
+      for (let day = 0; day < 7; day++) {
         const date = new Date(today);
         date.setDate(date.getDate() - (week * 7 + (6 - day)));
-        // Random submission count (0-10) - replace with actual data
-        const count = Math.floor(Math.random() * 11);
+        const dateStr = date.toISOString().split("T")[0];
+        const count = activityMap[dateStr] || 0;
         data.push({
-          date: date.toISOString().split("T")[0],
-          count: count,
+          date: dateStr,
+          count,
           level:
             count === 0
               ? 0
@@ -98,33 +102,6 @@ const ProfilePage = () => {
     return data;
   };
 
-  // Generate rating history data (mock data - replace with actual data later)
-  const generateRatingHistory = () => {
-    const months = 12;
-    const data = [];
-    const today = new Date();
-    let rating = 1500;
-
-    for (let i = months - 1; i >= 0; i--) {
-      const date = new Date(today);
-      date.setMonth(date.getMonth() - i);
-      // Random rating change
-      rating += Math.floor(Math.random() * 200) - 100;
-      rating = Math.max(1300, Math.min(2200, rating));
-      data.push({
-        date: date.toLocaleDateString("en-US", {
-          month: "short",
-          year: "numeric",
-        }),
-        rating: rating,
-      });
-    }
-    return data;
-  };
-
-  const contributionData = generateContributionData();
-  const ratingHistory = generateRatingHistory();
-
   const getContributionColor = (level) => {
     const colors = {
       0: "#ebedf0",
@@ -134,6 +111,15 @@ const ProfilePage = () => {
       4: "#216e39",
     };
     return colors[level] || colors[0];
+  };
+
+  const formatTooltip = (date, count) => {
+    const formatted = new Date(date + "T00:00:00").toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    return `${count} submission${count !== 1 ? "s" : ""} on ${formatted}`;
   };
 
   if (loading) {
@@ -166,53 +152,55 @@ const ProfilePage = () => {
     );
   }
 
+  const contributionData = generateContributionData();
+  const totalSubmissions = contributionData.reduce(
+    (sum, d) => sum + d.count,
+    0,
+  );
+
   return (
     <Box minH="100vh" bg="gray.50" py={8}>
       <Container maxW="container.xl">
         <Grid templateColumns="repeat(12, 1fr)" gap={6}>
-          {/* Left Sidebar - User Info */}
+          {/* Left Sidebar */}
           <GridItem colSpan={{ base: 12, lg: 4 }}>
             <VStack align="stretch" gap={6}>
               {/* Profile Card */}
               <Box bg="white" borderRadius="lg" boxShadow="sm" p={6}>
                 <VStack gap={4}>
-                  {/* Avatar */}
                   <Box position="relative" cursor="pointer">
-                    <Box position="relative">
-                      {user.profileUrl ? (
-                        <img
-                          src={user.profileUrl}
-                          alt={user.username}
-                          style={{
-                            width: "120px",
-                            height: "120px",
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                            border: "4px solid #805AD5",
-                          }}
-                        />
-                      ) : (
-                        <Box
-                          w="120px"
-                          h="120px"
-                          borderRadius="full"
-                          bg="purple.400"
-                          color="white"
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          fontSize="3xl"
-                          fontWeight="bold"
-                          border="4px solid"
-                          borderColor="purple.500"
-                        >
-                          {getInitials(user.username)}
-                        </Box>
-                      )}
-                    </Box>
+                    {user.profileUrl ? (
+                      <img
+                        src={user.profileUrl}
+                        alt={user.username}
+                        style={{
+                          width: "120px",
+                          height: "120px",
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          border: "4px solid #805AD5",
+                        }}
+                      />
+                    ) : (
+                      <Box
+                        w="120px"
+                        h="120px"
+                        borderRadius="full"
+                        bg="purple.400"
+                        color="white"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        fontSize="3xl"
+                        fontWeight="bold"
+                        border="4px solid"
+                        borderColor="purple.500"
+                      >
+                        {getInitials(user.username)}
+                      </Box>
+                    )}
                   </Box>
 
-                  {/* Username and Name */}
                   <VStack gap={1}>
                     <Heading size="lg" color="gray.800" textAlign="center">
                       {user.username}
@@ -224,7 +212,6 @@ const ProfilePage = () => {
                     )}
                   </VStack>
 
-                  {/* Roles */}
                   <HStack gap={2} flexWrap="wrap" justify="center">
                     {user.roles.map((role) => (
                       <Badge
@@ -240,7 +227,6 @@ const ProfilePage = () => {
                     ))}
                   </HStack>
 
-                  {/* Status */}
                   <Badge
                     colorScheme={user.isActive ? "green" : "red"}
                     fontSize="sm"
@@ -252,10 +238,8 @@ const ProfilePage = () => {
                   </Badge>
                 </VStack>
 
-                {/* Divider */}
                 <Box borderTopWidth="1px" my={6} />
 
-                {/* User Details */}
                 <VStack align="stretch" gap={3}>
                   <HStack gap={3}>
                     <Mail size={18} color="#718096" />
@@ -263,7 +247,6 @@ const ProfilePage = () => {
                       {user.email}
                     </Text>
                   </HStack>
-
                   <HStack gap={3}>
                     <User size={18} color="#718096" />
                     <Text fontSize="sm" color="gray.700">
@@ -279,7 +262,6 @@ const ProfilePage = () => {
                   Statistics
                 </Heading>
                 <VStack align="stretch" gap={4}>
-                  {/* Problems Solved */}
                   <Box>
                     <HStack justify="space-between" mb={2}>
                       <HStack gap={2}>
@@ -297,10 +279,7 @@ const ProfilePage = () => {
                       </Text>
                     </HStack>
                   </Box>
-
                   <Box borderTopWidth="1px" />
-
-                  {/* Rank by Points */}
                   <Box>
                     <HStack justify="space-between" mb={2}>
                       <HStack gap={2}>
@@ -318,10 +297,7 @@ const ProfilePage = () => {
                       </Text>
                     </HStack>
                   </Box>
-
                   <Box borderTopWidth="1px" />
-
-                  {/* Total Points */}
                   <Box>
                     <HStack justify="space-between" mb={2}>
                       <Text fontSize="sm" fontWeight="medium" color="gray.600">
@@ -332,10 +308,7 @@ const ProfilePage = () => {
                       </Text>
                     </HStack>
                   </Box>
-
                   <Box borderTopWidth="1px" />
-
-                  {/* Rating */}
                   <Box>
                     <HStack justify="space-between" mb={2}>
                       <HStack gap={2}>
@@ -358,10 +331,10 @@ const ProfilePage = () => {
             </VStack>
           </GridItem>
 
-          {/* Right Content Area */}
+          {/* Right Content */}
           <GridItem colSpan={{ base: 12, lg: 8 }}>
             <VStack align="stretch" gap={6}>
-              {/* About Section */}
+              {/* About */}
               <Box bg="white" borderRadius="lg" boxShadow="sm" p={6}>
                 <Heading size="md" mb={4} color="gray.800">
                   About
@@ -371,7 +344,7 @@ const ProfilePage = () => {
                 </Text>
               </Box>
 
-              {/* Submission Activity (GitHub-style contribution graph) */}
+              {/* Contribution Graph */}
               <Box bg="white" borderRadius="lg" boxShadow="sm" p={6}>
                 <HStack justify="space-between" align="center" mb={4}>
                   <Heading size="md" color="gray.800">
@@ -379,11 +352,21 @@ const ProfilePage = () => {
                   </Heading>
                   <HStack gap={2} fontSize="xs" color="gray.600">
                     <Text>Less</Text>
-                    <Box w="10px" h="10px" bg="#ebedf0" borderRadius="2px" />
-                    <Box w="10px" h="10px" bg="#9be9a8" borderRadius="2px" />
-                    <Box w="10px" h="10px" bg="#40c463" borderRadius="2px" />
-                    <Box w="10px" h="10px" bg="#30a14e" borderRadius="2px" />
-                    <Box w="10px" h="10px" bg="#216e39" borderRadius="2px" />
+                    {[
+                      "#ebedf0",
+                      "#9be9a8",
+                      "#40c463",
+                      "#30a14e",
+                      "#216e39",
+                    ].map((color) => (
+                      <Box
+                        key={color}
+                        w="10px"
+                        h="10px"
+                        bg={color}
+                        borderRadius="2px"
+                      />
+                    ))}
                     <Text>More</Text>
                   </HStack>
                 </HStack>
@@ -393,8 +376,8 @@ const ProfilePage = () => {
                     {Array.from({ length: 52 }).map((_, weekIndex) => (
                       <VStack key={weekIndex} gap={0.5}>
                         {Array.from({ length: 7 }).map((_, dayIndex) => {
-                          const dataIndex = weekIndex * 7 + dayIndex;
-                          const data = contributionData[dataIndex];
+                          const data =
+                            contributionData[weekIndex * 7 + dayIndex];
                           return (
                             <Box
                               key={dayIndex}
@@ -407,9 +390,7 @@ const ProfilePage = () => {
                               }
                               borderRadius="2px"
                               title={
-                                data
-                                  ? `${data.count} submissions on ${data.date}`
-                                  : ""
+                                data ? formatTooltip(data.date, data.count) : ""
                               }
                               cursor="pointer"
                               _hover={{ opacity: 0.8 }}
@@ -422,110 +403,11 @@ const ProfilePage = () => {
                 </Box>
 
                 <Text fontSize="xs" color="gray.500" mt={2}>
-                  Total submissions in the last year:{" "}
-                  {contributionData.reduce((sum, d) => sum + d.count, 0)}
+                  {totalSubmissions} submissions in the last year
                 </Text>
               </Box>
 
-              {/* Rating History Graph */}
-              <Box bg="white" borderRadius="lg" boxShadow="sm" p={6}>
-                <Heading size="md" mb={4} color="gray.800">
-                  Rating History
-                </Heading>
-
-                <Box position="relative" h="300px">
-                  {/* Y-axis labels */}
-                  <VStack
-                    position="absolute"
-                    left={0}
-                    h="100%"
-                    justify="space-between"
-                    align="end"
-                    pr={2}
-                    fontSize="xs"
-                    color="gray.500"
-                  >
-                    <Text>2200</Text>
-                    <Text>2000</Text>
-                    <Text>1800</Text>
-                    <Text>1600</Text>
-                    <Text>1400</Text>
-                  </VStack>
-
-                  {/* Graph container */}
-                  <Box ml="40px" h="100%" position="relative">
-                    {/* Background grid */}
-                    <Box position="absolute" w="100%" h="100%">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Box
-                          key={i}
-                          position="absolute"
-                          top={`${i * 25}%`}
-                          w="100%"
-                          borderTopWidth="1px"
-                          borderColor="gray.200"
-                        />
-                      ))}
-                    </Box>
-
-                    {/* Rating line */}
-                    <svg
-                      width="100%"
-                      height="100%"
-                      style={{ position: "absolute" }}
-                    >
-                      <polyline
-                        points={ratingHistory
-                          .map((point, i) => {
-                            const x = (i / (ratingHistory.length - 1)) * 100;
-                            const y = 100 - ((point.rating - 1300) / 900) * 100;
-                            return `${x}%,${y}%`;
-                          })
-                          .join(" ")}
-                        fill="none"
-                        stroke="#805AD5"
-                        strokeWidth="2"
-                      />
-                      {ratingHistory.map((point, i) => {
-                        const x = (i / (ratingHistory.length - 1)) * 100;
-                        const y = 100 - ((point.rating - 1300) / 900) * 100;
-                        return (
-                          <circle
-                            key={i}
-                            cx={`${x}%`}
-                            cy={`${y}%`}
-                            r="4"
-                            fill="#805AD5"
-                          />
-                        );
-                      })}
-                    </svg>
-                  </Box>
-
-                  {/* X-axis labels */}
-                  <HStack
-                    position="absolute"
-                    bottom="-20px"
-                    left="40px"
-                    w="calc(100% - 40px)"
-                    justify="space-between"
-                    fontSize="xs"
-                    color="gray.500"
-                  >
-                    {ratingHistory
-                      .filter((_, i) => i % 2 === 0)
-                      .map((point, i) => (
-                        <Text key={i}>{point.date}</Text>
-                      ))}
-                  </HStack>
-                </Box>
-
-                <Text fontSize="xs" color="gray.500" mt={6}>
-                  Current rating: {user.rating}
-                </Text>
-              </Box>
-
-              {/* Badges & Awards Section */}
+              {/* Badges */}
               <Box bg="white" borderRadius="lg" boxShadow="sm" p={6}>
                 <Heading size="md" mb={4} color="gray.800">
                   Badges & Awards

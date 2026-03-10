@@ -48,9 +48,9 @@ const CodeEditor = forwardRef(({ rightHeaderContent }, ref) => {
         align="center"
         px={4}
         py={2}
-        bg="white"
+        bg="#1a1a1a"
         borderBottom="1px"
-        borderColor="gray.200"
+        borderColor="#2a2a2a"
         minHeight="60px"
       >
         <LanguageSelector language={language} onSelect={onSelect} />

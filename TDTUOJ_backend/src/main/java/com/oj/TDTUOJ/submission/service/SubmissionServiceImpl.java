@@ -1,5 +1,6 @@
 package com.oj.TDTUOJ.submission.service;
 
+import com.oj.TDTUOJ.UserDailyActivity.service.UserActivityService;
 import com.oj.TDTUOJ.common.aws.AwsS3Service;
 import com.oj.TDTUOJ.common.enums.SubmissionStatus;
 import com.oj.TDTUOJ.common.enums.SubmissionVerdict;
@@ -40,6 +41,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     private final ProblemRepository problemRepository;
     private final Judge0Service judge0Service;
     private final AwsS3Service awsS3Service;
+    private final UserActivityService userActivityService;
 
     @Override
     public Response<SubmissionDTO> createSubmission(SubmissionDTO submissionDTO) {
@@ -74,6 +76,10 @@ public class SubmissionServiceImpl implements SubmissionService {
             String input          = awsS3Service.readFileContent(tc.getInputFileUrl());
             String expectedOutput = awsS3Service.readFileContent(tc.getExpectedOutputFileUrl());
 
+            log.info("tc.timeLimit: {}, tc.memoryLimit: {}, problem.timeLimit: {}, problem.memoryLimit: {}",
+                    tc.getTimeLimit(), tc.getMemoryLimit(), problem.getTimeLimit(), problem.getMemoryLimit());
+
+
             Judge0Result result = judge0Service.judge(
                     submissionDTO.getSourceCode(),
                     submissionDTO.getSubmissionLanguage(),
@@ -82,6 +88,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                     tc.getTimeLimit() != null ? tc.getTimeLimit() : problem.getTimeLimit(),
                     tc.getMemoryLimit() != null ? tc.getMemoryLimit() : problem.getMemoryLimit()
             );
+
 
             if (result.executionTime() != null)
                 maxTime = Math.max(maxTime, result.executionTime());
@@ -110,6 +117,8 @@ public class SubmissionServiceImpl implements SubmissionService {
         // 4. Build response
         SubmissionDTO responseDTO = modelMapper.map(submission, SubmissionDTO.class);
         responseDTO.setProblemId(problem.getId());
+
+        userActivityService.recordSubmission(currentUser.getId());
 
         return Response.<SubmissionDTO>builder()
                 .statusCode(HttpStatus.CREATED.value())

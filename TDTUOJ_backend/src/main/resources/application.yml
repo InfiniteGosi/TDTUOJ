@@ -30,6 +30,18 @@ judge0:
   api:
     url: http://localhost:2358
 
+anthropic:
+  api:
+    key: ${ANTHROPIC_API_KEY}
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
+
+gemini:
+  api:
+    key: ${GEMINI_API_KEY}
+
 management:
   endpoints:
     web:
