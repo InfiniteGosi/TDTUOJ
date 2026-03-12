@@ -1,6 +1,6 @@
 package com.oj.TDTUOJ.submission.service;
 
-import com.oj.TDTUOJ.UserDailyActivity.service.UserActivityService;
+import com.oj.TDTUOJ.userdailyactivity.service.UserActivityService;
 import com.oj.TDTUOJ.common.aws.AwsS3Service;
 import com.oj.TDTUOJ.common.enums.SubmissionStatus;
 import com.oj.TDTUOJ.common.enums.SubmissionVerdict;
@@ -10,13 +10,13 @@ import com.oj.TDTUOJ.judge0.Judge0Result;
 import com.oj.TDTUOJ.judge0.Judge0Service;
 import com.oj.TDTUOJ.problem.entity.Problem;
 import com.oj.TDTUOJ.problem.repository.ProblemRepository;
-import com.oj.TDTUOJ.problem.service.ProblemService;
 import com.oj.TDTUOJ.submission.dto.SubmissionDTO;
 import com.oj.TDTUOJ.submission.entity.Submission;
 import com.oj.TDTUOJ.submission.repository.SubmissionRepository;
 import com.oj.TDTUOJ.testcase.entity.TestCase;
 import com.oj.TDTUOJ.user.entity.User;
 import com.oj.TDTUOJ.user.service.UserService;
+import com.oj.TDTUOJ.userstatistics.service.UserStatisticsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -42,6 +42,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     private final Judge0Service judge0Service;
     private final AwsS3Service awsS3Service;
     private final UserActivityService userActivityService;
+    private final UserStatisticsService userStatisticsService;
 
     @Override
     public Response<SubmissionDTO> createSubmission(SubmissionDTO submissionDTO) {
@@ -75,10 +76,6 @@ public class SubmissionServiceImpl implements SubmissionService {
             // Fetch actual content from S3
             String input          = awsS3Service.readFileContent(tc.getInputFileUrl());
             String expectedOutput = awsS3Service.readFileContent(tc.getExpectedOutputFileUrl());
-
-            log.info("tc.timeLimit: {}, tc.memoryLimit: {}, problem.timeLimit: {}, problem.memoryLimit: {}",
-                    tc.getTimeLimit(), tc.getMemoryLimit(), problem.getTimeLimit(), problem.getMemoryLimit());
-
 
             Judge0Result result = judge0Service.judge(
                     submissionDTO.getSourceCode(),
@@ -114,11 +111,39 @@ public class SubmissionServiceImpl implements SubmissionService {
         submission.setErrorMessage(errorMessage);
         submissionRepository.save(submission);
 
-        // 4. Build response
-        SubmissionDTO responseDTO = modelMapper.map(submission, SubmissionDTO.class);
-        responseDTO.setProblemId(problem.getId());
+        // 4. Record activity and statistics
+        boolean isAccepted = finalVerdict == SubmissionVerdict.AC;
+        boolean isPractice = submissionDTO.getContestId() == null;
 
         userActivityService.recordSubmission(currentUser.getId());
+
+        int earnedPoints = 0;
+        if (isAccepted) {
+            // Exclude the submission we just saved so it doesn't count against itself.
+            // This also tightens the simultaneous-submit race window to a single row.
+            long priorAcCount = submissionRepository
+                    .countByUserIdAndProblemIdAndSubmissionVerdictAndIdNot(
+                            currentUser.getId(), problem.getId(), SubmissionVerdict.AC, submission.getId()
+                    );
+
+            if (priorAcCount == 0) {
+                earnedPoints = isPractice
+                        ? problem.getPoint()
+                        : (int)(problem.getPoint() * 1.5);
+                userStatisticsService.recordProblemSolved(currentUser.getId());
+            }
+        }
+
+        userStatisticsService.recordSubmission(
+                currentUser.getId(),
+                isAccepted,
+                earnedPoints,
+                isPractice
+        );
+
+        // 5. Build response
+        SubmissionDTO responseDTO = modelMapper.map(submission, SubmissionDTO.class);
+        responseDTO.setProblemId(problem.getId());
 
         return Response.<SubmissionDTO>builder()
                 .statusCode(HttpStatus.CREATED.value())

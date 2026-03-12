@@ -1,7 +1,7 @@
-package com.oj.TDTUOJ.UserDailyActivity.repository;
+package com.oj.TDTUOJ.userdailyactivity.repository;
 
 
-import com.oj.TDTUOJ.UserDailyActivity.entity.UserDailyActivity;
+import com.oj.TDTUOJ.userdailyactivity.entity.UserDailyActivity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

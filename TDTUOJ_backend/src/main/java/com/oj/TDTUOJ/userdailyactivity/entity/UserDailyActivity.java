@@ -1,4 +1,4 @@
-package com.oj.TDTUOJ.UserDailyActivity.entity;
+package com.oj.TDTUOJ.userdailyactivity.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

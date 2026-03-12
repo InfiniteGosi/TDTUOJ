@@ -1,8 +1,8 @@
-package com.oj.TDTUOJ.UserDailyActivity.service;
+package com.oj.TDTUOJ.userdailyactivity.service;
 
-import com.oj.TDTUOJ.UserDailyActivity.dto.UserDailyActivityDTO;
-import com.oj.TDTUOJ.UserDailyActivity.entity.UserDailyActivity;
-import com.oj.TDTUOJ.UserDailyActivity.repository.UserDailyActivityRepository;
+import com.oj.TDTUOJ.userdailyactivity.dto.UserDailyActivityDTO;
+import com.oj.TDTUOJ.userdailyactivity.entity.UserDailyActivity;
+import com.oj.TDTUOJ.userdailyactivity.repository.UserDailyActivityRepository;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.user.repository.UserRepository;

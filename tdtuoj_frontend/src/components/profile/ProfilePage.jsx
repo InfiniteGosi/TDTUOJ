@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Container,
-  Heading,
   Text,
   Badge,
   HStack,
@@ -13,118 +12,160 @@ import {
   Grid,
   GridItem,
 } from "@chakra-ui/react";
-import { Trophy, Star, Calendar, Mail, User, Award } from "lucide-react";
+import {
+  Trophy,
+  Star,
+  Mail,
+  User,
+  Award,
+  CheckCircle,
+  Target,
+  TrendingUp,
+  Zap,
+  Code2,
+} from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const getInitials = (u) => (u ? u.substring(0, 2).toUpperCase() : "U");
+
+const getRoleBadgeColor = (name) => {
+  switch (name) {
+    case "ADMIN":
+      return "red";
+    case "CREATOR":
+      return "orange";
+    case "PARTICIPANT":
+      return "blue";
+    default:
+      return "gray";
+  }
+};
+
+// ─── Heatmap helpers ──────────────────────────────────────────────────────────
+
+const HEAT_COLORS = ["#EDE9FE", "#C084FC", "#A855F7", "#7C3AED", "#4C1D95"];
+
+const buildHeatmapData = (activity) => {
+  const map = {};
+  (activity || []).forEach((a) => {
+    map[a.activityDate] = a.submissionsCount;
+  });
+
+  const cells = [];
+  const today = new Date();
+  for (let week = 51; week >= 0; week--) {
+    for (let day = 0; day < 7; day++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - (week * 7 + (6 - day)));
+      const key = d.toISOString().split("T")[0];
+      const count = map[key] || 0;
+      cells.push({
+        date: key,
+        count,
+        level:
+          count === 0
+            ? 0
+            : count <= 2
+              ? 1
+              : count <= 5
+                ? 2
+                : count <= 8
+                  ? 3
+                  : 4,
+      });
+    }
+  }
+  return cells;
+};
+
+const fmtDate = (dateStr) =>
+  new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+// ─── StatTile ─────────────────────────────────────────────────────────────────
+
+const StatTile = ({ icon: Icon, iconColor, label, value, sub }) => (
+  <Box
+    flex={1}
+    minW="120px"
+    bg="white"
+    borderRadius="xl"
+    p={4}
+    border="1px solid"
+    borderColor="gray.100"
+    boxShadow="sm"
+  >
+    <HStack gap={3} align="flex-start">
+      <Box
+        p={2}
+        borderRadius="lg"
+        bg={iconColor + "22"}
+        color={iconColor}
+        flexShrink={0}
+      >
+        <Icon size={18} />
+      </Box>
+      <VStack align="flex-start" gap={0}>
+        <Text fontSize="xs" color="gray.500" fontWeight="500">
+          {label}
+        </Text>
+        <Text fontSize="xl" fontWeight="800" color="gray.800" lineHeight="1.2">
+          {value ?? "—"}
+        </Text>
+        {sub && (
+          <Text fontSize="xs" color="gray.400">
+            {sub}
+          </Text>
+        )}
+      </VStack>
+    </HStack>
+  </Box>
+);
+
+// ─── ProfilePage ──────────────────────────────────────────────────────────────
+
 const ProfilePage = () => {
   const { username } = useParams();
-  const [user, setUser] = useState(null);
-  const [activity, setActivity] = useState([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { showMessage } = useToast();
 
+  const [user, setUser] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [activity, setActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [tooltip, setTooltip] = useState(null);
+
   useEffect(() => {
     if (!username) return;
-
     const fetchAll = async () => {
       try {
         setLoading(true);
-        const [userResponse, activityResponse] = await Promise.all([
+        const [userRes, statsRes, activityRes] = await Promise.all([
           ApiService.getUserByUsername(username),
+          ApiService.getUserStatistics(username),
           ApiService.getUserActivity(username),
         ]);
-
-        if (userResponse.statusCode === 200) setUser(userResponse.data);
-        if (activityResponse.statusCode === 200)
-          setActivity(activityResponse.data);
-      } catch (exception) {
-        showMessage(
-          exception.response?.data?.message || exception.message,
-          "error",
-        );
+        if (userRes.statusCode === 200) setUser(userRes.data);
+        if (statsRes.statusCode === 200) setStats(statsRes.data);
+        if (activityRes.statusCode === 200) setActivity(activityRes.data);
+      } catch (err) {
+        showMessage(err.response?.data?.message || err.message, "error");
       } finally {
         setLoading(false);
       }
     };
-
     fetchAll();
   }, [username]);
 
-  const getRoleBadgeColor = (roleName) => {
-    switch (roleName) {
-      case "ADMIN":
-        return "red";
-      case "CREATOR":
-        return "orange";
-      case "PARTICIPANT":
-        return "blue";
-      default:
-        return "gray";
-    }
-  };
-
-  const getInitials = (username) =>
-    username ? username.substring(0, 2).toUpperCase() : "U";
-
-  const generateContributionData = () => {
-    const activityMap = {};
-    activity.forEach((a) => {
-      activityMap[a.activityDate] = a.submissionsCount;
-    });
-
-    const data = [];
-    const today = new Date();
-
-    for (let week = 51; week >= 0; week--) {
-      for (let day = 0; day < 7; day++) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - (week * 7 + (6 - day)));
-        const dateStr = date.toISOString().split("T")[0];
-        const count = activityMap[dateStr] || 0;
-        data.push({
-          date: dateStr,
-          count,
-          level:
-            count === 0
-              ? 0
-              : count <= 2
-                ? 1
-                : count <= 5
-                  ? 2
-                  : count <= 8
-                    ? 3
-                    : 4,
-        });
-      }
-    }
-    return data;
-  };
-
-  const getContributionColor = (level) => {
-    const colors = {
-      0: "#ebedf0",
-      1: "#9be9a8",
-      2: "#40c463",
-      3: "#30a14e",
-      4: "#216e39",
-    };
-    return colors[level] || colors[0];
-  };
-
-  const formatTooltip = (date, count) => {
-    const formatted = new Date(date + "T00:00:00").toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    return `${count} submission${count !== 1 ? "s" : ""} on ${formatted}`;
-  };
-
   if (loading) {
     return (
-      <Box minH="100vh" bg="gray.50" py={8}>
+      <Box minH="100vh" bg="#F8F7FF" py={8}>
         <Container maxW="container.xl">
           <VStack gap={4} py={20}>
             <Spinner size="xl" color="purple.500" thickness="4px" />
@@ -137,7 +178,7 @@ const ProfilePage = () => {
 
   if (!user) {
     return (
-      <Box minH="100vh" bg="gray.50" py={8}>
+      <Box minH="100vh" bg="#F8F7FF" py={8}>
         <Container maxW="container.xl">
           <VStack gap={4} py={20}>
             <Text fontSize="2xl" color="gray.600">
@@ -152,177 +193,202 @@ const ProfilePage = () => {
     );
   }
 
-  const contributionData = generateContributionData();
-  const totalSubmissions = contributionData.reduce(
-    (sum, d) => sum + d.count,
-    0,
-  );
+  // ── Derived values ───────────────────────────────────────────────────────────
+  const solved = stats?.problemsSolved ?? 0;
+  const total = stats?.totalSubmissions ?? 0;
+  const accepted = stats?.acceptedSubmissions ?? 0;
+  const accRate = stats?.acceptanceRate ?? 0;
+  const practPts = stats?.practicePoints ?? 0;
+  const contestPts = stats?.contestPoints ?? 0;
+  const totalPts = stats?.totalPoints ?? user.point ?? 0;
+  const rating = stats?.currentRating ?? user.rating ?? 0;
+  const maxRating = stats?.maxRating ?? 0;
+  const heatmap = buildHeatmapData(activity);
+  const totalActivitySubmissions = heatmap.reduce((s, d) => s + d.count, 0);
+  const activeDays = activity.filter((a) => a.submissionsCount > 0).length;
 
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
+    <Box minH="100vh" bg="#F8F7FF" py={8}>
       <Container maxW="container.xl">
-        <Grid templateColumns="repeat(12, 1fr)" gap={6}>
-          {/* Left Sidebar */}
-          <GridItem colSpan={{ base: 12, lg: 4 }}>
-            <VStack align="stretch" gap={6}>
-              {/* Profile Card */}
-              <Box bg="white" borderRadius="lg" boxShadow="sm" p={6}>
-                <VStack gap={4}>
-                  <Box position="relative" cursor="pointer">
+        <Grid templateColumns={{ base: "1fr", lg: "300px 1fr" }} gap={6}>
+          {/* ── LEFT SIDEBAR ───────────────────────────────────────────── */}
+          <GridItem>
+            <VStack align="stretch" gap={5}>
+              {/* Identity card */}
+              <Box
+                bg="white"
+                borderRadius="2xl"
+                boxShadow="sm"
+                overflow="hidden"
+              >
+                {/* Purple banner */}
+                <Box
+                  h="60px"
+                  bg="linear-gradient(135deg, #6D28D9 0%, #A855F7 100%)"
+                />
+                <Box px={5} pb={5}>
+                  {/* Avatar overlapping banner */}
+                  <Box mt="-36px" mb={3}>
                     {user.profileUrl ? (
-                      <img
+                      <Box
+                        as="img"
                         src={user.profileUrl}
                         alt={user.username}
-                        style={{
-                          width: "120px",
-                          height: "120px",
-                          borderRadius: "50%",
-                          objectFit: "cover",
-                          border: "4px solid #805AD5",
-                        }}
+                        w="72px"
+                        h="72px"
+                        borderRadius="full"
+                        objectFit="cover"
+                        border="4px solid white"
+                        boxShadow="md"
+                        display="block"
                       />
                     ) : (
                       <Box
-                        w="120px"
-                        h="120px"
+                        w="72px"
+                        h="72px"
                         borderRadius="full"
-                        bg="purple.400"
+                        bg="purple.500"
                         color="white"
                         display="flex"
                         alignItems="center"
                         justifyContent="center"
-                        fontSize="3xl"
-                        fontWeight="bold"
-                        border="4px solid"
-                        borderColor="purple.500"
+                        fontSize="xl"
+                        fontWeight="800"
+                        border="4px solid white"
+                        boxShadow="md"
                       >
                         {getInitials(user.username)}
                       </Box>
                     )}
                   </Box>
 
-                  <VStack gap={1}>
-                    <Heading size="lg" color="gray.800" textAlign="center">
-                      {user.username}
-                    </Heading>
-                    {user.name && (
-                      <Text fontSize="md" color="gray.600" textAlign="center">
-                        {user.name}
-                      </Text>
-                    )}
-                  </VStack>
+                  <Text
+                    fontSize="lg"
+                    fontWeight="800"
+                    color="gray.800"
+                    mb={0.5}
+                  >
+                    {user.username}
+                  </Text>
+                  {user.name && (
+                    <Text fontSize="sm" color="gray.500" mb={2}>
+                      {user.name}
+                    </Text>
+                  )}
 
-                  <HStack gap={2} flexWrap="wrap" justify="center">
-                    {user.roles.map((role) => (
+                  <HStack gap={1.5} flexWrap="wrap" mb={3}>
+                    {(user.roles || []).map((role) => (
                       <Badge
                         key={role.id}
                         colorScheme={getRoleBadgeColor(role.name)}
-                        fontSize="xs"
+                        fontSize="10px"
                         px={2}
-                        py={1}
-                        borderRadius="md"
+                        py="2px"
+                        borderRadius="full"
+                        fontWeight="700"
                       >
                         {role.name}
                       </Badge>
                     ))}
+                    <Badge
+                      colorScheme={user.isActive ? "green" : "red"}
+                      fontSize="10px"
+                      px={2}
+                      py="2px"
+                      borderRadius="full"
+                      fontWeight="700"
+                    >
+                      {user.isActive ? "Active" : "Inactive"}
+                    </Badge>
                   </HStack>
 
-                  <Badge
-                    colorScheme={user.isActive ? "green" : "red"}
-                    fontSize="sm"
-                    px={3}
-                    py={1}
-                    borderRadius="md"
-                  >
-                    {user.isActive ? "Active" : "Inactive"}
-                  </Badge>
-                </VStack>
+                  <VStack align="stretch" gap={2}>
+                    <HStack gap={2} color="gray.500">
+                      <Mail size={13} />
+                      <Text fontSize="xs" wordBreak="break-all">
+                        {user.email}
+                      </Text>
+                    </HStack>
+                    <HStack gap={2} color="gray.500">
+                      <User size={13} />
+                      <Text fontSize="xs">User #{user.id}</Text>
+                    </HStack>
+                  </VStack>
 
-                <Box borderTopWidth="1px" my={6} />
-
-                <VStack align="stretch" gap={3}>
-                  <HStack gap={3}>
-                    <Mail size={18} color="#718096" />
-                    <Text fontSize="sm" color="gray.700" wordBreak="break-all">
-                      {user.email}
-                    </Text>
-                  </HStack>
-                  <HStack gap={3}>
-                    <User size={18} color="#718096" />
-                    <Text fontSize="sm" color="gray.700">
-                      User ID: #{user.id}
-                    </Text>
-                  </HStack>
-                </VStack>
+                  {user.about && (
+                    <Box
+                      mt={4}
+                      pt={4}
+                      borderTopWidth="1px"
+                      borderColor="gray.100"
+                    >
+                      <Text fontSize="sm" color="gray.600" lineHeight="1.6">
+                        {user.about}
+                      </Text>
+                    </Box>
+                  )}
+                </Box>
               </Box>
 
-              {/* Stats Card */}
-              <Box bg="white" borderRadius="lg" boxShadow="sm" p={6}>
-                <Heading size="md" mb={4} color="gray.800">
-                  Statistics
-                </Heading>
-                <VStack align="stretch" gap={4}>
-                  <Box>
-                    <HStack justify="space-between" mb={2}>
-                      <HStack gap={2}>
-                        <Award size={18} color="#805AD5" />
-                        <Text
-                          fontSize="sm"
-                          fontWeight="medium"
-                          color="gray.600"
-                        >
-                          Problems solved
-                        </Text>
-                      </HStack>
-                      <Text fontSize="lg" fontWeight="bold" color="purple.600">
-                        0
+              {/* Rating card */}
+              <Box
+                bg="linear-gradient(135deg, #6D28D9 0%, #A855F7 100%)"
+                borderRadius="2xl"
+                boxShadow="sm"
+                p={5}
+                color="white"
+              >
+                <HStack gap={2} mb={3}>
+                  <Star size={15} />
+                  <Text fontSize="xs" fontWeight="700" letterSpacing="0.06em">
+                    RATING
+                  </Text>
+                </HStack>
+                <Text fontSize="3xl" fontWeight="900" lineHeight="1">
+                  {rating}
+                </Text>
+                {maxRating > 0 && (
+                  <Text fontSize="xs" opacity={0.65} mt={1}>
+                    Peak: {maxRating}
+                  </Text>
+                )}
+              </Box>
+
+              {/* Points breakdown */}
+              <Box bg="white" borderRadius="2xl" boxShadow="sm" p={5}>
+                <HStack gap={2} mb={4}>
+                  <Trophy size={15} color="#7C3AED" />
+                  <Text
+                    fontSize="xs"
+                    fontWeight="700"
+                    color="gray.600"
+                    letterSpacing="0.06em"
+                  >
+                    POINTS BREAKDOWN
+                  </Text>
+                </HStack>
+                <VStack align="stretch" gap={3}>
+                  {[
+                    { label: "Practice", value: practPts, color: "#7C3AED" },
+                    { label: "Contest", value: contestPts, color: "#F59E0B" },
+                  ].map(({ label, value, color }) => (
+                    <HStack key={label} justify="space-between">
+                      <Text fontSize="sm" color="gray.500">
+                        {label}
+                      </Text>
+                      <Text fontSize="sm" fontWeight="700" color={color}>
+                        {value}
                       </Text>
                     </HStack>
-                  </Box>
-                  <Box borderTopWidth="1px" />
-                  <Box>
-                    <HStack justify="space-between" mb={2}>
-                      <HStack gap={2}>
-                        <Trophy size={18} color="#805AD5" />
-                        <Text
-                          fontSize="sm"
-                          fontWeight="medium"
-                          color="gray.600"
-                        >
-                          Rank by points
-                        </Text>
-                      </HStack>
-                      <Text fontSize="lg" fontWeight="bold" color="purple.600">
-                        #--
+                  ))}
+                  <Box borderTopWidth="1px" borderColor="gray.100" pt={3}>
+                    <HStack justify="space-between">
+                      <Text fontSize="sm" fontWeight="600" color="gray.700">
+                        Total
                       </Text>
-                    </HStack>
-                  </Box>
-                  <Box borderTopWidth="1px" />
-                  <Box>
-                    <HStack justify="space-between" mb={2}>
-                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
-                        Total points
-                      </Text>
-                      <Text fontSize="lg" fontWeight="bold" color="gray.800">
-                        {user.point}
-                      </Text>
-                    </HStack>
-                  </Box>
-                  <Box borderTopWidth="1px" />
-                  <Box>
-                    <HStack justify="space-between" mb={2}>
-                      <HStack gap={2}>
-                        <Star size={18} color="#F59E0B" />
-                        <Text
-                          fontSize="sm"
-                          fontWeight="medium"
-                          color="gray.600"
-                        >
-                          Rating
-                        </Text>
-                      </HStack>
-                      <Text fontSize="lg" fontWeight="bold" color="orange.600">
-                        {user.rating}
+                      <Text fontSize="lg" fontWeight="800" color="#10B981">
+                        {totalPts}
                       </Text>
                     </HStack>
                   </Box>
@@ -331,69 +397,128 @@ const ProfilePage = () => {
             </VStack>
           </GridItem>
 
-          {/* Right Content */}
-          <GridItem colSpan={{ base: 12, lg: 8 }}>
-            <VStack align="stretch" gap={6}>
-              {/* About */}
-              <Box bg="white" borderRadius="lg" boxShadow="sm" p={6}>
-                <Heading size="md" mb={4} color="gray.800">
-                  About
-                </Heading>
-                <Text color="gray.600" fontSize="sm">
-                  {user.about || "This user hasn't added an about section yet."}
-                </Text>
+          {/* ── RIGHT MAIN ─────────────────────────────────────────────── */}
+          <GridItem>
+            <VStack align="stretch" gap={5}>
+              {/* Top stat tiles */}
+              <HStack gap={3} flexWrap="wrap">
+                <StatTile
+                  icon={CheckCircle}
+                  iconColor="#10B981"
+                  label="Problems Solved"
+                  value={solved}
+                />
+                <StatTile
+                  icon={Code2}
+                  iconColor="#7C3AED"
+                  label="Total Submissions"
+                  value={total}
+                  sub={`${accepted} accepted`}
+                />
+                <StatTile
+                  icon={Target}
+                  iconColor="#F59E0B"
+                  label="Acceptance Rate"
+                  value={`${accRate}%`}
+                />
+                <StatTile
+                  icon={Zap}
+                  iconColor="#EF4444"
+                  label="Active Days"
+                  value={activeDays}
+                  sub="last 12 months"
+                />
+              </HStack>
+
+              {/* Submission stats grid */}
+              <Box bg="white" borderRadius="2xl" boxShadow="sm" p={5}>
+                <HStack gap={2} mb={4}>
+                  <Award size={15} color="#7C3AED" />
+                  <Text
+                    fontSize="xs"
+                    fontWeight="700"
+                    color="gray.600"
+                    letterSpacing="0.06em"
+                  >
+                    SUBMISSION STATISTICS
+                  </Text>
+                </HStack>
+                <Grid templateColumns="repeat(3, 1fr)" gap={3}>
+                  {[
+                    { label: "Total Submissions", value: total },
+                    { label: "Accepted", value: accepted },
+                    { label: "Acceptance Rate", value: `${accRate}%` },
+                    { label: "Problems Solved", value: solved },
+                    { label: "Practice Points", value: practPts },
+                    { label: "Contest Points", value: contestPts },
+                  ].map(({ label, value }) => (
+                    <Box
+                      key={label}
+                      bg="purple.50"
+                      borderRadius="xl"
+                      p={3}
+                      textAlign="center"
+                    >
+                      <Text
+                        fontSize="xl"
+                        fontWeight="800"
+                        color="purple.700"
+                        lineHeight="1.1"
+                      >
+                        {value}
+                      </Text>
+                      <Text fontSize="xs" color="gray.500" mt={0.5}>
+                        {label}
+                      </Text>
+                    </Box>
+                  ))}
+                </Grid>
               </Box>
 
-              {/* Contribution Graph */}
-              <Box bg="white" borderRadius="lg" boxShadow="sm" p={6}>
-                <HStack justify="space-between" align="center" mb={4}>
-                  <Heading size="md" color="gray.800">
-                    Submission Activity
-                  </Heading>
-                  <HStack gap={2} fontSize="xs" color="gray.600">
-                    <Text>Less</Text>
-                    {[
-                      "#ebedf0",
-                      "#9be9a8",
-                      "#40c463",
-                      "#30a14e",
-                      "#216e39",
-                    ].map((color) => (
-                      <Box
-                        key={color}
-                        w="10px"
-                        h="10px"
-                        bg={color}
-                        borderRadius="2px"
-                      />
-                    ))}
-                    <Text>More</Text>
+              {/* Activity heatmap */}
+              <Box bg="white" borderRadius="2xl" boxShadow="sm" p={5}>
+                <HStack justify="space-between" mb={4}>
+                  <HStack gap={2}>
+                    <TrendingUp size={15} color="#7C3AED" />
+                    <Text
+                      fontSize="xs"
+                      fontWeight="700"
+                      color="gray.600"
+                      letterSpacing="0.06em"
+                    >
+                      SUBMISSION ACTIVITY
+                    </Text>
                   </HStack>
+                  <Text fontSize="xs" color="gray.400">
+                    {totalActivitySubmissions} submissions in the last year
+                  </Text>
                 </HStack>
 
-                <Box overflowX="auto">
-                  <HStack gap={0.5} align="start">
-                    {Array.from({ length: 52 }).map((_, weekIndex) => (
-                      <VStack key={weekIndex} gap={0.5}>
-                        {Array.from({ length: 7 }).map((_, dayIndex) => {
-                          const data =
-                            contributionData[weekIndex * 7 + dayIndex];
+                <Box overflowX="auto" pb={1}>
+                  <HStack gap="3px" align="start" display="inline-flex">
+                    {Array.from({ length: 52 }).map((_, wk) => (
+                      <VStack key={wk} gap="3px">
+                        {Array.from({ length: 7 }).map((_, dy) => {
+                          const cell = heatmap[wk * 7 + dy];
+                          if (!cell) return <Box key={dy} w="11px" h="11px" />;
                           return (
                             <Box
-                              key={dayIndex}
-                              w="12px"
-                              h="12px"
-                              bg={
-                                data
-                                  ? getContributionColor(data.level)
-                                  : "#ebedf0"
-                              }
+                              key={dy}
+                              w="11px"
+                              h="11px"
                               borderRadius="2px"
-                              title={
-                                data ? formatTooltip(data.date, data.count) : ""
-                              }
-                              cursor="pointer"
-                              _hover={{ opacity: 0.8 }}
+                              bg={HEAT_COLORS[cell.level]}
+                              cursor={cell.count > 0 ? "pointer" : "default"}
+                              _hover={{ opacity: 0.7 }}
+                              onMouseEnter={(e) => {
+                                if (cell.count > 0)
+                                  setTooltip({
+                                    text: `${cell.count} submission${cell.count !== 1 ? "s" : ""} · ${fmtDate(cell.date)}`,
+                                    x: e.clientX,
+                                    y: e.clientY,
+                                  });
+                              }}
+                              onMouseLeave={() => setTooltip(null)}
                             />
                           );
                         })}
@@ -402,24 +527,44 @@ const ProfilePage = () => {
                   </HStack>
                 </Box>
 
-                <Text fontSize="xs" color="gray.500" mt={2}>
-                  {totalSubmissions} submissions in the last year
-                </Text>
-              </Box>
-
-              {/* Badges */}
-              <Box bg="white" borderRadius="lg" boxShadow="sm" p={6}>
-                <Heading size="md" mb={4} color="gray.800">
-                  Badges & Awards
-                </Heading>
-                <Text color="gray.500" fontSize="sm" fontStyle="italic">
-                  This user has not earned any badges or awards.
-                </Text>
+                {/* Legend */}
+                <HStack justify="flex-end" gap={1} mt={3} align="center">
+                  <Text fontSize="10px" color="gray.400">
+                    Less
+                  </Text>
+                  {HEAT_COLORS.map((c) => (
+                    <Box key={c} w="10px" h="10px" bg={c} borderRadius="2px" />
+                  ))}
+                  <Text fontSize="10px" color="gray.400">
+                    More
+                  </Text>
+                </HStack>
               </Box>
             </VStack>
           </GridItem>
         </Grid>
       </Container>
+
+      {/* Heatmap tooltip */}
+      {tooltip && (
+        <Box
+          position="fixed"
+          left={tooltip.x + 14}
+          top={tooltip.y - 36}
+          bg="gray.800"
+          color="white"
+          fontSize="xs"
+          px={3}
+          py={1.5}
+          borderRadius="md"
+          boxShadow="lg"
+          pointerEvents="none"
+          zIndex={9999}
+          whiteSpace="nowrap"
+        >
+          {tooltip.text}
+        </Box>
+      )}
     </Box>
   );
 };

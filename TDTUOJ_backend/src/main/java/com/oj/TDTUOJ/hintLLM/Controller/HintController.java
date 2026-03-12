@@ -1,7 +1,7 @@
-package com.oj.TDTUOJ.HintLLM.Controller;
+package com.oj.TDTUOJ.hintLLM.Controller;
 
-import com.oj.TDTUOJ.HintLLM.HintRequest;
-import com.oj.TDTUOJ.HintLLM.Service.HintService;
+import com.oj.TDTUOJ.hintLLM.HintRequest;
+import com.oj.TDTUOJ.hintLLM.Service.HintService;
 import com.oj.TDTUOJ.common.exceptions.BadRequestException;
 import com.oj.TDTUOJ.common.response.Response;
 import lombok.RequiredArgsConstructor;

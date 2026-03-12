@@ -68,6 +68,16 @@ const DIFFICULTY_COLORS = {
   HARD: "#e53e3e",
 };
 
+const POINT_RANGES = {
+  EASY: { min: 1, max: 10 },
+  MEDIUM: { min: 11, max: 20 },
+  HARD: { min: 21, max: 30 },
+};
+
+const getPointRange = (difficulty) => {
+  return POINT_RANGES[difficulty] || { min: 1, max: 300 };
+};
+
 const AdminProblemFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -132,6 +142,19 @@ const AdminProblemFormPage = () => {
     const fetchProblemData = async () => {
       if (!id) return;
       setLoadingData(true);
+
+      // Reset all state before loading new problem
+      setProblemData({
+        title: "",
+        point: "",
+        timeLimit: "",
+        memoryLimit: "",
+        statement: "",
+        problemDifficulty: "",
+      });
+      setTestCases([{ input: "", expectedOutput: "" }]);
+      setSelectedTags([]);
+      setAuthorInfo({ id: null, username: null });
       try {
         const response = await ApiService.getProblemById(id);
         if (response.statusCode === 200 && response.data) {
@@ -175,14 +198,24 @@ const AdminProblemFormPage = () => {
                 let expectedOutput = "";
                 try {
                   if (tc.inputFileUrl) {
-                    input = await (
-                      await fetch(`${tc.inputFileUrl}?t=${Date.now()}`)
-                    ).text();
+                    const resp = await fetch(
+                      `${tc.inputFileUrl}?t=${Date.now()}`,
+                    );
+                    const text = await resp.text();
+                    input =
+                      text.startsWith("<?xml") || text.startsWith("<Error")
+                        ? ""
+                        : text;
                   }
                   if (tc.expectedOutputFileUrl) {
-                    expectedOutput = await (
-                      await fetch(`${tc.expectedOutputFileUrl}?t=${Date.now()}`)
-                    ).text();
+                    const resp = await fetch(
+                      `${tc.expectedOutputFileUrl}?t=${Date.now()}`,
+                    );
+                    const text = await resp.text();
+                    expectedOutput =
+                      text.startsWith("<?xml") || text.startsWith("<Error")
+                        ? ""
+                        : text;
                   }
                 } catch (err) {
                   console.error(
@@ -197,8 +230,6 @@ const AdminProblemFormPage = () => {
           } else {
             setTestCases([{ input: "", expectedOutput: "" }]);
           }
-
-          showMessage("Problem loaded successfully", "success");
         } else {
           showMessage("Failed to load problem", "error");
         }
@@ -248,7 +279,11 @@ const AdminProblemFormPage = () => {
   // ─── Form helpers ────────────────────────────────────────────────────────────
 
   const handleProblemChange = (field, value) =>
-    setProblemData((prev) => ({ ...prev, [field]: value }));
+    setProblemData((prev) => ({
+      ...prev,
+      [field]: value,
+      ...(field === "problemDifficulty" ? { point: "" } : {}),
+    }));
 
   const addTestCase = () =>
     setTestCases((prev) => [...prev, { input: "", expectedOutput: "" }]);
@@ -276,6 +311,16 @@ const AdminProblemFormPage = () => {
     if (!problemData.point || problemData.point <= 0) {
       showMessage("Point must be greater than 0", "error");
       return false;
+    }
+    if (problemData.problemDifficulty) {
+      const range = getPointRange(problemData.problemDifficulty);
+      if (problemData.point < range.min || problemData.point > range.max) {
+        showMessage(
+          `Points for ${problemData.problemDifficulty.toLowerCase()} problems must be between ${range.min} and ${range.max}`,
+          "error",
+        );
+        return false;
+      }
     }
     if (!problemData.timeLimit || problemData.timeLimit <= 0) {
       showMessage("Time limit must be greater than 0", "error");
@@ -527,7 +572,14 @@ const AdminProblemFormPage = () => {
                       color="gray.700"
                       mb={2}
                     >
-                      Points *
+                      Points *{" "}
+                      {problemData.problemDifficulty && (
+                        <Box as="span" fontSize="xs" color="gray.400">
+                          ({getPointRange(problemData.problemDifficulty).min}–
+                          {getPointRange(problemData.problemDifficulty).max} for{" "}
+                          {problemData.problemDifficulty.toLowerCase()})
+                        </Box>
+                      )}
                     </Text>
                     <Input
                       type="number"
@@ -535,8 +587,33 @@ const AdminProblemFormPage = () => {
                       onChange={(e) =>
                         handleProblemChange("point", e.target.value)
                       }
-                      placeholder="100"
-                      min={1}
+                      onBlur={() => {
+                        if (
+                          problemData.point &&
+                          problemData.problemDifficulty
+                        ) {
+                          const range = getPointRange(
+                            problemData.problemDifficulty,
+                          );
+                          if (
+                            problemData.point < range.min ||
+                            problemData.point > range.max
+                          ) {
+                            showMessage(
+                              `Points for ${problemData.problemDifficulty.toLowerCase()} problems must be between ${range.min} and ${range.max}`,
+                              "error",
+                            );
+                          }
+                        }
+                      }}
+                      placeholder={
+                        problemData.problemDifficulty
+                          ? `${getPointRange(problemData.problemDifficulty).min}–${getPointRange(problemData.problemDifficulty).max}`
+                          : "Select difficulty first"
+                      }
+                      min={getPointRange(problemData.problemDifficulty).min}
+                      max={getPointRange(problemData.problemDifficulty).max}
+                      isDisabled={!problemData.problemDifficulty}
                       size="lg"
                     />
                   </Box>

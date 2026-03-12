@@ -1,4 +1,4 @@
-package com.oj.TDTUOJ.HintLLM;
+package com.oj.TDTUOJ.hintLLM;
 
 import lombok.Data;
 

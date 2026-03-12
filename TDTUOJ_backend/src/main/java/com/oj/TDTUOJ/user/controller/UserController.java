@@ -1,14 +1,13 @@
 package com.oj.TDTUOJ.user.controller;
 
-import com.oj.TDTUOJ.UserDailyActivity.dto.UserDailyActivityDTO;
-import com.oj.TDTUOJ.UserDailyActivity.service.UserActivityService;
-import com.oj.TDTUOJ.common.exceptions.NotFoundException;
+import com.oj.TDTUOJ.userdailyactivity.dto.UserDailyActivityDTO;
+import com.oj.TDTUOJ.userdailyactivity.service.UserActivityService;
 import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.user.dto.ChangePasswordRequest;
 import com.oj.TDTUOJ.user.dto.UserDTO;
-import com.oj.TDTUOJ.user.entity.User;
-import com.oj.TDTUOJ.user.repository.UserRepository;
 import com.oj.TDTUOJ.user.service.UserService;
+import com.oj.TDTUOJ.userstatistics.dto.UserStatisticsDTO;
+import com.oj.TDTUOJ.userstatistics.service.UserStatisticsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,6 +26,8 @@ public class UserController {
     private final UserService userService;
 
     private final UserActivityService userActivityService;
+
+    private final UserStatisticsService userStatisticsService;
 
     @GetMapping
     public ResponseEntity<Response<Page<UserDTO>>> getAllUsers(
@@ -74,5 +75,11 @@ public class UserController {
     public ResponseEntity<Response<List<UserDailyActivityDTO>>> getUserActivity(
             @PathVariable String username) {
         return ResponseEntity.ok(userActivityService.getActivityForYearByUsername(username));
+    }
+
+    @GetMapping("/{username}/statistics")
+    public ResponseEntity<Response<UserStatisticsDTO>> getUserStatistics(
+            @PathVariable String username) {
+        return ResponseEntity.ok(userStatisticsService.getStatsByUsername(username));
     }
 }

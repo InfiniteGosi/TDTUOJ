@@ -1,4 +1,4 @@
-package com.oj.TDTUOJ.UserDailyActivity.dto;
+package com.oj.TDTUOJ.userdailyactivity.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;

@@ -1,6 +1,6 @@
-package com.oj.TDTUOJ.HintLLM.Service;
+package com.oj.TDTUOJ.hintLLM.Service;
 
-import com.oj.TDTUOJ.HintLLM.HintRequest;
+import com.oj.TDTUOJ.hintLLM.HintRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
