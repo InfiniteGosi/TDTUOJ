@@ -99,7 +99,7 @@ const AdminProblemFormPage = () => {
   });
 
   const [testCases, setTestCases] = useState([
-    { input: "", expectedOutput: "" },
+    { input: "", expectedOutput: "", isSample: false },
   ]);
 
   // Tag state
@@ -223,7 +223,12 @@ const AdminProblemFormPage = () => {
                     err,
                   );
                 }
-                return { id: tc.id, input, expectedOutput };
+                return {
+                  id: tc.id,
+                  input,
+                  expectedOutput,
+                  isSample: tc.isSample ?? false,
+                };
               }),
             );
             setTestCases(loaded);
@@ -286,7 +291,10 @@ const AdminProblemFormPage = () => {
     }));
 
   const addTestCase = () =>
-    setTestCases((prev) => [...prev, { input: "", expectedOutput: "" }]);
+    setTestCases((prev) => [
+      ...prev,
+      { input: "", expectedOutput: "", isSample: false },
+    ]);
 
   const removeTestCase = (index) => {
     if (testCases.length > 1)
@@ -401,6 +409,7 @@ const AdminProblemFormPage = () => {
 
       testCases.forEach((tc, index) => {
         if (tc.id) formData.append(`testCases[${index}].id`, tc.id);
+        formData.append(`testCases[${index}].isSample`, tc.isSample ?? false);
         formData.append(
           `testCases[${index}].inputFile`,
           stringToFile(tc.input, `input_${index}.txt`, "text/plain"),
@@ -1045,9 +1054,48 @@ const AdminProblemFormPage = () => {
                 {testCases.map((testCase, index) => (
                   <Card.Root key={index} bg="gray.50" p={4} borderRadius="lg">
                     <HStack justify="space-between" mb={3}>
-                      <Heading size="md" color="gray.700">
-                        Test Case {index + 1}
-                      </Heading>
+                      <HStack gap={3}>
+                        <Heading size="md" color="gray.700">
+                          Test Case {index + 1}
+                        </Heading>
+                        {/* Sample toggle */}
+                        <HStack
+                          gap={2}
+                          px={3}
+                          py={1}
+                          borderRadius="full"
+                          bg={testCase.isSample ? "green.50" : "gray.100"}
+                          border="1px solid"
+                          borderColor={
+                            testCase.isSample ? "green.300" : "gray.300"
+                          }
+                          cursor="pointer"
+                          onClick={() =>
+                            handleTestCaseChange(
+                              index,
+                              "isSample",
+                              !testCase.isSample,
+                            )
+                          }
+                          userSelect="none"
+                          title="Sample test cases are visible to users solving the problem"
+                        >
+                          <Box
+                            w="10px"
+                            h="10px"
+                            borderRadius="full"
+                            bg={testCase.isSample ? "green.400" : "gray.400"}
+                            flexShrink={0}
+                          />
+                          <Text
+                            fontSize="xs"
+                            fontWeight="medium"
+                            color={testCase.isSample ? "green.700" : "gray.500"}
+                          >
+                            {testCase.isSample ? "Sample (visible)" : "Hidden"}
+                          </Text>
+                        </HStack>
+                      </HStack>
                       {testCases.length > 1 && (
                         <Button
                           onClick={() => removeTestCase(index)}

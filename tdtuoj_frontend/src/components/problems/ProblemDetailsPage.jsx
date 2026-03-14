@@ -284,8 +284,11 @@ const ProblemDetailsPage = () => {
           response.data.statementFileUrl,
         );
         setStatement(statementRes);
+        const sampleTestCases = response.data.testCases.filter(
+          (tc) => tc.isSample === true,
+        );
         const fetched = await Promise.all(
-          response.data.testCases.map(async (tc) => ({
+          sampleTestCases.map(async (tc) => ({
             id: tc.id,
             input: await ApiService.fetchFileContent(tc.inputFileUrl),
             output: await ApiService.fetchFileContent(tc.expectedOutputFileUrl),

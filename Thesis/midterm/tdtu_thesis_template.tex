@@ -1,0 +1,556 @@
+% ============================================================
+% KHÓA LUẬN / DỰ ÁN TỐT NGHIỆP
+% TRƯỜNG ĐẠI HỌC TÔN ĐỨC THẮNG – KHOA CÔNG NGHỆ THÔNG TIN
+% Theo Quyết định số 884/2020/QĐ-TĐT, ngày 01/12/2020
+% ============================================================
+
+\documentclass[12pt, a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese, english]{babel}
+\usepackage{csquotes}
+\usepackage{mathptmx}
+
+% Fix for texttt overflow: allow line breaks in \texttt
+\usepackage[htt]{hyphenat}
+
+\usepackage[
+  a4paper,
+  top    = 3.5cm,
+  bottom = 3.0cm,
+  left   = 3.5cm,
+  right  = 2.0cm,
+  headheight = 15pt,
+]{geometry}
+
+\usepackage{setspace}
+\setstretch{1.5}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyhead[C]{\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+\usepackage{indentfirst}
+\setlength{\parindent}{1.27cm}
+
+\usepackage{graphicx}
+\usepackage{float}
+
+\usepackage{caption}
+\captionsetup{font=normalsize, labelsep=colon, justification=centering}
+
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{array}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+\usepackage[table]{xcolor}
+
+\usepackage[
+  colorlinks = true,
+  linkcolor  = black,
+  citecolor  = black,
+  urlcolor   = blue,
+]{hyperref}
+
+\usepackage[
+  style   = apa,
+  backend = biber,
+  sorting = nyt,
+]{biblatex}
+\addbibresource{references.bib}
+
+\usepackage{acronym}
+\usepackage{appendix}
+
+\usepackage{titlesec}
+
+% Chapter heading: "CHƯƠNG X.  TITLE" on a single line, bold, left-aligned
+% Matches the reference image style
+\titleformat{\chapter}[hang]
+  {\normalfont\large\bfseries}
+  {CHƯƠNG \thechapter.}
+  {1em}
+  {\large\bfseries\MakeUppercase}
+\titlespacing*{\chapter}{0pt}{-20pt}{20pt}
+
+% Starred chapters (LỜI CẢM ƠN, TÓM TẮT, etc.): centered, no prefix
+\titleformat{name=\chapter,numberless}[block]
+  {\normalfont\large\bfseries\centering}
+  {}
+  {0pt}
+  {\large\bfseries}
+\titlespacing*{name=\chapter,numberless}{0pt}{-20pt}{20pt}
+
+\titleformat{\section}
+  {\normalfont\normalsize\bfseries}{\thesection}{1em}{}
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+
+\titleformat{\subsection}
+  {\normalfont\normalsize\bfseries}{\thesubsection}{1em}{}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+\titlespacing*{\subsubsection}{0pt}{8pt}{4pt}
+
+\usepackage{chngcntr}
+\counterwithin{figure}{chapter}
+\counterwithin{table}{chapter}
+\counterwithin{equation}{chapter}
+\renewcommand{\theequation}{\thechapter.\arabic{equation}}
+
+\addto\captionsenglish{%
+  \renewcommand{\figurename}{Hình}%
+  \renewcommand{\tablename}{Bảng}%
+  \renewcommand{\contentsname}{MỤC LỤC}%
+  \renewcommand{\listfigurename}{DANH MỤC HÌNH VẼ}%
+  \renewcommand{\listtablename}{DANH MỤC BẢNG BIỂU}%
+  \renewcommand{\bibname}{TÀI LIỆU THAM KHẢO}%
+  \renewcommand{\chaptername}{CHƯƠNG}%
+  \renewcommand{\appendixname}{PHỤ LỤC}%
+}
+
+\newcommand{\thesistitle}{HỆ THỐNG CHẤM BÀI TRỰC TUYẾN - TDTUOJ}
+\newcommand{\thesistitleen}{ONLINE JUDGE SYSTEM - TDTUOJ}
+\newcommand{\studentone}{Hồ Nguyễn An Khang -- 52200020}
+\newcommand{\supervisor}{ThS. Doãn Xuân Thanh}
+\newcommand{\major}{Kỹ thuật phần mềm}
+\newcommand{\submityear}{2026}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+\fontsize{13pt}{15.6pt}\selectfont
+\pagenumbering{gobble}
+
+% ------------------------------------------------------------
+% TRANG BÌA CHÍNH (Mẫu 1)
+% ------------------------------------------------------------
+\begin{titlepage}
+  \begin{center}
+    \textbf{TỔNG LIÊN ĐOÀN LAO ĐỘNG VIỆT NAM}\\[0.3cm]
+    \textbf{TRƯỜNG ĐẠI HỌC TÔN ĐỨC THẮNG}\\[0.3cm]
+    \textbf{KHOA CÔNG NGHỆ THÔNG TIN}\\[1cm]
+    \includegraphics[width=0.25\textwidth]{figures/logo.png}\\[1cm]
+    {\large\textbf{\studentone}}\\[2.5cm]
+    {\Large\textbf{\MakeUppercase{\thesistitle}}}\\[1.5cm]
+    {\large\textbf{KHÓA LUẬN TỐT NGHIỆP}}\\[0.5cm]
+    {\normalsize\textbf{\major}}\\[0.5cm]
+    \vfill
+    \textbf{THÀNH PHỐ HỒ CHÍ MINH, NĂM \submityear}
+  \end{center}
+\end{titlepage}
+
+% ------------------------------------------------------------
+% TRANG BÌA PHỤ (Mẫu 2)
+% ------------------------------------------------------------
+\begin{titlepage}
+  \begin{center}
+    \textbf{TỔNG LIÊN ĐOÀN LAO ĐỘNG VIỆT NAM}\\[0.3cm]
+    \textbf{TRƯỜNG ĐẠI HỌC TÔN ĐỨC THẮNG}\\[0.3cm]
+    \textbf{KHOA CÔNG NGHỆ THÔNG TIN}\\[1cm]
+    \includegraphics[width=0.25\textwidth]{figures/logo.png}\\[1cm]
+    {\large\textbf{\studentone}}\\[2.5cm]
+    {\Large\textbf{\MakeUppercase{\thesistitle}}}\\[1.5cm]
+    {\large\textbf{KHÓA LUẬN TỐT NGHIỆP}}\\[0.5cm]
+    {\normalsize\textbf{\major}}\\[1.5cm]
+    Người hướng dẫn:\\[0.2cm]
+    \textbf{\supervisor}
+    \vfill
+    \textbf{THÀNH PHỐ HỒ CHÍ MINH, NĂM \submityear}
+  \end{center}
+\end{titlepage}
+
+% ------------------------------------------------------------
+% LỜI CẢM ƠN
+% ------------------------------------------------------------
+\chapter*{LỜI CẢM ƠN}
+\addcontentsline{toc}{chapter}{LỜI CẢM ƠN}
+
+Em xin chân thành cảm ơn quý thầy cô Khoa Công nghệ Thông tin, Trường Đại học Tôn Đức Thắng đã tận tình giảng dạy và trang bị cho em những kiến thức nền tảng vững chắc trong suốt quá trình học tập. Đặc biệt, em xin gửi lời cảm ơn sâu sắc đến giảng viên hướng dẫn \textbf{\supervisor} đã dành thời gian định hướng, góp ý và hỗ trợ em trong từng giai đoạn thực hiện đề tài này. Bên cạnh đó, em xin cảm ơn gia đình và bạn bè đã luôn động viên, tạo điều kiện để em có thể hoàn thành tốt dự án.
+
+\vspace{3cm}
+\begin{flushright}
+  \begin{minipage}{10cm}
+    \centering
+    TP. Hồ Chí Minh, ngày \ldots{} tháng \ldots{} năm 20\ldots{}\\[1cm]
+    \textbf{Tác giả}\\[0.3cm]
+    (\textit{Ký tên và ghi rõ họ tên})
+  \end{minipage}
+\end{flushright}
+\newpage
+
+% ------------------------------------------------------------
+% LỜI CAM ĐOAN
+% ------------------------------------------------------------
+\chapter*{LỜI CAM ĐOAN}
+\addcontentsline{toc}{chapter}{LỜI CAM ĐOAN}
+
+\begin{center}
+  \textbf{CÔNG TRÌNH ĐƯỢC HOÀN THÀNH\\
+  TẠI TRƯỜNG ĐẠI HỌC TÔN ĐỨC THẮNG}
+\end{center}
+
+\noindent Tôi xin cam đoan đây là công trình nghiên cứu của riêng tôi và được sự hướng dẫn khoa học của \textbf{\supervisor}. Các nội dung nghiên cứu, kết quả trong đề tài này là trung thực và chưa công bố dưới bất kỳ hình thức nào trước đây. Những số liệu trong các bảng biểu phục vụ cho việc phân tích, nhận xét, đánh giá được chính tác giả thu thập từ các nguồn khác nhau có ghi rõ trong phần tài liệu tham khảo.
+
+\noindent Ngoài ra, trong Dự án còn sử dụng một số nhận xét, đánh giá cũng như số liệu của các tác giả khác, cơ quan tổ chức khác đều có trích dẫn và chú thích nguồn gốc.
+
+\noindent Nếu phát hiện có bất kỳ sự gian lận nào tôi xin hoàn toàn chịu trách nhiệm về nội dung Dự án của mình. Trường Đại học Tôn Đức Thắng không liên quan đến những vi phạm tác quyền, bản quyền do tôi gây ra trong quá trình thực hiện (nếu có).
+
+\vspace{3cm}
+\begin{flushright}
+  \begin{minipage}{10cm}
+    \centering
+    TP. Hồ Chí Minh, ngày \ldots{} tháng \ldots{} năm 20\ldots{}\\[1cm]
+    \textbf{Tác giả}\\[0.3cm]
+    (\textit{Ký tên và ghi rõ họ tên})
+  \end{minipage}
+\end{flushright}
+\newpage
+
+% ------------------------------------------------------------
+% TÓM TẮT
+% ------------------------------------------------------------
+\chapter*{\thesistitle}
+\addcontentsline{toc}{chapter}{TÓM TẮT}
+\begin{center}\textbf{TÓM TẮT}\end{center}
+
+\noindent Dự án này trình bày quá trình nghiên cứu, thiết kế và triển khai ban đầu của Hệ thống Chấm bài Trực tuyến TDTUOJ -- một nền tảng được xây dựng nhằm tự động hóa quy trình chấm bài lập trình và hỗ trợ tổ chức thi cử cho sinh viên Khoa Công nghệ Thông tin, Trường Đại học Tôn Đức Thắng.
+
+\noindent Hệ thống được thiết kế để phục vụ ba nhóm người dùng chính gồm sinh viên, giảng viên và quản trị viên, với các chức năng cốt lõi bao gồm nộp và chấm bài tự động cho nhiều ngôn ngữ lập trình, quản lý cuộc thi và bài toán, và phân tích hỗ trợ học tập thông minh bằng \ac{LLM}. Kiến trúc hệ thống được xây dựng theo mô hình hai lớp tách biệt rõ ràng giữa backend và frontend, tích hợp với ba dịch vụ bên ngoài gồm Judging Service (Judge0), \ac{LLM} và AI Parser Service.
+
+\noindent Đến thời điểm báo cáo giữa kỳ, hệ thống đã hoàn thành phần lớn các chức năng cốt lõi. Phía backend được xây dựng bằng Java với Spring Boot, đã hiện thực hóa đầy đủ các \ac{API} quản lý người dùng, quản lý bài toán, quản lý cuộc thi và luồng xử lý bài nộp tích hợp Judge0. Phía frontend được xây dựng bằng React, đã hoàn thiện giao diện xem chi tiết bài toán theo slug, quản lý người dùng, tính năng nộp bài và hỗ trợ học tập bằng \ac{LLM}.
+
+\newpage
+
+\chapter*{\thesistitleen}
+\addcontentsline{toc}{chapter}{ABSTRACT}
+\begin{center}\textbf{ABSTRACT}\end{center}
+
+\noindent This project presents the research, design, and initial implementation of the TDTUOJ Online Judge System -- a platform built to automate programming submission grading and support examination organization for students of the Faculty of Information Technology at Ton Duc Thang University.
+
+\noindent The system is designed to serve three main user groups: students, lecturers, and administrators, with core features including automatic submission judging for multiple programming languages via Judge0, contest and problem management, and AI-powered learning support via \ac{LLM} integration. The system architecture follows a clear two-layer separation between a Java Spring Boot backend and a React frontend, integrated with three external services: Judging Service (Judge0), \ac{LLM}, and AI Parser Service.
+
+\noindent As of the midterm report, the majority of core features have been implemented. The backend provides complete \ac{API} coverage for user management, problem management, contest management, and Judge0-integrated submission processing. The frontend has completed the problem detail view by slug, user management interface, submission functionality, and \ac{LLM}-powered hint and code explanation features.
+
+\newpage
+
+% ── Roman page numbers ───────────────────────────────────────
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\tableofcontents
+\newpage
+
+\listoffigures
+\addcontentsline{toc}{chapter}{DANH MỤC HÌNH VẼ}
+\newpage
+
+\listoftables
+\addcontentsline{toc}{chapter}{DANH MỤC BẢNG BIỂU}
+\newpage
+
+% ------------------------------------------------------------
+% DANH MỤC CÁC CHỮ VIẾT TẮT
+% ------------------------------------------------------------
+\chapter*{DANH MỤC CÁC CHỮ VIẾT TẮT}
+\addcontentsline{toc}{chapter}{DANH MỤC CÁC CHỮ VIẾT TẮT}
+
+\begin{acronym}[XXXXXXXX]
+  \acro{AC}{Accepted}
+  \acro{AI}{Artificial Intelligence -- Trí tuệ nhân tạo}
+  \acro{API}{Application Programming Interface}
+  \acro{CE}{Compilation Error}
+  \acro{CNTT}{Công nghệ Thông tin}
+  \acro{CSS}{Cascading Style Sheets}
+  \acro{ERD}{Entity-Relationship Diagram -- Sơ đồ thực thể quan hệ}
+  \acro{HTTP}{Hypertext Transfer Protocol}
+  \acro{JPA}{Java Persistence API}
+  \acro{JSON}{JavaScript Object Notation}
+  \acro{JWT}{JSON Web Token}
+  \acro{LLM}{Large Language Model -- Mô hình ngôn ngữ lớn}
+  \acro{MLE}{Memory Limit Exceeded}
+  \acro{MVC}{Model-View-Controller}
+  \acro{OJ}{Online Judge}
+  \acro{PDF}{Portable Document Format}
+  \acro{PK}{Primary Key -- Khóa chính}
+  \acro{FK}{Foreign Key -- Khóa ngoại}
+  \acro{RE}{Runtime Error}
+  \acro{REST}{Representational State Transfer}
+  \acro{TDTU}{Trường Đại học Tôn Đức Thắng}
+  \acro{TLE}{Time Limit Exceeded}
+  \acro{UI}{User Interface}
+  \acro{UX}{User Experience}
+  \acro{WA}{Wrong Answer}
+\end{acronym}
+\newpage
+
+% ── Arabic page numbers from 1 ───────────────────────────────
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ============================================================
+% CHƯƠNG 1 – MỞ ĐẦU VÀ TỔNG QUAN ĐỀ TÀI
+% ============================================================
+\chapter{Mở đầu và tổng quan đề tài}
+
+\section{Đặt vấn đề}
+
+Hiện nay, việc tổ chức các kỳ thi lập trình và rèn luyện kỹ năng giải thuật cho sinh viên tại Trường Đại học Tôn Đức Thắng vẫn còn nhiều hạn chế về mặt công cụ hỗ trợ. Chấm bài thủ công tiêu tốn nhiều thời gian và công sức của giảng viên, đồng thời khó đảm bảo tính nhất quán khi số lượng sinh viên ngày càng tăng. Bên cạnh đó, sinh viên thiếu một môi trường luyện tập chủ động với phản hồi tức thì để tự nâng cao kỹ năng lập trình ngoài giờ học.
+
+Để giải quyết những vấn đề này, đề tài đề xuất xây dựng Hệ thống Chấm bài Trực tuyến TDTUOJ -- một nền tảng tự động hóa toàn bộ quy trình chấm bài, hỗ trợ tổ chức thi cử quy mô lớn và tạo ra môi trường luyện tập lập trình chuyên nghiệp trong khuôn khổ học thuật của nhà trường.
+
+\section{Mục tiêu của hệ thống}
+
+TDTUOJ được xây dựng nhằm đạt một tập hợp các mục tiêu cụ thể và có tính ứng dụng cao. Về mặt kỹ thuật, hệ thống hỗ trợ đa ngôn ngữ lập trình, cho phép người dùng nộp bài viết bằng C, C++, Java và Python, đáp ứng nhu cầu đa dạng của sinh viên ở nhiều trình độ và môn học khác nhau. Song song với đó, hệ thống cung cấp đầy đủ công cụ để quản lý cuộc thi và bài tập, bao gồm tổ chức contest, quản lý danh sách bài toán, chấm điểm tự động và xếp hạng người tham gia theo thời gian thực.
+
+Ngoài các chức năng cốt lõi, hệ thống tích hợp một số tính năng nâng cao phục vụ học tập. Tính năng phân tích mã nguồn bằng \ac{LLM} cho phép giải thích code, gợi ý hướng giải và phân tích độ phức tạp thuật toán ngay trên giao diện -- giúp sinh viên hiểu rõ hơn về hiệu suất và logic của giải pháp mình đề xuất. Ngoài ra, hệ thống tích hợp AI Parser Service để tự động đọc đề bài từ file \ac{PDF} và chuyển đổi thành dữ liệu có cấu trúc, giúp giảng viên tiết kiệm đáng kể thời gian soạn thảo.
+
+\section{Phạm vi đề tài}
+
+Đề tài tập trung xây dựng một hệ thống hoàn chỉnh phục vụ sinh viên và giảng viên Khoa Công nghệ Thông tin, Trường Đại học Tôn Đức Thắng. Hệ thống quản lý ba vai trò với phân quyền rõ ràng: User (người dùng thông thường), Contest Creator (người tổ chức và quản lý cuộc thi), và Admin (quản trị viên với toàn quyền điều hành). Về mặt kiến trúc, phạm vi đề tài bao gồm phát triển một backend \ac{REST}ful \ac{API} bằng Java Spring Boot, một giao diện người dùng bằng React, và tích hợp ba dịch vụ bên ngoài: Judging Service (Judge0), \ac{LLM} và AI Parser Service.
+
+\section{Công nghệ sử dụng}
+
+TDTUOJ được xây dựng trên nền tảng các công nghệ hiện đại và phổ biến trong ngành. Backend sử dụng Java với Spring Boot để xây dựng các \ac{REST}ful \ac{API} theo kiến trúc \ac{MVC}, kết hợp Spring Data \ac{JPA} cho việc tương tác cơ sở dữ liệu và \ac{JWT} cho xác thực và phân quyền.
+
+Để thực thi và chấm điểm mã nguồn, hệ thống tích hợp Judge0 -- một nền tảng chấm bài mã nguồn mở cung cấp môi trường sandbox cô lập, hỗ trợ hơn 60 ngôn ngữ lập trình. Judge0 trả về đầy đủ thông tin gồm thời gian chạy, bộ nhớ sử dụng và verdict tương ứng cho từng lần nộp. Cách tiếp cận này cho phép nhóm phát triển tập trung vào các tính năng nghiệp vụ mà không cần tự xây dựng cơ sở hạ tầng thực thi mã nguồn.
+
+Hệ thống cũng tích hợp \ac{LLM} để cung cấp các tính năng hỗ trợ học tập thông minh, bao gồm gợi ý hướng giải, giải thích mã nguồn và phân tích lỗi trực tiếp trên giao diện -- đây là điểm khác biệt nổi bật của TDTUOJ so với các hệ thống chấm bài truyền thống.
+
+Frontend được xây dựng bằng React kết hợp \ac{CSS} tùy chỉnh, tạo ra giao diện linh hoạt với các component có khả năng tái sử dụng. Giao tiếp giữa frontend và backend thực hiện qua \ac{HTTP} request với dữ liệu trao đổi theo định dạng \ac{JSON}.
+
+% ============================================================
+% CHƯƠNG 2 – PHÂN TÍCH HỆ THỐNG
+% ============================================================
+\chapter{Phân tích hệ thống}
+
+\section{Kiến trúc tổng quan}
+
+TDTUOJ được xây dựng theo kiến trúc tách biệt hoàn toàn giữa backend và frontend, trong đó backend đóng vai trò máy chủ cung cấp \ac{REST}ful \ac{API} và frontend là ứng dụng phía client tiêu thụ các \ac{API} đó. Ngoài hai thành phần chính, hệ thống tích hợp với ba dịch vụ bên ngoài -- Judging Service (Judge0), \ac{LLM} và AI Parser Service -- mỗi dịch vụ được tách biệt độc lập để đảm bảo tính ổn định và khả năng mở rộng.
+
+\section{Sơ đồ Use Case tổng quan}
+
+Sơ đồ Use Case của TDTUOJ mô tả đầy đủ mối quan hệ giữa ba nhóm tác nhân người dùng và ba hệ thống bên ngoài, thể hiện rõ phạm vi chức năng của từng vai trò. Như minh họa trong Hình~\ref{fig:usecase}, hệ thống bao gồm User, Contest Creator và Admin theo quan hệ kế thừa, cùng với các tác nhân bên ngoài là \ac{LLM}, AI Parser Service và Judging Service.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\textwidth]{figures/usecase.png}
+  \caption{Sơ đồ Use Case tổng quan của hệ thống TDTUOJ}
+  \label{fig:usecase}
+\end{figure}
+
+\section{Các tác nhân trong hệ thống}
+
+\subsection{User (Người dùng)}
+
+User là sinh viên hoặc người tham gia sử dụng hệ thống để luyện tập và tham gia cuộc thi. Đây là vai trò cơ bản nhất và là nền tảng của quan hệ kế thừa -- Contest Creator và Admin đều kế thừa toàn bộ quyền hạn của vai trò này. Theo sơ đồ Use Case, User có thể đăng nhập, đăng ký tài khoản, xem danh sách cuộc thi, xem danh sách bài toán, tham gia cuộc thi và xem bảng xếp hạng. Ngoài ra, User có thể nộp bài giải bằng C, C++, Java hoặc Python thông qua chức năng Submit solution, từ đó kích hoạt ba tính năng mở rộng: phân tích độ phức tạp code, giải thích code và lỗi, và gợi ý hướng giải -- tất cả được cung cấp bởi tác nhân ngoài \ac{LLM}. Chức năng Visualize and debug code cũng được liên kết với Submit solution như một tính năng hỗ trợ bổ sung.
+
+\subsection{Contest Creator (Người tạo cuộc thi)}
+
+Contest Creator là giảng viên hoặc người được cấp quyền tổ chức cuộc thi và quản lý bài toán. Ngoài toàn bộ quyền hạn của User, Contest Creator có thể tạo bài toán mới kèm bộ test cases, chỉnh sửa và xóa bài toán đã có. Chức năng Create problem có thể mở rộng bằng tính năng Upload problem from PDF -- thực hiện qua AI Parser Service, tự động chuyển đổi đề bài từ file \ac{PDF} thành dữ liệu có cấu trúc. Về tổ chức thi, Contest Creator có quyền tạo, chỉnh sửa, xóa, giám sát và công bố kết quả cuộc thi. Việc chấm bài được xử lý hoàn toàn tự động bởi Judging Service (Judge0).
+
+\subsection{Admin (Quản trị viên)}
+
+Admin là vai trò có quyền quản trị cao nhất trong hệ thống, kế thừa toàn bộ quyền hạn của Contest Creator. Ngoài ra, Admin có thêm hai chức năng quản trị toàn hệ thống: Manage users -- xem danh sách, chỉnh sửa thông tin, kích hoạt và vô hiệu hóa tài khoản -- và Manage Organizations, cho phép tạo và quản lý các tổ chức đại diện cho từng khoa hoặc lớp học.
+
+\subsection{Các hệ thống bên ngoài}
+
+TDTUOJ tích hợp với ba dịch vụ bên ngoài chuyên biệt. \ac{LLM} cung cấp ba tính năng hỗ trợ học tập được kích hoạt sau khi người dùng nộp bài: phân tích độ phức tạp code, giải thích code và lỗi, và gợi ý hướng giải. AI Parser Service trích xuất và chuyển đổi nội dung đề bài từ file \ac{PDF} thành dữ liệu có cấu trúc khi Contest Creator tạo bài toán mới. Judging Service thực thi và chấm điểm bài nộp thông qua Judge0, trả về verdict tương ứng.
+
+\section{Thiết kế cơ sở dữ liệu}
+
+\subsection{Sơ đồ thực thể -- quan hệ}
+
+Sơ đồ \ac{ERD} trong Hình~\ref{fig:erd} thể hiện toàn bộ cấu trúc cơ sở dữ liệu của TDTUOJ với 20 bảng được tổ chức thành bốn nhóm chức năng: quản lý người dùng, quản lý bài toán, quản lý cuộc thi và quản lý bài nộp. Thiết kế đảm bảo tính toàn vẹn dữ liệu thông qua các ràng buộc khóa ngoại (\ac{FK}) và hỗ trợ hiệu quả các truy vấn phức tạp trong quá trình vận hành.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{figures/erd.png}
+  \caption{Sơ đồ thực thể -- quan hệ của hệ thống TDTUOJ}
+  \label{fig:erd}
+\end{figure}
+
+\subsection{Nhóm bảng quản lý người dùng}
+
+Nhóm bảng này xử lý toàn bộ dữ liệu liên quan đến tài khoản và hoạt động người dùng trong hệ thống.
+
+Bảng \texttt{users} là bảng trung tâm của toàn hệ thống, lưu thông tin cơ bản của mỗi tài khoản gồm \texttt{email}, \texttt{name}, \texttt{password}, \texttt{username}, \texttt{rating}, \texttt{point}, \texttt{isActive} và \texttt{profile\_url}. Các trường \texttt{rating} và \texttt{point} phản ánh năng lực và thành tích tích lũy qua quá trình tham gia cuộc thi và luyện tập.
+
+Bảng \texttt{roles} và bảng liên kết \texttt{users\_roles} hiện thực cơ chế phân quyền nhiều vai trò. Một người dùng có thể giữ nhiều vai trò đồng thời, mỗi vai trò được định nghĩa bằng trường \texttt{name}. Quan hệ nhiều-nhiều này được quản lý qua \texttt{users\_roles} với hai khóa ngoại \texttt{user\_id} và \texttt{role\_id}.
+
+Bảng \texttt{organizations} lưu thông tin các tổ chức trong hệ thống với các trường \texttt{name}, \texttt{about}, \texttt{slug}, \texttt{is\_public} và \texttt{admin\_user\_id}. Quan hệ nhiều-nhiều giữa người dùng và tổ chức được quản lý qua bảng liên kết \texttt{users\_organizations}.
+
+Bảng \texttt{user\_statistics} theo dõi các chỉ số tổng hợp của mỗi người dùng, bao gồm \texttt{problems\_solved}, \texttt{total\_submissions}, \texttt{accepted\_submissions}, \texttt{total\_points}, \texttt{practice\_points}, \texttt{contest\_points}, \texttt{current\_rating}, \texttt{max\_rating} và \texttt{acceptance\_rate}. Bảng này phục vụ chủ yếu cho các màn hình thống kê và bảng xếp hạng.
+
+Bảng \texttt{user\_daily\_activity} ghi nhận hoạt động hàng ngày của người dùng qua các trường \texttt{activity\_date}, \texttt{submissions\_count} và \texttt{problems\_solved}, phục vụ hiển thị biểu đồ hoạt động theo ngày tương tự GitHub contribution graph.
+
+Bảng \texttt{rating\_history} lưu lịch sử thay đổi rating qua từng cuộc thi, bao gồm \texttt{old\_rating}, \texttt{new\_rating}, \texttt{rating\_change}, \texttt{rank}, \texttt{contest\_id}, \texttt{user\_id} và \texttt{contest\_name}, giúp người dùng theo dõi sự tiến bộ theo thời gian.
+
+\subsection{Nhóm bảng quản lý bài toán}
+
+Nhóm bảng này quản lý nội dung bài toán, test cases, cấu trúc tính điểm và phân loại theo nhãn.
+
+Bảng \texttt{problems} lưu thông tin chính của mỗi bài toán với các trường \texttt{title}, \texttt{statement\_file\_url}, \texttt{point}, \texttt{time\_limit}, \texttt{memory\_limit}, \texttt{slug}, \texttt{author\_id}, \texttt{is\_public} và \texttt{difficulty\_level}. Nội dung đề bài được lưu dạng file trên S3 bucket của AWS và trỏ đến qua \texttt{statement\_file\_url}, trong khi \texttt{slug} được dùng để tạo URL thân thiện cho từng bài toán.
+
+Bảng \texttt{test\_cases} lưu các bộ dữ liệu kiểm thử gồm \texttt{input\_file\_url}, \texttt{expected\_output\_file\_url}, \texttt{is\_sample}, \texttt{time\_limit}, \texttt{memory\_limit} và \texttt{points}. Trường \texttt{is\_sample} phân biệt test case mẫu hiển thị công khai với test case ẩn chỉ dùng để chấm bài.
+Các trường \texttt{input\_file\_url}, \texttt{expected\_output\_file\_url} lưu đường dẫn tới file chứa dữ liệu test case, được lưu trữ trên dịch vụ S3 bucket của AWS.
+
+Bảng \texttt{problem\_points} định nghĩa cấu trúc tính điểm với các trường \texttt{based\_points}, \texttt{difficulty\_points}, \texttt{solve\_rate}, \texttt{dynamic\_points}, \texttt{contest\_multiplier}, \texttt{first\_solve\_bonus} và \texttt{speed\_bonus}, cho phép tính điểm linh hoạt theo nhiều tiêu chí.
+
+Bảng \texttt{tags} lưu danh sách nhãn phân loại bài toán theo chủ đề thuật toán với các trường \texttt{name}, \texttt{slug} và \texttt{is\_active}. Bảng liên kết \texttt{problems\_tags} quản lý quan hệ nhiều-nhiều giữa bài toán và nhãn qua hai khóa ngoại \texttt{problem\_id} và \texttt{tag\_id}.
+
+Bảng \texttt{users\_problems} theo dõi lịch sử giải bài của từng người dùng với các trường \texttt{points\_earned}, \texttt{first\_attempt\_date} và \texttt{solved\_date}, cung cấp dữ liệu để tính thống kê và hiển thị trạng thái đã giải hay chưa cho từng bài toán.
+
+\subsection{Nhóm bảng quản lý cuộc thi}
+
+Nhóm bảng này xử lý toàn bộ vòng đời của một cuộc thi, từ khi tạo đến khi kết thúc và công bố kết quả.
+
+Bảng \texttt{contests} lưu cấu hình cuộc thi với các trường \texttt{name}, \texttt{description},
+\texttt{start\_time}, \texttt{end\_time}, \texttt{is\_public}, \texttt{creator\_id}, \texttt{slug},
+\texttt{max\_participant}, \texttt{registration\_start}, \texttt{registration\_end}, \texttt{is\_rated}
+và \texttt{contest\_style}. Trường \texttt{contest\_style} cho phép cấu hình các kiểu thi khác nhau
+như ICPC hay IOI, ảnh hưởng trực tiếp đến cách tính điểm và xếp hạng.
+
+Bảng liên kết \texttt{contests\_problems} quản lý danh sách bài toán trong một cuộc thi với các trường \texttt{contest\_id}, \texttt{problem\_id}, \texttt{problem\_order} và \texttt{points}, cho phép mỗi bài toán có trọng số điểm riêng trong từng cuộc thi.
+
+Bảng \texttt{contest\_registration} ghi nhận thông tin đăng ký tham gia cuộc thi của người dùng với các trường \texttt{user\_id}, \texttt{contest\_id}, \texttt{register\_at} và \texttt{status}, phân biệt các trạng thái: đã đăng ký, đang chờ duyệt, hoặc bị từ chối.
+
+Bảng \texttt{contest\_participations} theo dõi kết quả của từng thí sinh trong cuộc thi với các trường \texttt{rank}, \texttt{score}, \texttt{penalty\_time}, \texttt{problems\_solved}, \texttt{points\_earns}, \texttt{contest\_id}, \texttt{user\_id}, \texttt{type}, \texttt{rating\_before} và \texttt{rating\_after}. Đây là bảng chính phục vụ bảng xếp hạng và tính toán thay đổi rating sau mỗi kỳ thi.
+
+Bảng \texttt{leaderboard\_cache} lưu dữ liệu bảng xếp hạng đã được tính toán sẵn với các trường \texttt{type}, \texttt{rankings}, \texttt{total\_users} và \texttt{last\_updated}, giúp tăng tốc độ truy vấn và giảm tải cho cơ sở dữ liệu khi nhiều người dùng xem bảng xếp hạng đồng thời.
+
+\subsection{Nhóm bảng quản lý bài nộp}
+
+Bảng \texttt{submissions} là trung tâm của luồng chấm bài, lưu toàn bộ thông tin về mỗi lần nộp bao gồm \texttt{source\_code}, \texttt{memory\_used}, \texttt{execution\_time}, \texttt{submission\_verdict}, \texttt{submission\_status}, \texttt{submission\_language}, \texttt{submission\_date}, \texttt{problem\_id}, \texttt{user\_id}, \texttt{contest\_id}, \texttt{test\_cases\_passed}, \texttt{total\_test\_cases}, \texttt{error\_message} và \texttt{is\_public}. Trường \texttt{submission\_verdict} lưu kết quả cuối cùng (\ac{AC}, \ac{WA}, \ac{TLE}, \ac{MLE}, \ac{RE} hoặc \ac{CE}), còn \texttt{test\_cases\_passed} cung cấp thông tin chi tiết về số test case đã vượt qua, giúp người dùng định vị lỗi trong giải pháp của mình.
+
+% ============================================================
+% CHƯƠNG 3 – KẾT QUẢ ĐÃ THỰC HIỆN
+% ============================================================
+\chapter{Kết quả đã thực hiện}
+
+Tính đến thời điểm báo cáo giữa kỳ, dự án đã hoàn thành một khối lượng đáng kể công việc thực tế trên cả hai phần backend và frontend. 
+
+\section{Backend -- Java Spring Boot}
+
+Phần backend được triển khai bằng Java với Spring Boot. Kiến trúc tuân theo mô hình \ac{MVC} kết hợp \ac{REST}ful \ac{API}, trong đó mỗi tài nguyên được ánh xạ thành một endpoint \ac{HTTP} tương ứng với các phương thức GET, POST, PUT và DELETE.
+
+\subsection{Quản lý người dùng}
+
+Module quản lý người dùng là một trong những thành phần đầu tiên được hoàn thiện. Hệ thống hiện thực đầy đủ các chức năng xem danh sách người dùng, xem chi tiết từng tài khoản, cập nhật thông tin và thay đổi trạng thái hoạt động thông qua cơ chế kích hoạt và vô hiệu hóa -- tương tác trực tiếp với các bảng \texttt{users}, \texttt{roles} và \texttt{users\_roles}. Tất cả thao tác được bảo vệ bởi \ac{JWT}, đảm bảo chỉ Admin mới có thể thực thi các thao tác quản trị tài khoản.
+
+\subsection{Quản lý bài toán}
+
+Module quản lý bài toán cung cấp đầy đủ \ac{API} phục vụ cả Contest Creator và User thông thường, tương tác với các bảng \texttt{problems}, \texttt{test\_cases}, \texttt{problem\_points} và \texttt{problems\_tags}. Phía quản trị, hệ thống hỗ trợ tạo mới, chỉnh sửa và xóa bài toán cùng các thông số cấu hình như giới hạn thời gian, giới hạn bộ nhớ, mức độ khó và bộ test cases. Phía người dùng, hệ thống hiện thực chức năng truy xuất chi tiết bài toán qua \texttt{slug}, tạo URL thân thiện và phù hợp với tiêu chuẩn \ac{REST}ful hiện đại.
+
+\subsection{Quản lý cuộc thi}
+
+Module quản lý cuộc thi tương tác với các bảng \texttt{contests}, \texttt{contests\_problems}, \texttt{contest\_registration} và \texttt{contest\_participations}. Contest Creator có thể tạo cuộc thi với đầy đủ thông số cấu hình gồm tên, mô tả, thời gian bắt đầu và kết thúc, kiểu thi, số người tham gia tối đa và thời gian đăng ký. Hệ thống cũng hỗ trợ chỉnh sửa, xóa và truy xuất thông tin chi tiết của từng cuộc thi.
+Ngoài ra, giai đoạn tiếp theo sẽ tích hợp thêm bộ nhớ cache Redis cho việc xếp hạng theo thời gian thực dựa vào bài toán mà người dùng giải được.
+
+\subsection{Xử lý bài nộp}
+
+Luồng xử lý bài nộp là tính năng trọng tâm và đã được tích hợp đầy đủ với Judge0. Khi người dùng nộp bài, backend tiếp nhận mã nguồn và ngôn ngữ lập trình, chuyển tiếp đến Judge0 qua \ac{API}. Judge0 biên dịch và thực thi mã trong môi trường sandbox cô lập với các giới hạn lấy từ bảng \texttt{test\_cases}, rồi trả về verdict tổng thể. Toàn bộ kết quả -- verdict, thời gian thực thi, bộ nhớ sử dụng và số test case đã vượt qua -- được lưu vào bảng \texttt{submissions} và trả về frontend. Luồng xử lý được thiết kế theo mô hình bất đồng bộ, đảm bảo server không bị chặn trong khi chờ Judge0 hoàn thành.
+
+\section{Tính năng hỗ trợ học tập bằng LLM}
+
+Một điểm nổi bật của TDTUOJ là tích hợp \ac{LLM} để cung cấp ba tính năng hỗ trợ học tập thông minh, tương ứng với ba use case mở rộng từ Submit solution trong sơ đồ Use Case. Các tính năng này đã được hiện thực ở cả phía backend và frontend.
+
+\subsection{Phân tích độ phức tạp code}
+
+Sau khi bài nộp nhận kết quả \ac{AC}, hệ thống có thể gửi mã nguồn đến \ac{LLM} để nhận về phân tích độ phức tạp thời gian và không gian của giải thuật. Tính năng này giúp sinh viên không chỉ biết bài đúng hay sai mà còn hiểu được hiệu suất thực sự của giải pháp, từ đó có hướng tối ưu nếu cần.
+
+\subsection{Giải thích code và lỗi}
+
+Người dùng có thể yêu cầu \ac{LLM} giải thích chi tiết đoạn mã đã viết hoặc phân tích nguyên nhân lỗi trong các lần nộp không đạt. Hệ thống gửi mã nguồn cùng thông tin bài toán và thông báo lỗi đến \ac{LLM}, nhận về phần giải thích bao gồm mô tả logic tổng thể, phân tích các phần quan trọng và các điểm có thể cải thiện.
+
+\subsection{Gợi ý hướng giải quyết bài toán}
+
+Khi gặp khó khăn, người dùng có thể yêu cầu gợi ý mà không cần tiết lộ đáp án hoàn chỉnh. Hệ thống gửi thông tin bài toán đến \ac{LLM} và nhận về gợi ý có cấu trúc -- hướng dẫn người dùng suy nghĩ đúng hướng thông qua các câu hỏi dẫn dắt hoặc gợi ý về thuật toán phù hợp, giúp sinh viên phát triển tư duy giải quyết vấn đề một cách chủ động.
+
+\section{Frontend -- React}
+
+Phần frontend được xây dựng bằng React. Giao diện được tổ chức thành các component có khả năng tái sử dụng cao, mỗi tính năng lớn được đóng gói thành một module riêng biệt.
+
+\subsection{Giao diện xem bài toán}
+
+Giao diện xem chi tiết bài toán đã được hoàn thiện với khả năng tải và hiển thị thông tin bài toán dựa trên slug truyền vào qua URL. Nội dung hiển thị bao gồm tên bài toán, mô tả, ràng buộc đầu vào đầu ra, giới hạn thời gian và bộ nhớ, mức độ khó, danh sách nhãn thuật toán và các ví dụ test case mẫu -- lấy từ các bảng \texttt{problems}, \texttt{test\_cases} và \texttt{problems\_tags} qua backend \ac{API}.
+
+\subsection{Giao diện quản lý người dùng}
+
+Giao diện quản lý người dùng dành cho Admin cung cấp đầy đủ các chức năng hiển thị danh sách tài khoản, xem chi tiết, chỉnh sửa thông tin và vô hiệu hóa tài khoản. Các thay đổi trên giao diện lập tức gọi \ac{API} backend tương ứng và cập nhật trạng thái hiển thị theo kết quả phản hồi.
+
+\subsection{Tính năng nộp bài}
+
+Người dùng có thể nhập mã nguồn trực tiếp vào trình soạn thảo trên giao diện web, chọn ngôn ngữ lập trình và gửi bài nộp. Frontend xử lý toàn bộ luồng từ thu thập dữ liệu, gửi yêu cầu đến backend, chờ kết quả từ Judge0 và hiển thị verdict cuối cùng cùng thông tin chi tiết về số test case đã vượt qua, thời gian thực thi và bộ nhớ sử dụng.
+
+% ============================================================
+% CHƯƠNG 4 – HƯỚNG PHÁT TRIỂN
+% ============================================================
+\chapter{Hướng phát triển}
+
+\section{Các tính năng còn lại cần hoàn thiện}
+
+Mặc dù phần lớn chức năng cốt lõi đã được hiện thực, vẫn còn một số tính năng quan trọng cần hoàn thiện để hệ thống đạt đủ năng lực vận hành thực tế. Bảng xếp hạng theo thời gian thực trong cuộc thi cần được phát triển để cập nhật liên tục thứ hạng người tham gia, sử dụng dữ liệu từ bảng \texttt{contest\_participations} và \texttt{leaderboard\_cache}. Tính năng phân tích độ phức tạp thuật toán qua AI Analyzer và nhập đề bài tự động từ \ac{PDF} qua AI Parser Service cũng là các hạng mục còn lại cần hoàn thiện trong giai đoạn tiếp theo.
+
+\section{Kế hoạch hoàn thiện}
+
+\subsection{Hoàn thiện chức năng cuộc thi và tổ chức}
+
+Ưu tiên hàng đầu là hoàn thiện toàn bộ vòng đời quản lý cuộc thi trên giao diện frontend. Hiện tại các \ac{API} backend cho cuộc thi đã sẵn sàng, nhưng phần giao diện dành cho Contest Creator vẫn cần được phát triển để tạo mới, chỉnh sửa, giám sát tiến trình và công bố kết quả một cách trực quan. Tính năng quản lý tổ chức cũng sẽ được hoàn thiện, cho phép Admin tạo và quản lý các tổ chức qua bảng \texttt{organizations} và \texttt{users\_organizations}, tạo ra cấu trúc phân cấp phù hợp với mô hình vận hành của một trường đại học.
+Ngoài ra, nhóm sẽ nghiên cứu ứng dụng bộ nhớ cache Redis để thực hiện việc xếp hạng người thi contest theo thời gian thực bằng điểm và thời gian giải được bài toán của người thi.
+
+\subsection{Trực quan hóa thuật toán}
+
+Hệ thống sẽ được bổ sung tính năng trực quan hóa thuật toán, cho phép sinh viên quan sát từng bước thực thi của các thuật toán phổ biến như sắp xếp, tìm kiếm, duyệt đồ thị và quy hoạch động thông qua hoạt ảnh minh họa trực tiếp. Người dùng có thể chọn thuật toán, nhập dữ liệu đầu vào tùy ý và điều chỉnh các bước hiển thị để theo dõi quá trình thực thi từng bước chi tiết của một thuật toán. Đây là công cụ học tập đặc biệt hữu ích cho sinh viên đang tiếp cận các khái niệm thuật toán lần đầu.
+
+\subsection{Tích hợp trình gỡ lỗi}
+
+Hệ thống sẽ tích hợp một trình gỡ lỗi trực tuyến vào giao diện nộp bài, cho phép người dùng đặt breakpoint, theo dõi giá trị biến tại từng bước thực thi và quan sát trạng thái chương trình ngay trên trình duyệt. Tính năng này giúp sinh viên tự chẩn đoán lỗi logic một cách chủ động, đồng thời rèn luyện kỹ năng debugging -- một kỹ năng thiết yếu trong nghề phát triển phần mềm. Tính năng này tương ứng với use case Visualize and debug code trong sơ đồ Use Case.
+
+\subsection{Tích hợp AI và hoàn thiện các dịch vụ}
+
+Sau khi hoàn thiện các chức năng quản lý cốt lõi, hệ thống sẽ tích hợp đầy đủ AI Analyzer vào luồng xử lý bài nộp để tự động phân tích và trả về độ phức tạp thuật toán ngay sau khi bài được chấp nhận, cùng với AI Parser Service để hỗ trợ giảng viên chuyển đổi đề bài từ \ac{PDF} một cách tự động.
+Ngoài ra, nhóm sẽ nghiên cứu ứng dụng các hàng đợi như RabbitMQ để xử lý bất đồng bộ các tác vụ chấm bài của Judge0, nhằm giảm tải cho hệ thống và đảm bảo việc chấm bài diễn ra mượt mà và ổn định.
+
+\subsection{Kiểm thử và triển khai}
+Giai đoạn cuối tập trung vào kiểm thử toàn diện và triển khai hệ thống lên môi trường production. Về kiểm thử, nhóm sẽ thực hiện unit test cho từng module backend để đảm bảo tính đúng đắn của từng thành phần, đồng thời tiến hành stress test để đánh giá khả năng chịu tải của hệ thống -- đặc biệt ở các điểm nghẽn tiềm năng như luồng nộp bài đồng thời và truy vấn bảng xếp hạng trong thời gian diễn ra cuộc thi. Sau khi hệ thống vượt qua các ngưỡng kiểm thử, toàn bộ hạ tầng sẽ được triển khai lên AWS, tận dụng các dịch vụ phù hợp cho từng thành phần của hệ thống.
+% ============================================================
+% CHƯƠNG 5 – KẾT LUẬN
+% ============================================================
+\chapter{Kết luận}
+
+\section{Tổng kết}
+
+Đề tài xây dựng Hệ thống Chấm bài Trực tuyến TDTUOJ là một dự án có ý nghĩa thiết thực và phù hợp với nhu cầu thực tiễn của Khoa Công nghệ Thông tin, Trường Đại học Tôn Đức Thắng. Tính đến thời điểm báo cáo giữa kỳ, dự án không chỉ dừng lại ở giai đoạn phân tích và thiết kế mà đã tiến vào triển khai thực tế với nhiều kết quả cụ thể và có thể kiểm chứng.
+
+Về phân tích và thiết kế, hệ thống đã có sơ đồ Use Case đầy đủ với ba tác nhân người dùng có quan hệ kế thừa rõ ràng và ba tác nhân bên ngoài, cùng sơ đồ \ac{ERD} hoàn chỉnh gồm 20 bảng phân thành bốn nhóm chức năng. Về triển khai, toàn bộ các module quản lý người dùng, bài toán, cuộc thi và bài nộp đã được hiện thực thành các \ac{REST}ful \ac{API} đầy đủ chức năng với bảo mật \ac{JWT}, tích hợp Judge0 cho việc chấm bài. Phía frontend đã hoàn thiện giao diện xem bài toán theo slug, quản lý người dùng, tính năng nộp bài và ba tính năng hỗ trợ học tập thông minh bằng \ac{LLM}. Toàn bộ mã nguồn được quản lý trên GitHub với 26 commit thể hiện tiến trình phát triển liên tục.
+
+\section{Ý nghĩa của đề tài}
+
+TDTUOJ không chỉ là một công cụ hỗ trợ giảng dạy đơn thuần mà là một nền tảng tổng thể có khả năng tạo ra tác động tích cực và lâu dài cho cộng đồng học thuật của nhà trường. Với sinh viên, hệ thống tạo ra môi trường luyện tập lập trình chuyên nghiệp với phản hồi tức thì, phân tích thuật toán chuyên sâu và hỗ trợ học tập thông minh từ \ac{LLM}. Với giảng viên, hệ thống giải phóng nguồn lực khỏi các công việc lặp đi lặp lại và nâng cao hiệu quả tổ chức thi cử. Ở tầm nhìn rộng hơn, TDTUOJ góp phần xây dựng văn hóa lập trình thi đấu tại \ac{TDTU}, đồng thời thể hiện năng lực nghiên cứu và phát triển phần mềm thực tiễn của sinh viên Khoa \ac{CNTT}.
+
+% ============================================================
+% TÀI LIỆU THAM KHẢO
+% ============================================================
+\newpage
+\printbibliography[
+  title   = {TÀI LIỆU THAM KHẢO},
+  heading = bibintoc,
+]
+
+\end{document}

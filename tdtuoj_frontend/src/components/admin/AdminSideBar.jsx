@@ -52,7 +52,7 @@ const AdminSidebar = () => {
               }
             >
               <FontAwesomeIcon icon={faShoppingBag} />
-              <span>Orders</span>
+              <span>Test</span>
             </NavLink>
           </li>
           <li>
@@ -63,7 +63,7 @@ const AdminSidebar = () => {
               }
             >
               <FontAwesomeIcon icon={faCreditCard} />
-              <span>Payments</span>
+              <span>Test</span>
             </NavLink>
           </li>
           <li>

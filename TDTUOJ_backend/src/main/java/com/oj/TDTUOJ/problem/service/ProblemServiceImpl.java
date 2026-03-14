@@ -192,6 +192,7 @@ public class ProblemServiceImpl implements ProblemService {
                 testCases.add(TestCase.builder()
                         .inputFileUrl(inputUrl.toString())
                         .expectedOutputFileUrl(outputUrl.toString())
+                        .isSample(Boolean.TRUE.equals(tc.getIsSample()))
                         .problem(problem)
                         .build());
                 idx++;
@@ -219,7 +220,6 @@ public class ProblemServiceImpl implements ProblemService {
     @Override
     @Transactional
     public Response<ProblemDTO> updateProblem(ProblemDTO problemDTO) {
-        log.info(problemDTO.toString());
         try {
             Problem problem = problemRepository.findById(problemDTO.getId())
                     .orElseThrow(() -> new NotFoundException("Problem not found with id: " + problemDTO.getId()));
@@ -266,9 +266,11 @@ public class ProblemServiceImpl implements ProblemService {
                 List<TestCase> updated = new ArrayList<>();
                 int idx = 0;
                 for (TestCaseDTO tc : problemDTO.getTestCases()) {
+                    log.info("TestCase id={} isSample={}", tc.getId(), tc.getIsSample());
                     TestCase testCase;
                     if (tc.getId() != null && existingMap.containsKey(tc.getId())) {
                         testCase = existingMap.get(tc.getId());
+                        testCase.setIsSample(Boolean.TRUE.equals(tc.getIsSample()));
                         if (tc.getInputFile() != null && !tc.getInputFile().isEmpty()) {
                             if (testCase.getInputFileUrl() != null)
                                 awsS3Service.deleteFile(extractS3Key(testCase.getInputFileUrl()));
@@ -288,6 +290,7 @@ public class ProblemServiceImpl implements ProblemService {
                                         String.format("%s/testcases/inputs/%d.txt", newBasePath, idx), tc.getInputFile()).toString())
                                 .expectedOutputFileUrl(awsS3Service.uploadFile(
                                         String.format("%s/testcases/outputs/%d.txt", newBasePath, idx), tc.getExpectedOutputFile()).toString())
+                                .isSample(Boolean.TRUE.equals(tc.getIsSample()))
                                 .problem(problem)
                                 .build();
                     }
@@ -357,9 +360,6 @@ public class ProblemServiceImpl implements ProblemService {
         problem.setTags(newTags);
         problem.setUpdatedAt(LocalDateTime.now());
         problem = problemRepository.save(problem);
-
-        log.info("Tags updated for problem {}: {}", problemId,
-                newTags.stream().map(Tag::getName).collect(Collectors.joining(", ")));
 
         return Response.<ProblemDTO>builder()
                 .statusCode(HttpStatus.OK.value())
@@ -557,7 +557,7 @@ public class ProblemServiceImpl implements ProblemService {
         dto.setId(testCase.getId());
         dto.setInputFileUrl(testCase.getInputFileUrl());
         dto.setExpectedOutputFileUrl(testCase.getExpectedOutputFileUrl());
-        dto.setIsSample(testCase.isSample());
+        dto.setIsSample(testCase.getIsSample());
         dto.setTimeLimit(testCase.getTimeLimit());
         dto.setMemoryLimit(testCase.getMemoryLimit());
         dto.setPoints(testCase.getPoints());

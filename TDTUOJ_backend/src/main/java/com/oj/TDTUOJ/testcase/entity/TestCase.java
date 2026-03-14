@@ -23,7 +23,7 @@ public class TestCase {
     private String expectedOutputFileUrl;
 
     @Builder.Default
-    private boolean isSample = false;
+    private Boolean isSample = false;
 
     private Double timeLimit;  // in seconds
 
