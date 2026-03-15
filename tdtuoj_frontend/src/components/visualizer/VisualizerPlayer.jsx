@@ -1,20 +1,16 @@
 // src/components/visualizer/VisualizerPlayer.jsx
 import { useState, useEffect, useRef, useCallback } from "react";
 import RendererFactory from "./renderers/RendererFactory";
+import AutoTraceRenderer from "./renderers/AutoTraceRenderer";
 
 const T = {
   bg: "#0f0f0f",
   surface: "#1a1a1a",
-  surfaceHover: "#222",
   border: "#2a2a2a",
-  borderBright: "#3a3a3a",
   text: "#e8e8e8",
   textMuted: "#888",
-  textDim: "#555",
   accent: "#ffa116",
   accentDim: "rgba(255,161,22,0.12)",
-  green: "#2cbb5d",
-  greenDim: "rgba(44,187,93,0.1)",
   red: "#ef4743",
 };
 
@@ -29,10 +25,29 @@ const MODE_META = {
   },
 };
 
+const RENDERER_KEYS = new Set([
+  "type",
+  "data",
+  "nodes",
+  "edges",
+  "highlighted",
+  "sorted",
+  "swapped",
+  "visited",
+  "current",
+  "activeEdge",
+  "line",
+  "event",
+  "function",
+  "locals",
+]);
+
 export default function VisualizerPlayer({
   frames = [],
   stdout = "",
   error = "",
+  vizMode = "MANUAL",
+  onStepChange = null,
 }) {
   const [step, setStep] = useState(0);
   const [mode, setMode] = useState(MODES.SNAPSHOT);
@@ -41,22 +56,59 @@ export default function VisualizerPlayer({
   const timerRef = useRef(null);
   const total = frames.length;
 
-  // ── Tick logic ─────────────────────────────────────────────────────────────
-  const tick = useCallback(() => {
-    setStep((prev) => {
-      if (mode === MODES.LOOP) {
-        return (prev + 1) % total;
-      }
-      // PLAY mode: stop at last frame
-      if (prev >= total - 1) {
-        setPlaying(false);
-        return prev;
-      }
-      return prev + 1;
-    });
-  }, [mode, total]);
+  // ── Synchronous step updater — notifies parent immediately ────────────────
+  // Using a ref for frames so the callback always sees the latest frames
+  // without needing to be recreated on every frame change
+  const framesRef = useRef(frames);
+  useEffect(() => {
+    framesRef.current = frames;
+  }, [frames]);
 
-  // ── Start / stop timer ─────────────────────────────────────────────────────
+  const onStepChangeRef = useRef(onStepChange);
+  useEffect(() => {
+    onStepChangeRef.current = onStepChange;
+  }, [onStepChange]);
+
+  const updateStep = useCallback((newStep) => {
+    const f = framesRef.current;
+    const cb = onStepChangeRef.current;
+    setStep(newStep);
+    if (cb) {
+      cb({
+        frame: f[newStep] ?? null,
+        nextFrame: f[newStep + 1] ?? null,
+      });
+    }
+  }, []); // stable — no deps needed because we use refs
+
+  // ── Tick ───────────────────────────────────────────────────────────────────
+  const stepRef = useRef(step);
+  useEffect(() => {
+    stepRef.current = step;
+  }, [step]);
+
+  const modeRef = useRef(mode);
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
+
+  const tick = useCallback(() => {
+    const cur = stepRef.current;
+    const total = framesRef.current.length;
+    const m = modeRef.current;
+
+    if (m === MODES.LOOP) {
+      updateStep((cur + 1) % total);
+      return;
+    }
+    if (cur >= total - 1) {
+      setPlaying(false);
+      return;
+    }
+    updateStep(cur + 1);
+  }, [updateStep]);
+
+  // ── Timer ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (playing && mode !== MODES.SNAPSHOT) {
       timerRef.current = setInterval(tick, delay);
@@ -66,54 +118,56 @@ export default function VisualizerPlayer({
     return () => clearInterval(timerRef.current);
   }, [playing, delay, tick, mode]);
 
-  // ── Reset on new frames ────────────────────────────────────────────────────
+  // ── Reset when frames change ───────────────────────────────────────────────
   useEffect(() => {
-    setStep(0);
     setPlaying(false);
-  }, [frames]);
+    // Use setTimeout to ensure framesRef is updated before we call updateStep
+    setTimeout(() => updateStep(0), 0);
+  }, [frames, updateStep]);
 
   // ── Keyboard shortcuts ─────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
       if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")
         return;
-      if (e.key === "ArrowRight" || e.key === "d") stepForward();
-      if (e.key === "ArrowLeft" || e.key === "a") stepBack();
+      const cur = stepRef.current;
+      const total = framesRef.current.length;
+      if (e.key === "ArrowRight" || e.key === "d")
+        updateStep(Math.min(cur + 1, total - 1));
+      if (e.key === "ArrowLeft" || e.key === "a")
+        updateStep(Math.max(cur - 1, 0));
       if (e.key === " ") {
         e.preventDefault();
-        togglePlay();
+        handleTogglePlay();
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [step, playing, total, mode]);
+  }, [updateStep]);
 
-  const stepForward = () => setStep((s) => Math.min(s + 1, total - 1));
-  const stepBack = () => setStep((s) => Math.max(s - 1, 0));
-  const goToStart = () => {
-    setStep(0);
-    setPlaying(false);
-  };
-  const goToEnd = () => {
-    setStep(total - 1);
-    setPlaying(false);
-  };
-
-  const togglePlay = () => {
-    if (mode === MODES.SNAPSHOT) return;
-    if (!playing && step >= total - 1 && mode === MODES.PLAY) setStep(0);
+  const handleTogglePlay = useCallback(() => {
+    const m = modeRef.current;
+    const cur = stepRef.current;
+    const tot = framesRef.current.length;
+    if (m === MODES.SNAPSHOT) return;
+    if (!playing && cur >= tot - 1 && m === MODES.PLAY) updateStep(0);
     setPlaying((p) => !p);
-  };
+  }, [playing, updateStep]);
 
   const handleModeChange = (m) => {
     setMode(m);
     setPlaying(false);
-    setStep(0);
+    updateStep(0);
   };
 
   const currentFrame = frames[step] ?? null;
+  const nextFrame = frames[step + 1] ?? null;
   const progress = total > 1 ? step / (total - 1) : 0;
+  const extraKeys = currentFrame
+    ? Object.keys(currentFrame).filter((k) => !RENDERER_KEYS.has(k))
+    : [];
 
+  // ── Empty / error ──────────────────────────────────────────────────────────
   if (total === 0) {
     return (
       <div
@@ -139,6 +193,8 @@ export default function VisualizerPlayer({
           >
             {error}
           </pre>
+        ) : vizMode === "AUTO" ? (
+          "No frames captured. Make sure your code reads input and has variables to trace."
         ) : (
           "No frames to visualize. Make sure your code calls snapshot()."
         )}
@@ -155,14 +211,15 @@ export default function VisualizerPlayer({
         overflow: "hidden",
       }}
     >
-      {/* ── Mode selector ─────────────────────────────────────────────────── */}
+      {/* ── Playback mode selector ────────────────────────────────────────── */}
       <div
         style={{
           display: "flex",
           gap: 4,
-          padding: "10px 12px",
+          padding: "8px 12px",
           borderBottom: `1px solid ${T.border}`,
           flexShrink: 0,
+          alignItems: "center",
         }}
       >
         {Object.entries(MODE_META).map(([key, meta]) => (
@@ -186,13 +243,28 @@ export default function VisualizerPlayer({
             {meta.label}
           </button>
         ))}
+
         <div style={{ flex: 1 }} />
-        {/* Frame counter */}
+
+        {/* Next line preview */}
+        {nextFrame?.line && (
+          <div
+            style={{
+              fontSize: 10,
+              color: "#f5c518",
+              fontFamily: "'JetBrains Mono', monospace",
+              marginRight: 8,
+              opacity: 0.8,
+            }}
+          >
+            next → line {nextFrame.line}
+          </div>
+        )}
+
         <div
           style={{
             fontSize: 11,
             color: T.textMuted,
-            alignSelf: "center",
             fontFamily: "'JetBrains Mono', monospace",
           }}
         >
@@ -202,64 +274,40 @@ export default function VisualizerPlayer({
         </div>
       </div>
 
-      {/* ── Renderer area ─────────────────────────────────────────────────── */}
+      {/* ── Renderer ──────────────────────────────────────────────────────── */}
       <div style={{ flex: 1, overflow: "auto", minHeight: 0 }}>
-        <RendererFactory frame={currentFrame} />
+        {vizMode === "AUTO" && (
+          <AutoTraceRenderer frame={currentFrame} frames={frames} step={step} />
+        )}
+        {vizMode === "MANUAL" && <RendererFactory frame={currentFrame} />}
 
-        {/* Extra frame metadata (user can put any extra keys in snapshot) */}
-        {currentFrame &&
-          Object.keys(currentFrame).filter(
-            (k) =>
-              k !== "type" &&
-              k !== "data" &&
-              k !== "nodes" &&
-              k !== "edges" &&
-              k !== "highlighted" &&
-              k !== "sorted" &&
-              k !== "swapped" &&
-              k !== "visited" &&
-              k !== "current" &&
-              k !== "activeEdge",
-          ).length > 0 && (
-            <div
-              style={{
-                margin: "0 12px 12px",
-                padding: "8px 12px",
-                background: T.surface,
-                border: `1px solid ${T.border}`,
-                borderRadius: 6,
-                fontSize: 11,
-                fontFamily: "'JetBrains Mono', monospace",
-                color: T.textMuted,
-              }}
-            >
-              {Object.entries(currentFrame)
-                .filter(
-                  ([k]) =>
-                    ![
-                      "type",
-                      "data",
-                      "nodes",
-                      "edges",
-                      "highlighted",
-                      "sorted",
-                      "swapped",
-                      "visited",
-                      "current",
-                      "activeEdge",
-                    ].includes(k),
-                )
-                .map(([k, v]) => (
-                  <div key={k} style={{ marginBottom: 2 }}>
-                    <span style={{ color: T.accent }}>{k}</span>
-                    {": "}
-                    <span style={{ color: T.text }}>{JSON.stringify(v)}</span>
-                  </div>
-                ))}
-            </div>
-          )}
+        {/* Extra metadata — manual mode */}
+        {vizMode === "MANUAL" && extraKeys.length > 0 && (
+          <div
+            style={{
+              margin: "0 12px 12px",
+              padding: "8px 12px",
+              background: T.surface,
+              border: `1px solid ${T.border}`,
+              borderRadius: 6,
+              fontSize: 11,
+              fontFamily: "'JetBrains Mono', monospace",
+              color: T.textMuted,
+            }}
+          >
+            {extraKeys.map((k) => (
+              <div key={k} style={{ marginBottom: 2 }}>
+                <span style={{ color: T.accent }}>{k}</span>
+                {": "}
+                <span style={{ color: T.text }}>
+                  {JSON.stringify(currentFrame[k])}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
-        {/* stdout panel */}
+        {/* stdout */}
         {stdout && (
           <div style={{ margin: "0 12px 12px" }}>
             <div
@@ -302,7 +350,7 @@ export default function VisualizerPlayer({
         }}
       >
         {/* Progress slider */}
-        <div style={{ marginBottom: 10, position: "relative" }}>
+        <div style={{ marginBottom: 10 }}>
           <input
             type="range"
             min={0}
@@ -310,7 +358,7 @@ export default function VisualizerPlayer({
             value={step}
             onChange={(e) => {
               setPlaying(false);
-              setStep(Number(e.target.value));
+              updateStep(Number(e.target.value));
             }}
             style={{
               width: "100%",
@@ -327,19 +375,28 @@ export default function VisualizerPlayer({
 
         {/* Buttons */}
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <CtrlBtn onClick={goToStart} title="Go to start (Home)">
+          <CtrlBtn
+            onClick={() => {
+              updateStep(0);
+              setPlaying(false);
+            }}
+            title="Start"
+          >
             ⏮
           </CtrlBtn>
-          <CtrlBtn onClick={stepBack} title="Previous (← / A)">
+          <CtrlBtn
+            onClick={() => updateStep(Math.max(step - 1, 0))}
+            title="Previous (←)"
+          >
             ◀
           </CtrlBtn>
 
           {mode !== MODES.SNAPSHOT ? (
             <CtrlBtn
-              onClick={togglePlay}
+              onClick={handleTogglePlay}
               title="Play / Pause (Space)"
               active={playing}
-              style={{ minWidth: 64, justifyContent: "center" }}
+              style={{ minWidth: 72, justifyContent: "center" }}
             >
               {playing ? "⏸ Pause" : "▶ Play"}
             </CtrlBtn>
@@ -354,7 +411,7 @@ export default function VisualizerPlayer({
                 color: T.accent,
                 fontFamily: "'JetBrains Mono', monospace",
                 fontWeight: 600,
-                minWidth: 64,
+                minWidth: 72,
                 textAlign: "center",
               }}
             >
@@ -362,16 +419,24 @@ export default function VisualizerPlayer({
             </div>
           )}
 
-          <CtrlBtn onClick={stepForward} title="Next (→ / D)">
+          <CtrlBtn
+            onClick={() => updateStep(Math.min(step + 1, total - 1))}
+            title="Next (→)"
+          >
             ▶
           </CtrlBtn>
-          <CtrlBtn onClick={goToEnd} title="Go to end (End)">
+          <CtrlBtn
+            onClick={() => {
+              updateStep(total - 1);
+              setPlaying(false);
+            }}
+            title="End"
+          >
             ⏭
           </CtrlBtn>
 
           <div style={{ flex: 1 }} />
 
-          {/* Speed control — only relevant in Play/Loop */}
           {mode !== MODES.SNAPSHOT && (
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span
@@ -388,7 +453,7 @@ export default function VisualizerPlayer({
                 min={50}
                 max={2000}
                 step={50}
-                value={2050 - delay} // invert: right = faster
+                value={2050 - delay}
                 onChange={(e) => setDelay(2050 - Number(e.target.value))}
                 style={{
                   width: 72,
@@ -398,7 +463,6 @@ export default function VisualizerPlayer({
                   appearance: "none",
                   outline: "none",
                 }}
-                title={`${delay}ms per frame`}
               />
               <span
                 style={{
