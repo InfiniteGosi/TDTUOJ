@@ -15,13 +15,14 @@ import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
 import ReactMarkdown from "react-markdown";
 import CodeEditor from "../CodeEditor/CodeEditor";
+import HintPanel from "./HintPanel";
+import VisualizerModal from "../visualizer/VisualizerModal";
 import hljs from "highlight.js/lib/core";
 import cpp from "highlight.js/lib/languages/cpp";
 import java from "highlight.js/lib/languages/java";
 import python from "highlight.js/lib/languages/python";
 import c from "highlight.js/lib/languages/c";
 import "highlight.js/styles/vs2015.css";
-import HintPanel from "./HintPanel";
 
 hljs.registerLanguage("cpp", cpp);
 hljs.registerLanguage("java", java);
@@ -271,6 +272,7 @@ const ProblemDetailsPage = () => {
 
   const [hintPanelWidth, setHintPanelWidth] = useState(340);
   const [isDraggingHint, setIsDraggingHint] = useState(false);
+  const [vizOpen, setVizOpen] = useState(false);
 
   const { showMessage } = useToast();
   const codeEditorRef = useRef(null);
@@ -1293,23 +1295,44 @@ const ProblemDetailsPage = () => {
                 <CodeEditor
                   ref={codeEditorRef}
                   rightHeaderContent={
-                    <Button
-                      size="sm"
-                      bg={T.accent}
-                      color="#000"
-                      fontWeight="700"
-                      fontSize="sm"
-                      px={5}
-                      borderRadius="6px"
-                      onClick={handleSubmit}
-                      isLoading={submitting}
-                      loadingText="Running..."
-                      _hover={{ bg: "#ffb833", transform: "translateY(-1px)" }}
-                      _active={{ bg: "#e08e00" }}
-                      transition="all 0.15s"
-                    >
-                      Run & Submit
-                    </Button>
+                    <HStack gap={2}>
+                      <Button
+                        size="sm"
+                        bg="transparent"
+                        color={T.purple}
+                        border={`1px solid ${T.purple}44`}
+                        fontWeight="700"
+                        fontSize="sm"
+                        px={4}
+                        borderRadius="6px"
+                        onClick={() => setVizOpen(true)}
+                        _hover={{ bg: T.purpleDim, borderColor: T.purple }}
+                        _active={{ bg: T.purpleDim }}
+                        transition="all 0.15s"
+                      >
+                        ◈ Visualize
+                      </Button>
+                      <Button
+                        size="sm"
+                        bg={T.accent}
+                        color="#000"
+                        fontWeight="700"
+                        fontSize="sm"
+                        px={5}
+                        borderRadius="6px"
+                        onClick={handleSubmit}
+                        isLoading={submitting}
+                        loadingText="Running..."
+                        _hover={{
+                          bg: "#ffb833",
+                          transform: "translateY(-1px)",
+                        }}
+                        _active={{ bg: "#e08e00" }}
+                        transition="all 0.15s"
+                      >
+                        Run & Submit
+                      </Button>
+                    </HStack>
                   }
                 />
               </Box>
@@ -1344,6 +1367,18 @@ const ProblemDetailsPage = () => {
               onClose={() => setHintPanelOpen(false)}
             />
           </>
+        )}
+
+        {vizOpen && (
+          <VisualizerModal
+            isOpen={vizOpen}
+            onClose={() => setVizOpen(false)}
+            defaultCode={codeEditorRef.current?.getCodeAndLanguage().code ?? ""}
+            defaultLang={
+              codeEditorRef.current?.getCodeAndLanguage().language ?? "cpp"
+            }
+            testCases={testCases}
+          />
         )}
       </Box>
     </Box>

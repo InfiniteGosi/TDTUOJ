@@ -337,4 +337,14 @@ export default class ApiService {
     });
     return resp.data;
   }
+
+  // ─── Visualizer ─────────────────────────────────────────────────────────────
+  static async visualize({ sourceCode, language, stdin = "" }) {
+    const resp = await axios.post(
+      `${this.BASE_URL}/visualize`,
+      { sourceCode, language, stdin },
+      { headers: this.getHeader() },
+    );
+    return resp.data; // Response<VisualizerResponse>
+  }
 }
