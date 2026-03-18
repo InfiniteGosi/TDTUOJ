@@ -40,9 +40,16 @@ public class VisualizerServiceImpl implements VisualizerService {
     public Response<VisualizerResponse> visualize(VisualizerRequest request) {
         validateRequest(request);
 
-        String instrumented = instrument(request.getSourceCode(), request.getLanguage(), request.getMode());
-        log.info("Visualizing: language={}, codeLength={}", request.getLanguage(),
-                request.getSourceCode().length());
+        VisualizerMode mode = request.getMode();
+        if (mode == null) {
+            log.warn("VisualizerRequest.mode is null — defaulting to MANUAL. " +
+                    "Ensure the frontend sends a 'mode' field (\"MANUAL\" or \"AUTO\").");
+            mode = VisualizerMode.MANUAL;
+        }
+        log.info("Visualizing: language={}, mode={}, codeLength={}", request.getLanguage(),
+                mode, request.getSourceCode().length());
+
+        String instrumented = instrument(request.getSourceCode(), request.getLanguage(), mode);
 
         Map<?, ?> judge0Response = submitToJudge0(
                 instrumented,
@@ -157,21 +164,22 @@ public class VisualizerServiceImpl implements VisualizerService {
     // ── Instrumentation ───────────────────────────────────────────────────────
 
     private String instrument(String code, SubmissionLanguage lang, VisualizerMode mode) {
-        if (mode == VisualizerMode.MANUAL) {
-            // existing behavior
+        // Treat null or MANUAL as the manual/custom-snapshot path (original working behaviour).
+        // Only switch to AUTO when explicitly requested.
+        if (mode == VisualizerMode.AUTO) {
             return switch (lang) {
-                case PYTHON -> instrumentPythonManual(code);
-                case JAVA   -> instrumentJavaManual(code);
-                case C      -> instrumentCManual(code);
-                case CPP    -> instrumentCppManual(code);
+                case PYTHON -> instrumentPythonAuto(code);
+                case JAVA   -> instrumentJavaAuto(code);
+                case C      -> instrumentCAuto(code);
+                case CPP    -> instrumentCppAuto(code);
             };
         }
-        // AUTO mode
+        // MANUAL (default — also covers null/unrecognised values)
         return switch (lang) {
-            case PYTHON -> instrumentPythonAuto(code);
-            case JAVA   -> instrumentJavaAuto(code);
-            case C      -> instrumentCAuto(code);
-            case CPP    -> instrumentCppAuto(code);
+            case PYTHON -> instrumentPythonManual(code);
+            case JAVA   -> instrumentJavaManual(code);
+            case C      -> instrumentCManual(code);
+            case CPP    -> instrumentCppManual(code);
         };
     }
 

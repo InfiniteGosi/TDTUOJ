@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.3.14)  14 MAR 2026 22:19
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.3.14)  16 MAR 2026 12:56
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1249,7 +1249,7 @@ Package biblatex Info: ... file 'tdtu_thesis_template.bbl' found.
 (tdtu_thesis_template.bbl)
 Package biblatex Info: Reference section=0 on input line 134.
 Package biblatex Info: Reference segment=0 on input line 134.
-<figures/logo.png, id=207, 1204.5pt x 665.48625pt>
+<figures/logo.png, id=307, 1204.5pt x 665.48625pt>
 File: figures/logo.png Graphic file (type png)
 <use figures/logo.png>
 Package pdftex.def Info: figures/logo.png  used on input line 148.
@@ -1333,53 +1333,59 @@ l.250 \newpage
 \tf@toc=\write5
 \openout5 = `tdtu_thesis_template.toc'.
 
- [3] (tdtu_thesis_template.lof)
+ [3] [4] (tdtu_thesis_template.lof)
 \tf@lof=\write6
 \openout6 = `tdtu_thesis_template.lof'.
 
- [4
+ [5
 
 ] (tdtu_thesis_template.lot)
 \tf@lot=\write7
 \openout7 = `tdtu_thesis_template.lot'.
 
- [5
+ [6
 
 ]
 
-LaTeX Warning: Hyper reference `acro:AI' on page vi undefined on input line 275.
+LaTeX Warning: Hyper reference `acro:AI' on page vii undefined on input line 275.
 
 
-LaTeX Warning: Hyper reference `acro:AI' on page vi undefined on input line 275.
+LaTeX Warning: Hyper reference `acro:AI' on page vii undefined on input line 275.
 
 
-LaTeX Warning: Hyper reference `acro:OJ' on page vi undefined on input line 288.
+LaTeX Warning: Hyper reference `acro:CSS' on page vii undefined on input line 279.
 
 
-LaTeX Warning: Hyper reference `acro:OJ' on page vi undefined on input line 288.
+LaTeX Warning: Hyper reference `acro:CSS' on page vii undefined on input line 279.
 
 
-LaTeX Warning: Hyper reference `acro:PK' on page vi undefined on input line 290.
+LaTeX Warning: Hyper reference `acro:OJ' on page vii undefined on input line 288.
 
 
-LaTeX Warning: Hyper reference `acro:PK' on page vi undefined on input line 290.
+LaTeX Warning: Hyper reference `acro:OJ' on page vii undefined on input line 288.
 
-[6
+
+LaTeX Warning: Hyper reference `acro:PK' on page vii undefined on input line 290.
+
+
+LaTeX Warning: Hyper reference `acro:PK' on page vii undefined on input line 290.
+
+[7
 
 ]
 
-LaTeX Warning: Hyper reference `acro:UI' on page vii undefined on input line 296.
+LaTeX Warning: Hyper reference `acro:UI' on page viii undefined on input line 296.
 
 
-LaTeX Warning: Hyper reference `acro:UI' on page vii undefined on input line 296.
+LaTeX Warning: Hyper reference `acro:UI' on page viii undefined on input line 296.
 
 
-LaTeX Warning: Hyper reference `acro:UX' on page vii undefined on input line 297.
+LaTeX Warning: Hyper reference `acro:UX' on page viii undefined on input line 297.
 
 
-LaTeX Warning: Hyper reference `acro:UX' on page vii undefined on input line 297.
+LaTeX Warning: Hyper reference `acro:UX' on page viii undefined on input line 297.
 
-[7]
+[8]
 CHÆ¯Æ NG 1.
 Package acronym Info: Label `acro:PDF' newly defined as it shall be overridden
 although it is yet undefined on input line 321.
@@ -1387,118 +1393,160 @@ Package acronym Info: Label `acro:REST' newly defined as it shall be overridden
 although it is yet undefined on input line 325.
 [1
 
-]
-Package acronym Info: Label `acro:MVC' newly defined as it shall be overridden
-although it is yet undefined on input line 329.
-Package acronym Info: Label `acro:JPA' newly defined as it shall be overridden
-although it is yet undefined on input line 329.
-Package acronym Info: Label `acro:JWT' newly defined as it shall be overridden
-although it is yet undefined on input line 329.
-Package acronym Info: Label `acro:CSS' newly defined as it shall be overridden
-although it is yet undefined on input line 335.
-Package acronym Info: Label `acro:HTTP' newly defined as it shall be overridden
-although it is yet undefined on input line 335.
-Package acronym Info: Label `acro:JSON' newly defined as it shall be overridden
-although it is yet undefined on input line 335.
- [2] [3]
+] [2]
 CHÆ¯Æ NG 2.
-<figures/usecase.png, id=444, 1285.80376pt x 1356.06625pt>
+
+Underfull \hbox (badness 10000) in paragraph at lines 342--343
+[]\T5/ptm/m/n/13 Spring Boot công cung c§p h» sinh th¡i \T5/ptm/m/it/13 Starter de-pen-den-cies
+ []
+
+
+Underfull \hbox (badness 3954) in paragraph at lines 342--343
+\T5/ptm/m/n/13 phong phó, méi starter ^^_âng gâi mët tªp hñp c¡c th÷ vi»n li¶n quan:
+ []
+
+
+Underfull \hbox (badness 3690) in paragraph at lines 342--343
+\T5/cmtt/m/n/13 spring-boot-starter-data-jpa \T5/ptm/m/n/13 t½ch hñp Hi-ber-nate v  Spring Data JPA,
+ []
+
+
+Underfull \hbox (badness 6016) in paragraph at lines 342--343
+\T5/cmtt/m/n/13 spring-boot-starter-security \T5/ptm/m/n/13 cung c§p to n bë khung b£o mªt, v 
+ []
+
+
+Underfull \hbox (badness 1527) in paragraph at lines 342--343
+\T5/cmtt/m/n/13 spring-boot-starter-test \T5/ptm/m/n/13 t½ch hñp JU-nit, Mock-ito v  c¡c cæng cö kiºm
+ []
+
+Package acronym Info: Label `acro:MVC' newly defined as it shall be overridden
+although it is yet undefined on input line 346.
+[3
+
+]
+Package acronym Info: Label `acro:HTTP' newly defined as it shall be overridden
+although it is yet undefined on input line 348.
+Package acronym Info: Label `acro:JPA' newly defined as it shall be overridden
+although it is yet undefined on input line 352.
+Package acronym Info: Label `acro:JWT' newly defined as it shall be overridden
+although it is yet undefined on input line 356.
+ [4]
+Package acronym Info: Label `acro:ERD' newly defined as it shall be overridden
+although it is yet undefined on input line 366.
+
+Underfull \hbox (badness 3471) in paragraph at lines 370--371
+[]\T5/ptm/m/n/13 K¸t nèi tø Spring Boot ^^_¸n Post-greSQL ^^_÷ñc c§u h¼nh trong file
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 370--371
+\T5/cmtt/m/n/13 application.pro-perties \T5/ptm/m/n/13 vîi c¡c thæng sè \T5/cmtt/m/n/13 spring.data-source.url\T5/ptm/m/n/13 ,
+ []
+
+
+Underfull \hbox (badness 1389) in paragraph at lines 370--371
+\T5/cmtt/m/n/13 spring.data-source.user-name \T5/ptm/m/n/13 v  \T5/cmtt/m/n/13 spring.data-source.pass-word\T5/ptm/m/n/13 . Con-nec-
+ []
+
+[5]
+LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 383.
+ (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
+File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
+) [6{C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [7] [8] [9] [10]
+Package acronym Info: Label `acro:AC' newly defined as it shall be overridden
+although it is yet undefined on input line 481.
+Package acronym Info: Label `acro:WA' newly defined as it shall be overridden
+although it is yet undefined on input line 481.
+Package acronym Info: Label `acro:TLE' newly defined as it shall be overridden
+although it is yet undefined on input line 481.
+Package acronym Info: Label `acro:MLE' newly defined as it shall be overridden
+although it is yet undefined on input line 481.
+Package acronym Info: Label `acro:RE' newly defined as it shall be overridden
+although it is yet undefined on input line 481.
+Package acronym Info: Label `acro:CE' newly defined as it shall be overridden
+although it is yet undefined on input line 481.
+ [11]
+Package acronym Info: Label `acro:JSON' newly defined as it shall be overridden
+although it is yet undefined on input line 497.
+ [12] [13]
+CHÆ¯Æ NG 3.
+<figures/usecase.png, id=643, 1285.80376pt x 1356.06625pt>
 File: figures/usecase.png Graphic file (type png)
 <use figures/usecase.png>
-Package pdftex.def Info: figures/usecase.png  used on input line 352.
+Package pdftex.def Info: figures/usecase.png  used on input line 522.
 (pdftex.def)             Requested size: 405.7355pt x 427.90804pt.
-[4
+[14
 
-] [5 <./figures/usecase.png>]
-Package acronym Info: Label `acro:ERD' newly defined as it shall be overridden
-although it is yet undefined on input line 379.
+] [15 <./figures/usecase.png>]
 Package acronym Info: Label `acro:FK' newly defined as it shall be overridden
-although it is yet undefined on input line 379.
- [6]
-<figures/erd.png, id=466, 2279.51625pt x 2028.57875pt>
+although it is yet undefined on input line 549.
+ [16]
+<figures/erd.png, id=664, 2279.51625pt x 2028.57875pt>
 File: figures/erd.png Graphic file (type png)
 <use figures/erd.png>
-Package pdftex.def Info: figures/erd.png  used on input line 383.
+Package pdftex.def Info: figures/erd.png  used on input line 553.
 (pdftex.def)             Requested size: 441.01773pt x 392.46043pt.
- [7 <./figures/erd.png>] [8]
-Overfull \hbox (8.89075pt too wide) in paragraph at lines 408--409
-\T5/cmtt/m/n/13 statement_-file_-url\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 point\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 time_-limit\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 memory_-limit\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 slug\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 author_-id\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 is_-
+ [17 <./figures/erd.png>] [18]
+Underfull \hbox (badness 1910) in paragraph at lines 580--581
+[]\T5/ptm/m/n/13 B£ng \T5/cmtt/m/n/13 test_-cases \T5/ptm/m/n/13 l÷u c¡c bë dú li»u kiºm thû gçm \T5/cmtt/m/n/13 input_-file_-
  []
 
 
-Overfull \hbox (26.19142pt too wide) in paragraph at lines 410--412
-[]\T5/ptm/m/n/13 B£ng \T5/cmtt/m/n/13 test_-cases \T5/ptm/m/n/13 l÷u c¡c bë dú li»u kiºm thû gçm \T5/cmtt/m/n/13 input_-file_-url\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 expected_-
+Underfull \hbox (badness 1400) in paragraph at lines 582--583
+[]\T5/ptm/m/n/13 B£ng \T5/cmtt/m/n/13 problem_-points \T5/ptm/m/n/13 ^^_ành ngh¾a c§u tróc t½nh ^^_iºm vîi c¡c tr÷íng
  []
 
 
-Overfull \hbox (20.45256pt too wide) in paragraph at lines 413--414
-\T5/cmtt/m/n/13 points\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 difficulty_-points\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 solve_-rate\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 dynamic_-points\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 contest_-multiplier\T5/ptm/m/n/13 ,
+Underfull \hbox (badness 1603) in paragraph at lines 592--593
+\T5/cmtt/m/n/13 start_-time\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 end_-time\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 is_-public\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 creator_-id\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 slug\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 max_-participant\T5/ptm/m/n/13 ,
  []
 
 
-Overfull \hbox (62.39429pt too wide) in paragraph at lines 423--428
-\T5/cmtt/m/n/13 start_-time\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 end_-time\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 is_-public\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 creator_-id\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 slug\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 max_-participant\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 registration_-
+Underfull \hbox (badness 10000) in paragraph at lines 592--593
+\T5/cmtt/m/n/13 registration_-start\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 registration_-end\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 is_-rated \T5/ptm/m/n/13 v  \T5/cmtt/m/n/13 contest_-style\T5/ptm/m/n/13 .
  []
 
-[9]
-Package acronym Info: Label `acro:AC' newly defined as it shall be overridden
-although it is yet undefined on input line 439.
-Package acronym Info: Label `acro:WA' newly defined as it shall be overridden
-although it is yet undefined on input line 439.
-Package acronym Info: Label `acro:TLE' newly defined as it shall be overridden
-although it is yet undefined on input line 439.
-Package acronym Info: Label `acro:MLE' newly defined as it shall be overridden
-although it is yet undefined on input line 439.
-Package acronym Info: Label `acro:RE' newly defined as it shall be overridden
-although it is yet undefined on input line 439.
-Package acronym Info: Label `acro:CE' newly defined as it shall be overridden
-although it is yet undefined on input line 439.
-
-Overfull \hbox (7.48154pt too wide) in paragraph at lines 439--440
-\T5/ptm/m/n/13 méi l¦n nëp bao gçm \T5/cmtt/m/n/13 source_-code\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 memory_-used\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 execution_-time\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 submission_-
+[19]
+Underfull \hbox (badness 2165) in paragraph at lines 604--605
+\T5/cmtt/m/n/13 language\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 submission_-date\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 problem_-id\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 user_-id\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 contest_-id\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 test_-
  []
 
-
-Overfull \hbox (30.57845pt too wide) in paragraph at lines 439--440
-\T5/cmtt/m/n/13 verdict\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 submission_-status\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 submission_-language\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 submission_-date\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 problem_-
- []
-
-
-Overfull \hbox (17.10927pt too wide) in paragraph at lines 439--440
-\T5/cmtt/m/n/13 message \T5/ptm/m/n/13 v  \T5/cmtt/m/n/13 is_-public\T5/ptm/m/n/13 . Tr÷íng \T5/cmtt/m/n/13 submission_-verdict \T5/ptm/m/n/13 l÷u k¸t qu£ cuèi còng ([][][]Accepted
- []
-
-
-Overfull \hbox (1.03114pt too wide) in paragraph at lines 439--440
-\T5/ptm/m/n/13 ([])[], [][][]Runtime Er-ror ([])[] ho°c [][][]Compilation Er-ror ([])[]), cán \T5/cmtt/m/n/13 test_-cases_-passed
- []
-
-[10]
-CHÆ¯Æ NG 3.
-
-Overfull \hbox (13.41096pt too wide) in paragraph at lines 462--464
-[]\T5/ptm/m/n/13 Module qu£n lþ cuëc thi t÷ìng t¡c vîi c¡c b£ng \T5/cmtt/m/n/13 contests\T5/ptm/m/n/13 , \T5/cmtt/m/n/13 contests_-problems\T5/ptm/m/n/13 ,
- []
-
-[11
-
-] [12] [13] [14]
+[20]
 CHÆ¯Æ NG 4.
-[15
+[21
 
-] [16]
+] [22] [23]
 CHÆ¯Æ NG 5.
+[24
+
+] [25] [26]
+CHÆ¯Æ NG 6.
 Package acronym Info: Label `acro:TDTU' newly defined as it shall be overridden
-although it is yet undefined on input line 545.
+although it is yet undefined on input line 719.
 Package acronym Info: Label `acro:CNTT' newly defined as it shall be overridden
-although it is yet undefined on input line 545.
-[17
+although it is yet undefined on input line 719.
+[27
 
 ]
 
-LaTeX Warning: Empty bibliography on input line 551.
+Package csquotes Warning: No space factor codes for 'T5' encoding.
+(csquotes)                Punctuation tracker may fail on input line 726.
 
-(tdtu_thesis_template.aux)
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 726.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <9> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 726.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <7> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 726.
+
+Underfull \hbox (badness 1406) in paragraph at lines 729--729
+[][]\T5/ptm/m/n/12 Do[]silovi[]c, H. Z. (2024). Judge0: Open-source on-line judge sys-tem [Truy cªp ng y
+ []
+
+[28
+
+] (tdtu_thesis_template.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -1511,23 +1559,23 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 LaTeX Warning: There were undefined references.
 
 Package rerunfilecheck Info: File `tdtu_thesis_template.out' has not changed.
-(rerunfilecheck)             Checksum: 7E0CCF87E091EDAC3C4C3F3146C1DEF8;9496.
+(rerunfilecheck)             Checksum: 6E6F579E94A6793092BF1614D1B73ED6;14640.
 Package logreq Info: Writing requests to 'tdtu_thesis_template.run.xml'.
 \openout1 = `tdtu_thesis_template.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 24706 strings out of 467867
- 427997 string characters out of 5418334
- 1394437 words of memory out of 5000000
- 53128 multiletter control sequences out of 15000+600000
- 660269 words of font info for 80 fonts, out of 8000000 for 9000
+ 25127 strings out of 467867
+ 437096 string characters out of 5418334
+ 1395858 words of memory out of 5000000
+ 53490 multiletter control sequences out of 15000+600000
+ 673243 words of font info for 107 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,12n,83p,1023b,5054s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmb8v.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmr8v.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmri8v.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/vnr/vntt12.pfb>
-Output written on tdtu_thesis_template.pdf (30 pages, 548625 bytes).
+ 75i,12n,83p,1347b,5054s stack positions out of 10000i,1000n,20000p,200000b,200000s
+<C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmb8v.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmr8v.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmri8v.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/vnr/vntt12.pfb>
+Output written on tdtu_thesis_template.pdf (42 pages, 618783 bytes).
 PDF statistics:
- 594 PDF objects out of 1000 (max. 8388607)
- 125 named destinations out of 1000 (max. 500000)
- 424 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 836 PDF objects out of 1000 (max. 8388607)
+ 178 named destinations out of 1000 (max. 500000)
+ 624 words of extra memory for PDF output out of 10000 (max. 10000000)
 

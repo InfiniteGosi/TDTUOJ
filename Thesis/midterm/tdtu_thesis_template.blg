@@ -1,0 +1,19 @@
+[0] Config.pm:328> INFO - This is Biber 2.21
+[0] Config.pm:331> INFO - Logfile is 'tdtu_thesis_template.blg'
+[424] biber-MSWIN64:342> INFO - === 
+[645] Biber.pm:421> INFO - Reading 'tdtu_thesis_template.bcf'
+[758] Biber.pm:999> INFO - Using all citekeys in bib section 0
+[775] Biber.pm:4487> INFO - Processing section 0
+[809] Biber.pm:4678> INFO - Looking for bibtex file 'references.bib' for section 0
+[889] bibtex.pm:1713> INFO - LaTeX decoding ...
+[926] bibtex.pm:1519> INFO - Found BibTeX data source 'references.bib'
+[1100] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[1100] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[1101] Biber.pm:4307> INFO - Sorting list 'nyt/apasortcite//global/global/global' of type 'entry' with template 'nyt' and locale 'en-US'
+[1101] Biber.pm:4313> INFO - No sort tailoring available for locale 'en-US'
+[1122] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[1122] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[1122] Biber.pm:4307> INFO - Sorting list 'nyt/global//global/global/global' of type 'entry' with template 'nyt' and locale 'en-US'
+[1122] Biber.pm:4313> INFO - No sort tailoring available for locale 'en-US'
+[1240] bbl.pm:676> INFO - Writing 'tdtu_thesis_template.bbl' with encoding 'UTF-8'
+[1250] bbl.pm:779> INFO - Output to tdtu_thesis_template.bbl

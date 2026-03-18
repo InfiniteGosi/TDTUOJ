@@ -16,5 +16,814 @@
   {}
 \endgroup
 
+
+\refsection{0}
+  \datalist[entry]{nyt/apasortcite//global/global/global}
+    \entry{aws_s3}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=3eb2c1a57a8160029f036e3dcbf84bf1}{%
+           family={{Amazon Web Services}},
+           familyi={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \strng{fullhash}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \strng{fullhashraw}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \strng{bibnamehash}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \strng{authorbibnamehash}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \strng{authornamehash}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \strng{authorfullhash}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \strng{authorfullhashraw}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \field{sortinit}{A}
+      \field{sortinithash}{2f401846e2029bad6b3ecc16d50031e2}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{Amazon S3 -- Object Storage Built to Retrieve Any Amount of Data}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://aws.amazon.com/s3
+      \endverb
+      \verb{url}
+      \verb https://aws.amazon.com/s3
+      \endverb
+    \endentry
+    \entry{docker_docs}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=4bd3b392874c74fba4ed57a24eae0ac1}{%
+           family={{Docker Inc.}},
+           familyi={D\bibinitperiod}}}%
+      }
+      \strng{namehash}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \strng{fullhash}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \strng{fullhashraw}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \strng{bibnamehash}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \strng{authorbibnamehash}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \strng{authornamehash}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \strng{authorfullhash}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \strng{authorfullhashraw}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{Docker Documentation}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://docs.docker.com
+      \endverb
+      \verb{url}
+      \verb https://docs.docker.com
+      \endverb
+    \endentry
+    \entry{judge0}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=6aa295755c8fa52dca86c500463bea41}{%
+           family={Došilović},
+           familyi={D\bibinitperiod},
+           given={Herman\bibnamedelima Zvonimir},
+           giveni={H\bibinitperiod\bibinitdelim Z\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{6aa295755c8fa52dca86c500463bea41}
+      \strng{fullhash}{6aa295755c8fa52dca86c500463bea41}
+      \strng{fullhashraw}{6aa295755c8fa52dca86c500463bea41}
+      \strng{bibnamehash}{6aa295755c8fa52dca86c500463bea41}
+      \strng{authorbibnamehash}{6aa295755c8fa52dca86c500463bea41}
+      \strng{authornamehash}{6aa295755c8fa52dca86c500463bea41}
+      \strng{authorfullhash}{6aa295755c8fa52dca86c500463bea41}
+      \strng{authorfullhashraw}{6aa295755c8fa52dca86c500463bea41}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{Judge0: Open-Source Online Judge System}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://judge0.com
+      \endverb
+      \verb{url}
+      \verb https://judge0.com
+      \endverb
+    \endentry
+    \entry{grafana_docs}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=92d1002bbeda9145e9369766ab6d96a9}{%
+           family={{Grafana Labs}},
+           familyi={G\bibinitperiod}}}%
+      }
+      \strng{namehash}{92d1002bbeda9145e9369766ab6d96a9}
+      \strng{fullhash}{92d1002bbeda9145e9369766ab6d96a9}
+      \strng{fullhashraw}{92d1002bbeda9145e9369766ab6d96a9}
+      \strng{bibnamehash}{92d1002bbeda9145e9369766ab6d96a9}
+      \strng{authorbibnamehash}{92d1002bbeda9145e9369766ab6d96a9}
+      \strng{authornamehash}{92d1002bbeda9145e9369766ab6d96a9}
+      \strng{authorfullhash}{92d1002bbeda9145e9369766ab6d96a9}
+      \strng{authorfullhashraw}{92d1002bbeda9145e9369766ab6d96a9}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{Grafana Documentation}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://grafana.com/docs
+      \endverb
+      \verb{url}
+      \verb https://grafana.com/docs
+      \endverb
+    \endentry
+    \entry{jwt_spec}{misc}{}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=3656094aa90ce6b5927293e625dedee3}{%
+           family={Jones},
+           familyi={J\bibinitperiod},
+           given={M.},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=3ac7ec83304c92610359a406f07ad45a}{%
+           family={Bradley},
+           familyi={B\bibinitperiod},
+           given={J.},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=2764fe7207c045fdc85a76e2d51203a3}{%
+           family={Sakimura},
+           familyi={S\bibinitperiod},
+           given={N.},
+           giveni={N\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{5683aecbbdfe106e64cf9e667351ba26}
+      \strng{fullhash}{5b3ff80030418207cdd5756912287da3}
+      \strng{fullhashraw}{5b3ff80030418207cdd5756912287da3}
+      \strng{bibnamehash}{5b3ff80030418207cdd5756912287da3}
+      \strng{authorbibnamehash}{5b3ff80030418207cdd5756912287da3}
+      \strng{authornamehash}{5683aecbbdfe106e64cf9e667351ba26}
+      \strng{authorfullhash}{5b3ff80030418207cdd5756912287da3}
+      \strng{authorfullhashraw}{5b3ff80030418207cdd5756912287da3}
+      \field{sortinit}{J}
+      \field{sortinithash}{b2f54a9081ace9966a7cb9413811edb4}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{howpublished}{Internet Engineering Task Force}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{{RFC 7519}: JSON Web Token ({JWT})}
+      \field{year}{2015}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://datatracker.ietf.org/doc/html/rfc7519
+      \endverb
+      \verb{url}
+      \verb https://datatracker.ietf.org/doc/html/rfc7519
+      \endverb
+    \endentry
+    \entry{react_docs}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=350a86b0327152e3a50596538f38a5db}{%
+           family={{Meta Platforms, Inc.}},
+           familyi={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{350a86b0327152e3a50596538f38a5db}
+      \strng{fullhash}{350a86b0327152e3a50596538f38a5db}
+      \strng{fullhashraw}{350a86b0327152e3a50596538f38a5db}
+      \strng{bibnamehash}{350a86b0327152e3a50596538f38a5db}
+      \strng{authorbibnamehash}{350a86b0327152e3a50596538f38a5db}
+      \strng{authornamehash}{350a86b0327152e3a50596538f38a5db}
+      \strng{authorfullhash}{350a86b0327152e3a50596538f38a5db}
+      \strng{authorfullhashraw}{350a86b0327152e3a50596538f38a5db}
+      \field{sortinit}{M}
+      \field{sortinithash}{4625c616857f13d17ce56f7d4f97d451}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{React -- A JavaScript Library for Building User Interfaces}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://react.dev
+      \endverb
+      \verb{url}
+      \verb https://react.dev
+      \endverb
+    \endentry
+    \entry{redis_docs}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=5931ee9e163586335d0830f3e4a0df39}{%
+           family={{Redis Ltd.}},
+           familyi={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{fullhash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{fullhashraw}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{bibnamehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authorbibnamehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authornamehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authorfullhash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authorfullhashraw}{5931ee9e163586335d0830f3e4a0df39}
+      \field{sortinit}{R}
+      \field{sortinithash}{5e1c39a9d46ffb6bebd8f801023a9486}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{Redis Documentation}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://redis.io/docs
+      \endverb
+      \verb{url}
+      \verb https://redis.io/docs
+      \endverb
+    \endentry
+    \entry{postgresql_docs}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=917cf2b2062aec0c604dbecc106084cd}{%
+           family={{The PostgreSQL Global Development Group}},
+           familyi={T\bibinitperiod}}}%
+      }
+      \strng{namehash}{917cf2b2062aec0c604dbecc106084cd}
+      \strng{fullhash}{917cf2b2062aec0c604dbecc106084cd}
+      \strng{fullhashraw}{917cf2b2062aec0c604dbecc106084cd}
+      \strng{bibnamehash}{917cf2b2062aec0c604dbecc106084cd}
+      \strng{authorbibnamehash}{917cf2b2062aec0c604dbecc106084cd}
+      \strng{authornamehash}{917cf2b2062aec0c604dbecc106084cd}
+      \strng{authorfullhash}{917cf2b2062aec0c604dbecc106084cd}
+      \strng{authorfullhashraw}{917cf2b2062aec0c604dbecc106084cd}
+      \field{sortinit}{T}
+      \field{sortinithash}{9af77f0292593c26bde9a56e688eaee9}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{PostgreSQL 16 Documentation}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://www.postgresql.org/docs/16/
+      \endverb
+      \verb{url}
+      \verb https://www.postgresql.org/docs/16/
+      \endverb
+    \endentry
+    \entry{prometheus_docs}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=df667deb01f96ee2ad7887388f9c2a0e}{%
+           family={{The Prometheus Authors}},
+           familyi={T\bibinitperiod}}}%
+      }
+      \strng{namehash}{df667deb01f96ee2ad7887388f9c2a0e}
+      \strng{fullhash}{df667deb01f96ee2ad7887388f9c2a0e}
+      \strng{fullhashraw}{df667deb01f96ee2ad7887388f9c2a0e}
+      \strng{bibnamehash}{df667deb01f96ee2ad7887388f9c2a0e}
+      \strng{authorbibnamehash}{df667deb01f96ee2ad7887388f9c2a0e}
+      \strng{authornamehash}{df667deb01f96ee2ad7887388f9c2a0e}
+      \strng{authorfullhash}{df667deb01f96ee2ad7887388f9c2a0e}
+      \strng{authorfullhashraw}{df667deb01f96ee2ad7887388f9c2a0e}
+      \field{sortinit}{T}
+      \field{sortinithash}{9af77f0292593c26bde9a56e688eaee9}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{Prometheus -- Monitoring System and Time Series Database}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://prometheus.io/docs
+      \endverb
+      \verb{url}
+      \verb https://prometheus.io/docs
+      \endverb
+    \endentry
+    \entry{spring_boot_in_action}{book}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=229fc5bee84302022868b790118e1d78}{%
+           family={Walls},
+           familyi={W\bibinitperiod},
+           given={Craig},
+           giveni={C\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{location}{1}{%
+        {Shelter Island, NY}%
+      }
+      \list{publisher}{1}{%
+        {Manning Publications}%
+      }
+      \strng{namehash}{229fc5bee84302022868b790118e1d78}
+      \strng{fullhash}{229fc5bee84302022868b790118e1d78}
+      \strng{fullhashraw}{229fc5bee84302022868b790118e1d78}
+      \strng{bibnamehash}{229fc5bee84302022868b790118e1d78}
+      \strng{authorbibnamehash}{229fc5bee84302022868b790118e1d78}
+      \strng{authornamehash}{229fc5bee84302022868b790118e1d78}
+      \strng{authorfullhash}{229fc5bee84302022868b790118e1d78}
+      \strng{authorfullhashraw}{229fc5bee84302022868b790118e1d78}
+      \field{sortinit}{W}
+      \field{sortinithash}{4315d78024d0cea9b57a0c6f0e35ed0d}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Spring Boot in Action}
+      \field{year}{2016}
+      \true{nocite}
+    \endentry
+    \entry{online_judge_survey}{article}{}{}
+      \name{author}{5}{}{%
+        {{un=0,uniquepart=base,hash=65fb54eba8c7b8b30b1bf19d4d180fad}{%
+           family={Wasik},
+           familyi={W\bibinitperiod},
+           given={Szymon},
+           giveni={S\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=812ae563464d056cd68f3971ef4e44c6}{%
+           family={Antczak},
+           familyi={A\bibinitperiod},
+           given={Maciej},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=12ebe9e15800bea0eebdfe001a5692c6}{%
+           family={Badura},
+           familyi={B\bibinitperiod},
+           given={Jan},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=24ec911fbb5e33f6e7875b2602c9fe60}{%
+           family={Laskowski},
+           familyi={L\bibinitperiod},
+           given={Artur},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=a5faf846046065be51d02664ff209c3b}{%
+           family={Sternal},
+           familyi={S\bibinitperiod},
+           given={Tomasz},
+           giveni={T\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{publisher}{1}{%
+        {ACM}%
+      }
+      \strng{namehash}{9902ca64251b533665532209fa267ca8}
+      \strng{fullhash}{7f657396af16c82d2005a4f7bca683f2}
+      \strng{fullhashraw}{7f657396af16c82d2005a4f7bca683f2}
+      \strng{bibnamehash}{7f657396af16c82d2005a4f7bca683f2}
+      \strng{authorbibnamehash}{7f657396af16c82d2005a4f7bca683f2}
+      \strng{authornamehash}{9902ca64251b533665532209fa267ca8}
+      \strng{authorfullhash}{7f657396af16c82d2005a4f7bca683f2}
+      \strng{authorfullhashraw}{7f657396af16c82d2005a4f7bca683f2}
+      \field{sortinit}{W}
+      \field{sortinithash}{4315d78024d0cea9b57a0c6f0e35ed0d}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{ACM Computing Surveys}
+      \field{number}{1}
+      \field{title}{A Survey on Online Judge Systems and Their Applications}
+      \field{volume}{51}
+      \field{year}{2018}
+      \true{nocite}
+      \field{pages}{1\bibrangedash 34}
+      \range{pages}{34}
+    \endentry
+  \enddatalist
+  \datalist[entry]{nyt/global//global/global/global}
+    \entry{aws_s3}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=3eb2c1a57a8160029f036e3dcbf84bf1}{%
+           family={{Amazon Web Services}},
+           familyi={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \strng{fullhash}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \strng{fullhashraw}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \strng{bibnamehash}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \strng{authorbibnamehash}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \strng{authornamehash}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \strng{authorfullhash}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \strng{authorfullhashraw}{3eb2c1a57a8160029f036e3dcbf84bf1}
+      \field{sortinit}{A}
+      \field{sortinithash}{2f401846e2029bad6b3ecc16d50031e2}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{Amazon S3 -- Object Storage Built to Retrieve Any Amount of Data}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://aws.amazon.com/s3
+      \endverb
+      \verb{url}
+      \verb https://aws.amazon.com/s3
+      \endverb
+    \endentry
+    \entry{docker_docs}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=4bd3b392874c74fba4ed57a24eae0ac1}{%
+           family={{Docker Inc.}},
+           familyi={D\bibinitperiod}}}%
+      }
+      \strng{namehash}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \strng{fullhash}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \strng{fullhashraw}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \strng{bibnamehash}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \strng{authorbibnamehash}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \strng{authornamehash}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \strng{authorfullhash}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \strng{authorfullhashraw}{4bd3b392874c74fba4ed57a24eae0ac1}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{Docker Documentation}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://docs.docker.com
+      \endverb
+      \verb{url}
+      \verb https://docs.docker.com
+      \endverb
+    \endentry
+    \entry{judge0}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=6aa295755c8fa52dca86c500463bea41}{%
+           family={Došilović},
+           familyi={D\bibinitperiod},
+           given={Herman\bibnamedelima Zvonimir},
+           giveni={H\bibinitperiod\bibinitdelim Z\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{6aa295755c8fa52dca86c500463bea41}
+      \strng{fullhash}{6aa295755c8fa52dca86c500463bea41}
+      \strng{fullhashraw}{6aa295755c8fa52dca86c500463bea41}
+      \strng{bibnamehash}{6aa295755c8fa52dca86c500463bea41}
+      \strng{authorbibnamehash}{6aa295755c8fa52dca86c500463bea41}
+      \strng{authornamehash}{6aa295755c8fa52dca86c500463bea41}
+      \strng{authorfullhash}{6aa295755c8fa52dca86c500463bea41}
+      \strng{authorfullhashraw}{6aa295755c8fa52dca86c500463bea41}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{Judge0: Open-Source Online Judge System}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://judge0.com
+      \endverb
+      \verb{url}
+      \verb https://judge0.com
+      \endverb
+    \endentry
+    \entry{grafana_docs}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=92d1002bbeda9145e9369766ab6d96a9}{%
+           family={{Grafana Labs}},
+           familyi={G\bibinitperiod}}}%
+      }
+      \strng{namehash}{92d1002bbeda9145e9369766ab6d96a9}
+      \strng{fullhash}{92d1002bbeda9145e9369766ab6d96a9}
+      \strng{fullhashraw}{92d1002bbeda9145e9369766ab6d96a9}
+      \strng{bibnamehash}{92d1002bbeda9145e9369766ab6d96a9}
+      \strng{authorbibnamehash}{92d1002bbeda9145e9369766ab6d96a9}
+      \strng{authornamehash}{92d1002bbeda9145e9369766ab6d96a9}
+      \strng{authorfullhash}{92d1002bbeda9145e9369766ab6d96a9}
+      \strng{authorfullhashraw}{92d1002bbeda9145e9369766ab6d96a9}
+      \field{sortinit}{G}
+      \field{sortinithash}{32d67eca0634bf53703493fb1090a2e8}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{Grafana Documentation}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://grafana.com/docs
+      \endverb
+      \verb{url}
+      \verb https://grafana.com/docs
+      \endverb
+    \endentry
+    \entry{jwt_spec}{misc}{}{}
+      \name{author}{3}{}{%
+        {{un=0,uniquepart=base,hash=3656094aa90ce6b5927293e625dedee3}{%
+           family={Jones},
+           familyi={J\bibinitperiod},
+           given={M.},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=3ac7ec83304c92610359a406f07ad45a}{%
+           family={Bradley},
+           familyi={B\bibinitperiod},
+           given={J.},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=2764fe7207c045fdc85a76e2d51203a3}{%
+           family={Sakimura},
+           familyi={S\bibinitperiod},
+           given={N.},
+           giveni={N\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{5683aecbbdfe106e64cf9e667351ba26}
+      \strng{fullhash}{5b3ff80030418207cdd5756912287da3}
+      \strng{fullhashraw}{5b3ff80030418207cdd5756912287da3}
+      \strng{bibnamehash}{5b3ff80030418207cdd5756912287da3}
+      \strng{authorbibnamehash}{5b3ff80030418207cdd5756912287da3}
+      \strng{authornamehash}{5683aecbbdfe106e64cf9e667351ba26}
+      \strng{authorfullhash}{5b3ff80030418207cdd5756912287da3}
+      \strng{authorfullhashraw}{5b3ff80030418207cdd5756912287da3}
+      \field{sortinit}{J}
+      \field{sortinithash}{b2f54a9081ace9966a7cb9413811edb4}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{howpublished}{Internet Engineering Task Force}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{{RFC 7519}: JSON Web Token ({JWT})}
+      \field{year}{2015}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://datatracker.ietf.org/doc/html/rfc7519
+      \endverb
+      \verb{url}
+      \verb https://datatracker.ietf.org/doc/html/rfc7519
+      \endverb
+    \endentry
+    \entry{react_docs}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=350a86b0327152e3a50596538f38a5db}{%
+           family={{Meta Platforms, Inc.}},
+           familyi={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{350a86b0327152e3a50596538f38a5db}
+      \strng{fullhash}{350a86b0327152e3a50596538f38a5db}
+      \strng{fullhashraw}{350a86b0327152e3a50596538f38a5db}
+      \strng{bibnamehash}{350a86b0327152e3a50596538f38a5db}
+      \strng{authorbibnamehash}{350a86b0327152e3a50596538f38a5db}
+      \strng{authornamehash}{350a86b0327152e3a50596538f38a5db}
+      \strng{authorfullhash}{350a86b0327152e3a50596538f38a5db}
+      \strng{authorfullhashraw}{350a86b0327152e3a50596538f38a5db}
+      \field{sortinit}{M}
+      \field{sortinithash}{4625c616857f13d17ce56f7d4f97d451}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{React -- A JavaScript Library for Building User Interfaces}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://react.dev
+      \endverb
+      \verb{url}
+      \verb https://react.dev
+      \endverb
+    \endentry
+    \entry{redis_docs}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=5931ee9e163586335d0830f3e4a0df39}{%
+           family={{Redis Ltd.}},
+           familyi={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{fullhash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{fullhashraw}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{bibnamehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authorbibnamehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authornamehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authorfullhash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authorfullhashraw}{5931ee9e163586335d0830f3e4a0df39}
+      \field{sortinit}{R}
+      \field{sortinithash}{5e1c39a9d46ffb6bebd8f801023a9486}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{Redis Documentation}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://redis.io/docs
+      \endverb
+      \verb{url}
+      \verb https://redis.io/docs
+      \endverb
+    \endentry
+    \entry{postgresql_docs}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=917cf2b2062aec0c604dbecc106084cd}{%
+           family={{The PostgreSQL Global Development Group}},
+           familyi={T\bibinitperiod}}}%
+      }
+      \strng{namehash}{917cf2b2062aec0c604dbecc106084cd}
+      \strng{fullhash}{917cf2b2062aec0c604dbecc106084cd}
+      \strng{fullhashraw}{917cf2b2062aec0c604dbecc106084cd}
+      \strng{bibnamehash}{917cf2b2062aec0c604dbecc106084cd}
+      \strng{authorbibnamehash}{917cf2b2062aec0c604dbecc106084cd}
+      \strng{authornamehash}{917cf2b2062aec0c604dbecc106084cd}
+      \strng{authorfullhash}{917cf2b2062aec0c604dbecc106084cd}
+      \strng{authorfullhashraw}{917cf2b2062aec0c604dbecc106084cd}
+      \field{sortinit}{T}
+      \field{sortinithash}{9af77f0292593c26bde9a56e688eaee9}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{PostgreSQL 16 Documentation}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://www.postgresql.org/docs/16/
+      \endverb
+      \verb{url}
+      \verb https://www.postgresql.org/docs/16/
+      \endverb
+    \endentry
+    \entry{prometheus_docs}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=df667deb01f96ee2ad7887388f9c2a0e}{%
+           family={{The Prometheus Authors}},
+           familyi={T\bibinitperiod}}}%
+      }
+      \strng{namehash}{df667deb01f96ee2ad7887388f9c2a0e}
+      \strng{fullhash}{df667deb01f96ee2ad7887388f9c2a0e}
+      \strng{fullhashraw}{df667deb01f96ee2ad7887388f9c2a0e}
+      \strng{bibnamehash}{df667deb01f96ee2ad7887388f9c2a0e}
+      \strng{authorbibnamehash}{df667deb01f96ee2ad7887388f9c2a0e}
+      \strng{authornamehash}{df667deb01f96ee2ad7887388f9c2a0e}
+      \strng{authorfullhash}{df667deb01f96ee2ad7887388f9c2a0e}
+      \strng{authorfullhashraw}{df667deb01f96ee2ad7887388f9c2a0e}
+      \field{sortinit}{T}
+      \field{sortinithash}{9af77f0292593c26bde9a56e688eaee9}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 01/03/2026}
+      \field{title}{Prometheus -- Monitoring System and Time Series Database}
+      \field{year}{2024}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://prometheus.io/docs
+      \endverb
+      \verb{url}
+      \verb https://prometheus.io/docs
+      \endverb
+    \endentry
+    \entry{spring_boot_in_action}{book}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=229fc5bee84302022868b790118e1d78}{%
+           family={Walls},
+           familyi={W\bibinitperiod},
+           given={Craig},
+           giveni={C\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{location}{1}{%
+        {Shelter Island, NY}%
+      }
+      \list{publisher}{1}{%
+        {Manning Publications}%
+      }
+      \strng{namehash}{229fc5bee84302022868b790118e1d78}
+      \strng{fullhash}{229fc5bee84302022868b790118e1d78}
+      \strng{fullhashraw}{229fc5bee84302022868b790118e1d78}
+      \strng{bibnamehash}{229fc5bee84302022868b790118e1d78}
+      \strng{authorbibnamehash}{229fc5bee84302022868b790118e1d78}
+      \strng{authornamehash}{229fc5bee84302022868b790118e1d78}
+      \strng{authorfullhash}{229fc5bee84302022868b790118e1d78}
+      \strng{authorfullhashraw}{229fc5bee84302022868b790118e1d78}
+      \field{sortinit}{W}
+      \field{sortinithash}{4315d78024d0cea9b57a0c6f0e35ed0d}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Spring Boot in Action}
+      \field{year}{2016}
+      \true{nocite}
+    \endentry
+    \entry{online_judge_survey}{article}{}{}
+      \name{author}{5}{}{%
+        {{un=0,uniquepart=base,hash=65fb54eba8c7b8b30b1bf19d4d180fad}{%
+           family={Wasik},
+           familyi={W\bibinitperiod},
+           given={Szymon},
+           giveni={S\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=812ae563464d056cd68f3971ef4e44c6}{%
+           family={Antczak},
+           familyi={A\bibinitperiod},
+           given={Maciej},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=12ebe9e15800bea0eebdfe001a5692c6}{%
+           family={Badura},
+           familyi={B\bibinitperiod},
+           given={Jan},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=24ec911fbb5e33f6e7875b2602c9fe60}{%
+           family={Laskowski},
+           familyi={L\bibinitperiod},
+           given={Artur},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=a5faf846046065be51d02664ff209c3b}{%
+           family={Sternal},
+           familyi={S\bibinitperiod},
+           given={Tomasz},
+           giveni={T\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{publisher}{1}{%
+        {ACM}%
+      }
+      \strng{namehash}{9902ca64251b533665532209fa267ca8}
+      \strng{fullhash}{7f657396af16c82d2005a4f7bca683f2}
+      \strng{fullhashraw}{7f657396af16c82d2005a4f7bca683f2}
+      \strng{bibnamehash}{7f657396af16c82d2005a4f7bca683f2}
+      \strng{authorbibnamehash}{7f657396af16c82d2005a4f7bca683f2}
+      \strng{authornamehash}{9902ca64251b533665532209fa267ca8}
+      \strng{authorfullhash}{7f657396af16c82d2005a4f7bca683f2}
+      \strng{authorfullhashraw}{7f657396af16c82d2005a4f7bca683f2}
+      \field{sortinit}{W}
+      \field{sortinithash}{4315d78024d0cea9b57a0c6f0e35ed0d}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{ACM Computing Surveys}
+      \field{number}{1}
+      \field{title}{A Survey on Online Judge Systems and Their Applications}
+      \field{volume}{51}
+      \field{year}{2018}
+      \true{nocite}
+      \field{pages}{1\bibrangedash 34}
+      \range{pages}{34}
+    \endentry
+  \enddatalist
+\endrefsection
 \endinput
 

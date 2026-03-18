@@ -1,5 +1,6 @@
 package com.oj.TDTUOJ.submission.service;
 
+import com.oj.TDTUOJ.submission.dto.SubmissionJobDTO;
 import com.oj.TDTUOJ.userdailyactivity.service.UserActivityService;
 import com.oj.TDTUOJ.common.aws.AwsS3Service;
 import com.oj.TDTUOJ.common.enums.SubmissionStatus;
@@ -35,23 +36,30 @@ import java.util.List;
 @Slf4j
 public class SubmissionServiceImpl implements SubmissionService {
 
-    private final SubmissionRepository submissionRepository;
-    private final UserService userService;
-    private final ModelMapper modelMapper;
-    private final ProblemRepository problemRepository;
-    private final Judge0Service judge0Service;
-    private final AwsS3Service awsS3Service;
-    private final UserActivityService userActivityService;
-    private final UserStatisticsService userStatisticsService;
+    private final SubmissionRepository   submissionRepository;
+    private final UserService            userService;
+    private final ModelMapper            modelMapper;
+    private final ProblemRepository      problemRepository;
+    private final SubmissionQueueService submissionQueueService;
 
     @Override
     public Response<SubmissionDTO> createSubmission(SubmissionDTO submissionDTO) {
         User currentUser = userService.getCurrentLoggedInUser();
 
+        // 1. Rate limit check — one submission per cooldown window
+        if (submissionQueueService.isOnCooldown(currentUser.getId())) {
+            return Response.<SubmissionDTO>builder()
+                    .statusCode(HttpStatus.TOO_MANY_REQUESTS.value())
+                    .message("Please wait " + submissionQueueService.getCooldownSeconds()
+                            + " seconds before submitting again")
+                    .data(null)
+                    .build();
+        }
+
         Problem problem = problemRepository.findById(submissionDTO.getProblemId())
                 .orElseThrow(() -> new NotFoundException("Problem not found"));
 
-        // 1. Save as PENDING first
+        // 2. Save as PENDING immediately
         Submission submission = Submission.builder()
                 .sourceCode(submissionDTO.getSourceCode())
                 .submissionLanguage(submissionDTO.getSubmissionLanguage())
@@ -64,91 +72,51 @@ public class SubmissionServiceImpl implements SubmissionService {
                 .build();
         submission = submissionRepository.save(submission);
 
-        // 2. Run against every test case
-        List<TestCase> testCases = problem.getTestCases();
-        int passed = 0;
-        SubmissionVerdict finalVerdict = SubmissionVerdict.AC;
-        String errorMessage = null;
-        double maxTime = 0;
-        int maxMemory = 0;
+        // 3. Push to Redis queue — worker picks it up asynchronously
+        SubmissionJobDTO job = SubmissionJobDTO.builder()
+                .submissionId(submission.getId())
+                .problemId(problem.getId())
+                .userId(currentUser.getId())
+                .contestId(submissionDTO.getContestId())
+                .sourceCode(submissionDTO.getSourceCode())
+                .submissionLanguage(submissionDTO.getSubmissionLanguage())
+                .isPublic(submissionDTO.getIsPublic())
+                .build();
+        submissionQueueService.enqueue(job);
 
-        for (TestCase tc : testCases) {
-            // Fetch actual content from S3
-            String input          = awsS3Service.readFileContent(tc.getInputFileUrl());
-            String expectedOutput = awsS3Service.readFileContent(tc.getExpectedOutputFileUrl());
+        // 4. Start cooldown for this user
+        submissionQueueService.setCooldown(currentUser.getId());
 
-            Judge0Result result = judge0Service.judge(
-                    submissionDTO.getSourceCode(),
-                    submissionDTO.getSubmissionLanguage(),
-                    input,
-                    expectedOutput,
-                    tc.getTimeLimit() != null ? tc.getTimeLimit() : problem.getTimeLimit(),
-                    tc.getMemoryLimit() != null ? tc.getMemoryLimit() : problem.getMemoryLimit()
-            );
-
-
-            if (result.executionTime() != null)
-                maxTime = Math.max(maxTime, result.executionTime());
-            if (result.memoryUsed() != null)
-                maxMemory = Math.max(maxMemory, result.memoryUsed());
-
-            if (result.verdict() == SubmissionVerdict.AC) {
-                passed++;
-            } else {
-                finalVerdict = result.verdict();
-                errorMessage = result.errorMessage();
-                break; // stop on first failure
-            }
-        }
-
-        // 3. Update with real Judge0 results
-        submission.setSubmissionVerdict(finalVerdict);
-        submission.setSubmissionStatus(SubmissionStatus.COMPLETED);
-        submission.setTestCasesPassed(passed);
-        submission.setTotalTestCases(testCases.size());
-        submission.setExecutionTime((int)(maxTime * 1000)); // seconds → ms
-        submission.setMemoryUsed((double) maxMemory);
-        submission.setErrorMessage(errorMessage);
-        submissionRepository.save(submission);
-
-        // 4. Record activity and statistics
-        boolean isAccepted = finalVerdict == SubmissionVerdict.AC;
-        boolean isPractice = submissionDTO.getContestId() == null;
-
-        userActivityService.recordSubmission(currentUser.getId());
-
-        int earnedPoints = 0;
-        if (isAccepted) {
-            // Exclude the submission we just saved so it doesn't count against itself.
-            // This also tightens the simultaneous-submit race window to a single row.
-            long priorAcCount = submissionRepository
-                    .countByUserIdAndProblemIdAndSubmissionVerdictAndIdNot(
-                            currentUser.getId(), problem.getId(), SubmissionVerdict.AC, submission.getId()
-                    );
-
-            if (priorAcCount == 0) {
-                earnedPoints = isPractice
-                        ? problem.getPoint()
-                        : (int)(problem.getPoint() * 1.5);
-                userStatisticsService.recordProblemSolved(currentUser.getId());
-            }
-        }
-
-        userStatisticsService.recordSubmission(
-                currentUser.getId(),
-                isAccepted,
-                earnedPoints,
-                isPractice
-        );
-
-        // 5. Build response
+        // 5. Return immediately with PENDING status + queue position
         SubmissionDTO responseDTO = modelMapper.map(submission, SubmissionDTO.class);
         responseDTO.setProblemId(problem.getId());
+        responseDTO.setQueuePosition(submissionQueueService.getQueuePosition(submission.getId()));
 
         return Response.<SubmissionDTO>builder()
-                .statusCode(HttpStatus.CREATED.value())
-                .message("Submission judged successfully")
+                .statusCode(HttpStatus.ACCEPTED.value())
+                .message("Submission received, judging in progress")
                 .data(responseDTO)
+                .build();
+    }
+
+    @Override
+    public Response<SubmissionDTO> getSubmissionStatus(Long id) {
+        Submission submission = submissionRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Submission not found"));
+
+        // 1. Map base fields
+        SubmissionDTO dto = modelMapper.map(submission, SubmissionDTO.class);
+        dto.setProblemId(submission.getProblem() != null ? submission.getProblem().getId() : null);
+
+        // 2. Only PENDING submissions have a queue position
+        if (submission.getSubmissionStatus() == SubmissionStatus.PENDING) {
+            dto.setQueuePosition(submissionQueueService.getQueuePosition(id));
+        }
+
+        return Response.<SubmissionDTO>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Submission status retrieved successfully")
+                .data(dto)
                 .build();
     }
 

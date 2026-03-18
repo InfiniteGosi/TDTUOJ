@@ -310,6 +310,14 @@ export default class ApiService {
     return resp.data; // Response<Page<SubmissionDTO>>
   }
 
+  static async getSubmissionStatus(submissionId) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/submissions/${submissionId}/status`,
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
   // ─── Judge0 ──────────────────────────────────────────────────────────────────
 
   static async executeCode(languageId, sourceCode, stdin, expectedOutput) {
@@ -339,10 +347,15 @@ export default class ApiService {
   }
 
   // ─── Visualizer ─────────────────────────────────────────────────────────────
-  static async visualize({ sourceCode, language, stdin = "" }) {
+  static async visualize({
+    sourceCode,
+    language,
+    stdin = "",
+    mode = "MANUAL",
+  }) {
     const resp = await axios.post(
       `${this.BASE_URL}/visualize`,
-      { sourceCode, language, stdin },
+      { sourceCode, language, stdin, mode },
       { headers: this.getHeader() },
     );
     return resp.data; // Response<VisualizerResponse>

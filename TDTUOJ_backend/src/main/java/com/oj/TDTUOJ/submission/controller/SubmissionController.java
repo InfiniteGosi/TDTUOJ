@@ -20,7 +20,15 @@ public class SubmissionController {
     public ResponseEntity<Response<SubmissionDTO>> createSubmission(
             @RequestBody SubmissionDTO submissionDTO
     ) {
-        return ResponseEntity.ok(submissionService.createSubmission(submissionDTO));
+        Response<SubmissionDTO> response = submissionService.createSubmission(submissionDTO);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    @GetMapping("/{id}/status")
+    public ResponseEntity<Response<SubmissionDTO>> getSubmissionStatus(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(submissionService.getSubmissionStatus(id));
     }
 
     @GetMapping("/me")

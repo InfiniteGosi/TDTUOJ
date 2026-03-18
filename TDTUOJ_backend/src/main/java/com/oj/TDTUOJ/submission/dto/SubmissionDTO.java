@@ -42,4 +42,6 @@ public class SubmissionDTO {
     private Long userId;
 
     private Long contestId;
+
+    private Integer queuePosition;
 }

@@ -6,8 +6,10 @@ import org.springframework.data.domain.Page;
 
 public interface SubmissionService {
     Response<SubmissionDTO> createSubmission(SubmissionDTO submissionDTO);
-    
+
     Response<Page<SubmissionDTO>> getMySubmissions(Integer limit,
                                                    Integer offset,
                                                    Long problemId);
+
+    Response<SubmissionDTO> getSubmissionStatus(Long id);
 }

@@ -256,6 +256,8 @@ const ProblemDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState(null);
+  const [pollingId, setPollingId] = useState(null);
+  const [queuePosition, setQueuePosition] = useState(null);
   const [activeTab, setActiveTab] = useState("description");
   const [viewingSubmission, setViewingSubmission] = useState(null);
   const [verdictFilter, setVerdictFilter] = useState(null);
@@ -326,6 +328,7 @@ const ProblemDetailsPage = () => {
   };
 
   const handleSubmit = async () => {
+    if (submitting) return;
     if (!codeEditorRef.current) return;
     const { code, language } = codeEditorRef.current.getCodeAndLanguage();
     if (!code?.trim()) {
@@ -335,8 +338,10 @@ const ProblemDetailsPage = () => {
 
     setSubmitting(true);
     setResults(null);
+    setQueuePosition(null);
 
     try {
+      // 1. POST submission — returns immediately with PENDING
       const resp = await ApiService.createSubmission({
         sourceCode: code,
         submissionLanguage: mapEditorLanguageToSubmissionLanguage(language),
@@ -346,40 +351,72 @@ const ProblemDetailsPage = () => {
       });
 
       const sub = resp.data;
-      const allPassed = sub.submissionVerdict === "AC";
-
-      // Update solved badge or attempted badge immediately on AC
-      if (allPassed && !problem?.solved) {
-        setProblem((prev) => ({ ...prev, solved: true, attempted: false }));
-      } else if (!allPassed) {
-        setProblem((prev) => ({ ...prev, attempted: true }));
-      }
-
-      setResults({
-        allPassed,
-        passedCount: sub.testCasesPassed ?? 0,
-        totalCount: sub.totalTestCases ?? testCases.length,
-        verdict: sub.submissionVerdict,
-        errorMessage: sub.errorMessage,
-        executionTime: sub.executionTime,
-        memoryUsed: sub.memoryUsed,
-      });
-
+      setQueuePosition(sub.queuePosition ?? null);
       setActiveTab("results");
-      showMessage(
-        allPassed
-          ? "All test cases passed! 🎉"
-          : `${sub.testCasesPassed}/${sub.totalTestCases} test cases passed — ${sub.submissionVerdict}`,
-        allPassed ? "success" : "warning",
-      );
 
-      if (submissionsLoaded) {
-        await fetchSubmissions();
-      }
+      // 2. Poll /status every 2s until COMPLETED
+      const intervalId = setInterval(async () => {
+        try {
+          const statusResp = await ApiService.getSubmissionStatus(sub.id);
+          const updated = statusResp.data;
+
+          if (updated.submissionStatus === "PENDING") {
+            setQueuePosition(updated.queuePosition ?? null);
+          } else if (updated.submissionStatus === "RUNNING") {
+            setQueuePosition(null); // no longer in queue
+          } else if (updated.submissionStatus === "COMPLETED") {
+            clearInterval(intervalId);
+            setPollingId(null);
+            setSubmitting(false);
+            setQueuePosition(null);
+
+            const allPassed = updated.submissionVerdict === "AC";
+
+            if (allPassed && !problem?.solved) {
+              setProblem((prev) => ({
+                ...prev,
+                solved: true,
+                attempted: false,
+              }));
+            } else if (!allPassed) {
+              setProblem((prev) => ({ ...prev, attempted: true }));
+            }
+
+            setResults({
+              allPassed,
+              passedCount: updated.testCasesPassed ?? 0,
+              totalCount: updated.totalTestCases ?? testCases.length,
+              verdict: updated.submissionVerdict,
+              errorMessage: updated.errorMessage,
+              executionTime: updated.executionTime,
+              memoryUsed: updated.memoryUsed,
+            });
+
+            showMessage(
+              allPassed
+                ? "All test cases passed! 🎉"
+                : `${updated.testCasesPassed}/${updated.totalTestCases} test cases passed — ${updated.submissionVerdict}`,
+              allPassed ? "success" : "warning",
+            );
+
+            if (submissionsLoaded) await fetchSubmissions();
+          }
+        } catch (err) {
+          clearInterval(intervalId);
+          setPollingId(null);
+          setSubmitting(false);
+          showMessage(err.response?.data?.message || err.message, "error");
+        }
+      }, 2000);
+
+      setPollingId(intervalId);
     } catch (error) {
-      showMessage(error.response?.data?.message || error.message, "error");
-    } finally {
       setSubmitting(false);
+      if (error.response?.status === 429) {
+        showMessage("Please wait 5 seconds before submitting again", "warning");
+      } else {
+        showMessage(error.response?.data?.message || error.message, "error");
+      }
     }
   };
 
@@ -423,6 +460,12 @@ const ProblemDetailsPage = () => {
   useEffect(() => {
     fetchProblem();
   }, [slug]);
+
+  useEffect(() => {
+    return () => {
+      if (pollingId) clearInterval(pollingId);
+    };
+  }, [pollingId]);
 
   useEffect(() => {
     if (!isDraggingHint) return;
@@ -469,11 +512,13 @@ const ProblemDetailsPage = () => {
     { id: "description", label: "Description" },
     { id: "testcases", label: `Test Cases (${testCases.length})` },
     { id: "submissions", label: "Submissions" },
-    ...(results
+    ...(results || submitting
       ? [
           {
             id: "results",
-            label: `Results ${results.passedCount}/${results.totalCount}`,
+            label: submitting
+              ? "Judging..."
+              : `Results ${results.passedCount}/${results.totalCount}`,
           },
         ]
       : []),
@@ -1213,76 +1258,126 @@ const ProblemDetailsPage = () => {
                 )}
 
                 {/* ── Results ── */}
-                {activeTab === "results" && results && (
+                {activeTab === "results" && (
                   <VStack align="stretch" gap={3}>
-                    {/* Summary card */}
-                    <Box
-                      p={4}
-                      borderRadius="8px"
-                      bg={results.allPassed ? T.greenDim : T.redDim}
-                      border={`1px solid ${results.allPassed ? T.green + "44" : T.red + "44"}`}
-                      display="flex"
-                      alignItems="center"
-                      gap={3}
-                    >
-                      {results.allPassed ? (
-                        <CheckCircle size={22} color={T.green} />
-                      ) : (
-                        <XCircle size={22} color={T.red} />
-                      )}
-                      <Box>
-                        <Text
-                          fontWeight="700"
-                          fontSize="sm"
-                          color={results.allPassed ? T.green : T.red}
-                        >
-                          {VERDICT_LABEL[results.verdict] ?? results.verdict}
-                        </Text>
-                        <Text fontSize="xs" color={T.textMuted}>
-                          {results.passedCount} / {results.totalCount} test
-                          cases passed
-                        </Text>
-                        {(results.executionTime != null ||
-                          results.memoryUsed != null) && (
-                          <Text fontSize="xs" color={T.textMuted}>
-                            {results.executionTime != null &&
-                              `${results.executionTime} s`}
-                            {results.executionTime != null &&
-                              results.memoryUsed != null &&
-                              " · "}
-                            {results.memoryUsed != null &&
-                              `${results.memoryUsed} KB`}
+                    {/* PENDING: sitting in queue */}
+                    {submitting && queuePosition != null && (
+                      <Box
+                        p={4}
+                        borderRadius="8px"
+                        bg={T.blueDim}
+                        border={`1px solid ${T.blue}44`}
+                        display="flex"
+                        alignItems="center"
+                        gap={3}
+                      >
+                        <Spinner size="sm" color={T.blue} />
+                        <Box>
+                          <Text fontWeight="700" fontSize="sm" color={T.blue}>
+                            Waiting in queue
                           </Text>
-                        )}
-                      </Box>
-                    </Box>
-
-                    {/* CE / runtime error details */}
-                    {results.errorMessage && (
-                      <Box>
-                        <Text
-                          fontSize="xs"
-                          color={T.red}
-                          fontWeight="600"
-                          mb={1}
-                        >
-                          {results.verdict === "CE"
-                            ? "COMPILATION ERROR"
-                            : "ERROR"}
-                        </Text>
-                        <Box
-                          bg={T.redDim}
-                          p={3}
-                          borderRadius="6px"
-                          fontFamily="'JetBrains Mono', monospace"
-                          fontSize="xs"
-                          color={T.red}
-                          whiteSpace="pre-wrap"
-                          border={`1px solid ${T.red}33`}
-                        >
-                          {results.errorMessage}
+                          <Text fontSize="xs" color={T.textMuted}>
+                            Position: {queuePosition}
+                          </Text>
                         </Box>
                       </Box>
+                    )}
+
+                    {/* RUNNING: Judge0 is executing */}
+                    {submitting && queuePosition == null && (
+                      <Box
+                        p={4}
+                        borderRadius="8px"
+                        bg={T.accentDim}
+                        border={`1px solid ${T.accent}44`}
+                        display="flex"
+                        alignItems="center"
+                        gap={3}
+                      >
+                        <Spinner size="sm" color={T.accent} />
+                        <Box>
+                          <Text fontWeight="700" fontSize="sm" color={T.accent}>
+                            Judging...
+                          </Text>
+                          <Text fontSize="xs" color={T.textMuted}>
+                            Running against test cases
+                          </Text>
+                        </Box>
+                      </Box>
+                    )}
+
+                    {/* COMPLETED: show verdict */}
+                    {results && (
+                      <>
+                        <Box
+                          p={4}
+                          borderRadius="8px"
+                          bg={results.allPassed ? T.greenDim : T.redDim}
+                          border={`1px solid ${results.allPassed ? T.green + "44" : T.red + "44"}`}
+                          display="flex"
+                          alignItems="center"
+                          gap={3}
+                        >
+                          {results.allPassed ? (
+                            <CheckCircle size={22} color={T.green} />
+                          ) : (
+                            <XCircle size={22} color={T.red} />
+                          )}
+                          <Box>
+                            <Text
+                              fontWeight="700"
+                              fontSize="sm"
+                              color={results.allPassed ? T.green : T.red}
+                            >
+                              {VERDICT_LABEL[results.verdict] ??
+                                results.verdict}
+                            </Text>
+                            <Text fontSize="xs" color={T.textMuted}>
+                              {results.passedCount} / {results.totalCount} test
+                              cases passed
+                            </Text>
+                            {(results.executionTime != null ||
+                              results.memoryUsed != null) && (
+                              <Text fontSize="xs" color={T.textMuted}>
+                                {results.executionTime != null &&
+                                  `${results.executionTime} ms`}
+                                {results.executionTime != null &&
+                                  results.memoryUsed != null &&
+                                  " · "}
+                                {results.memoryUsed != null &&
+                                  `${results.memoryUsed} KB`}
+                              </Text>
+                            )}
+                          </Box>
+                        </Box>
+
+                        {results.errorMessage && (
+                          <Box>
+                            <Text
+                              fontSize="xs"
+                              color={T.red}
+                              fontWeight="600"
+                              mb={1}
+                            >
+                              {results.verdict === "CE"
+                                ? "COMPILATION ERROR"
+                                : "ERROR"}
+                            </Text>
+                            <Box
+                              bg={T.redDim}
+                              p={3}
+                              borderRadius="6px"
+                              fontFamily="'JetBrains Mono', monospace"
+                              fontSize="xs"
+                              color={T.red}
+                              whiteSpace="pre-wrap"
+                              border={`1px solid ${T.red}33`}
+                            >
+                              {results.errorMessage}
+                            </Box>
+                          </Box>
+                        )}
+                      </>
                     )}
                   </VStack>
                 )}
@@ -1322,6 +1417,7 @@ const ProblemDetailsPage = () => {
                         borderRadius="6px"
                         onClick={handleSubmit}
                         isLoading={submitting}
+                        isDisabled={submitting}
                         loadingText="Running..."
                         _hover={{
                           bg: "#ffb833",
