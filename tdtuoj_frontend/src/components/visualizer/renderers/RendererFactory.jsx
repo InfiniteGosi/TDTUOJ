@@ -1,8 +1,11 @@
 // src/components/visualizer/renderers/RendererFactory.jsx
 import ArrayRenderer from "./ArrayRenderer";
-import TreeRenderer from "./TreeRenderer";
+import TreeRenderer from "./TreeRendererer";
 import GraphRenderer from "./GraphRenderer";
 import LinkedListRenderer from "./LinkedListRenderer";
+import StackRenderer from "./StackRenderer";
+import QueueRenderer from "./QueueRenderer";
+import MatrixRenderer from "./MatrixRenderer";
 
 const T = {
   textMuted: "#888",
@@ -30,16 +33,32 @@ export default function RendererFactory({ frame }) {
   switch (frame.type) {
     case "array":
       return <ArrayRenderer frame={frame} />;
+
     case "tree":
       return <TreeRenderer frame={frame} />;
+
     case "graph":
       return <GraphRenderer frame={frame} />;
+
     case "linkedlist":
     case "linked_list":
     case "list":
       return <LinkedListRenderer frame={frame} />;
+
+    case "stack":
+      return <StackRenderer frame={frame} />;
+
+    case "queue":
+    case "deque":
+      return <QueueRenderer frame={frame} />;
+
+    case "matrix":
+    case "grid":
+    case "board":
+      return <MatrixRenderer frame={frame} />;
+
     default:
-      // Fallback: render raw JSON so user can debug their snapshot() call
+      // Fallback: render raw JSON so the user can debug their snapshot() call
       return (
         <div style={{ padding: 16 }}>
           <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8 }}>

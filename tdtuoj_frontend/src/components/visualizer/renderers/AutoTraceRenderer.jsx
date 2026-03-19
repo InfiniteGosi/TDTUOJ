@@ -1,12 +1,6 @@
 // src/components/visualizer/renderers/AutoTraceRenderer.jsx
-//
-// Used in AUTO mode. Frames look like:
-//   { line, event, function, locals: { varName: value, ... } }
-//
-// C/C++ emit one frame per variable on the same line — we merge them here.
-// Layout: variable table (left) + auto-detected visual (right)
-
 import ArrayRenderer from "./ArrayRenderer";
+import MatrixRenderer from "./MatrixRenderer";
 
 const T = {
   bg: "#0f0f0f",
@@ -23,7 +17,6 @@ const T = {
   red: "#ef4743",
 };
 
-// Variable names commonly used as array indices
 const INDEX_NAMES = new Set([
   "i",
   "j",
@@ -47,25 +40,55 @@ const INDEX_NAMES = new Set([
   "pos",
   "start",
   "end",
+  "row",
+  "col",
+  "x",
+  "y",
 ]);
 
-// ── Merge frames with the same line + function into one locals snapshot ───────
-// C/C++ transformers emit one _Ti()/_Td()/_Tv() per variable per line.
-// This merges them so the renderer sees all variables at once.
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function is1DNumericArray(v) {
+  return (
+    Array.isArray(v) && v.length > 0 && v.every((x) => typeof x === "number")
+  );
+}
+
+function is2DNumericArray(v) {
+  return (
+    Array.isArray(v) &&
+    v.length > 0 &&
+    v.every(
+      (row) => Array.isArray(row) && row.every((x) => typeof x === "number"),
+    )
+  );
+}
+
+// Java emits 2D arrays as a JSON string e.g. "[[1,2],[3,4]]"
+// Try to parse it; return the parsed array or null.
+function tryParseMatrix(v) {
+  if (is2DNumericArray(v)) return v;
+  if (typeof v === "string") {
+    const t = v.trim();
+    if (t.startsWith("[[")) {
+      try {
+        const parsed = JSON.parse(t);
+        if (is2DNumericArray(parsed)) return parsed;
+      } catch (_) {}
+    }
+  }
+  return null;
+}
+
+// ── Frame merging (unchanged from original) ───────────────────────────────────
+
 function mergeLocalsAtStep(frames, step) {
   if (!frames || frames.length === 0) return {};
-
   const current = frames[step];
   if (!current) return {};
-
   const targetLine = current.line;
   const targetFn = current.function;
-
-  // For C (which still emits one var per frame), merge adjacent same-line frames
-  // For C++/Java/Python (one combined frame per line), this just returns that frame's locals
-
-  // Scan backwards — stop after MAX_BURST to avoid collapsing loop iterations
-  const MAX_BURST = 8; // max vars a single line could track
+  const MAX_BURST = 8;
   let blockStart = step;
   let back = 0;
   while (
@@ -77,8 +100,6 @@ function mergeLocalsAtStep(frames, step) {
     blockStart--;
     back++;
   }
-
-  // Scan forwards — same limit
   let blockEnd = step;
   let fwd = 0;
   while (
@@ -90,7 +111,6 @@ function mergeLocalsAtStep(frames, step) {
     blockEnd++;
     fwd++;
   }
-
   const merged = {};
   for (let i = blockStart; i <= blockEnd; i++) {
     Object.assign(merged, frames[i].locals || {});
@@ -99,6 +119,7 @@ function mergeLocalsAtStep(frames, step) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
+
 export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
   if (!frame) {
     return (
@@ -115,26 +136,33 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
     );
   }
 
-  const { line, function: fn, event } = frame;
-
-  // Merge same-line frames for C/C++ which emit one var per frame
+  const { line, function: fn } = frame;
   const locals = mergeLocalsAtStep(frames, step);
+  const prevLocals = step > 0 ? mergeLocalsAtStep(frames, step - 1) : {};
 
-  // ── Detect arrays ──────────────────────────────────────────────────────────
+  const changedKeys = new Set(
+    Object.entries(locals)
+      .filter(([k, v]) => JSON.stringify(v) !== JSON.stringify(prevLocals[k]))
+      .map(([k]) => k),
+  );
+
+  // ── Detect 2D matrices ────────────────────────────────────────────────────
+  const matrixEntries = Object.entries(locals)
+    .map(([k, v]) => [k, tryParseMatrix(v)])
+    .filter(([, v]) => v !== null);
+
+  // ── Detect 1D arrays (exclude anything that is actually a matrix) ──────────
+  const matrixKeys = new Set(matrixEntries.map(([k]) => k));
+
   const arrayEntries = Object.entries(locals)
-    .filter(
-      ([, v]) =>
-        Array.isArray(v) &&
-        v.length > 0 &&
-        v.every((x) => typeof x === "number"),
-    )
+    .filter(([k, v]) => !matrixKeys.has(k) && is1DNumericArray(v))
     .sort(([, a], [, b]) => b.length - a.length);
 
   const mainArray = arrayEntries[0] ?? null;
   const secondaryArrays = arrayEntries.slice(1);
   const arrayLen = mainArray ? mainArray[1].length : 0;
 
-  // ── Detect index variables pointing into main array ────────────────────────
+  // ── Detect index variables ────────────────────────────────────────────────
   const highlighted = Object.entries(locals)
     .filter(
       ([k, v]) =>
@@ -146,7 +174,19 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
     )
     .map(([, v]) => v);
 
-  // ── Compute arr[i] current value for display in variable table ────────────
+  // Detect [row, col] for matrix current cell
+  const rowVar = ["i", "r", "row"].find(
+    (k) => typeof locals[k] === "number" && Number.isInteger(locals[k]),
+  );
+  const colVar = ["j", "c", "col"].find(
+    (k) => typeof locals[k] === "number" && Number.isInteger(locals[k]),
+  );
+  const matrixCurrent =
+    matrixEntries.length > 0 && rowVar && colVar
+      ? [locals[rowVar], locals[colVar]]
+      : null;
+
+  // ── Compute arr[i] display ────────────────────────────────────────────────
   const currentElements = highlighted
     .filter((idx) => mainArray && idx >= 0 && idx < mainArray[1].length)
     .map((idx) => {
@@ -154,29 +194,23 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
         Object.entries(locals).find(
           ([k, v]) => INDEX_NAMES.has(k) && v === idx,
         )?.[0] ?? "i";
-      return {
-        indexVar,
-        index: idx,
-        value: mainArray[1][idx],
-      };
+      return { indexVar, index: idx, value: mainArray[1][idx] };
     });
 
-  // ── Separate scalars from arrays for the variable table ───────────────────
+  // ── Scalars for left panel ────────────────────────────────────────────────
   const scalarEntries = Object.entries(locals).filter(
-    ([, v]) => !Array.isArray(v) && typeof v !== "object" && v !== null,
+    ([k, v]) =>
+      !matrixKeys.has(k) &&
+      !Array.isArray(v) &&
+      typeof v !== "object" &&
+      v !== null,
   );
 
-  // ── Track which variables changed from previous frame ─────────────────────
-  const prevLocals = step > 0 ? mergeLocalsAtStep(frames, step - 1) : {};
-  const changedKeys = new Set(
-    Object.entries(locals)
-      .filter(([k, v]) => JSON.stringify(v) !== JSON.stringify(prevLocals[k]))
-      .map(([k]) => k),
-  );
+  const hasVisual = matrixEntries.length > 0 || mainArray !== null;
 
   return (
     <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
-      {/* ── Left: variable table ────────────────────────────────────────────── */}
+      {/* ── Left: variable table ──────────────────────────────────────────── */}
       <div
         style={{
           width: 220,
@@ -187,7 +221,7 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
           flexDirection: "column",
         }}
       >
-        {/* Line + function + event header */}
+        {/* Header */}
         <div
           style={{
             padding: "8px 12px",
@@ -214,7 +248,6 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
             >
               line {line}
             </div>
-
             {fn && fn !== "<module>" && fn !== "main" && (
               <div
                 style={{
@@ -230,42 +263,10 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
                 {fn}()
               </div>
             )}
-
-            {event === "call" && (
-              <div
-                style={{
-                  fontSize: 9,
-                  color: T.green,
-                  fontFamily: "'JetBrains Mono', monospace",
-                  background: "rgba(44,187,93,0.1)",
-                  border: "1px solid rgba(44,187,93,0.2)",
-                  borderRadius: 3,
-                  padding: "1px 5px",
-                }}
-              >
-                → call
-              </div>
-            )}
-
-            {event === "return" && (
-              <div
-                style={{
-                  fontSize: 9,
-                  color: T.purple,
-                  fontFamily: "'JetBrains Mono', monospace",
-                  background: "rgba(167,139,250,0.1)",
-                  border: "1px solid rgba(167,139,250,0.2)",
-                  borderRadius: 3,
-                  padding: "1px 5px",
-                }}
-              >
-                ← return
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Scalar variables */}
+        {/* Scalars */}
         {scalarEntries.length === 0 && (
           <div
             style={{
@@ -284,7 +285,6 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
           const isHighlight =
             isIndex && typeof v === "number" && highlighted.includes(v);
           const isChanged = changedKeys.has(k);
-
           return (
             <div
               key={k}
@@ -302,7 +302,6 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
                 transition: "background 0.15s",
               }}
             >
-              {/* Changed indicator dot */}
               <div
                 style={{
                   width: 4,
@@ -313,7 +312,6 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
                   marginTop: 1,
                 }}
               />
-
               <span
                 style={{
                   fontSize: 11,
@@ -326,7 +324,6 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
               >
                 {k}
               </span>
-
               <span
                 style={{
                   fontSize: 11,
@@ -334,7 +331,6 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
                   fontFamily: "'JetBrains Mono', monospace",
                   wordBreak: "break-all",
                   fontWeight: isChanged ? 600 : 400,
-                  transition: "color 0.15s",
                 }}
               >
                 {JSON.stringify(v)}
@@ -343,7 +339,7 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
           );
         })}
 
-        {/* arr[i] current value — shown when an index variable points into the array */}
+        {/* arr[i] value rows */}
         {currentElements.map(({ indexVar, index, value }) => (
           <div
             key={`elem_${index}`}
@@ -433,56 +429,63 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
             </span>
           </div>
         ))}
+
+        {/* Matrix name badges */}
+        {matrixEntries.map(([k, v]) => (
+          <div
+            key={k}
+            style={{
+              padding: "4px 12px",
+              borderBottom: `1px solid ${T.border}`,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <div
+              style={{
+                width: 4,
+                height: 4,
+                borderRadius: "50%",
+                flexShrink: 0,
+                background: changedKeys.has(k) ? T.purple : "transparent",
+              }}
+            />
+            <span
+              style={{
+                fontSize: 11,
+                color: T.purple,
+                fontFamily: "'JetBrains Mono', monospace",
+                fontWeight: 600,
+              }}
+            >
+              {k}
+            </span>
+            <span
+              style={{
+                fontSize: 10,
+                color: T.textMuted,
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
+              [{v.length}×{v[0]?.length ?? 0}]
+            </span>
+          </div>
+        ))}
       </div>
 
       {/* ── Right: visual panel ──────────────────────────────────────────────── */}
       <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
-        {mainArray ? (
+        {hasVisual ? (
           <div>
-            {/* Main array label */}
-            <div
-              style={{
-                fontSize: 10,
-                color: T.textMuted,
-                marginBottom: 4,
-                fontFamily: "'JetBrains Mono', monospace",
-                paddingLeft: 8,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                flexWrap: "wrap",
-              }}
-            >
-              <span style={{ color: T.green, fontWeight: 700 }}>
-                {mainArray[0]}
-              </span>
-              <span>[ {mainArray[1].length} ]</span>
-              {highlighted.length > 0 && (
-                <span
-                  style={{
-                    color: T.accent,
-                    background: T.accentDim,
-                    padding: "1px 6px",
-                    borderRadius: 3,
-                    border: `1px solid ${T.accent}44`,
-                  }}
-                >
-                  index → [{highlighted.join(", ")}]
-                </span>
-              )}
-            </div>
-
-            <ArrayRenderer
-              frame={{
-                type: "array",
-                data: mainArray[1],
-                highlighted: highlighted,
-              }}
-            />
-
-            {/* Secondary arrays */}
-            {secondaryArrays.map(([k, v]) => (
-              <div key={k} style={{ marginTop: 20 }}>
+            {/* Matrices first */}
+            {matrixEntries.map(([k, v], idx) => (
+              <div
+                key={k}
+                style={{
+                  marginBottom: idx < matrixEntries.length - 1 ? 24 : 0,
+                }}
+              >
                 <div
                   style={{
                     fontSize: 10,
@@ -493,16 +496,101 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
                     display: "flex",
                     alignItems: "center",
                     gap: 8,
+                    flexWrap: "wrap",
                   }}
                 >
-                  <span style={{ color: T.green, fontWeight: 700 }}>{k}</span>
-                  <span>[ {v.length} ]</span>
+                  <span style={{ color: T.purple, fontWeight: 700 }}>{k}</span>
+                  <span>
+                    [{v.length}×{v[0]?.length ?? 0}]
+                  </span>
+                  {matrixCurrent && (
+                    <span
+                      style={{
+                        color: T.accent,
+                        background: T.accentDim,
+                        padding: "1px 6px",
+                        borderRadius: 3,
+                        border: `1px solid ${T.accent}44`,
+                      }}
+                    >
+                      [{matrixCurrent[0]}][{matrixCurrent[1]}]
+                    </span>
+                  )}
                 </div>
-                <ArrayRenderer
-                  frame={{ type: "array", data: v, highlighted: [] }}
+                <MatrixRenderer
+                  frame={{
+                    type: "matrix",
+                    data: v,
+                    current: matrixCurrent,
+                    label: k,
+                  }}
                 />
               </div>
             ))}
+
+            {/* 1D arrays */}
+            {mainArray && (
+              <div style={{ marginTop: matrixEntries.length > 0 ? 20 : 0 }}>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: T.textMuted,
+                    marginBottom: 4,
+                    fontFamily: "'JetBrains Mono', monospace",
+                    paddingLeft: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span style={{ color: T.green, fontWeight: 700 }}>
+                    {mainArray[0]}
+                  </span>
+                  <span>[ {mainArray[1].length} ]</span>
+                  {highlighted.length > 0 && (
+                    <span
+                      style={{
+                        color: T.accent,
+                        background: T.accentDim,
+                        padding: "1px 6px",
+                        borderRadius: 3,
+                        border: `1px solid ${T.accent}44`,
+                      }}
+                    >
+                      index → [{highlighted.join(", ")}]
+                    </span>
+                  )}
+                </div>
+                <ArrayRenderer
+                  frame={{ type: "array", data: mainArray[1], highlighted }}
+                />
+                {secondaryArrays.map(([k, v]) => (
+                  <div key={k} style={{ marginTop: 20 }}>
+                    <div
+                      style={{
+                        fontSize: 10,
+                        color: T.textMuted,
+                        marginBottom: 4,
+                        fontFamily: "'JetBrains Mono', monospace",
+                        paddingLeft: 8,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <span style={{ color: T.green, fontWeight: 700 }}>
+                        {k}
+                      </span>
+                      <span>[ {v.length} ]</span>
+                    </div>
+                    <ArrayRenderer
+                      frame={{ type: "array", data: v, highlighted: [] }}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div
@@ -525,7 +613,7 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
                 color: T.textMuted,
               }}
             >
-              No numeric array detected
+              No array or matrix detected
             </div>
             <div
               style={{
@@ -537,8 +625,8 @@ export default function AutoTraceRenderer({ frame, frames = [], step = 0 }) {
                 fontFamily: "'JetBrains Mono', monospace",
               }}
             >
-              Variables are shown in the left panel. Arrays appear here
-              automatically once your code declares one.
+              Variables are shown in the left panel. Arrays and matrices appear
+              here automatically once your code declares one.
             </div>
           </div>
         )}

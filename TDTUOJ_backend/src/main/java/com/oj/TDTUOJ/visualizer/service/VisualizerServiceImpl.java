@@ -34,16 +34,13 @@ public class VisualizerServiceImpl implements VisualizerService {
             SubmissionLanguage.CPP,    76
     );
 
-    // ── Public entry point ────────────────────────────────────────────────────
-
     @Override
     public Response<VisualizerResponse> visualize(VisualizerRequest request) {
         validateRequest(request);
 
         VisualizerMode mode = request.getMode();
         if (mode == null) {
-            log.warn("VisualizerRequest.mode is null — defaulting to MANUAL. " +
-                    "Ensure the frontend sends a 'mode' field (\"MANUAL\" or \"AUTO\").");
+            log.warn("VisualizerRequest.mode is null — defaulting to MANUAL.");
             mode = VisualizerMode.MANUAL;
         }
         log.info("Visualizing: language={}, mode={}, codeLength={}", request.getLanguage(),
@@ -74,7 +71,7 @@ public class VisualizerServiceImpl implements VisualizerService {
         body.put("language_id",    LANG_ID.get(language));
         body.put("stdin",          encode(stdin != null ? stdin : ""));
         body.put("cpu_time_limit", 10.0);
-        body.put("memory_limit",   262144);  // KB — same default as Judge0Service (256 MB)
+        body.put("memory_limit",   262144);
 
         return webClientBuilder
                 .baseUrl(judge0Url)
@@ -97,22 +94,19 @@ public class VisualizerServiceImpl implements VisualizerService {
         int statusId = extractStatusId(response);
         log.info("Judge0 visualizer status id: {}", statusId);
 
-        // Compile error
         String compileOutput = decode(response.get("compile_output"));
         if (compileOutput != null && !compileOutput.isBlank()) {
             return error("Compile error:\n" + compileOutput.trim());
         }
 
-        // Runtime error (but still try to parse stdout — partial frames are ok)
         String stderr = decode(response.get("stderr"));
 
-        // TLE
         if (statusId == 5) {
             return error("Time limit exceeded — your algorithm may have too many snapshot() calls or an infinite loop");
         }
 
         String rawStdout = decode(response.get("stdout"));
-        log.info("=== RAW STDOUT ===\n{}", rawStdout);  // ← add this
+        log.info("=== RAW STDOUT ===\n{}", rawStdout);
         log.info("=== STDERR ===\n{}", decode(response.get("stderr")));
         log.info("=== COMPILE OUTPUT ===\n{}", decode(response.get("compile_output")));
 
@@ -130,7 +124,6 @@ public class VisualizerServiceImpl implements VisualizerService {
         int start = rawStdout.indexOf("__FRAMES__");
         int end   = rawStdout.indexOf("__END__");
 
-        // Program ran fine but user never called snapshot()
         if (start == -1 || end == -1) {
             return VisualizerResponse.builder()
                     .frames(Collections.emptyList())
@@ -151,7 +144,6 @@ public class VisualizerServiceImpl implements VisualizerService {
             return VisualizerResponse.builder()
                     .frames(frames)
                     .stdout(userStdout.isBlank() ? null : userStdout)
-                    // surface stderr as a warning if frames still parsed ok
                     .error(stderr != null && !stderr.isBlank() ? stderr.trim() : null)
                     .build();
 
@@ -164,8 +156,6 @@ public class VisualizerServiceImpl implements VisualizerService {
     // ── Instrumentation ───────────────────────────────────────────────────────
 
     private String instrument(String code, SubmissionLanguage lang, VisualizerMode mode) {
-        // Treat null or MANUAL as the manual/custom-snapshot path (original working behaviour).
-        // Only switch to AUTO when explicitly requested.
         if (mode == VisualizerMode.AUTO) {
             return switch (lang) {
                 case PYTHON -> instrumentPythonAuto(code);
@@ -174,7 +164,6 @@ public class VisualizerServiceImpl implements VisualizerService {
                 case CPP    -> instrumentCppAuto(code);
             };
         }
-        // MANUAL (default — also covers null/unrecognised values)
         return switch (lang) {
             case PYTHON -> instrumentPythonManual(code);
             case JAVA   -> instrumentJavaManual(code);
@@ -182,6 +171,69 @@ public class VisualizerServiceImpl implements VisualizerService {
             case CPP    -> instrumentCppManual(code);
         };
     }
+
+    // ── Brace normalizer (shared pre-pass for AUTO mode C / C++ / Java) ───────
+
+    private String addBraces(String code) {
+        code = code.replace("\r\n", "\n").replace("\r", "\n");
+
+        String[] lines = code.split("\n", -1);
+        List<String> out = new ArrayList<>();
+
+        java.util.regex.Pattern controlPat = java.util.regex.Pattern.compile(
+                "^(\\s*)(?:(?:else\\s+if|if|for|while)\\s*\\(.*\\)|else)\\s*$"
+        );
+
+        for (int i = 0; i < lines.length; i++) {
+            String line    = lines[i];
+            String trimmed = line.trim();
+
+            java.util.regex.Matcher m = controlPat.matcher(line);
+            boolean isControl = m.matches()
+                    && !trimmed.startsWith("//")
+                    && !trimmed.startsWith("/*");
+
+            if (isControl && i + 1 < lines.length) {
+                String nextTrimmed = lines[i + 1].trim();
+                if (!nextTrimmed.startsWith("{")) {
+                    // Walk forward past chained braceless control lines to find
+                    // the index of the actual statement body.
+                    int bodyIdx = i + 1;
+                    while (bodyIdx < lines.length) {
+                        String candidate        = lines[bodyIdx];
+                        String candidateTrimmed = candidate.trim();
+                        java.util.regex.Matcher cm = controlPat.matcher(candidate);
+                        boolean candidateIsControl = cm.matches()
+                                && !candidateTrimmed.startsWith("//")
+                                && !candidateTrimmed.startsWith("/*");
+                        if (!candidateIsControl) break;
+                        bodyIdx++;
+                    }
+
+                    if (bodyIdx < lines.length) {
+                        String indent = m.group(1);
+                        out.add(line + " {");
+                        for (int k = i + 1; k <= bodyIdx; k++) {
+                            out.add(lines[k]);
+                        }
+                        out.add(indent + "}");
+                        i = bodyIdx;
+                        continue;
+                    }
+                }
+            }
+
+            out.add(line);
+        }
+
+        String result = String.join("\n", out);
+        if (!result.equals(code)) {
+            return addBraces(result);
+        }
+        return result;
+    }
+
+    // ── AUTO instrumentation ──────────────────────────────────────────────────
 
     private String instrumentPythonAuto(String code) {
         String preamble =
@@ -239,7 +291,6 @@ public class VisualizerServiceImpl implements VisualizerService {
         String currentFunc = "<module>";
         Map<Integer, Integer> loopHeaderLines = new LinkedHashMap<>();
 
-        // Stack of pending snaps — each: [lineNo, indent]
         Deque<int[]>  pendingSnapStack     = new ArrayDeque<>();
         Deque<String> pendingSnapFuncStack = new ArrayDeque<>();
 
@@ -257,9 +308,6 @@ public class VisualizerServiceImpl implements VisualizerService {
 
             boolean isBlockOpener = anyBlockOpener.matcher(line).matches();
 
-            // Fire pending snaps only when:
-            // 1. Current indent is greater than the pending snap's opener indent
-            // 2. Current line is NOT itself a block opener (would leave empty block)
             boolean firedPending = false;
             if (!isBlockOpener && !pendingSnapStack.isEmpty()) {
                 while (!pendingSnapStack.isEmpty()
@@ -271,12 +319,10 @@ public class VisualizerServiceImpl implements VisualizerService {
                 }
             }
 
-            // Skip imports
             if (importLine.matcher(line).matches()) {
                 continue;
             }
 
-            // Function definition
             java.util.regex.Matcher funcM = funcDef.matcher(line);
             if (funcM.find()) {
                 currentFunc = funcM.group(2);
@@ -285,7 +331,6 @@ public class VisualizerServiceImpl implements VisualizerService {
                 continue;
             }
 
-            // For loop
             java.util.regex.Matcher forM = forLoop.matcher(line);
             if (forM.find()) {
                 String vname = forM.group(2);
@@ -299,7 +344,6 @@ public class VisualizerServiceImpl implements VisualizerService {
                 continue;
             }
 
-            // While loop
             java.util.regex.Matcher whileM = whileLoop.matcher(line);
             if (whileM.find()) {
                 loopHeaderLines.put(indent, lineNo);
@@ -309,7 +353,6 @@ public class VisualizerServiceImpl implements VisualizerService {
                 continue;
             }
 
-            // if/elif/else
             java.util.regex.Matcher ifM = ifLine.matcher(line);
             if (ifM.find()) {
                 pendingSnapStack.push(new int[]{lineNo, indent});
@@ -317,14 +360,12 @@ public class VisualizerServiceImpl implements VisualizerService {
                 continue;
             }
 
-            // Any other block opener
             if (isBlockOpener) {
                 pendingSnapStack.push(new int[]{lineNo, indent});
                 pendingSnapFuncStack.push(currentFunc);
                 continue;
             }
 
-            // Track variable assignments
             java.util.regex.Matcher assignM = simpleAssign.matcher(line);
             if (assignM.find()) {
                 String vname = assignM.group(2);
@@ -339,15 +380,12 @@ public class VisualizerServiceImpl implements VisualizerService {
 
             String snapIndent = " ".repeat(indent);
 
-            // Only inject regular snap if pending snap didn't already fire on this line
             if (!firedPending) {
                 out.append(buildPythonSnap(lineNo, currentFunc, knownVars, snapIndent));
             } else {
-                // Pending fired — still inject this line's snap with updated vars
                 out.append(buildPythonSnap(lineNo, currentFunc, knownVars, snapIndent));
             }
 
-            // Loop-back frame
             int bestIndent = -1;
             int bestLine   = -1;
             for (Map.Entry<Integer, Integer> e : loopHeaderLines.entrySet()) {
@@ -382,7 +420,6 @@ public class VisualizerServiceImpl implements VisualizerService {
     }
 
     private String instrumentJavaAuto(String code) {
-        // Hoist all user imports to the top
         StringBuilder userImports = new StringBuilder();
         StringBuilder userBody    = new StringBuilder();
 
@@ -466,16 +503,17 @@ public class VisualizerServiceImpl implements VisualizerService {
         return userImports + helper + transformed;
     }
 
-    // ── Java source transformer ───────────────────────────────────────────────────
     private String transformJavaSource(String code) {
+        code = addBraces(code);
+
         String[] lines         = code.split("\n");
         StringBuilder out      = new StringBuilder();
         String currentMethod   = "main";
-        List<String> knownVars = new ArrayList<>();
-        List<String> loopVars  = new ArrayList<>();
+        List<String> knownVars   = new ArrayList<>();
+        List<String> knownVars2d = new ArrayList<>();
+        List<String> loopVars    = new ArrayList<>();
         int braceDepth         = 0;
         int loopVarDepth       = -1;
-        // Innermost loop header line per brace depth
         Map<Integer, Integer> loopHeaderLine = new LinkedHashMap<>();
 
         java.util.regex.Pattern methodDecl  = java.util.regex.Pattern
@@ -484,6 +522,8 @@ public class VisualizerServiceImpl implements VisualizerService {
                 .compile("^\\s*(?:int|long|double|float|boolean|String|char)\\s+(\\w+)");
         java.util.regex.Pattern intArrDecl  = java.util.regex.Pattern
                 .compile("^\\s*int\\[\\]\\s+(\\w+)");
+        java.util.regex.Pattern int2dArrDecl = java.util.regex.Pattern
+                .compile("^\\s*int\\[\\]\\[\\]\\s+(\\w+)");
         java.util.regex.Pattern forInitVar  = java.util.regex.Pattern
                 .compile("for\\s*\\(\\s*(?:int|long|double)\\s+(\\w+)");
         java.util.regex.Pattern blockOpener = java.util.regex.Pattern
@@ -499,27 +539,24 @@ public class VisualizerServiceImpl implements VisualizerService {
             boolean isLoopOpener = blockOpener.matcher(trimmed).matches()
                     && !trimmed.startsWith("//");
 
-            // Track brace depth
             for (char c : trimmed.toCharArray()) {
                 if (c == '{') braceDepth++;
                 else if (c == '}') braceDepth--;
             }
 
-            // Exit loop scope
             if (loopVarDepth >= 0 && braceDepth < loopVarDepth) {
                 loopVars.clear();
                 loopVarDepth = -1;
             }
-            // Remove loop header tracking for depths we've exited
             int finalBraceDepth = braceDepth;
             loopHeaderLine.entrySet().removeIf(e -> e.getKey() > finalBraceDepth);
 
-            // Track method — reset all
             if (methodDecl.matcher(line).find()) {
                 java.util.regex.Matcher m = java.util.regex.Pattern
                         .compile("\\s(\\w+)\\s*\\(").matcher(line);
                 if (m.find()) currentMethod = m.group(1);
                 knownVars    = new ArrayList<>();
+                knownVars2d  = new ArrayList<>();
                 loopVars     = new ArrayList<>();
                 loopVarDepth = -1;
                 loopHeaderLine.clear();
@@ -527,7 +564,6 @@ public class VisualizerServiceImpl implements VisualizerService {
                 continue;
             }
 
-            // Track regular variable declarations
             java.util.regex.Matcher declM    = varDecl.matcher(line);
             java.util.regex.Matcher arrDeclM = intArrDecl.matcher(line);
             java.util.regex.Matcher forInitM = forInitVar.matcher(line);
@@ -542,8 +578,12 @@ public class VisualizerServiceImpl implements VisualizerService {
                 String vname = arrDeclM.group(1);
                 if (!knownVars.contains(vname)) knownVars.add(vname);
             }
+            java.util.regex.Matcher arr2dM = int2dArrDecl.matcher(line);
+            if (arr2dM.find()) {
+                String vname = arr2dM.group(1);
+                if (!knownVars2d.contains(vname)) knownVars2d.add(vname);
+            }
 
-            // Track for-init variables
             forInitM.reset(line);
             if (forInitM.find()) {
                 String vname = forInitM.group(1);
@@ -553,7 +593,6 @@ public class VisualizerServiceImpl implements VisualizerService {
                 }
             }
 
-            // Record loop header line at this brace depth
             if (isLoopOpener) {
                 loopHeaderLine.put(braceDepth, lineNo);
             }
@@ -565,10 +604,12 @@ public class VisualizerServiceImpl implements VisualizerService {
             boolean isBlank     = trimmed.isEmpty();
             boolean isBraceOnly = braceOnly.matcher(trimmed).matches();
             boolean isSemicolon = trimmed.endsWith(";") && !isComment && !isImport && !isBlank;
+            boolean isJump      = trimmed.equals("return;") || trimmed.startsWith("return ")
+                    || trimmed.equals("break;")  || trimmed.equals("continue;")
+                    || trimmed.startsWith("throw ");
 
-            if (isBraceOnly || (!isSemicolon && !isLoopOpener)) continue;
+            if (isBraceOnly || isJump || (!isSemicolon && !isLoopOpener)) continue;
 
-            // Build combined vars
             List<String> allVars = new ArrayList<>(knownVars);
             for (String lv : loopVars) {
                 if (!allVars.contains(lv)) allVars.add(lv);
@@ -576,23 +617,20 @@ public class VisualizerServiceImpl implements VisualizerService {
 
             String fn = currentMethod;
 
-            // Inject frame for current line
-            emitJavaFrame(out, lineNo, fn, allVars);
+            emitJavaFrame(out, lineNo, fn, allVars, knownVars2d);
 
-            // After a ; inside a loop body — also inject a loop-header frame
-            // so the blue line jumps back to the for/while line (condition check)
             if (isSemicolon && !loopHeaderLine.isEmpty()) {
                 int headerLine = loopHeaderLine.values().stream()
-                        .reduce((a, b) -> b).orElse(-1); // innermost loop
+                        .reduce((a, b) -> b).orElse(-1);
                 if (headerLine > 0 && headerLine != lineNo) {
-                    emitJavaFrame(out, headerLine, fn, allVars);
+                    emitJavaFrame(out, headerLine, fn, allVars, knownVars2d);
                 }
             }
         }
         return out.toString();
     }
 
-    private void emitJavaFrame(StringBuilder out, int lineNo, String fn, List<String> allVars) {
+    private void emitJavaFrame(StringBuilder out, int lineNo, String fn, List<String> allVars, List<String> vars2d) {
         if (allVars.isEmpty()) {
             out.append("try{_Tracer._line(").append(lineNo)
                     .append(",\"").append(fn)
@@ -609,6 +647,17 @@ public class VisualizerServiceImpl implements VisualizerService {
                     .append("\",new String[]{").append(namesArr)
                     .append("},new Object[]{").append(valsArr)
                     .append("});}catch(Exception _e){}\n");
+        }
+        for (String vname : vars2d) {
+            out.append("try{ StringBuilder _sb=new StringBuilder(\"[\");");
+            out.append("for(int _ri=0;_ri<").append(vname).append(".length&&_ri<50;_ri++){");
+            out.append("if(_ri>0)_sb.append(\",\");_sb.append(\"[\");");
+            out.append("for(int _ci=0;_ci<").append(vname).append("[_ri].length&&_ci<50;_ci++){");
+            out.append("if(_ci>0)_sb.append(\",\");_sb.append(").append(vname).append("[_ri][_ci]);}");
+            out.append("_sb.append(\"]\");}_sb.append(\"]\");");
+            out.append("_Tracer._line(").append(lineNo).append(",\"").append(fn).append("\",");
+            out.append("new String[]{\"").append(vname).append("\"},");
+            out.append("new Object[]{_sb.toString()});}catch(Exception _e2){}\n");
         }
     }
 
@@ -730,8 +779,9 @@ public class VisualizerServiceImpl implements VisualizerService {
         return preamble + transformed;
     }
 
-    // ── C/C++ source transformer ──────────────────────────────────────────────────
     private String transformCSource(String code, boolean isCpp) {
+        code = addBraces(code);
+
         String[] lines = code.split("\n");
         StringBuilder out = new StringBuilder();
         String currentFn = "main";
@@ -753,8 +803,6 @@ public class VisualizerServiceImpl implements VisualizerService {
         Map<String, String> loopVars = new LinkedHashMap<>();
         int braceDepth   = 0;
         int loopVarDepth = -1;
-        // Track loop opener lines so we can inject at their line number on each iteration
-        // key = brace depth of loop body, value = line number of the for/while header
         Map<Integer, Integer> loopHeaderLine = new LinkedHashMap<>();
 
         for (int i = 0; i < lines.length; i++) {
@@ -765,23 +813,19 @@ public class VisualizerServiceImpl implements VisualizerService {
             boolean isLoopOpener = loopLine.matcher(trimmed).matches()
                     && !trimmed.startsWith("//");
 
-            // Count braces BEFORE processing so we know depth entering this line
             int depthBefore = braceDepth;
             for (char c : trimmed.toCharArray()) {
                 if (c == '{') braceDepth++;
                 else if (c == '}') braceDepth--;
             }
 
-            // Exit loop scope
             if (loopVarDepth >= 0 && braceDepth < loopVarDepth) {
                 loopVars.clear();
                 loopVarDepth = -1;
             }
-            // Remove loop header tracking for depths we've exited
             int finalBraceDepth = braceDepth;
             loopHeaderLine.entrySet().removeIf(e -> e.getKey() > finalBraceDepth);
 
-            // Track function
             java.util.regex.Matcher fm = fnDecl.matcher(line);
             if (fm.find() && !trimmed.startsWith("//")) {
                 currentFn    = fm.group(1);
@@ -791,11 +835,9 @@ public class VisualizerServiceImpl implements VisualizerService {
                 loopHeaderLine.clear();
             }
 
-            // Check for-loop line
             java.util.regex.Matcher loopCheck = loopVar.matcher(line);
             boolean isForLine = loopCheck.find();
 
-            // Track method-scope declarations
             if (!isForLine) {
                 java.util.regex.Matcher im = intDecl.matcher(line);
                 java.util.regex.Matcher dm = dblDecl.matcher(line);
@@ -808,7 +850,6 @@ public class VisualizerServiceImpl implements VisualizerService {
                 if (vm.find() && !vars.containsKey(vm.group(1))) vars.put(vm.group(1), "v");
             }
 
-            // Track for-loop init variable
             java.util.regex.Matcher lm = loopVar.matcher(line);
             if (lm.find()) {
                 String vname = lm.group(1);
@@ -818,14 +859,12 @@ public class VisualizerServiceImpl implements VisualizerService {
                 }
             }
 
-            // Record loop header line number at the depth of the loop body
             if (isLoopOpener) {
                 loopHeaderLine.put(braceDepth, lineNo);
             }
 
             out.append(line).append("\n");
 
-            // Combine all vars
             Map<String, String> allVars = new LinkedHashMap<>(vars);
             allVars.putAll(loopVars);
 
@@ -834,24 +873,22 @@ public class VisualizerServiceImpl implements VisualizerService {
             boolean isComment   = trimmed.startsWith("//") || trimmed.startsWith("/*");
             boolean isPreproc   = trimmed.startsWith("#");
             boolean isSemicolon = trimmed.endsWith(";") && !isComment && !isPreproc;
+            boolean isJump      = trimmed.equals("return;") || trimmed.startsWith("return ")
+                    || trimmed.equals("break;")  || trimmed.equals("continue;")
+                    || trimmed.startsWith("throw ");
 
-            // Inject after every ; statement
-            if (isSemicolon && !allVars.isEmpty()) {
+            if (isSemicolon && !isJump && !allVars.isEmpty()) {
                 emitCppFrame(out, lineNo, fn, allVars, isCpp);
 
-                // After injecting for a ; inside a loop body, ALSO inject a
-                // "loop header" frame so the blue line jumps back to the for line
-                // This simulates the loop condition check between iterations
                 if (!loopHeaderLine.isEmpty()) {
                     int loopLine2 = loopHeaderLine.values().stream()
-                            .reduce((a, b) -> b).orElse(-1); // innermost loop
+                            .reduce((a, b) -> b).orElse(-1);
                     if (loopLine2 > 0) {
                         emitCppFrame(out, loopLine2, fn, allVars, isCpp);
                     }
                 }
             }
 
-            // Also inject once on the loop opener line itself (first iteration entry)
             if (isLoopOpener && !allVars.isEmpty()) {
                 emitCppFrame(out, lineNo, fn, allVars, isCpp);
             }
@@ -859,7 +896,6 @@ public class VisualizerServiceImpl implements VisualizerService {
         return out.toString();
     }
 
-    // ── Helper: emit one unified frame for C or C++ ───────────────────────────────
     private void emitCppFrame(StringBuilder out, int lineNo, String fn,
                               Map<String, String> allVars, boolean isCpp) {
         List<String> scalarVars = new ArrayList<>();
@@ -906,7 +942,6 @@ public class VisualizerServiceImpl implements VisualizerService {
             out.append("}\n");
 
         } else {
-            // C: one _Ti/_Td per scalar
             for (String vname : scalarVars) {
                 String vtype = allVars.get(vname);
                 if (vtype.equals("i")) {
@@ -921,6 +956,8 @@ public class VisualizerServiceImpl implements VisualizerService {
             }
         }
     }
+
+    // ── MANUAL instrumentation ────────────────────────────────────────────────
 
     private String instrumentPythonManual(String code) {
         String preamble =
@@ -940,7 +977,6 @@ public class VisualizerServiceImpl implements VisualizerService {
     }
 
     private String instrumentJavaManual(String code) {
-        // Strip any existing imports from user code and hoist them to the top
         StringBuilder userImports = new StringBuilder();
         StringBuilder userBody = new StringBuilder();
 
@@ -1032,7 +1068,6 @@ public class VisualizerServiceImpl implements VisualizerService {
             
             """;
 
-        // Final order: all imports first, then Snapshot class, then user code body
         return userImports + helper + userBody;
     }
 
@@ -1042,17 +1077,12 @@ public class VisualizerServiceImpl implements VisualizerService {
                 #include <stdlib.h>
                 #include <string.h>
                 
-                #define _FRAME_BUF_SIZE (8 * 1024 * 1024)  /* 8 MB */
+                #define _FRAME_BUF_SIZE (8 * 1024 * 1024)
                 
                 static char  _buf[_FRAME_BUF_SIZE];
                 static int   _pos  = 0;
                 static int   _first = 1;
                 
-                /*
-                 * snapshot(json_string)
-                 * Pass a raw JSON object string.
-                 * Example: snapshot("{\\"type\\":\\"array\\",\\"data\\":[1,2,3]}");
-                 */
                 void snapshot(const char* json_state) {
                     if (!_first) { _buf[_pos++] = ','; }
                     _first = 0;
@@ -1106,7 +1136,6 @@ public class VisualizerServiceImpl implements VisualizerService {
             static std::string _frames_buf;
             static bool _frames_first = true;
             
-            // Overload 1: initializer list — for simple snapshots
             void snapshot(std::initializer_list<std::pair<const char*, J>> fields) {
                 std::string s = "{";
                 bool first = true;
@@ -1121,14 +1150,12 @@ public class VisualizerServiceImpl implements VisualizerService {
                 _frames_first = false;
             }
             
-            // Overload 2: raw const char* — for manually built JSON strings
             void snapshot(const char* rawJson) {
                 if (!_frames_first) _frames_buf += ",";
                 _frames_buf += rawJson;
                 _frames_first = false;
             }
             
-            // Overload 3: std::string — same as above but for string variables
             void snapshot(const std::string& rawJson) {
                 if (!_frames_first) _frames_buf += ",";
                 _frames_buf += rawJson;

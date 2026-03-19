@@ -2,7 +2,7 @@
 // Frame shape expected:
 //   { type: "tree", nodes: [{id, val, left?, right?}], highlighted?: (id|val)[], current?: id|val }
 //
-// nodes is a flat array. id 0/null means no child.
+// nodes is a flat array. Missing left/right keys mean no child.
 // highlighted and current match against node.id (fallback to node.val).
 
 import { useMemo } from "react";
@@ -35,24 +35,27 @@ function buildLayout(nodes, highlighted = [], current = null) {
     map[n.id] = n;
   });
 
-  // Find root: node whose id doesn't appear as left/right of any other node
+  // Find root: node whose id doesn't appear as left/right of any other node.
+  // FIX: use != null instead of !== 0 so that node id=0 is correctly
+  // identified as a child when it appears in another node's left/right field.
   const childIds = new Set();
   nodes.forEach((n) => {
-    if (n.left != null && n.left !== 0) childIds.add(n.left);
-    if (n.right != null && n.right !== 0) childIds.add(n.right);
+    if (n.left != null) childIds.add(n.left);
+    if (n.right != null) childIds.add(n.right);
   });
   const roots = nodes.filter((n) => !childIds.has(n.id));
   if (roots.length === 0)
     return { positions: {}, width: 0, height: 0, edges: [] };
   const root = roots[0];
 
-  // Assign depth + compute subtree widths
+  // Assign depth + compute subtree widths.
+  // FIX: guard with id == null instead of !id so that id===0 is not skipped.
   const depth = {};
   const subtreeW = {};
   const order = [];
 
   function dfs(id, d) {
-    if (!id || !map[id]) return 0;
+    if (id == null || !map[id]) return 0;
     depth[id] = d;
     order.push(id);
     const node = map[id];
@@ -64,19 +67,19 @@ function buildLayout(nodes, highlighted = [], current = null) {
   }
   dfs(root.id, 0);
 
-  // Assign x positions
+  // Assign x positions.
+  // FIX: same guard as above.
   const x = {};
   function assignX(id, left) {
-    if (!id || !map[id]) return;
+    if (id == null || !map[id]) return;
     const node = map[id];
-    const lw = node.left && map[node.left] ? subtreeW[node.left] : 0;
+    const lw = node.left != null && map[node.left] ? subtreeW[node.left] : 0;
     x[id] = left + lw + NODE_R;
     assignX(node.left, left);
     assignX(node.right, left + lw + H_GAP + NODE_R * 2);
   }
   assignX(root.id, 0);
 
-  const maxDepth = Math.max(...Object.values(depth));
   const positions = {};
   order.forEach((id) => {
     positions[id] = {
@@ -88,9 +91,14 @@ function buildLayout(nodes, highlighted = [], current = null) {
   // Collect edges
   const edges = [];
   nodes.forEach((n) => {
-    if (n.left && map[n.left] && positions[n.id] && positions[n.left])
+    if (n.left != null && map[n.left] && positions[n.id] && positions[n.left])
       edges.push({ from: n.id, to: n.left });
-    if (n.right && map[n.right] && positions[n.id] && positions[n.right])
+    if (
+      n.right != null &&
+      map[n.right] &&
+      positions[n.id] &&
+      positions[n.right]
+    )
       edges.push({ from: n.id, to: n.right });
   });
 
@@ -99,7 +107,7 @@ function buildLayout(nodes, highlighted = [], current = null) {
   const width = Math.max(...allX) + NODE_R + 20;
   const height = Math.max(...allY) + NODE_R + 20;
 
-  return { positions, width, height, edges, map, highlighted, current };
+  return { positions, width, height, edges, map };
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -113,7 +121,7 @@ export default function TreeRenderer({ frame }) {
   }
 
   const { nodes, highlighted = [], current = null } = frame;
-  const { positions, width, height, edges, map } = useMemo(
+  const { positions, width, height, edges } = useMemo(
     () => buildLayout(nodes, highlighted, current),
     [JSON.stringify(nodes), JSON.stringify(highlighted), current],
   );
