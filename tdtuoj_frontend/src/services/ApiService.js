@@ -360,4 +360,80 @@ export default class ApiService {
     );
     return resp.data; // Response<VisualizerResponse>
   }
+
+  // ─── Contests ────────────────────────────────────────────────────────────────
+
+  static async getPublicContests({ page = 0, size = 20 } = {}) {
+    const resp = await axios.get(`${this.BASE_URL}/contests`, {
+      headers: this.getHeader(),
+      params: { page, size },
+    });
+    return resp.data;
+  }
+
+  static async getContestById(id) {
+    const resp = await axios.get(`${this.BASE_URL}/contests/${id}`, {
+      headers: this.getHeader(),
+    });
+    return resp.data;
+  }
+
+  static async getContestBySlug(slug) {
+    const resp = await axios.get(`${this.BASE_URL}/contests/slug/${slug}`, {
+      headers: this.getHeader(),
+    });
+    return resp.data;
+  }
+
+  static async createContest(data) {
+    const resp = await axios.post(`${this.BASE_URL}/contests`, data, {
+      headers: this.getHeader(),
+    });
+    return resp.data;
+  }
+
+  static async updateContest(id, data) {
+    const resp = await axios.put(`${this.BASE_URL}/contests/${id}`, data, {
+      headers: this.getHeader(),
+    });
+    return resp.data;
+  }
+
+  static async deleteContest(id) {
+    const resp = await axios.delete(`${this.BASE_URL}/contests/${id}`, {
+      headers: this.getHeader(),
+    });
+    return resp.data;
+  }
+
+  static async registerForContest(id) {
+    const resp = await axios.post(
+      `${this.BASE_URL}/contests/${id}/register`,
+      {},
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async getContestLeaderboard(id, { page = 0, size = 50 } = {}) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/contests/${id}/leaderboard`,
+      {
+        headers: this.getHeader(),
+        params: { page, size },
+      },
+    );
+    return resp.data;
+  }
+
+  static async getMyContestRank(id, window = 3) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/contests/${id}/leaderboard/me`,
+      {
+        headers: this.getHeader(),
+        params: { window },
+      },
+    );
+    return resp.data;
+  }
 }

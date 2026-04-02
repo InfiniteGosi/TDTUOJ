@@ -3,6 +3,14 @@ import com.oj.TDTUOJ.common.aws.AwsS3Service;
 import com.oj.TDTUOJ.common.enums.SubmissionStatus;
 import com.oj.TDTUOJ.common.enums.SubmissionVerdict;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
+import com.oj.TDTUOJ.contest.dto.ScoreboardEntryDTO;
+import com.oj.TDTUOJ.contest.entity.Contest;
+import com.oj.TDTUOJ.contest.entity.ContestParticipation;
+import com.oj.TDTUOJ.contest.entity.ContestProblem;
+import com.oj.TDTUOJ.contest.repository.ContestParticipationRepository;
+import com.oj.TDTUOJ.contest.repository.ContestProblemRepository;
+import com.oj.TDTUOJ.contest.repository.ContestRepository;
+import com.oj.TDTUOJ.contest.service.ContestLeaderboardService;
 import com.oj.TDTUOJ.judge0.Judge0Result;
 import com.oj.TDTUOJ.judge0.Judge0Service;
 import com.oj.TDTUOJ.problem.entity.Problem;
@@ -12,13 +20,16 @@ import com.oj.TDTUOJ.submission.entity.Submission;
 import com.oj.TDTUOJ.submission.repository.SubmissionRepository;
 import com.oj.TDTUOJ.testcase.entity.TestCase;
 import com.oj.TDTUOJ.userdailyactivity.service.UserActivityService;
+import com.oj.TDTUOJ.user.entity.User;
+import com.oj.TDTUOJ.user.repository.UserRepository;
 import com.oj.TDTUOJ.userstatistics.service.UserStatisticsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import com.oj.TDTUOJ.testcase.repository.TestCaseRepository; // ADD
-import org.springframework.transaction.annotation.Transactional; // ADD
+import com.oj.TDTUOJ.testcase.repository.TestCaseRepository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.List;
 
 @Service
@@ -26,14 +37,21 @@ import java.util.List;
 @Slf4j
 public class SubmissionJudgeService {
 
-    private final SubmissionRepository   submissionRepository;
-    private final ProblemRepository      problemRepository;
-    private final Judge0Service          judge0Service;
-    private final AwsS3Service           awsS3Service;
-    private final UserActivityService    userActivityService;
-    private final UserStatisticsService  userStatisticsService;
-    private final SubmissionQueueService submissionQueueService;
-    private final TestCaseRepository     testCaseRepository;
+    private static final int WRONG_ATTEMPT_PENALTY_MINUTES = 20;
+
+    private final SubmissionRepository           submissionRepository;
+    private final ProblemRepository              problemRepository;
+    private final Judge0Service                  judge0Service;
+    private final AwsS3Service                   awsS3Service;
+    private final UserActivityService            userActivityService;
+    private final UserStatisticsService          userStatisticsService;
+    private final SubmissionQueueService         submissionQueueService;
+    private final TestCaseRepository             testCaseRepository;
+    private final ContestRepository              contestRepository;
+    private final ContestProblemRepository       contestProblemRepository;
+    private final ContestParticipationRepository contestParticipationRepository;
+    private final ContestLeaderboardService      leaderboardService;
+    private final UserRepository                 userRepository;
 
     @Transactional
     public void judge(SubmissionJobDTO job) {
@@ -126,5 +144,122 @@ public class SubmissionJudgeService {
                 earnedPoints,
                 isPractice
         );
+
+        // 5. Update the real-time leaderboard for contest submissions
+        if (isAccepted && !isPractice) {
+            updateContestLeaderboard(job, submission, problem);
+        }
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // ICPC Leaderboard update
+    // ────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Called after an accepted contest submission.
+     *
+     * <p>ICPC penalty for a problem:
+     * <pre>
+     *   penaltyMinutes = minutesFromStart(firstACTime) + 20 × wrongAttemptsBeforeAC
+     * </pre>
+     * The cumulative {@code ContestParticipation.penaltyTime} is the sum
+     * of per-problem penalties for every solved problem.
+     */
+    private void updateContestLeaderboard(SubmissionJobDTO job, Submission submission, Problem problem) {
+        Long contestId = job.getContestId();
+
+        try {
+            Contest contest = contestRepository.findById(contestId)
+                    .orElseThrow(() -> new NotFoundException("Contest not found: " + contestId));
+
+            User user = userRepository.findById(job.getUserId())
+                    .orElseThrow(() -> new NotFoundException("User not found: " + job.getUserId()));
+
+            // ── Get or create participation row ──────────────────────────────
+            ContestParticipation participation = contestParticipationRepository
+                    .findByContestIdAndUserId(contestId, job.getUserId())
+                    .orElseGet(() -> {
+                        ContestParticipation newP = ContestParticipation.builder()
+                                .contest(contest)
+                                .user(user)
+                                .build();
+                        return contestParticipationRepository.save(newP);
+                    });
+
+            // ── Skip if this problem was already AC'd (idempotency guard) ────
+            ContestProblem contestProblem = contestProblemRepository
+                    .findByContestIdAndProblemId(contestId, problem.getId())
+                    .orElse(null);
+            if (contestProblem == null) {
+                log.warn("Problem {} is not part of contest {} — leaderboard not updated",
+                        problem.getId(), contestId);
+                return;
+            }
+
+            long priorAcForThisProblem = submissionRepository
+                    .countByUserIdAndProblemIdAndSubmissionVerdictAndIdNot(
+                            job.getUserId(), problem.getId(),
+                            SubmissionVerdict.AC, submission.getId());
+
+            if (priorAcForThisProblem > 0) {
+                // Already solved — no point re-updating the leaderboard
+                log.debug("User {} already solved problem {} in contest {} — skip leaderboard update",
+                        job.getUserId(), problem.getId(), contestId);
+                return;
+            }
+
+            // ── Minutes from contest start to this acceptance ────────────────
+            int minutesFromStart = (int) Duration
+                    .between(contest.getStartTime(), submission.getSubmissionDate())
+                    .toMinutes();
+
+            // ── Wrong attempts for this problem before this AC ───────────────
+            long wrongAttempts = submissionRepository
+                    .countByUserIdAndProblemIdAndSubmissionVerdictAndIdNot(
+                            job.getUserId(), problem.getId(),
+                            SubmissionVerdict.WA, submission.getId());
+
+            int problemPenalty = minutesFromStart
+                    + (int)(wrongAttempts * WRONG_ATTEMPT_PENALTY_MINUTES);
+
+            // ── Update participation row ──────────────────────────────────────
+            int newSolved  = participation.getProblemsSolved() + 1;
+            int newPenalty = participation.getPenaltyTime() + problemPenalty;
+
+            participation.setProblemsSolved(newSolved);
+            participation.setPenaltyTime(newPenalty);
+            participation.setScore(newSolved); // ICPC score = problems solved
+            contestParticipationRepository.save(participation);
+
+            // ── Build per-problem status for the scoreboard grid ─────────────
+            ScoreboardEntryDTO.ProblemScoreDTO probStatus = new ScoreboardEntryDTO.ProblemScoreDTO();
+            probStatus.setProblemId(problem.getId());
+            probStatus.setProblemOrder(contestProblem.getProblemOrder());
+            probStatus.setSolved(true);
+            probStatus.setAttempts((int) wrongAttempts);
+            probStatus.setPenaltyMinutes(minutesFromStart);
+            probStatus.setPointsEarned(contestProblem.getPoints());
+
+            // ── Push to Redis leaderboard ─────────────────────────────────────
+            leaderboardService.recordAcceptedSubmission(
+                    contestId,
+                    job.getUserId(),
+                    user.getUsername(),
+                    user.getProfileUrl(),
+                    problem.getId(),
+                    contestProblem.getProblemOrder(),
+                    newPenalty,
+                    newSolved,
+                    probStatus
+            );
+
+            log.info("Leaderboard updated: contestId={} userId={} solved={} totalPenalty={}",
+                    contestId, job.getUserId(), newSolved, newPenalty);
+
+        } catch (Exception e) {
+            // Leaderboard update must never break the judging flow
+            log.error("Failed to update leaderboard for contestId={} userId={}",
+                    contestId, job.getUserId(), e);
+        }
     }
 }

@@ -18,6 +18,10 @@ import ChangePasswordPage from "./components/profile/ChangePasswordPage";
 import AdminUserPage from "./components/admin/AdminUserPage";
 import AdminEditUserPage from "./components/admin/AdminEditUserPage";
 import AdminProblemTagPage from "./components/admin/AdminProblemTagPage";
+import ContestPage from "./components/contests/ContestPage";
+import ContestDetailPage from "./components/contests/ContestDetailPage";
+import AdminContestPage from "./components/admin/AdminContestPage";
+import AdminContestFormPage from "./components/admin/AdminContestFormPage";
 import { ToastProvider } from "./components/common/ToastMessage";
 
 function App() {
@@ -33,6 +37,8 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/home" element={<HomePage />} />
                 <Route path="/problems" element={<ProblemPage />} />
+                <Route path="/contests" element={<ContestPage />} />
+                <Route path="/contests/:slug" element={<ContestDetailPage />} />
                 <Route path="/users" element={<UserPage />} />
                 <Route
                   path="/problems/:slug"
@@ -64,6 +70,16 @@ function App() {
                   <Route
                     path="problem-tags"
                     element={<AdminProblemTagPage />}
+                  />
+
+                  <Route path="contests" element={<AdminContestPage />} />
+                  <Route
+                    path="contests/new"
+                    element={<AdminContestFormPage />}
+                  />
+                  <Route
+                    path="contests/edit/:id"
+                    element={<AdminContestFormPage />}
                   />
 
                   <Route path="users" element={<AdminUserPage />} />

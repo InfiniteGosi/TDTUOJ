@@ -3,9 +3,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faList,
   faTags,
-  faShoppingBag,
-  faCreditCard,
   faUser,
+  faTrophy,
 } from "@fortawesome/free-solid-svg-icons";
 
 const AdminSidebar = () => {
@@ -14,7 +13,7 @@ const AdminSidebar = () => {
   return (
     <div className="admin-sidebar">
       <div className="sidebar-header">
-        <h2>Pannel</h2>
+        <h2>Panel</h2>
       </div>
 
       <div className="sidebar-nav">
@@ -41,29 +40,18 @@ const AdminSidebar = () => {
               }
             >
               <FontAwesomeIcon icon={faTags} />
-              <span>Prolem Tags</span>
+              <span>Problem Tags</span>
             </NavLink>
           </li>
           <li>
             <NavLink
-              to="/admin/orders"
+              to="/admin/contests"
               className={
-                location.pathname.includes("/admin/orders") ? "active" : ""
+                location.pathname.includes("/admin/contests") ? "active" : ""
               }
             >
-              <FontAwesomeIcon icon={faShoppingBag} />
-              <span>Test</span>
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/admin/payments"
-              className={
-                location.pathname.includes("/admin/payments") ? "active" : ""
-              }
-            >
-              <FontAwesomeIcon icon={faCreditCard} />
-              <span>Test</span>
+              <FontAwesomeIcon icon={faTrophy} />
+              <span>Contests</span>
             </NavLink>
           </li>
           <li>
@@ -84,3 +72,4 @@ const AdminSidebar = () => {
 };
 
 export default AdminSidebar;
+
