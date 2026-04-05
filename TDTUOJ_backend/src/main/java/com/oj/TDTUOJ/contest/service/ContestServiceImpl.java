@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -210,6 +211,11 @@ public class ContestServiceImpl implements ContestService {
                 .orElseThrow(() -> new NotFoundException("Contest not found: " + contestId));
         User user = userService.getCurrentLoggedInUser();
 
+        // Cannot register for a contest that has already ended
+        if (contest.getEndTime() != null && LocalDateTime.now().isAfter(contest.getEndTime())) {
+            throw new BadRequestException("Cannot register: contest has already ended");
+        }
+
         if (contestRegistrationRepository.existsByContestIdAndUserId(contestId, user.getId())) {
             throw new BadRequestException("Already registered for this contest");
         }
@@ -234,6 +240,23 @@ public class ContestServiceImpl implements ContestService {
         return Response.<Void>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Registered for contest successfully")
+                .build();
+    }
+
+    // ── Registration status check ─────────────────────────────────────────── //
+
+    @Override
+    public Response<Boolean> isRegisteredForContest(Long contestId) {
+        if (!contestRepository.existsById(contestId)) {
+            throw new NotFoundException("Contest not found: " + contestId);
+        }
+        User user = userService.getCurrentLoggedInUser();
+        boolean registered = contestRegistrationRepository
+                .existsByContestIdAndUserId(contestId, user.getId());
+        return Response.<Boolean>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Success")
+                .data(registered)
                 .build();
     }
 
@@ -267,7 +290,8 @@ public class ContestServiceImpl implements ContestService {
         dto.setCreatorId(contest.getCreator() != null ? contest.getCreator().getId() : null);
         dto.setCreatorUsername(contest.getCreator() != null ? contest.getCreator().getUsername() : null);
         dto.setTotalProblems(contest.getContestProblems().size());
-        dto.setTotalParticipants(contest.getParticipations().size());
+        // Use registrations (sign-ups), not participations (runtime data)
+        dto.setTotalParticipants(contest.getRegistrations().size());
         // Attach problem list
         dto.setProblems(
                 contest.getContestProblems().stream()

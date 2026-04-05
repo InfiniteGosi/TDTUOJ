@@ -21,12 +21,22 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     boolean existsByUserIdAndProblemId(Long userId, Long problemId);
 
-    // Fix 1: count prior AC submissions excluding the one just saved,
-    // so the current submission never counts against itself.
+    // Global count (used by practice / statistics paths — no contest filter)
     long countByUserIdAndProblemIdAndSubmissionVerdictAndIdNot(
             Long userId, Long problemId, SubmissionVerdict verdict, Long excludeId
     );
 
-    // Fix 2: full (unpaged) list used by the backfill path in UserStatisticsServiceImpl.
+    // Contest-scoped: count prior AC submissions for a problem within a specific contest,
+    // excluding the submission just saved so it doesn't count against itself.
+    long countByUserIdAndProblemIdAndContestIdAndSubmissionVerdictAndIdNot(
+            Long userId, Long problemId, Long contestId, SubmissionVerdict verdict, Long excludeId
+    );
+
+    // Contest-scoped: count WA submissions for a problem within a specific contest.
+    long countByUserIdAndProblemIdAndContestIdAndSubmissionVerdict(
+            Long userId, Long problemId, Long contestId, SubmissionVerdict verdict
+    );
+
+    // Full (unpaged) list used by the backfill path in UserStatisticsServiceImpl.
     List<Submission> findAllByUserId(Long userId);
 }

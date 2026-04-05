@@ -1,5 +1,6 @@
 package com.oj.TDTUOJ.submission.service;
 import com.oj.TDTUOJ.common.aws.AwsS3Service;
+import com.oj.TDTUOJ.common.enums.ContestRegistrationStatus;
 import com.oj.TDTUOJ.common.enums.SubmissionStatus;
 import com.oj.TDTUOJ.common.enums.SubmissionVerdict;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
@@ -9,6 +10,7 @@ import com.oj.TDTUOJ.contest.entity.ContestParticipation;
 import com.oj.TDTUOJ.contest.entity.ContestProblem;
 import com.oj.TDTUOJ.contest.repository.ContestParticipationRepository;
 import com.oj.TDTUOJ.contest.repository.ContestProblemRepository;
+import com.oj.TDTUOJ.contest.repository.ContestRegistrationRepository;
 import com.oj.TDTUOJ.contest.repository.ContestRepository;
 import com.oj.TDTUOJ.contest.service.ContestLeaderboardService;
 import com.oj.TDTUOJ.judge0.Judge0Result;
@@ -30,6 +32,7 @@ import com.oj.TDTUOJ.testcase.repository.TestCaseRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -50,6 +53,7 @@ public class SubmissionJudgeService {
     private final ContestRepository              contestRepository;
     private final ContestProblemRepository       contestProblemRepository;
     private final ContestParticipationRepository contestParticipationRepository;
+    private final ContestRegistrationRepository  contestRegistrationRepository;
     private final ContestLeaderboardService      leaderboardService;
     private final UserRepository                 userRepository;
 
@@ -175,6 +179,23 @@ public class SubmissionJudgeService {
             User user = userRepository.findById(job.getUserId())
                     .orElseThrow(() -> new NotFoundException("User not found: " + job.getUserId()));
 
+            // ── Guard: contest must be currently running ─────────────────────
+            LocalDateTime now = LocalDateTime.now();
+            if (now.isBefore(contest.getStartTime()) || now.isAfter(contest.getEndTime())) {
+                log.debug("Submission for contestId={} ignored for leaderboard: contest is not running", contestId);
+                return;
+            }
+
+            // ── Guard: user must have an approved registration ───────────────
+            boolean isRegistered = contestRegistrationRepository
+                    .existsByContestIdAndUserIdAndStatus(
+                            contestId, job.getUserId(), ContestRegistrationStatus.APPROVED);
+            if (!isRegistered) {
+                log.warn("User {} submitted to contestId={} without an approved registration — leaderboard not updated",
+                        job.getUserId(), contestId);
+                return;
+            }
+
             // ── Get or create participation row ──────────────────────────────
             ContestParticipation participation = contestParticipationRepository
                     .findByContestIdAndUserId(contestId, job.getUserId())
@@ -186,7 +207,7 @@ public class SubmissionJudgeService {
                         return contestParticipationRepository.save(newP);
                     });
 
-            // ── Skip if this problem was already AC'd (idempotency guard) ────
+            // ── Skip if this problem was already AC'd IN THIS CONTEST (idempotency guard) ────
             ContestProblem contestProblem = contestProblemRepository
                     .findByContestIdAndProblemId(contestId, problem.getId())
                     .orElse(null);
@@ -197,12 +218,13 @@ public class SubmissionJudgeService {
             }
 
             long priorAcForThisProblem = submissionRepository
-                    .countByUserIdAndProblemIdAndSubmissionVerdictAndIdNot(
+                    .countByUserIdAndProblemIdAndContestIdAndSubmissionVerdictAndIdNot(
                             job.getUserId(), problem.getId(),
+                            contestId,
                             SubmissionVerdict.AC, submission.getId());
 
             if (priorAcForThisProblem > 0) {
-                // Already solved — no point re-updating the leaderboard
+                // Already solved in this contest — no point re-updating the leaderboard
                 log.debug("User {} already solved problem {} in contest {} — skip leaderboard update",
                         job.getUserId(), problem.getId(), contestId);
                 return;
@@ -213,11 +235,12 @@ public class SubmissionJudgeService {
                     .between(contest.getStartTime(), submission.getSubmissionDate())
                     .toMinutes();
 
-            // ── Wrong attempts for this problem before this AC ───────────────
+            // ── Wrong attempts for this problem WITHIN THIS CONTEST before this AC ──
             long wrongAttempts = submissionRepository
-                    .countByUserIdAndProblemIdAndSubmissionVerdictAndIdNot(
+                    .countByUserIdAndProblemIdAndContestIdAndSubmissionVerdict(
                             job.getUserId(), problem.getId(),
-                            SubmissionVerdict.WA, submission.getId());
+                            contestId,
+                            SubmissionVerdict.WA);
 
             int problemPenalty = minutesFromStart
                     + (int)(wrongAttempts * WRONG_ATTEMPT_PENALTY_MINUTES);

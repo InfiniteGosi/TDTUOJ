@@ -25,6 +25,9 @@ public interface ContestService {
     /** Register the currently authenticated user for a contest. */
     Response<Void> registerForContest(Long contestId);
 
+    /** Check whether the currently authenticated user is already registered. */
+    Response<Boolean> isRegisteredForContest(Long contestId);
+
     /** Return the full ICPC leaderboard (paginated). */
     Response<LeaderboardDTO> getLeaderboard(Long contestId, int page, int size);
 

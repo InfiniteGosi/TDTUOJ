@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import {
   Box,
   Spinner,
@@ -250,6 +250,11 @@ const TagChip = ({ name }) => (
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const ProblemDetailsPage = () => {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
+  // contestId is passed as ?contestId=<id> when navigating from a contest
+  const contestId = searchParams.get("contestId")
+    ? Number(searchParams.get("contestId"))
+    : null;
   const [problem, setProblem] = useState(null);
   const [statement, setStatement] = useState("");
   const [testCases, setTestCases] = useState([]);
@@ -347,7 +352,7 @@ const ProblemDetailsPage = () => {
         submissionLanguage: mapEditorLanguageToSubmissionLanguage(language),
         problemId: problem.id,
         isPublic: true,
-        contestId: null,
+        contestId,
       });
 
       const sub = resp.data;

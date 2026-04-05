@@ -415,6 +415,14 @@ export default class ApiService {
     return resp.data;
   }
 
+  static async isRegisteredForContest(id) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/contests/${id}/is-registered`,
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
   static async getContestLeaderboard(id, { page = 0, size = 50 } = {}) {
     const resp = await axios.get(
       `${this.BASE_URL}/contests/${id}/leaderboard`,

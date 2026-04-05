@@ -83,6 +83,11 @@ public class ContestController {
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
+    @GetMapping("/{id}/is-registered")
+    public ResponseEntity<Response<Boolean>> isRegistered(@PathVariable Long id) {
+        return ResponseEntity.ok(contestService.isRegisteredForContest(id));
+    }
+
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
     public ResponseEntity<Response<ContestDTO>> createContest(

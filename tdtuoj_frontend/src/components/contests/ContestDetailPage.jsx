@@ -34,7 +34,8 @@ import { useToast } from "../common/ToastMessage";
 
 const fmt = (dt) => {
   if (!dt) return "—";
-  return new Date(dt).toLocaleString("en-GB", {
+  // Append 'Z' so the bare LocalDateTime from the backend is treated as UTC
+  return new Date(dt + "Z").toLocaleString("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -46,8 +47,11 @@ const fmt = (dt) => {
 const statusOf = (contest) => {
   if (!contest?.startTime) return "UPCOMING";
   const now   = Date.now();
-  const start = new Date(contest.startTime).getTime();
-  const end   = new Date(contest.endTime).getTime();
+  // Backend returns LocalDateTime with no timezone suffix.
+  // Appending 'Z' forces JavaScript to parse as UTC, which matches
+  // how the server (UTC) stores and evaluates the times.
+  const start = new Date(contest.startTime + "Z").getTime();
+  const end   = new Date(contest.endTime   + "Z").getTime();
   if (now < start) return "UPCOMING";
   if (now > end)   return "ENDED";
   return "RUNNING";
@@ -262,14 +266,37 @@ const ContestDetailPage = () => {
   const [activeTab, setActiveTab]   = useState("Problems");
 
   useEffect(() => {
-    ApiService.getContestBySlug(slug)
-      .then((resp) => {
-        if (resp.statusCode === 200) setContest(resp.data);
-      })
-      .catch((err) =>
-        showMessage(err.response?.data?.message || err.message, "error"),
-      )
-      .finally(() => setLoading(false));
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const resp = await ApiService.getContestBySlug(slug);
+        if (cancelled) return;
+        if (resp.statusCode === 200) {
+          setContest(resp.data);
+
+          // Check registration status for authenticated non-admin/creator users
+          if (ApiService.isAuthenticated() && !ApiService.isAdmin() && !ApiService.isCreator()) {
+            try {
+              const regResp = await ApiService.isRegisteredForContest(resp.data.id);
+              if (!cancelled && regResp.statusCode === 200) {
+                setRegistered(regResp.data === true);
+              }
+            } catch (_) {
+              // silently ignore — user might not be logged in with a valid token
+            }
+          }
+        }
+      } catch (err) {
+        if (!cancelled)
+          showMessage(err.response?.data?.message || err.message, "error");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    load();
+    return () => { cancelled = true; };
   }, [slug]);
 
   const handleRegister = async () => {
@@ -450,6 +477,21 @@ const ContestDetailPage = () => {
                       <CheckCircle size={18} />
                       <Text fontWeight="700">Registered!</Text>
                     </HStack>
+                  ) : status === "ENDED" ? (
+                    <Button
+                      size="lg"
+                      bg="white"
+                      color="purple.700"
+                      fontWeight="800"
+                      borderRadius="xl"
+                      px={8}
+                      _hover={{ bg: "purple.50" }}
+                      onClick={() => setActiveTab("Leaderboard")}
+                      gap={2}
+                    >
+                      <Trophy size={18} />
+                      View Results
+                    </Button>
                   ) : (
                     <Button
                       size="lg"
@@ -465,9 +507,7 @@ const ContestDetailPage = () => {
                       gap={2}
                     >
                       <Medal size={18} />
-                      {status === "ENDED"
-                        ? "View Results"
-                        : "Register Now"}
+                      Register Now
                     </Button>
                   )}
                 </Box>
@@ -573,7 +613,7 @@ const ContestDetailPage = () => {
                       _hover={{ bg: "purple.50", cursor: "pointer" }}
                       transition="background 0.1s"
                       bg={idx % 2 === 0 ? "white" : "gray.50"}
-                      onClick={() => navigate(`/problems/${p.problemSlug}`)}
+                      onClick={() => navigate(`/problems/${p.problemSlug}?contestId=${contest.id}`)}
                     >
                       <Table.Cell textAlign="center">
                         <Box
