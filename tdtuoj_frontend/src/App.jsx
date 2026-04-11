@@ -2,6 +2,7 @@ import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import Footer from "./components/common/Footer";
 import NavBar from "./components/common/NavBar";
+import GlobalClockBar from "./components/common/GlobalClockBar";
 import HomePage from "./components/home/HomePage";
 import RegisterPage from "./components/auth/RegisterPage";
 import LoginPage from "./components/auth/LoginPage";
@@ -31,6 +32,7 @@ function App() {
         <BrowserRouter>
           <div className="App">
             <NavBar />
+            <GlobalClockBar />
             <div className="content">
               <Routes>
                 <Route path="/register" element={<RegisterPage />} />

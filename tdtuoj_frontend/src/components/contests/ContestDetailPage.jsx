@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -26,6 +26,7 @@ import {
   RefreshCw,
   ListOrdered,
   BookOpen,
+  XCircle,
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
@@ -34,8 +35,9 @@ import { useToast } from "../common/ToastMessage";
 
 const fmt = (dt) => {
   if (!dt) return "—";
-  // Append 'Z' so the bare LocalDateTime from the backend is treated as UTC
-  return new Date(dt + "Z").toLocaleString("en-GB", {
+  // Backend stores LocalDateTime as-is (local time, no timezone).
+  // Parsing without a suffix correctly treats it as local time.
+  return new Date(dt).toLocaleString("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -47,11 +49,8 @@ const fmt = (dt) => {
 const statusOf = (contest) => {
   if (!contest?.startTime) return "UPCOMING";
   const now   = Date.now();
-  // Backend returns LocalDateTime with no timezone suffix.
-  // Appending 'Z' forces JavaScript to parse as UTC, which matches
-  // how the server (UTC) stores and evaluates the times.
-  const start = new Date(contest.startTime + "Z").getTime();
-  const end   = new Date(contest.endTime   + "Z").getTime();
+  const start = new Date(contest.startTime).getTime();
+  const end   = new Date(contest.endTime).getTime();
   if (now < start) return "UPCOMING";
   if (now > end)   return "ENDED";
   return "RUNNING";
@@ -68,6 +67,176 @@ const fmtMins = (mins) => {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
+};
+
+// ─── Countdown hook ───────────────────────────────────────────────────────────
+
+const useCountdown = (targetDateStr, onExpire) => {
+  const getRemaining = () => {
+    if (!targetDateStr) return null;
+    const diff = new Date(targetDateStr).getTime() - Date.now();
+    if (diff <= 0) return null;
+    return {
+      total: diff,
+      days:    Math.floor(diff / 86400000),
+      hours:   Math.floor((diff % 86400000) / 3600000),
+      minutes: Math.floor((diff %  3600000) /   60000),
+      seconds: Math.floor((diff %    60000) /    1000),
+    };
+  };
+
+  const [remaining, setRemaining] = useState(getRemaining);
+  const firedRef = useRef(false);
+
+  useEffect(() => {
+    firedRef.current = false;
+    setRemaining(getRemaining());
+    const id = setInterval(() => {
+      const r = getRemaining();
+      setRemaining(r);
+      if (!r && !firedRef.current) {
+        firedRef.current = true;
+        onExpire?.();
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [targetDateStr]);
+
+  return remaining;
+};
+
+// ─── Countdown banner (LeetCode-style) ────────────────────────────────────────
+
+const CountdownUnit = ({ value, label }) => (
+  <Box textAlign="center" minW="56px">
+    <Box
+      bg="whiteAlpha.200"
+      borderRadius="lg"
+      px={3}
+      py={2}
+      fontFamily="'JetBrains Mono', monospace"
+      fontSize="2xl"
+      fontWeight="800"
+      lineHeight="1"
+    >
+      {String(value).padStart(2, "0")}
+    </Box>
+    <Text fontSize="10px" mt={1} opacity={0.7} fontWeight="600" textTransform="uppercase" letterSpacing="0.5px">
+      {label}
+    </Text>
+  </Box>
+);
+
+const ContestCountdown = ({ contest, onExpire }) => {
+  const remaining = useCountdown(contest?.startTime, onExpire);
+  const statusNow = statusOf(contest);
+
+  if (!contest) return null;
+
+  // Show a running timer when contest is live
+  if (statusNow === "RUNNING") {
+    return (
+      <Box
+        bg="green.600"
+        color="white"
+        py={3}
+        textAlign="center"
+        fontSize="sm"
+        fontWeight="700"
+      >
+        🟢 Contest is LIVE — Good luck!
+      </Box>
+    );
+  }
+
+  if (statusNow === "ENDED") return null;
+  if (!remaining) return null;
+
+  return (
+    <Box
+      style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%)" }}
+      color="white"
+      py={5}
+      textAlign="center"
+    >
+      <Text fontSize="xs" fontWeight="600" opacity={0.7} mb={2} letterSpacing="1px" textTransform="uppercase">
+        Contest starts in
+      </Text>
+      <HStack justify="center" gap={3}>
+        {remaining.days > 0 && <CountdownUnit value={remaining.days} label="Days" />}
+        <CountdownUnit value={remaining.hours} label="Hours" />
+        <Box fontSize="2xl" fontWeight="800" opacity={0.5} pt={0}>:</Box>
+        <CountdownUnit value={remaining.minutes} label="Min" />
+        <Box fontSize="2xl" fontWeight="800" opacity={0.5} pt={0}>:</Box>
+        <CountdownUnit value={remaining.seconds} label="Sec" />
+      </HStack>
+    </Box>
+  );
+};
+
+const CountdownWaiting = ({ contest, onExpire }) => {
+  const remaining = useCountdown(contest?.startTime, onExpire);
+
+  if (!remaining) {
+    return (
+      <VStack py={16} gap={3}>
+        <Spinner size="lg" color="purple.500" />
+        <Text color="gray.500" fontWeight="600">Loading problems...</Text>
+      </VStack>
+    );
+  }
+
+  return (
+    <VStack py={16} gap={4}>
+      <Box
+        w={16}
+        h={16}
+        borderRadius="full"
+        bg="purple.50"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Clock size={32} color="#7c3aed" />
+      </Box>
+      <Text color="gray.700" fontWeight="700" fontSize="lg">
+        Problems will be revealed soon
+      </Text>
+      <Text color="gray.400" fontSize="sm" textAlign="center" maxW="400px">
+        You are registered! Problems will become available when the contest starts.
+      </Text>
+      <HStack gap={2} mt={2}>
+        {remaining.days > 0 && (
+          <Box textAlign="center" bg="purple.50" borderRadius="lg" px={3} py={2}>
+            <Text fontFamily="'JetBrains Mono', monospace" fontSize="xl" fontWeight="800" color="purple.700">
+              {String(remaining.days).padStart(2, "0")}
+            </Text>
+            <Text fontSize="9px" color="purple.400" fontWeight="600" textTransform="uppercase">Days</Text>
+          </Box>
+        )}
+        <Box textAlign="center" bg="purple.50" borderRadius="lg" px={3} py={2}>
+          <Text fontFamily="'JetBrains Mono', monospace" fontSize="xl" fontWeight="800" color="purple.700">
+            {String(remaining.hours).padStart(2, "0")}
+          </Text>
+          <Text fontSize="9px" color="purple.400" fontWeight="600" textTransform="uppercase">Hrs</Text>
+        </Box>
+        <Text fontSize="xl" fontWeight="800" color="purple.300">:</Text>
+        <Box textAlign="center" bg="purple.50" borderRadius="lg" px={3} py={2}>
+          <Text fontFamily="'JetBrains Mono', monospace" fontSize="xl" fontWeight="800" color="purple.700">
+            {String(remaining.minutes).padStart(2, "0")}
+          </Text>
+          <Text fontSize="9px" color="purple.400" fontWeight="600" textTransform="uppercase">Min</Text>
+        </Box>
+        <Text fontSize="xl" fontWeight="800" color="purple.300">:</Text>
+        <Box textAlign="center" bg="purple.50" borderRadius="lg" px={3} py={2}>
+          <Text fontFamily="'JetBrains Mono', monospace" fontSize="xl" fontWeight="800" color="purple.700">
+            {String(remaining.seconds).padStart(2, "0")}
+          </Text>
+          <Text fontSize="9px" color="purple.400" fontWeight="600" textTransform="uppercase">Sec</Text>
+        </Box>
+      </HStack>
+    </VStack>
+  );
 };
 
 // ─── Section tabs ──────────────────────────────────────────────────────────────
@@ -262,8 +431,30 @@ const ContestDetailPage = () => {
   const [contest, setContest]       = useState(null);
   const [loading, setLoading]       = useState(true);
   const [registering, setRegistering] = useState(false);
+  const [unregistering, setUnregistering] = useState(false);
   const [registered, setRegistered]  = useState(false);
   const [activeTab, setActiveTab]   = useState("Problems");
+
+  // Extracted so we can re-call it when countdown expires
+  const reload = useCallback(async () => {
+    try {
+      const resp = await ApiService.getContestBySlug(slug);
+      if (resp.statusCode === 200) {
+        setContest(resp.data);
+
+        if (ApiService.isAuthenticated() && !ApiService.isAdmin() && !ApiService.isCreator()) {
+          try {
+            const regResp = await ApiService.isRegisteredForContest(resp.data.id);
+            if (regResp.statusCode === 200) {
+              setRegistered(regResp.data === true);
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (err) {
+      showMessage(err.response?.data?.message || err.message, "error");
+    }
+  }, [slug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -319,6 +510,25 @@ const ContestDetailPage = () => {
       showMessage(err.response?.data?.message || err.message, "error");
     } finally {
       setRegistering(false);
+    }
+  };
+
+  const handleUnregister = async () => {
+    try {
+      setUnregistering(true);
+      const resp = await ApiService.unregisterFromContest(contest.id);
+      if (resp.statusCode === 200) {
+        setRegistered(false);
+        showMessage("Successfully unregistered!", "success");
+        setContest((c) => ({
+          ...c,
+          totalParticipants: Math.max(0, (c.totalParticipants ?? 1) - 1),
+        }));
+      }
+    } catch (err) {
+      showMessage(err.response?.data?.message || err.message, "error");
+    } finally {
+      setUnregistering(false);
     }
   };
 
@@ -463,20 +673,50 @@ const ContestDetailPage = () => {
                 </HStack>
               </VStack>
 
-              {/* Register button */}
+              {/* Register / Unregister button */}
               {!canEdit && (
                 <Box>
                   {registered ? (
-                    <HStack
-                      px={6}
-                      py={3}
-                      bg="green.400"
-                      borderRadius="xl"
-                      gap={2}
-                    >
-                      <CheckCircle size={18} />
-                      <Text fontWeight="700">Registered!</Text>
-                    </HStack>
+                    status === "UPCOMING" ? (
+                      <VStack gap={2}>
+                        <HStack
+                          px={6}
+                          py={3}
+                          bg="green.400"
+                          borderRadius="xl"
+                          gap={2}
+                        >
+                          <CheckCircle size={18} />
+                          <Text fontWeight="700">Registered!</Text>
+                        </HStack>
+                        <Button
+                          size="sm"
+                          bg="whiteAlpha.200"
+                          color="white"
+                          fontWeight="600"
+                          borderRadius="lg"
+                          _hover={{ bg: "red.500" }}
+                          loading={unregistering}
+                          loadingText="Unregistering..."
+                          onClick={handleUnregister}
+                          gap={2}
+                        >
+                          <XCircle size={14} />
+                          Unregister
+                        </Button>
+                      </VStack>
+                    ) : (
+                      <HStack
+                        px={6}
+                        py={3}
+                        bg="green.400"
+                        borderRadius="xl"
+                        gap={2}
+                      >
+                        <CheckCircle size={18} />
+                        <Text fontWeight="700">Registered!</Text>
+                      </HStack>
+                    )
                   ) : status === "ENDED" ? (
                     <Button
                       size="lg"
@@ -528,6 +768,9 @@ const ContestDetailPage = () => {
           </VStack>
         </Container>
       </Box>
+
+      {/* Countdown bar */}
+      <ContestCountdown contest={contest} onExpire={reload} />
 
       {/* Body */}
       <Container maxW="container.xl" mt={8}>
@@ -584,10 +827,42 @@ const ContestDetailPage = () => {
         {activeTab === "Problems" && (
           <Box bg="white" borderRadius="xl" boxShadow="sm" border="1px solid" borderColor="gray.200" overflow="hidden">
             {problems.length === 0 ? (
-              <VStack py={16} gap={3}>
-                <BookOpen size={40} color="#D1D5DB" />
-                <Text color="gray.400">No problems added yet</Text>
-              </VStack>
+              canEdit ? (
+                <VStack py={16} gap={3}>
+                  <BookOpen size={40} color="#D1D5DB" />
+                  <Text color="gray.400">No problems added yet</Text>
+                </VStack>
+              ) : !registered ? (
+                <VStack py={16} gap={3}>
+                  <Lock size={40} color="#D1D5DB" />
+                  <Text color="gray.500" fontWeight="600" fontSize="lg">
+                    Problems are locked
+                  </Text>
+                  <Text color="gray.400" fontSize="sm" textAlign="center" maxW="400px">
+                    Register for this contest to view the problems once the contest starts.
+                  </Text>
+                  {status !== "ENDED" && (
+                    <Button
+                      mt={2}
+                      colorScheme="purple"
+                      onClick={handleRegister}
+                      loading={registering}
+                      loadingText="Registering..."
+                      gap={2}
+                    >
+                      <Medal size={16} />
+                      Register Now
+                    </Button>
+                  )}
+                </VStack>
+              ) : status === "UPCOMING" ? (
+                <CountdownWaiting contest={contest} onExpire={reload} />
+              ) : (
+                <VStack py={16} gap={3}>
+                  <BookOpen size={40} color="#D1D5DB" />
+                  <Text color="gray.400">No problems added yet</Text>
+                </VStack>
+              )
             ) : (
               <Table.Root variant="line" size="md">
                 <Table.Header bg="purple.50">

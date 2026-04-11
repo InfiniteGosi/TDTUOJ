@@ -83,6 +83,12 @@ public class ContestController {
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
+    @DeleteMapping("/{id}/register")
+    public ResponseEntity<Response<Void>> unregister(@PathVariable Long id) {
+        Response<Void> response = contestService.unregisterFromContest(id);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
     @GetMapping("/{id}/is-registered")
     public ResponseEntity<Response<Boolean>> isRegistered(@PathVariable Long id) {
         return ResponseEntity.ok(contestService.isRegisteredForContest(id));

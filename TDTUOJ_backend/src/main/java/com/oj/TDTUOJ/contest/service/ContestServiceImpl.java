@@ -26,6 +26,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -211,8 +213,10 @@ public class ContestServiceImpl implements ContestService {
                 .orElseThrow(() -> new NotFoundException("Contest not found: " + contestId));
         User user = userService.getCurrentLoggedInUser();
 
-        // Cannot register for a contest that has already ended
-        if (contest.getEndTime() != null && LocalDateTime.now().isAfter(contest.getEndTime())) {
+        // Cannot register for a contest that has already started and ended
+        LocalDateTime now = LocalDateTime.now();
+        if (contest.getStartTime() != null && now.isAfter(contest.getStartTime())
+                && contest.getEndTime() != null && now.isAfter(contest.getEndTime())) {
             throw new BadRequestException("Cannot register: contest has already ended");
         }
 
@@ -240,6 +244,33 @@ public class ContestServiceImpl implements ContestService {
         return Response.<Void>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Registered for contest successfully")
+                .build();
+    }
+
+    // ── Unregistration ─────────────────────────────────────────────────────── //
+
+    @Override
+    @Transactional
+    public Response<Void> unregisterFromContest(Long contestId) {
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(() -> new NotFoundException("Contest not found: " + contestId));
+        User user = userService.getCurrentLoggedInUser();
+
+        if (!contestRegistrationRepository.existsByContestIdAndUserId(contestId, user.getId())) {
+            throw new BadRequestException("You are not registered for this contest");
+        }
+
+        // Only allow unregistering before the contest starts
+        if (contest.getStartTime() != null && !LocalDateTime.now().isBefore(contest.getStartTime())) {
+            throw new BadRequestException("Cannot unregister: contest has already started");
+        }
+
+        contestRegistrationRepository.deleteByContestIdAndUserId(contestId, user.getId());
+
+        log.info("User {} unregistered from contest {}", user.getId(), contestId);
+        return Response.<Void>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Unregistered from contest successfully")
                 .build();
     }
 
@@ -292,21 +323,52 @@ public class ContestServiceImpl implements ContestService {
         dto.setTotalProblems(contest.getContestProblems().size());
         // Use registrations (sign-ups), not participations (runtime data)
         dto.setTotalParticipants(contest.getRegistrations().size());
-        // Attach problem list
-        dto.setProblems(
-                contest.getContestProblems().stream()
-                        .map(cp -> {
-                            ContestProblemDTO cpDTO = modelMapper.map(cp, ContestProblemDTO.class);
-                            if (cp.getProblem() != null) {
-                                cpDTO.setProblemId(cp.getProblem().getId());
-                                cpDTO.setProblemTitle(cp.getProblem().getTitle());
-                                cpDTO.setProblemSlug(cp.getProblem().getSlug());
-                                cpDTO.setProblemDifficulty(cp.getProblem().getProblemDifficulty());
-                            }
-                            return cpDTO;
-                        })
-                        .collect(Collectors.toList())
-        );
+
+        // ── Determine whether the caller may see the problem list ────────── //
+        boolean canSeeProblems = false;
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()
+                && !(auth.getPrincipal() instanceof String && "anonymousUser".equals(auth.getPrincipal()))) {
+            // Admins and creators always see problems
+            boolean isPrivileged = auth.getAuthorities().stream()
+                    .anyMatch(a -> "ADMIN".equals(a.getAuthority()) || "CREATOR".equals(a.getAuthority()));
+            if (isPrivileged) {
+                canSeeProblems = true;
+            } else {
+                // Participants see problems only if registered AND contest has started
+                try {
+                    User currentUser = userService.getCurrentLoggedInUser();
+                    boolean isRegistered = contestRegistrationRepository
+                            .existsByContestIdAndUserId(contest.getId(), currentUser.getId());
+                    boolean contestStarted = contest.getStartTime() != null
+                            && !LocalDateTime.now().isBefore(contest.getStartTime());
+                    canSeeProblems = isRegistered && contestStarted;
+                } catch (Exception ignored) {
+                    // Not authenticated or user not found — leave canSeeProblems false
+                }
+            }
+        }
+
+        if (canSeeProblems) {
+            dto.setProblems(
+                    contest.getContestProblems().stream()
+                            .map(cp -> {
+                                ContestProblemDTO cpDTO = modelMapper.map(cp, ContestProblemDTO.class);
+                                if (cp.getProblem() != null) {
+                                    cpDTO.setProblemId(cp.getProblem().getId());
+                                    cpDTO.setProblemTitle(cp.getProblem().getTitle());
+                                    cpDTO.setProblemSlug(cp.getProblem().getSlug());
+                                    cpDTO.setProblemDifficulty(cp.getProblem().getProblemDifficulty());
+                                }
+                                return cpDTO;
+                            })
+                            .collect(Collectors.toList())
+            );
+        } else {
+            dto.setProblems(null);
+        }
+
         return dto;
     }
 

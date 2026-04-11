@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Box,
@@ -21,6 +21,9 @@ import {
   Trash2,
   Search,
   ChevronDown,
+  AlertTriangle,
+  Clock,
+  CalendarClock,
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
@@ -281,7 +284,6 @@ const EMPTY_FORM = {
   startTime: "",
   endTime: "",
   registrationStart: "",
-  registrationEnd: "",
   maxParticipant: "",
   isPublic: true,
   isRated: false,
@@ -300,8 +302,164 @@ const toPickerDate = (isoStr) => {
 // Format DateTimePicker value into ISO string for the API
 const toIsoString = (val) => {
   if (!val) return null;
-  // Already in YYYY-MM-DDTHH:mm:ss format
   return val.length === 16 ? val + ":00" : val;
+};
+
+// ─── Schedule helpers ──────────────────────────────────────────────────────────
+
+const fmtShort = (iso) => {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d)) return null;
+  return d.toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+};
+
+const getScheduleWarnings = (form) => {
+  const w = [];
+  const s = form.startTime ? new Date(form.startTime).getTime() : null;
+  const e = form.endTime   ? new Date(form.endTime).getTime()   : null;
+  const ro = form.registrationStart ? new Date(form.registrationStart).getTime() : null;
+
+  if (s && e && e <= s)
+    w.push({ type: "error", msg: "End time must be after start time" });
+  if (s && e && e > s) {
+    const mins = (e - s) / 60000;
+    if (mins < 5) w.push({ type: "warn", msg: "Contest duration is under 5 minutes" });
+  }
+  if (ro && s && ro >= s)
+    w.push({ type: "warn", msg: "Registration opens after contest starts" });
+  if (s && s < Date.now())
+    w.push({ type: "warn", msg: "Start time is in the past" });
+
+  return w;
+};
+
+// ─── Visual timeline (vertical) ────────────────────────────────────────────────
+
+const EVENTS = [
+  { key: "registrationStart", label: "Registration Opens", color: "#3b82f6", bg: "#eff6ff" },
+  { key: "startTime",         label: "Registration Closes / Contest Starts", color: "#16a34a", bg: "#f0fdf4" },
+  { key: "endTime",           label: "Contest Ends",       color: "#ef4444", bg: "#fef2f2" },
+];
+
+const ScheduleTimeline = ({ form }) => {
+  const events = useMemo(() => {
+    const list = EVENTS
+      .filter((ev) => form[ev.key])
+      .map((ev) => ({ ...ev, time: new Date(form[ev.key]).getTime() }));
+    list.sort((a, b) => a.time - b.time);
+    return list;
+  }, [form.startTime, form.endTime, form.registrationStart]);
+
+  const warnings = useMemo(() => getScheduleWarnings(form), [
+    form.startTime, form.endTime, form.registrationStart,
+  ]);
+
+  const hasStart = Boolean(form.startTime);
+  const hasEnd   = Boolean(form.endTime);
+
+  if (events.length === 0) {
+    return (
+      <Box bg="gray.50" borderRadius="lg" border="1px dashed" borderColor="gray.200" p={4} textAlign="center">
+        <CalendarClock size={24} color="#d1d5db" style={{ margin: "0 auto 8px" }} />
+        <Text fontSize="xs" color="gray.400" fontWeight="500">
+          Set times to see the schedule
+        </Text>
+      </Box>
+    );
+  }
+
+  return (
+    <VStack align="stretch" gap={3}>
+      {/* Vertical timeline */}
+      <Box bg="gray.50" borderRadius="lg" p={4} border="1px solid" borderColor="gray.100">
+        <Text fontSize="10px" fontWeight="700" color="gray.400" letterSpacing="0.05em" mb={3}>
+          SCHEDULE ORDER
+        </Text>
+        <VStack align="stretch" gap={0}>
+          {events.map((ev, i) => (
+            <HStack key={ev.key} gap={3} position="relative">
+              {/* Vertical line + dot */}
+              <VStack gap={0} align="center" w="16px" flexShrink={0}>
+                {i > 0 && (
+                  <Box w="2px" h="8px" bg="gray.200" />
+                )}
+                <Box
+                  w="10px"
+                  h="10px"
+                  borderRadius="full"
+                  bg={ev.color}
+                  border="2px solid white"
+                  boxShadow="0 0 0 1px " 
+                  flexShrink={0}
+                />
+                {i < events.length - 1 && (
+                  <Box w="2px" flex={1} minH="8px" bg="gray.200" />
+                )}
+              </VStack>
+              {/* Label + time */}
+              <Box
+                flex={1}
+                bg={ev.bg}
+                borderRadius="md"
+                px={3}
+                py={1.5}
+                mb={1}
+              >
+                <Text fontSize="10px" fontWeight="700" color={ev.color}>
+                  {ev.label}
+                </Text>
+                <Text fontSize="10px" color="gray.500">
+                  {fmtShort(new Date(ev.time).toISOString())}
+                </Text>
+              </Box>
+            </HStack>
+          ))}
+        </VStack>
+      </Box>
+
+      {/* Duration badge */}
+      {hasStart && hasEnd && (() => {
+        const s = new Date(form.startTime).getTime();
+        const e = new Date(form.endTime).getTime();
+        const diff = e - s;
+        if (diff <= 0) return null;
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        return (
+          <HStack gap={1} justify="center">
+            <Clock size={12} color="#9ca3af" />
+            <Text fontSize="xs" color="gray.500" fontWeight="600">
+              Duration: {h > 0 ? `${h}h ` : ""}{m}m
+            </Text>
+          </HStack>
+        );
+      })()}
+
+      {/* Warnings */}
+      {warnings.length > 0 && (
+        <VStack align="stretch" gap={1}>
+          {warnings.map((w, i) => (
+            <HStack
+              key={i}
+              gap={2}
+              px={3}
+              py={2}
+              bg={w.type === "error" ? "red.50" : "orange.50"}
+              borderRadius="md"
+              border="1px solid"
+              borderColor={w.type === "error" ? "red.200" : "orange.200"}
+            >
+              <AlertTriangle size={14} color={w.type === "error" ? "#ef4444" : "#f59e0b"} />
+              <Text fontSize="xs" fontWeight="600" color={w.type === "error" ? "red.600" : "orange.600"}>
+                {w.msg}
+              </Text>
+            </HStack>
+          ))}
+        </VStack>
+      )}
+    </VStack>
+  );
 };
 
 const AdminContestFormPage = () => {
@@ -327,7 +485,6 @@ const AdminContestFormPage = () => {
             startTime: toPickerDate(c.startTime),
             endTime: toPickerDate(c.endTime),
             registrationStart: toPickerDate(c.registrationStart),
-            registrationEnd: toPickerDate(c.registrationEnd),
             maxParticipant: c.maxParticipant ?? "",
             isPublic: c.isPublic ?? true,
             isRated: c.isRated ?? false,
@@ -355,13 +512,18 @@ const AdminContestFormPage = () => {
     if (!form.startTime)   return showMessage("Start time is required", "error");
     if (!form.endTime)     return showMessage("End time is required", "error");
 
+    // Validate time ordering
+    const sMs = new Date(form.startTime).getTime();
+    const eMs = new Date(form.endTime).getTime();
+    if (eMs <= sMs) return showMessage("End time must be after start time", "error");
+
     const payload = {
       name: form.name.trim(),
       description: form.description.trim() || null,
       startTime: toIsoString(form.startTime),
       endTime: toIsoString(form.endTime),
       registrationStart: toIsoString(form.registrationStart),
-      registrationEnd: toIsoString(form.registrationEnd),
+      registrationEnd: toIsoString(form.startTime),  // auto-close registration at contest start
       maxParticipant: form.maxParticipant ? parseInt(form.maxParticipant) : null,
       isPublic: form.isPublic,
       isRated: form.isRated,
@@ -479,7 +641,7 @@ const AdminContestFormPage = () => {
 
               <Box borderTopWidth="1px" borderColor="gray.100" />
 
-              {/* Schedule Section */}
+               {/* Schedule Section */}
               <Box>
                 <Text
                   fontSize="xs"
@@ -490,28 +652,12 @@ const AdminContestFormPage = () => {
                 >
                   SCHEDULE
                 </Text>
-                <VStack align="stretch" gap={4}>
-                  <HStack gap={4} align="flex-start">
-                    <Field label="Start Time" required>
-                      <DateTimePicker
-                        value={form.startTime}
-                        onChange={(v) => set("startTime", v)}
-                        placeholder="Pick start date & time"
-                      />
-                    </Field>
-                    <Field label="End Time" required>
-                      <DateTimePicker
-                        value={form.endTime}
-                        onChange={(v) => set("endTime", v)}
-                        placeholder="Pick end date & time"
-                      />
-                    </Field>
-                  </HStack>
-
-                  <HStack gap={4} align="flex-start">
+                <HStack align="flex-start" gap={6}>
+                  {/* Left: time pickers */}
+                  <VStack align="stretch" gap={4} flex={1}>
                     <Field
                       label="Registration Opens"
-                      hint="Leave blank to allow registration any time"
+                      hint="Leave blank to allow registration any time. Registration closes automatically when the contest starts."
                     >
                       <DateTimePicker
                         value={form.registrationStart}
@@ -519,15 +665,30 @@ const AdminContestFormPage = () => {
                         placeholder="Pick opening date & time"
                       />
                     </Field>
-                    <Field label="Registration Closes">
-                      <DateTimePicker
-                        value={form.registrationEnd}
-                        onChange={(v) => set("registrationEnd", v)}
-                        placeholder="Pick closing date & time"
-                      />
-                    </Field>
-                  </HStack>
-                </VStack>
+
+                    <HStack gap={4} align="flex-start">
+                      <Field label="Start Time" required>
+                        <DateTimePicker
+                          value={form.startTime}
+                          onChange={(v) => set("startTime", v)}
+                          placeholder="Pick start date & time"
+                        />
+                      </Field>
+                      <Field label="End Time" required>
+                        <DateTimePicker
+                          value={form.endTime}
+                          onChange={(v) => set("endTime", v)}
+                          placeholder="Pick end date & time"
+                        />
+                      </Field>
+                    </HStack>
+                  </VStack>
+
+                  {/* Right: visual timeline */}
+                  <Box w="280px" minW="240px" flexShrink={0} pt={6}>
+                    <ScheduleTimeline form={form} />
+                  </Box>
+                </HStack>
               </Box>
 
               <Box borderTopWidth="1px" borderColor="gray.100" />

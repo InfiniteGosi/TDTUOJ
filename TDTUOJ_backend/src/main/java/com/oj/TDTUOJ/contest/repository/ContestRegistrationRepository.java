@@ -17,4 +17,6 @@ public interface ContestRegistrationRepository extends JpaRepository<ContestRegi
     boolean existsByContestIdAndUserIdAndStatus(Long contestId, Long userId, ContestRegistrationStatus status);
 
     long countByContestId(Long contestId);
+
+    void deleteByContestIdAndUserId(Long contestId, Long userId);
 }

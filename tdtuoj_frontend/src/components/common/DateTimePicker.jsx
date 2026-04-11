@@ -35,16 +35,21 @@ const pad = (n) => String(n).padStart(2, "0");
 const ScrollColumn = ({ value, max, onChange, label }) => {
   const items = Array.from({ length: max }, (_, i) => i);
   const listRef = useRef(null);
+  const isProgScroll = useRef(false);
   const ITEM_H = 36;
 
-  // Scroll to current value
+  // Scroll to current value (programmatic — skip onScroll handler)
   useEffect(() => {
     if (listRef.current) {
+      isProgScroll.current = true;
       listRef.current.scrollTop = value * ITEM_H;
+      // Clear the flag after the browser has finished the scroll
+      requestAnimationFrame(() => { isProgScroll.current = false; });
     }
   }, [value]);
 
   const handleScroll = useCallback(() => {
+    if (isProgScroll.current) return; // ignore programmatic scrolls
     if (listRef.current) {
       const idx = Math.round(listRef.current.scrollTop / ITEM_H);
       const clamped = Math.max(0, Math.min(idx, max - 1));

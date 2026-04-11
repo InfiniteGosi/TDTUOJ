@@ -415,6 +415,14 @@ export default class ApiService {
     return resp.data;
   }
 
+  static async unregisterFromContest(id) {
+    const resp = await axios.delete(
+      `${this.BASE_URL}/contests/${id}/register`,
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
   static async isRegisteredForContest(id) {
     const resp = await axios.get(
       `${this.BASE_URL}/contests/${id}/is-registered`,

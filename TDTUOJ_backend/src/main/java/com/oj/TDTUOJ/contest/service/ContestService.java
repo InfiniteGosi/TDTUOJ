@@ -25,6 +25,9 @@ public interface ContestService {
     /** Register the currently authenticated user for a contest. */
     Response<Void> registerForContest(Long contestId);
 
+    /** Unregister the currently authenticated user from a contest (only before start). */
+    Response<Void> unregisterFromContest(Long contestId);
+
     /** Check whether the currently authenticated user is already registered. */
     Response<Boolean> isRegisteredForContest(Long contestId);
 
