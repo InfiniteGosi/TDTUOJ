@@ -4,6 +4,9 @@ import com.oj.TDTUOJ.common.aws.AwsS3Service;
 import com.oj.TDTUOJ.common.exceptions.BadRequestException;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.common.response.Response;
+import com.oj.TDTUOJ.contest.dto.RatingHistoryDTO;
+import com.oj.TDTUOJ.contest.entity.RatingHistory;
+import com.oj.TDTUOJ.contest.repository.RatingHistoryRepository;
 import com.oj.TDTUOJ.role.entity.Role;
 import com.oj.TDTUOJ.role.repository.RoleRepository;
 import com.oj.TDTUOJ.user.dto.ChangePasswordRequest;
@@ -40,6 +43,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
     private final AwsS3Service awsS3Service;
+    private final RatingHistoryRepository ratingHistoryRepository;
 
     @Override
     public User getCurrentLoggedInUser() {
@@ -275,6 +279,33 @@ public class UserServiceImpl implements UserService {
         return Response.builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Account deactivated successfully")
+                .build();
+    }
+    @Override
+    public Response<List<RatingHistoryDTO>> getRatingHistory(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("User not found: " + username));
+
+        List<RatingHistoryDTO> history = ratingHistoryRepository
+                .findByUserIdOrderByCreatedAtDesc(user.getId())
+                .stream()
+                .map(rh -> {
+                    RatingHistoryDTO dto = new RatingHistoryDTO();
+                    dto.setContestId(rh.getContestId());
+                    dto.setContestName(rh.getContestName());
+                    dto.setOldRating(rh.getOldRating());
+                    dto.setNewRating(rh.getNewRating());
+                    dto.setRatingChange(rh.getRatingChange());
+                    dto.setRank(rh.getRank());
+                    dto.setCreatedAt(rh.getCreatedAt());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        return Response.<List<RatingHistoryDTO>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Rating history retrieved")
+                .data(history)
                 .build();
     }
 }

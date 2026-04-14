@@ -127,6 +127,128 @@ const StatTile = ({ icon: Icon, iconColor, label, value, sub }) => (
     </HStack>
   </Box>
 );
+// ─── RatingChart (pure SVG) ───────────────────────────────────────────────────
+
+const RatingChart = ({ data }) => {
+  const [hovered, setHovered] = useState(null);
+
+  // Data comes newest-first from API; reverse for chronological left→right
+  const points = [...data].reverse();
+  if (points.length === 0) return null;
+
+  const W = 600, H = 220, PX = 40, PY = 30;
+  const chartW = W - PX * 2, chartH = H - PY * 2;
+
+  const ratings = points.map((p) => p.newRating);
+  // Include oldRating of first entry for the "starting" point
+  const allRatings = [points[0].oldRating, ...ratings];
+  const minR = Math.min(...allRatings) - 50;
+  const maxR = Math.max(...allRatings) + 50;
+  const rangeR = maxR - minR || 1;
+
+  // Build coordinate list: first point = oldRating before first contest
+  const coords = [];
+  // Starting point
+  coords.push({
+    x: PX,
+    y: PY + chartH - ((points[0].oldRating - minR) / rangeR) * chartH,
+    rating: points[0].oldRating,
+    label: "Start",
+    idx: -1,
+  });
+  // Each contest result
+  points.forEach((p, i) => {
+    coords.push({
+      x: PX + ((i + 1) / points.length) * chartW,
+      y: PY + chartH - ((p.newRating - minR) / rangeR) * chartH,
+      rating: p.newRating,
+      change: p.ratingChange,
+      label: p.contestName,
+      rank: p.rank,
+      idx: i,
+    });
+  });
+
+  const linePath = coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.x},${c.y}`).join(" ");
+  const areaPath = linePath + ` L${coords[coords.length - 1].x},${PY + chartH} L${PX},${PY + chartH} Z`;
+
+  // Y-axis ticks
+  const tickCount = 5;
+  const ticks = Array.from({ length: tickCount }, (_, i) => {
+    const val = minR + (rangeR * i) / (tickCount - 1);
+    return { val: Math.round(val), y: PY + chartH - (i / (tickCount - 1)) * chartH };
+  });
+
+  return (
+    <Box position="relative">
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ overflow: "visible" }}>
+        <defs>
+          <linearGradient id="ratingFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#7C3AED" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#7C3AED" stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+
+        {/* Grid lines + Y labels */}
+        {ticks.map((t) => (
+          <g key={t.val}>
+            <line x1={PX} y1={t.y} x2={W - PX} y2={t.y} stroke="#E5E7EB" strokeWidth={0.5} />
+            <text x={PX - 6} y={t.y + 4} textAnchor="end" fontSize="9" fill="#9CA3AF">{t.val}</text>
+          </g>
+        ))}
+
+        {/* Area fill */}
+        <path d={areaPath} fill="url(#ratingFill)" />
+
+        {/* Line */}
+        <path d={linePath} fill="none" stroke="#7C3AED" strokeWidth={2} strokeLinejoin="round" />
+
+        {/* Dots */}
+        {coords.map((c, i) => (
+          <circle
+            key={i}
+            cx={c.x}
+            cy={c.y}
+            r={hovered === i ? 5 : 3.5}
+            fill={i === 0 ? "#A855F7" : (c.change >= 0 ? "#10B981" : "#EF4444")}
+            stroke="white"
+            strokeWidth={2}
+            style={{ cursor: "pointer", transition: "r 0.15s" }}
+            onMouseEnter={() => setHovered(i)}
+            onMouseLeave={() => setHovered(null)}
+          />
+        ))}
+
+        {/* Tooltip */}
+        {hovered !== null && (() => {
+          const c = coords[hovered];
+          const ttW = 130, ttH = 50;
+          let tx = c.x - ttW / 2;
+          if (tx < 5) tx = 5;
+          if (tx + ttW > W - 5) tx = W - ttW - 5;
+          const ty = c.y - ttH - 12;
+          return (
+            <g>
+              <rect x={tx} y={ty} width={ttW} height={ttH} rx={6} fill="#1F2937" opacity={0.95} />
+              <text x={tx + ttW / 2} y={ty + 16} textAnchor="middle" fontSize="10" fill="white" fontWeight="600">
+                {c.label?.length > 18 ? c.label.slice(0, 18) + "…" : c.label}
+              </text>
+              <text x={tx + ttW / 2} y={ty + 30} textAnchor="middle" fontSize="10" fill="#D1D5DB">
+                Rating: {c.rating}
+              </text>
+              {c.change !== undefined && (
+                <text x={tx + ttW / 2} y={ty + 43} textAnchor="middle" fontSize="10"
+                  fill={c.change >= 0 ? "#86EFAC" : "#FCA5A5"} fontWeight="600">
+                  {c.change >= 0 ? "+" : ""}{c.change} (Rank #{c.rank})
+                </text>
+              )}
+            </g>
+          );
+        })()}
+      </svg>
+    </Box>
+  );
+};
 
 // ─── ProfilePage ──────────────────────────────────────────────────────────────
 
@@ -138,6 +260,7 @@ const ProfilePage = () => {
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
   const [activity, setActivity] = useState([]);
+  const [ratingHistory, setRatingHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tooltip, setTooltip] = useState(null);
 
@@ -146,14 +269,16 @@ const ProfilePage = () => {
     const fetchAll = async () => {
       try {
         setLoading(true);
-        const [userRes, statsRes, activityRes] = await Promise.all([
+        const [userRes, statsRes, activityRes, ratingRes] = await Promise.all([
           ApiService.getUserByUsername(username),
           ApiService.getUserStatistics(username),
           ApiService.getUserActivity(username),
+          ApiService.getRatingHistory(username).catch(() => ({ statusCode: 200, data: [] })),
         ]);
         if (userRes.statusCode === 200) setUser(userRes.data);
         if (statsRes.statusCode === 200) setStats(statsRes.data);
         if (activityRes.statusCode === 200) setActivity(activityRes.data);
+        if (ratingRes.statusCode === 200) setRatingHistory(ratingRes.data || []);
       } catch (err) {
         showMessage(err.response?.data?.message || err.message, "error");
       } finally {
@@ -198,8 +323,6 @@ const ProfilePage = () => {
   const total = stats?.totalSubmissions ?? 0;
   const accepted = stats?.acceptedSubmissions ?? 0;
   const accRate = stats?.acceptanceRate ?? 0;
-  const practPts = stats?.practicePoints ?? 0;
-  const contestPts = stats?.contestPoints ?? 0;
   const totalPts = stats?.totalPoints ?? user.point ?? 0;
   const rating = stats?.currentRating ?? user.rating ?? 0;
   const maxRating = stats?.maxRating ?? 0;
@@ -353,11 +476,26 @@ const ProfilePage = () => {
                     Peak: {maxRating}
                   </Text>
                 )}
+                {ratingHistory.length > 0 && (() => {
+                  const last = ratingHistory[0];
+                  const change = last.ratingChange;
+                  return (
+                    <HStack mt={2} gap={1}>
+                      <Text fontSize="xs" fontWeight="700"
+                        color={change >= 0 ? "#86EFAC" : "#FCA5A5"}>
+                        {change >= 0 ? "+" : ""}{change}
+                      </Text>
+                      <Text fontSize="xs" opacity={0.5}>
+                        last contest
+                      </Text>
+                    </HStack>
+                  );
+                })()}
               </Box>
 
-              {/* Points breakdown */}
+              {/* Total Points */}
               <Box bg="white" borderRadius="2xl" boxShadow="sm" p={5}>
-                <HStack gap={2} mb={4}>
+                <HStack gap={2} mb={3}>
                   <Trophy size={15} color="#7C3AED" />
                   <Text
                     fontSize="xs"
@@ -365,34 +503,15 @@ const ProfilePage = () => {
                     color="gray.600"
                     letterSpacing="0.06em"
                   >
-                    POINTS BREAKDOWN
+                    TOTAL POINTS
                   </Text>
                 </HStack>
-                <VStack align="stretch" gap={3}>
-                  {[
-                    { label: "Practice", value: practPts, color: "#7C3AED" },
-                    { label: "Contest", value: contestPts, color: "#F59E0B" },
-                  ].map(({ label, value, color }) => (
-                    <HStack key={label} justify="space-between">
-                      <Text fontSize="sm" color="gray.500">
-                        {label}
-                      </Text>
-                      <Text fontSize="sm" fontWeight="700" color={color}>
-                        {value}
-                      </Text>
-                    </HStack>
-                  ))}
-                  <Box borderTopWidth="1px" borderColor="gray.100" pt={3}>
-                    <HStack justify="space-between">
-                      <Text fontSize="sm" fontWeight="600" color="gray.700">
-                        Total
-                      </Text>
-                      <Text fontSize="lg" fontWeight="800" color="#10B981">
-                        {totalPts}
-                      </Text>
-                    </HStack>
-                  </Box>
-                </VStack>
+                <Text fontSize="3xl" fontWeight="900" color="#10B981" lineHeight="1">
+                  {totalPts}
+                </Text>
+                <Text fontSize="xs" color="gray.400" mt={1}>
+                  {solved} problem{solved !== 1 ? "s" : ""} solved
+                </Text>
               </Box>
             </VStack>
           </GridItem>
@@ -449,8 +568,8 @@ const ProfilePage = () => {
                     { label: "Accepted", value: accepted },
                     { label: "Acceptance Rate", value: `${accRate}%` },
                     { label: "Problems Solved", value: solved },
-                    { label: "Practice Points", value: practPts },
-                    { label: "Contest Points", value: contestPts },
+                    { label: "Total Points", value: totalPts },
+                    { label: "Rating", value: rating },
                   ].map(({ label, value }) => (
                     <Box
                       key={label}
@@ -474,6 +593,24 @@ const ProfilePage = () => {
                   ))}
                 </Grid>
               </Box>
+
+              {/* Rating Chart */}
+              {ratingHistory.length > 0 && (
+                <Box bg="white" borderRadius="2xl" boxShadow="sm" p={5}>
+                  <HStack gap={2} mb={4}>
+                    <TrendingUp size={15} color="#7C3AED" />
+                    <Text
+                      fontSize="xs"
+                      fontWeight="700"
+                      color="gray.600"
+                      letterSpacing="0.06em"
+                    >
+                      RATING HISTORY
+                    </Text>
+                  </HStack>
+                  <RatingChart data={ratingHistory} />
+                </Box>
+              )}
 
               {/* Activity heatmap */}
               <Box bg="white" borderRadius="2xl" boxShadow="sm" p={5}>

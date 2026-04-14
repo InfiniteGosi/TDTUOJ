@@ -19,6 +19,10 @@ public interface ContestParticipationRepository extends JpaRepository<ContestPar
 
     List<ContestParticipation> findByContestIdOrderByRankAsc(Long contestId);
 
+    /** Eagerly loads User to avoid N+1 when computing ratings. */
+    @Query("SELECT cp FROM ContestParticipation cp JOIN FETCH cp.user WHERE cp.contest.id = :contestId ORDER BY cp.rank ASC")
+    List<ContestParticipation> findByContestIdWithUserOrderByRankAsc(@Param("contestId") Long contestId);
+
     /**
      * Bulk-update ranks in DB after Redis re-ranks the leaderboard.
      * Called asynchronously after leaderboard invalidation.

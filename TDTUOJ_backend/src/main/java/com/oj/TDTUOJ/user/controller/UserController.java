@@ -1,5 +1,7 @@
 package com.oj.TDTUOJ.user.controller;
 
+import com.oj.TDTUOJ.contest.dto.RatingHistoryDTO;
+
 import com.oj.TDTUOJ.userdailyactivity.dto.UserDailyActivityDTO;
 import com.oj.TDTUOJ.userdailyactivity.service.UserActivityService;
 import com.oj.TDTUOJ.common.response.Response;
@@ -81,5 +83,11 @@ public class UserController {
     public ResponseEntity<Response<UserStatisticsDTO>> getUserStatistics(
             @PathVariable String username) {
         return ResponseEntity.ok(userStatisticsService.getStatsByUsername(username));
+    }
+
+    @GetMapping("/{username}/rating-history")
+    public ResponseEntity<Response<List<RatingHistoryDTO>>> getRatingHistory(
+            @PathVariable String username) {
+        return ResponseEntity.ok(userService.getRatingHistory(username));
     }
 }

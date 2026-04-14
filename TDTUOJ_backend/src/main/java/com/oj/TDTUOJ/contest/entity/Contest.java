@@ -44,6 +44,10 @@ public class Contest {
     @Builder.Default
     private Boolean isRated = false;
 
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private Boolean ratingProcessed = false;
+
     private Integer maxParticipant;
 
     private LocalDateTime registrationStart;

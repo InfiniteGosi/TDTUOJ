@@ -161,6 +161,16 @@ export default class ApiService {
     return resp.data;
   }
 
+  static async getRatingHistory(username) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/users/${username}/rating-history`,
+      {
+        headers: this.getHeader(),
+      },
+    );
+    return resp.data;
+  }
+
   // ─── Problems ────────────────────────────────────────────────────────────────
   static async getAllProblems({
     limit = 10,

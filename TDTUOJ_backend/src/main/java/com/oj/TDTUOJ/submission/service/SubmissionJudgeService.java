@@ -128,16 +128,15 @@ public class SubmissionJudgeService {
 
         int earnedPoints = 0;
         if (isAccepted) {
-            // Exclude the submission we just saved so it doesn't count against itself
+            // Global check: has this user ever AC'd this problem before (in any mode)?
             long priorAcCount = submissionRepository
                     .countByUserIdAndProblemIdAndSubmissionVerdictAndIdNot(
                             job.getUserId(), problem.getId(), SubmissionVerdict.AC, submission.getId()
                     );
 
             if (priorAcCount == 0) {
-                earnedPoints = isPractice
-                        ? problem.getPoint()
-                        : (int)(problem.getPoint() * 1.5);
+                // First time solving this problem — award points once
+                earnedPoints = problem.getPoint();
                 userStatisticsService.recordProblemSolved(job.getUserId());
             }
         }
@@ -145,8 +144,7 @@ public class SubmissionJudgeService {
         userStatisticsService.recordSubmission(
                 job.getUserId(),
                 isAccepted,
-                earnedPoints,
-                isPractice
+                earnedPoints
         );
 
         // 5. Update the real-time leaderboard for contest submissions

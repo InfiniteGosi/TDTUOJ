@@ -152,9 +152,15 @@ public class ContestServiceImpl implements ContestService {
         if (dto.getName()              != null) contest.setName(dto.getName());
         if (dto.getDescription()       != null) contest.setDescription(dto.getDescription());
         if (dto.getStartTime()         != null) contest.setStartTime(dto.getStartTime());
-        if (dto.getEndTime()           != null) contest.setEndTime(dto.getEndTime());
+        if (dto.getEndTime()           != null) {
+            contest.setEndTime(dto.getEndTime());
+            contest.setRatingProcessed(false); // re-trigger rating on time change
+        }
         if (dto.getIsPublic()          != null) contest.setIsPublic(dto.getIsPublic());
-        if (dto.getIsRated()           != null) contest.setIsRated(dto.getIsRated());
+        if (dto.getIsRated()           != null) {
+            contest.setIsRated(dto.getIsRated());
+            contest.setRatingProcessed(false); // re-trigger rating on rated change
+        }
         if (dto.getMaxParticipant()    != null) contest.setMaxParticipant(dto.getMaxParticipant());
         if (dto.getRegistrationStart() != null) contest.setRegistrationStart(dto.getRegistrationStart());
         if (dto.getRegistrationEnd()   != null) contest.setRegistrationEnd(dto.getRegistrationEnd());

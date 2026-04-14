@@ -21,6 +21,7 @@ import AdminEditUserPage from "./components/admin/AdminEditUserPage";
 import AdminProblemTagPage from "./components/admin/AdminProblemTagPage";
 import ContestPage from "./components/contests/ContestPage";
 import ContestDetailPage from "./components/contests/ContestDetailPage";
+import ContestProblemPage from "./components/contests/ContestProblemPage";
 import AdminContestPage from "./components/admin/AdminContestPage";
 import AdminContestFormPage from "./components/admin/AdminContestFormPage";
 import { ToastProvider } from "./components/common/ToastMessage";
@@ -35,6 +36,10 @@ function App() {
             <GlobalClockBar />
             <div className="content">
               <Routes>
+                <Route
+                  path="/contests/:contestSlug/problems/:problemSlug"
+                  element={<ContestProblemPage />}
+                />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/home" element={<HomePage />} />

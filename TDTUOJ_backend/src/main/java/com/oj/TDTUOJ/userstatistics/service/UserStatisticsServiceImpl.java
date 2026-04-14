@@ -52,16 +52,14 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
                 .distinct()
                 .count();
 
-        // Award points once per distinct AC'd practice problem.
-        // Contest points can't be recovered retroactively — leave at 0.
+        // Award points once per distinct AC'd problem (any mode).
         Map<Long, Integer> firstAcPoints = new LinkedHashMap<>();
         all.stream()
                 .filter(s -> s.getSubmissionVerdict() == SubmissionVerdict.AC
-                        && s.getContestId() == null
                         && s.getProblem() != null)
                 .forEach(s -> firstAcPoints.putIfAbsent(
                         s.getProblem().getId(), s.getProblem().getPoint()));
-        int practicePoints = firstAcPoints.values().stream().mapToInt(Integer::intValue).sum();
+        int totalPoints = firstAcPoints.values().stream().mapToInt(Integer::intValue).sum();
 
         double rate = total == 0 ? 0.0
                 : Math.round((accepted * 100.0 / total) * 10.0) / 10.0;
@@ -71,35 +69,28 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
                 .totalSubmissions(total)
                 .acceptedSubmissions(accepted)
                 .problemsSolved((int) solved)
-                .practicePoints(practicePoints)
-                .contestPoints(0)
-                .totalPoints(practicePoints)
+                .totalPoints(totalPoints)
                 .acceptanceRate(rate)
                 .build());
     }
 
     @Override
-    public void recordSubmission(Long userId, boolean isAccepted, Integer points, boolean isPractice) {
+    public void recordSubmission(Long userId, boolean isAccepted, Integer points) {
         UserStatistics stats = getOrCreate(userId);
 
         stats.setTotalSubmissions(stats.getTotalSubmissions() + 1);
 
-        if (isAccepted) {
+        if (isAccepted && points > 0) {
             stats.setAcceptedSubmissions(stats.getAcceptedSubmissions() + 1);
-
-            if (isPractice) {
-                stats.setPracticePoints(stats.getPracticePoints() + points);
-            } else {
-                stats.setContestPoints(stats.getContestPoints() + points);
-            }
-
-            stats.setTotalPoints(stats.getPracticePoints() + stats.getContestPoints());
+            stats.setTotalPoints(stats.getTotalPoints() + points);
+        } else if (isAccepted) {
+            stats.setAcceptedSubmissions(stats.getAcceptedSubmissions() + 1);
         }
 
         // Recalculate acceptance rate
         double rate = stats.getTotalSubmissions() == 0 ? 0.0
                 : (stats.getAcceptedSubmissions() * 100.0) / stats.getTotalSubmissions();
-        stats.setAcceptanceRate(Math.round(rate * 10.0) / 10.0); // round to 1 decimal
+        stats.setAcceptanceRate(Math.round(rate * 10.0) / 10.0);
 
         statisticsRepository.save(stats);
     }

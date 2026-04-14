@@ -35,14 +35,6 @@ public class UserStatistics {
 
     @Column(nullable = false)
     @Builder.Default
-    private Integer practicePoints = 0;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private Integer contestPoints = 0;
-
-    @Column(nullable = false)
-    @Builder.Default
     private Integer totalPoints = 0;
 
     @Builder.Default

@@ -239,9 +239,6 @@ const CountdownWaiting = ({ contest, onExpire }) => {
   );
 };
 
-// ─── Section tabs ──────────────────────────────────────────────────────────────
-
-const TABS = ["Problems", "Leaderboard"];
 
 // ─── Leaderboard table ─────────────────────────────────────────────────────────
 
@@ -433,7 +430,6 @@ const ContestDetailPage = () => {
   const [registering, setRegistering] = useState(false);
   const [unregistering, setUnregistering] = useState(false);
   const [registered, setRegistered]  = useState(false);
-  const [activeTab, setActiveTab]   = useState("Problems");
 
   // Extracted so we can re-call it when countdown expires
   const reload = useCallback(async () => {
@@ -774,182 +770,242 @@ const ContestDetailPage = () => {
 
       {/* Body */}
       <Container maxW="container.xl" mt={8}>
-        {/* Tab bar */}
-        <HStack
-          gap={0}
-          bg="white"
-          borderRadius="xl"
-          boxShadow="sm"
-          border="1px solid"
-          borderColor="gray.200"
-          p={1}
-          mb={6}
-          display="inline-flex"
-        >
-          {TABS.map((tab) => (
-            <Box
-              key={tab}
-              as="button"
-              px={5}
-              py={2}
-              borderRadius="lg"
-              fontSize="sm"
-              fontWeight="600"
-              bg={activeTab === tab ? "purple.600" : "transparent"}
-              color={activeTab === tab ? "white" : "gray.500"}
-              transition="all 0.15s"
-              _hover={activeTab !== tab ? { bg: "purple.50", color: "purple.600" } : {}}
-              onClick={() => setActiveTab(tab)}
-              style={{ outline: "none" }}
-              gap={2}
-              display="flex"
-              alignItems="center"
-            >
-              {tab === "Problems" ? <BookOpen size={14} /> : <ListOrdered size={14} />}
-              {tab}
-              {tab === "Problems" && (
-                <Badge
-                  ml={1}
-                  bg={activeTab === tab ? "whiteAlpha.300" : "purple.100"}
-                  color={activeTab === tab ? "white" : "purple.700"}
-                  borderRadius="full"
-                  px={2}
-                  fontSize="xs"
+        {/* ── Contest is RUNNING + registered/admin ── */}
+        {(registered || canEdit) && status === "RUNNING" && (
+          <Box
+            bg="white"
+            borderRadius="2xl"
+            boxShadow="sm"
+            border="1px solid"
+            borderColor="green.200"
+            p={8}
+            mb={6}
+            textAlign="center"
+          >
+            <VStack gap={4}>
+              <Box
+                w={16} h={16} borderRadius="full"
+                bg="green.50" display="flex" alignItems="center" justifyContent="center"
+              >
+                <Trophy size={32} color="#16a34a" />
+              </Box>
+              <Text fontSize="xl" fontWeight="800" color="gray.800">
+                Contest is Live!
+              </Text>
+              <Text color="gray.500" fontSize="sm" maxW="500px">
+                Enter the contest to start solving problems, or check the leaderboard.
+              </Text>
+              <HStack gap={4} mt={2} flexWrap="wrap" justify="center">
+                <Button
+                  size="lg"
+                  bg="purple.600"
+                  color="white"
+                  fontWeight="800"
+                  borderRadius="xl"
+                  px={8}
+                  _hover={{ bg: "purple.700", transform: "translateY(-1px)" }}
+                  transition="all 0.15s"
+                  onClick={() => {
+                    const fp = problems[0];
+                    if (fp) navigate(`/contests/${slug}/problems/${fp.problemSlug}`);
+                  }}
+                  gap={2}
+                  disabled={problems.length === 0}
                 >
-                  {problems.length}
-                </Badge>
-              )}
-            </Box>
-          ))}
-        </HStack>
-
-        {/* Tab content */}
-        {activeTab === "Problems" && (
-          <Box bg="white" borderRadius="xl" boxShadow="sm" border="1px solid" borderColor="gray.200" overflow="hidden">
-            {problems.length === 0 ? (
-              canEdit ? (
-                <VStack py={16} gap={3}>
-                  <BookOpen size={40} color="#D1D5DB" />
-                  <Text color="gray.400">No problems added yet</Text>
-                </VStack>
-              ) : !registered ? (
-                <VStack py={16} gap={3}>
-                  <Lock size={40} color="#D1D5DB" />
-                  <Text color="gray.500" fontWeight="600" fontSize="lg">
-                    Problems are locked
-                  </Text>
-                  <Text color="gray.400" fontSize="sm" textAlign="center" maxW="400px">
-                    Register for this contest to view the problems once the contest starts.
-                  </Text>
-                  {status !== "ENDED" && (
-                    <Button
-                      mt={2}
-                      colorScheme="purple"
-                      onClick={handleRegister}
-                      loading={registering}
-                      loadingText="Registering..."
-                      gap={2}
-                    >
-                      <Medal size={16} />
-                      Register Now
-                    </Button>
-                  )}
-                </VStack>
-              ) : status === "UPCOMING" ? (
-                <CountdownWaiting contest={contest} onExpire={reload} />
-              ) : (
-                <VStack py={16} gap={3}>
-                  <BookOpen size={40} color="#D1D5DB" />
-                  <Text color="gray.400">No problems added yet</Text>
-                </VStack>
-              )
-            ) : (
-              <Table.Root variant="line" size="md">
-                <Table.Header bg="purple.50">
-                  <Table.Row>
-                    <Table.ColumnHeader w="8%" textAlign="center">
-                      <Text fontWeight="bold" color="purple.700" fontSize="sm">#</Text>
-                    </Table.ColumnHeader>
-                    <Table.ColumnHeader>
-                      <Text fontWeight="bold" color="purple.700" fontSize="sm">Problem</Text>
-                    </Table.ColumnHeader>
-                    <Table.ColumnHeader w="15%">
-                      <Text fontWeight="bold" color="purple.700" fontSize="sm">Difficulty</Text>
-                    </Table.ColumnHeader>
-                    <Table.ColumnHeader w="12%" textAlign="center">
-                      <Text fontWeight="bold" color="purple.700" fontSize="sm">Points</Text>
-                    </Table.ColumnHeader>
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {problems.map((p, idx) => (
-                    <Table.Row
-                      key={p.problemId}
-                      _hover={{ bg: "purple.50", cursor: "pointer" }}
-                      transition="background 0.1s"
-                      bg={idx % 2 === 0 ? "white" : "gray.50"}
-                      onClick={() => navigate(`/problems/${p.problemSlug}?contestId=${contest.id}`)}
-                    >
-                      <Table.Cell textAlign="center">
-                        <Box
-                          w={8}
-                          h={8}
-                          borderRadius="full"
-                          bg="purple.100"
-                          color="purple.700"
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          fontWeight="800"
-                          fontSize="sm"
-                          mx="auto"
-                        >
-                          {String.fromCharCode(64 + (p.problemOrder ?? idx + 1))}
-                        </Box>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text fontSize="sm" fontWeight="600" color="gray.800">
-                          {p.problemTitle}
-                        </Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        {p.problemDifficulty ? (
-                          <Badge
-                            colorScheme={
-                              p.problemDifficulty === "EASY"
-                                ? "green"
-                                : p.problemDifficulty === "MEDIUM"
-                                ? "orange"
-                                : "red"
-                            }
-                            variant="subtle"
-                            fontSize="xs"
-                            borderRadius="full"
-                            px={2}
-                          >
-                            {p.problemDifficulty.charAt(0) +
-                              p.problemDifficulty.slice(1).toLowerCase()}
-                          </Badge>
-                        ) : (
-                          <Text color="gray.300" fontSize="sm">—</Text>
-                        )}
-                      </Table.Cell>
-                      <Table.Cell textAlign="center">
-                        <Text fontSize="sm" fontWeight="600" color="gray.700">
-                          {p.points ?? "—"}
-                        </Text>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
-            )}
+                  <BookOpen size={18} />
+                  Enter Contest
+                </Button>
+                <Button
+                  size="lg"
+                  bg="white"
+                  color="purple.700"
+                  fontWeight="700"
+                  borderRadius="xl"
+                  px={8}
+                  border="2px solid"
+                  borderColor="purple.200"
+                  _hover={{ bg: "purple.50", borderColor: "purple.400" }}
+                  transition="all 0.15s"
+                  onClick={() => {
+                    document.getElementById("leaderboard-section")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  gap={2}
+                >
+                  <ListOrdered size={18} />
+                  View Leaderboard
+                </Button>
+              </HStack>
+            </VStack>
           </Box>
         )}
 
-        {activeTab === "Leaderboard" && (
-          <LeaderboardTable contestId={contest.id} problems={problems} />
+        {/* ── Waiting for start (registered + upcoming) ── */}
+        {registered && status === "UPCOMING" && (
+          <Box
+            bg="white" borderRadius="2xl" boxShadow="sm"
+            border="1px solid" borderColor="gray.200"
+            overflow="hidden" mb={6}
+          >
+            <CountdownWaiting contest={contest} onExpire={reload} />
+          </Box>
         )}
+
+        {/* ── Not registered yet ── */}
+        {!registered && !canEdit && status !== "ENDED" && (
+          <Box
+            bg="white" borderRadius="2xl" boxShadow="sm"
+            border="1px solid" borderColor="gray.200"
+            p={8} mb={6} textAlign="center"
+          >
+            <VStack gap={3}>
+              <Lock size={40} color="#D1D5DB" />
+              <Text color="gray.600" fontWeight="700" fontSize="lg">
+                Register to participate
+              </Text>
+              <Text color="gray.400" fontSize="sm" maxW="400px">
+                Register to access problems and compete on the leaderboard.
+              </Text>
+              <Button
+                mt={2} size="lg" bg="purple.600" color="white"
+                fontWeight="800" borderRadius="xl" px={8}
+                _hover={{ bg: "purple.700" }}
+                onClick={handleRegister} loading={registering}
+                loadingText="Registering..." gap={2}
+              >
+                <Medal size={18} />
+                Register Now
+              </Button>
+            </VStack>
+          </Box>
+        )}
+
+        {/* ── Contest ended ── */}
+        {status === "ENDED" && (
+          <Box
+            bg="white" borderRadius="2xl" boxShadow="sm"
+            border="1px solid" borderColor="gray.200"
+            p={8} mb={6} textAlign="center"
+          >
+            <VStack gap={4}>
+              <Box
+                w={16} h={16} borderRadius="full"
+                bg="gray.100" display="flex" alignItems="center" justifyContent="center"
+              >
+                <Trophy size={32} color="#6b7280" />
+              </Box>
+              <Text fontSize="xl" fontWeight="800" color="gray.700">
+                Contest has ended
+              </Text>
+              <Text color="gray.400" fontSize="sm">
+                Check the final standings below.
+              </Text>
+              {(registered || canEdit) && problems.length > 0 && (
+                <Button
+                  size="md" variant="ghost" colorScheme="purple"
+                  onClick={() => {
+                    const fp = problems[0];
+                    if (fp) navigate(`/contests/${slug}/problems/${fp.problemSlug}`);
+                  }}
+                  gap={2}
+                >
+                  <BookOpen size={16} />
+                  Review Problems
+                </Button>
+              )}
+            </VStack>
+          </Box>
+        )}
+
+        {/* ── Problems list (admin/creator only) ── */}
+        {canEdit && problems.length > 0 && (
+          <Box
+            bg="white" borderRadius="2xl" boxShadow="sm"
+            border="1px solid" borderColor="gray.200"
+            overflow="hidden" mb={6}
+          >
+            <HStack px={5} py={3} bg="purple.50" gap={2}>
+              <BookOpen size={15} color="#7C3AED" />
+              <Text fontSize="sm" fontWeight="700" color="purple.700">
+                Problems ({problems.length})
+              </Text>
+            </HStack>
+            <Table.Root variant="line" size="md">
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeader w="8%" textAlign="center">
+                    <Text fontWeight="bold" color="gray.600" fontSize="sm">#</Text>
+                  </Table.ColumnHeader>
+                  <Table.ColumnHeader>
+                    <Text fontWeight="bold" color="gray.600" fontSize="sm">Problem</Text>
+                  </Table.ColumnHeader>
+                  <Table.ColumnHeader w="15%">
+                    <Text fontWeight="bold" color="gray.600" fontSize="sm">Difficulty</Text>
+                  </Table.ColumnHeader>
+                  <Table.ColumnHeader w="12%" textAlign="center">
+                    <Text fontWeight="bold" color="gray.600" fontSize="sm">Points</Text>
+                  </Table.ColumnHeader>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {problems.map((p, idx) => (
+                  <Table.Row
+                    key={p.problemId}
+                    _hover={{ bg: "purple.50", cursor: "pointer" }}
+                    bg={idx % 2 === 0 ? "white" : "gray.50"}
+                    onClick={() => navigate(`/contests/${slug}/problems/${p.problemSlug}`)}
+                  >
+                    <Table.Cell textAlign="center">
+                      <Box
+                        w={8} h={8} borderRadius="full"
+                        bg="purple.100" color="purple.700"
+                        display="flex" alignItems="center" justifyContent="center"
+                        fontWeight="800" fontSize="sm" mx="auto"
+                      >
+                        {String.fromCharCode(64 + (p.problemOrder ?? idx + 1))}
+                      </Box>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Text fontSize="sm" fontWeight="600" color="gray.800">{p.problemTitle}</Text>
+                    </Table.Cell>
+                    <Table.Cell>
+                      {p.problemDifficulty ? (
+                        <Badge
+                          colorScheme={
+                            p.problemDifficulty === "EASY" ? "green"
+                            : p.problemDifficulty === "MEDIUM" ? "orange" : "red"
+                          }
+                          variant="subtle" fontSize="xs" borderRadius="full" px={2}
+                        >
+                          {p.problemDifficulty.charAt(0) + p.problemDifficulty.slice(1).toLowerCase()}
+                        </Badge>
+                      ) : (
+                        <Text color="gray.300" fontSize="sm">—</Text>
+                      )}
+                    </Table.Cell>
+                    <Table.Cell textAlign="center">
+                      <Text fontSize="sm" fontWeight="600" color="gray.700">{p.points ?? "—"}</Text>
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Root>
+          </Box>
+        )}
+
+        {/* ── Leaderboard (always visible) ── */}
+        <Box
+          id="leaderboard-section"
+          bg="white" borderRadius="2xl" boxShadow="sm"
+          border="1px solid" borderColor="gray.200" p={5}
+        >
+          <HStack px={1} pb={4} gap={2}>
+            <ListOrdered size={15} color="#7C3AED" />
+            <Text fontSize="sm" fontWeight="700" color="purple.700">
+              Leaderboard
+            </Text>
+          </HStack>
+          <LeaderboardTable contestId={contest.id} problems={problems} />
+        </Box>
       </Container>
     </Box>
   );

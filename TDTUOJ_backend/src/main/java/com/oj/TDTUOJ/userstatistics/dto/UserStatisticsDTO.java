@@ -11,8 +11,6 @@ public class UserStatisticsDTO {
     private Integer problemsSolved;
     private Integer totalSubmissions;
     private Integer acceptedSubmissions;
-    private Integer practicePoints;
-    private Integer contestPoints;
     private Integer totalPoints;
     private Integer currentRating;
     private Integer maxRating;
