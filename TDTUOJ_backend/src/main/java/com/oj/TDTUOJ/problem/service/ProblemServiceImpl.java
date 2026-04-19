@@ -271,20 +271,45 @@ public class ProblemServiceImpl implements ProblemService {
                     if (tc.getId() != null && existingMap.containsKey(tc.getId())) {
                         testCase = existingMap.get(tc.getId());
                         testCase.setIsSample(Boolean.TRUE.equals(tc.getIsSample()));
-                        if (tc.getInputFile() != null && !tc.getInputFile().isEmpty()) {
+
+                        boolean hasNewInput = tc.getInputFile() != null && !tc.getInputFile().isEmpty();
+                        boolean hasNewOutput = tc.getExpectedOutputFile() != null && !tc.getExpectedOutputFile().isEmpty();
+
+                        if (hasNewInput) {
+                            // User edited this test case input — delete old, upload new
                             if (testCase.getInputFileUrl() != null)
                                 awsS3Service.deleteFile(extractS3Key(testCase.getInputFileUrl()));
                             testCase.setInputFileUrl(awsS3Service.uploadFile(
                                     String.format("%s/testcases/inputs/%d.txt", newBasePath, idx), tc.getInputFile()).toString());
+                        } else if (pathChanged && testCase.getInputFileUrl() != null) {
+                            // Title changed → move the file to the new path
+                            String oldKey = extractS3Key(testCase.getInputFileUrl());
+                            String newKey = String.format("%s/testcases/inputs/%d.txt", newBasePath, idx);
+                            awsS3Service.moveFile(oldKey, newKey);
+                            testCase.setInputFileUrl(awsS3Service.getFileUrl(newKey).toString());
                         }
-                        if (tc.getExpectedOutputFile() != null && !tc.getExpectedOutputFile().isEmpty()) {
+
+                        if (hasNewOutput) {
+                            // User edited this test case output — delete old, upload new
                             if (testCase.getExpectedOutputFileUrl() != null)
                                 awsS3Service.deleteFile(extractS3Key(testCase.getExpectedOutputFileUrl()));
                             testCase.setExpectedOutputFileUrl(awsS3Service.uploadFile(
                                     String.format("%s/testcases/outputs/%d.txt", newBasePath, idx), tc.getExpectedOutputFile()).toString());
+                        } else if (pathChanged && testCase.getExpectedOutputFileUrl() != null) {
+                            // Title changed → move the file to the new path
+                            String oldKey = extractS3Key(testCase.getExpectedOutputFileUrl());
+                            String newKey = String.format("%s/testcases/outputs/%d.txt", newBasePath, idx);
+                            awsS3Service.moveFile(oldKey, newKey);
+                            testCase.setExpectedOutputFileUrl(awsS3Service.getFileUrl(newKey).toString());
                         }
+
                         existingMap.remove(tc.getId());
                     } else {
+                        // New test case — must have files
+                        if (tc.getInputFile() == null || tc.getInputFile().isEmpty())
+                            throw new IllegalArgumentException("Input file is required for new test case " + idx);
+                        if (tc.getExpectedOutputFile() == null || tc.getExpectedOutputFile().isEmpty())
+                            throw new IllegalArgumentException("Expected output file is required for new test case " + idx);
                         testCase = TestCase.builder()
                                 .inputFileUrl(awsS3Service.uploadFile(
                                         String.format("%s/testcases/inputs/%d.txt", newBasePath, idx), tc.getInputFile()).toString())
@@ -297,7 +322,9 @@ public class ProblemServiceImpl implements ProblemService {
                     updated.add(testCase);
                     idx++;
                 }
+                // Delete test cases that were removed by the user
                 for (TestCase toRemove : existingMap.values()) {
+                    log.warn("Deleting orphaned test case id={} for problem id={}", toRemove.getId(), problem.getId());
                     if (toRemove.getInputFileUrl() != null)
                         awsS3Service.deleteFile(extractS3Key(toRemove.getInputFileUrl()));
                     if (toRemove.getExpectedOutputFileUrl() != null)

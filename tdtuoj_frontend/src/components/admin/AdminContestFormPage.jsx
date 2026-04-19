@@ -24,6 +24,7 @@ import {
   AlertTriangle,
   Clock,
   CalendarClock,
+  User,
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
@@ -284,9 +285,9 @@ const EMPTY_FORM = {
   startTime: "",
   endTime: "",
   registrationStart: "",
-  maxParticipant: "",
+  maxParticipant: "20",
   isPublic: true,
-  isRated: false,
+  isRated: true,
   contestStyle: "ICPC",
   problems: [],
 };
@@ -471,6 +472,7 @@ const AdminContestFormPage = () => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [creatorInfo, setCreatorInfo] = useState({ id: null, username: null });
 
   useEffect(() => {
     if (!isEdit) return;
@@ -495,6 +497,10 @@ const AdminContestFormPage = () => {
               problemOrder: p.problemOrder,
               points: p.points ?? 100,
             })),
+          });
+          setCreatorInfo({
+            id: c.creatorId || null,
+            username: c.creatorUsername || null,
           });
         }
       })
@@ -594,6 +600,38 @@ const AdminContestFormPage = () => {
               ICPC Style
             </Badge>
           </HStack>
+
+          {/* Creator info badge (edit mode only) */}
+          {isEdit && creatorInfo.id && (
+            <HStack
+              gap={2}
+              bg="purple.50"
+              border="1px solid"
+              borderColor="purple.200"
+              borderRadius="lg"
+              px={4}
+              py={2}
+              alignSelf="flex-start"
+            >
+              <User size={16} color="#7c3aed" />
+              <Text fontSize="sm" color="gray.600">
+                Creator:
+              </Text>
+              <Badge
+                colorScheme="purple"
+                variant="subtle"
+                fontSize="sm"
+                px={2}
+                py={0.5}
+                borderRadius="md"
+              >
+                {creatorInfo.username}
+              </Badge>
+              <Text fontSize="xs" color="gray.400">
+                (ID: {creatorInfo.id})
+              </Text>
+            </HStack>
+          )}
 
           {/* Form */}
           <Box

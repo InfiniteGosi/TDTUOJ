@@ -7,7 +7,6 @@ import com.oj.TDTUOJ.contest.repository.ContestParticipationRepository;
 import com.oj.TDTUOJ.contest.repository.ContestRepository;
 import com.oj.TDTUOJ.contest.repository.RatingHistoryRepository;
 import com.oj.TDTUOJ.user.entity.User;
-import com.oj.TDTUOJ.user.repository.UserRepository;
 import com.oj.TDTUOJ.userstatistics.entity.UserStatistics;
 import com.oj.TDTUOJ.userstatistics.repository.UserStatisticsRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -51,7 +49,6 @@ public class ContestRatingService {
     private final ContestRepository              contestRepository;
     private final ContestParticipationRepository  participationRepository;
     private final RatingHistoryRepository         ratingHistoryRepository;
-    private final UserRepository                  userRepository;
     private final UserStatisticsRepository        userStatisticsRepository;
 
     /**
@@ -60,6 +57,32 @@ public class ContestRatingService {
      */
     @Transactional
     public void processRatings(Contest contest) {
+        // ── Step 0: Roll back any previous rating processing for this contest ──
+        List<RatingHistory> oldHistory = ratingHistoryRepository.findByContestId(contest.getId());
+        if (!oldHistory.isEmpty()) {
+            log.info("Rolling back {} previous rating entries for contestId={}",
+                    oldHistory.size(), contest.getId());
+            for (RatingHistory rh : oldHistory) {
+                userStatisticsRepository.findByUserId(rh.getUser().getId()).ifPresent(stats -> {
+                    int rollbackRating = stats.getCurrentRating() - rh.getRatingChange();
+                    rollbackRating = Math.max(1, rollbackRating);
+                    stats.setCurrentRating(rollbackRating);
+                    userStatisticsRepository.save(stats);
+                    log.info("  Rolled back userId={} rating {} → {} (undid {})",
+                            rh.getUser().getId(), stats.getCurrentRating() + rh.getRatingChange(),
+                            rollbackRating, rh.getRatingChange());
+                });
+            }
+            ratingHistoryRepository.deleteAll(oldHistory);
+            // Clear participation snapshots
+            participationRepository.findByContestIdOrderByRankAsc(contest.getId())
+                    .forEach(cp -> {
+                        cp.setRatingBefore(null);
+                        cp.setRatingAfter(null);
+                        participationRepository.save(cp);
+                    });
+        }
+
         // Use JOIN FETCH so User entities are eagerly loaded
         List<ContestParticipation> participations =
                 participationRepository.findByContestIdWithUserOrderByRankAsc(contest.getId());
@@ -75,18 +98,39 @@ public class ContestRatingService {
         log.info("Computing ratings for contestId={} '{}' with {} participant(s)",
                 contest.getId(), contest.getName(), n);
 
-        // 1. Resolve current ratings (null or 0 → default 1500)
+        // 1. Sort participations by ICPC rules: most problems solved DESC, then lowest penalty ASC.
+        //    We do NOT trust cp.getRank() because it is updated asynchronously and may be stale.
+        participations.sort((a, b) -> {
+            int solvedA = a.getProblemsSolved() != null ? a.getProblemsSolved() : 0;
+            int solvedB = b.getProblemsSolved() != null ? b.getProblemsSolved() : 0;
+            if (solvedA != solvedB) return Integer.compare(solvedB, solvedA); // desc
+            int penaltyA = a.getPenaltyTime() != null ? a.getPenaltyTime() : 0;
+            int penaltyB = b.getPenaltyTime() != null ? b.getPenaltyTime() : 0;
+            return Integer.compare(penaltyA, penaltyB); // asc
+        });
+
+        // 2. Resolve current ratings from user_statistics (null or 0 → default 1500)
         int[] ratings = new int[n];
+        UserStatistics[] statsArr = new UserStatistics[n];
         for (int i = 0; i < n; i++) {
             User user = participations.get(i).getUser();
-            Integer r = user.getRating();
-            ratings[i] = (r != null && r > 0) ? r : DEFAULT_RATING;
-            log.info("  participant: userId={} username={} currentRating={} effectiveRating={}",
-                    user.getId(), user.getUsername(), r, ratings[i]);
+            UserStatistics stats = userStatisticsRepository.findByUserId(user.getId())
+                    .orElseGet(() -> {
+                        UserStatistics fresh = UserStatistics.builder()
+                                .userId(user.getId())
+                                .build();
+                        return userStatisticsRepository.save(fresh);
+                    });
+            statsArr[i] = stats;
+            int r = (stats.getCurrentRating() != null && stats.getCurrentRating() > 0)
+                    ? stats.getCurrentRating() : DEFAULT_RATING;
+            ratings[i] = r;
+            log.info("  rank={} participant: userId={} username={} solved={} penalty={} currentRating={} effectiveRating={}",
+                    i + 1, user.getId(), user.getUsername(),
+                    participations.get(i).getProblemsSolved(),
+                    participations.get(i).getPenaltyTime(),
+                    stats.getCurrentRating(), ratings[i]);
         }
-
-        // 2. Sort participations by rank ascending (should already be, but enforce)
-        participations.sort(Comparator.comparingInt(p -> p.getRank() != null ? p.getRank() : Integer.MAX_VALUE));
 
         // 3. Compute seed and delta for each participant
         for (int i = 0; i < n; i++) {
@@ -100,7 +144,8 @@ public class ContestRatingService {
                 if (j != i && ratings[j] > myRating) seed++;
             }
 
-            int rank = cp.getRank() != null && cp.getRank() > 0 ? cp.getRank() : n;
+            // Rank derived from sorted position (1-based)
+            int rank = i + 1;
 
             // delta = K * (seed - rank) / N
             int delta;
@@ -121,32 +166,25 @@ public class ContestRatingService {
             cp.setRatingAfter(newRating);
             participationRepository.save(cp);
 
-            // 5. Persist: rating history row (idempotency guard)
-            if (!ratingHistoryRepository.existsByContestIdAndUserId(contest.getId(), user.getId())) {
-                RatingHistory history = RatingHistory.builder()
-                        .user(user)
-                        .contestId(contest.getId())
-                        .contestName(contest.getName())
-                        .oldRating(oldRating)
-                        .newRating(newRating)
-                        .ratingChange(delta)
-                        .rank(rank)
-                        .build();
-                ratingHistoryRepository.save(history);
+            // 5. Persist: rating history row
+            RatingHistory history = RatingHistory.builder()
+                    .user(user)
+                    .contestId(contest.getId())
+                    .contestName(contest.getName())
+                    .oldRating(oldRating)
+                    .newRating(newRating)
+                    .ratingChange(delta)
+                    .rank(rank)
+                    .build();
+            ratingHistoryRepository.save(history);
+
+            // 6. Update user_statistics (single source of truth for rating)
+            UserStatistics stats = statsArr[i];
+            stats.setCurrentRating(newRating);
+            if (newRating > (stats.getMaxRating() != null ? stats.getMaxRating() : 0)) {
+                stats.setMaxRating(newRating);
             }
-
-            // 6. Update user's current rating
-            user.setRating(newRating);
-            userRepository.save(user);
-
-            // 7. Update user_statistics table (currentRating + maxRating)
-            userStatisticsRepository.findByUserId(user.getId()).ifPresent(stats -> {
-                stats.setCurrentRating(newRating);
-                if (newRating > (stats.getMaxRating() != null ? stats.getMaxRating() : 0)) {
-                    stats.setMaxRating(newRating);
-                }
-                userStatisticsRepository.save(stats);
-            });
+            userStatisticsRepository.save(stats);
 
             log.info("  Rating: userId={} username={} rank={} seed={} delta={} {} → {}",
                     user.getId(), user.getUsername(), rank, seed, delta, oldRating, newRating);

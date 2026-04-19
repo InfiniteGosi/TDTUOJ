@@ -67,8 +67,6 @@ public class AuthServiceImpl implements AuthService {
                 .email(registrationRequest.getEmail())
                 .roles(userRoles)
                 .isActive(true)
-                .point(0)
-                .rating(0)
                 .build();
 
         user.setCreatedAt(LocalDateTime.now());

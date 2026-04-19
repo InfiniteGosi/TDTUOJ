@@ -193,20 +193,11 @@ const NavBar = () => {
                           </button>
                         </li>
 
-                        {/* Admin Link */}
-                        {isAdmin && (
+                        {/* Admin / Creator Panel Link */}
+                        {(isAdmin || isCreator) && (
                           <li>
                             <Link className="dropdown-item" to="/admin">
-                              Admin Panel
-                            </Link>
-                          </li>
-                        )}
-
-                        {/* Creator Link */}
-                        {isCreator && (
-                          <li>
-                            <Link className="dropdown-item" to="/creator">
-                              Creator Dashboard
+                              Panel
                             </Link>
                           </li>
                         )}

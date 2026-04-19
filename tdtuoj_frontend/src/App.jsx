@@ -11,7 +11,7 @@ import UserPage from "./components/users/UserPage";
 import ProfilePage from "./components/profile/ProfilePage";
 import ProblemDetailsPage from "./components/problems/ProblemDetailsPage";
 import AdminLayout from "./components/admin/AdminLayout";
-import { AdminRoute, ParticipantRoute } from "./services/Guard";
+import { AdminRoute, AdminOrCreatorRoute, ParticipantRoute } from "./services/Guard";
 import AdminProblemPage from "./components/admin/AdminProblemPage";
 import AdminProblemFormPage from "./components/admin/AdminProblemFormPage";
 import EditProfilePage from "./components/profile/EditProfilePage";
@@ -62,7 +62,7 @@ function App() {
                 />
                 <Route
                   path="/admin"
-                  element={<AdminRoute element={<AdminLayout />} />}
+                  element={<AdminOrCreatorRoute element={<AdminLayout />} />}
                 >
                   <Route path="problems" element={<AdminProblemPage />} />
                   <Route
@@ -89,10 +89,10 @@ function App() {
                     element={<AdminContestFormPage />}
                   />
 
-                  <Route path="users" element={<AdminUserPage />} />
+                  <Route path="users" element={<AdminRoute element={<AdminUserPage />} />} />
                   <Route
                     path="/admin/users/edit/:userId"
-                    element={<AdminEditUserPage />}
+                    element={<AdminRoute element={<AdminEditUserPage />} />}
                   />
                 </Route>
 

@@ -35,9 +35,7 @@ public class UserDTO {
 
     private String profileUrl;
 
-    private Integer point;
 
-    private Integer rating;
 
     private Set<RoleDTO> roles;
 

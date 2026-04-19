@@ -41,9 +41,7 @@ public class User {
 
     private String profileUrl;
 
-    private Integer point;
 
-    private Integer rating;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

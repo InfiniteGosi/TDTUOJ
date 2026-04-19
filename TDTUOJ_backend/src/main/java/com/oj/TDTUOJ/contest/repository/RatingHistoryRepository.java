@@ -14,4 +14,7 @@ public interface RatingHistoryRepository extends JpaRepository<RatingHistory, Lo
 
     /** Idempotency guard: prevent double-processing. */
     boolean existsByContestIdAndUserId(Long contestId, Long userId);
+
+    /** Find all rating entries for a contest (used for rollback on reprocess). */
+    List<RatingHistory> findByContestId(Long contestId);
 }

@@ -228,6 +228,7 @@ const AdminProblemFormPage = () => {
                   input,
                   expectedOutput,
                   isSample: tc.isSample ?? false,
+                  dirty: false,
                 };
               }),
             );
@@ -293,7 +294,7 @@ const AdminProblemFormPage = () => {
   const addTestCase = () =>
     setTestCases((prev) => [
       ...prev,
-      { input: "", expectedOutput: "", isSample: false },
+      { input: "", expectedOutput: "", isSample: false, dirty: true },
     ]);
 
   const removeTestCase = (index) => {
@@ -303,7 +304,9 @@ const AdminProblemFormPage = () => {
 
   const handleTestCaseChange = (index, field, value) =>
     setTestCases((prev) =>
-      prev.map((tc, i) => (i === index ? { ...tc, [field]: value } : tc)),
+      prev.map((tc, i) =>
+        i === index ? { ...tc, [field]: value, dirty: true } : tc,
+      ),
     );
 
   const stringToFile = (content, filename, mimeType) =>
@@ -410,14 +413,17 @@ const AdminProblemFormPage = () => {
       testCases.forEach((tc, index) => {
         if (tc.id) formData.append(`testCases[${index}].id`, tc.id);
         formData.append(`testCases[${index}].isSample`, tc.isSample ?? false);
-        formData.append(
-          `testCases[${index}].inputFile`,
-          stringToFile(tc.input, `input_${index}.txt`, "text/plain"),
-        );
-        formData.append(
-          `testCases[${index}].expectedOutputFile`,
-          stringToFile(tc.expectedOutput, `output_${index}.txt`, "text/plain"),
-        );
+        // Only send files for new test cases (no id) or dirty (edited) ones
+        if (!tc.id || tc.dirty) {
+          formData.append(
+            `testCases[${index}].inputFile`,
+            stringToFile(tc.input, `input_${index}.txt`, "text/plain"),
+          );
+          formData.append(
+            `testCases[${index}].expectedOutputFile`,
+            stringToFile(tc.expectedOutput, `output_${index}.txt`, "text/plain"),
+          );
+        }
       });
 
       let response;

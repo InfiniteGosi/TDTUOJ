@@ -6,9 +6,11 @@ import {
   faUser,
   faTrophy,
 } from "@fortawesome/free-solid-svg-icons";
+import ApiService from "../../services/ApiService";
 
 const AdminSidebar = () => {
   const location = useLocation();
+  const isAdmin = ApiService.isAdmin();
 
   return (
     <div className="admin-sidebar">
@@ -54,17 +56,19 @@ const AdminSidebar = () => {
               <span>Contests</span>
             </NavLink>
           </li>
-          <li>
-            <NavLink
-              to="/admin/users"
-              className={
-                location.pathname.includes("/admin/users") ? "active" : ""
-              }
-            >
-              <FontAwesomeIcon icon={faUser} />
-              <span>Users</span>
-            </NavLink>
-          </li>
+          {isAdmin && (
+            <li>
+              <NavLink
+                to="/admin/users"
+                className={
+                  location.pathname.includes("/admin/users") ? "active" : ""
+                }
+              >
+                <FontAwesomeIcon icon={faUser} />
+                <span>Users</span>
+              </NavLink>
+            </li>
+          )}
         </ul>
       </div>
     </div>
@@ -72,4 +76,3 @@ const AdminSidebar = () => {
 };
 
 export default AdminSidebar;
-

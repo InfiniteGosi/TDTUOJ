@@ -41,14 +41,14 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.getProblemBySlug(slug));
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Response<ProblemDTO>> createProblem(
             @ModelAttribute @Valid ProblemDTO problemDTO) {
         return ResponseEntity.ok(problemService.createProblem(problemDTO));
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Response<ProblemDTO>> updateProblem(
             @ModelAttribute @Valid ProblemDTO problemDTO) {
@@ -64,7 +64,7 @@ public class ProblemController {
      * or
      * { "tags": [{ "id": 1 }, { "id": 3 }] }
      */
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
     @PatchMapping("/{id}/tags")
     public ResponseEntity<Response<ProblemDTO>> updateProblemTags(
             @PathVariable Long id,
@@ -72,7 +72,7 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.updateProblemTags(id, problemDTO));
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Response<?>> deleteProblem(@PathVariable Long id) {
         return ResponseEntity.ok(problemService.deleteProblem(id));
