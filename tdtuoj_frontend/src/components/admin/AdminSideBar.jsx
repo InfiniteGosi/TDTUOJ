@@ -5,6 +5,7 @@ import {
   faTags,
   faUser,
   faTrophy,
+  faBuilding,
 } from "@fortawesome/free-solid-svg-icons";
 import ApiService from "../../services/ApiService";
 
@@ -54,6 +55,19 @@ const AdminSidebar = () => {
             >
               <FontAwesomeIcon icon={faTrophy} />
               <span>Contests</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/admin/organizations"
+              className={
+                location.pathname.includes("/admin/organizations")
+                  ? "active"
+                  : ""
+              }
+            >
+              <FontAwesomeIcon icon={faBuilding} />
+              <span>Organizations</span>
             </NavLink>
           </li>
           {isAdmin && (

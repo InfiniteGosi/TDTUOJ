@@ -24,6 +24,9 @@ import ContestDetailPage from "./components/contests/ContestDetailPage";
 import ContestProblemPage from "./components/contests/ContestProblemPage";
 import AdminContestPage from "./components/admin/AdminContestPage";
 import AdminContestFormPage from "./components/admin/AdminContestFormPage";
+import OrganizationPage from "./components/organizations/OrganizationPage";
+import OrganizationDetailPage from "./components/organizations/OrganizationDetailPage";
+import AdminOrganizationPage from "./components/admin/AdminOrganizationPage";
 import { ToastProvider } from "./components/common/ToastMessage";
 
 function App() {
@@ -46,6 +49,8 @@ function App() {
                 <Route path="/problems" element={<ProblemPage />} />
                 <Route path="/contests" element={<ContestPage />} />
                 <Route path="/contests/:slug" element={<ContestDetailPage />} />
+                <Route path="/organizations" element={<OrganizationPage />} />
+                <Route path="/organizations/:slug" element={<OrganizationDetailPage />} />
                 <Route path="/users" element={<UserPage />} />
                 <Route
                   path="/problems/:slug"
@@ -88,6 +93,8 @@ function App() {
                     path="contests/edit/:id"
                     element={<AdminContestFormPage />}
                   />
+
+                  <Route path="organizations" element={<AdminOrganizationPage />} />
 
                   <Route path="users" element={<AdminRoute element={<AdminUserPage />} />} />
                   <Route

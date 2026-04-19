@@ -58,6 +58,7 @@ public class SecurityConfig {
                                 "/api/problems/**",
                                 "/api/users/**",
                                 "/api/contests/**",
+                                "/api/organizations/**",
                                 "/api/status/**",
                                 "/api/files/**",
                                 "/swagger-ui/**",

@@ -462,4 +462,118 @@ export default class ApiService {
     );
     return resp.data;
   }
+
+  // ─── Organizations ──────────────────────────────────────────────────────────
+
+  static async getOrganizations({ page = 0, size = 12, search = "" } = {}) {
+    const resp = await axios.get(`${this.BASE_URL}/organizations`, {
+      headers: this.getHeader(),
+      params: { page, size, search },
+    });
+    return resp.data;
+  }
+
+  static async getMyOrganizations({ page = 0, size = 12 } = {}) {
+    const resp = await axios.get(`${this.BASE_URL}/organizations/my`, {
+      headers: this.getHeader(),
+    });
+    return resp.data;
+  }
+
+  static async getOrganizationBySlug(slug) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/organizations/slug/${slug}`,
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async createOrganization(data) {
+    const resp = await axios.post(`${this.BASE_URL}/organizations`, data, {
+      headers: this.getHeader(),
+    });
+    return resp.data;
+  }
+
+  static async updateOrganization(id, data) {
+    const resp = await axios.put(
+      `${this.BASE_URL}/organizations/${id}`,
+      data,
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async deleteOrganization(id) {
+    const resp = await axios.delete(`${this.BASE_URL}/organizations/${id}`, {
+      headers: this.getHeader(),
+    });
+    return resp.data;
+  }
+
+  static async joinOrganization(orgId, code = null) {
+    const body = code ? { code } : {};
+    const resp = await axios.post(
+      `${this.BASE_URL}/organizations/${orgId}/join`,
+      body,
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async leaveOrganization(id) {
+    const resp = await axios.delete(
+      `${this.BASE_URL}/organizations/${id}/leave`,
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async getOrganizationMembers(id, { page = 0, size = 20, search = "" } = {}) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/organizations/${id}/members`,
+      {
+        headers: this.getHeader(),
+        params: { page, size, search },
+      },
+    );
+    return resp.data;
+  }
+
+  static async updateMemberRole(orgId, userId, role) {
+    const resp = await axios.put(
+      `${this.BASE_URL}/organizations/${orgId}/members/${userId}/role`,
+      { role },
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async removeMember(orgId, userId) {
+    const resp = await axios.delete(
+      `${this.BASE_URL}/organizations/${orgId}/members/${userId}`,
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async searchNonMembers(orgId, q = "", { page = 0, size = 10 } = {}) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/organizations/${orgId}/search-users`,
+      {
+        headers: this.getHeader(),
+        params: { q, page, size },
+      },
+    );
+    return resp.data;
+  }
+
+  static async addMember(orgId, userId) {
+    const resp = await axios.post(
+      `${this.BASE_URL}/organizations/${orgId}/members`,
+      { userId },
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
 }
