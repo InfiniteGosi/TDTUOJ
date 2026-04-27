@@ -576,4 +576,83 @@ export default class ApiService {
     );
     return resp.data;
   }
+
+  // ── Labs ──────────────────────────────────────────────────────────────── //
+
+  static async getOrgLabs(orgId, { page = 0, size = 10 } = {}) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/organizations/${orgId}/labs`,
+      { headers: this.getHeader(), params: { page, size } },
+    );
+    return resp.data;
+  }
+
+  static async getOrgLab(orgId, slug) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/organizations/${orgId}/labs/${slug}`,
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async createLab(orgId, data) {
+    const resp = await axios.post(
+      `${this.BASE_URL}/organizations/${orgId}/labs`,
+      data,
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async updateLab(orgId, labId, data) {
+    const resp = await axios.put(
+      `${this.BASE_URL}/organizations/${orgId}/labs/${labId}`,
+      data,
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async deleteLab(orgId, labId) {
+    const resp = await axios.delete(
+      `${this.BASE_URL}/organizations/${orgId}/labs/${labId}`,
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async getLabProgress(orgId, labId) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/organizations/${orgId}/labs/${labId}/progress`,
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async exportLabProgress(orgId, labId, format = "csv") {
+    const resp = await axios.get(
+      `${this.BASE_URL}/organizations/${orgId}/labs/${labId}/export`,
+      { headers: this.getHeader(), params: { format }, responseType: "blob" },
+    );
+    return resp.data;
+  }
+
+  static async publishSolutions(orgId, labId) {
+    const resp = await axios.post(
+      `${this.BASE_URL}/organizations/${orgId}/labs/${labId}/publish-solutions`,
+      {},
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  // ── My Problems (lecturer repository) ─────────────────────────────────── //
+
+  static async getMyProblems({ page = 0, size = 10, search = "" } = {}) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/problems/my`,
+      { headers: this.getHeader(), params: { page, size, search } },
+    );
+    return resp.data;
+  }
 }

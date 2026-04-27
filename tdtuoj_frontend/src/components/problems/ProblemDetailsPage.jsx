@@ -255,6 +255,10 @@ const ProblemDetailsPage = () => {
   const contestId = searchParams.get("contestId")
     ? Number(searchParams.get("contestId"))
     : null;
+  // labId is passed as ?labId=<id> when navigating from a lab exercise
+  const labId = searchParams.get("labId")
+    ? Number(searchParams.get("labId"))
+    : null;
   const [problem, setProblem] = useState(null);
   const [statement, setStatement] = useState("");
   const [testCases, setTestCases] = useState([]);
@@ -353,6 +357,7 @@ const ProblemDetailsPage = () => {
         problemId: problem.id,
         isPublic: true,
         contestId,
+        labId,
       });
 
       const sub = resp.data;

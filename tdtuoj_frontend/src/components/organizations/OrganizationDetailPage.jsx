@@ -40,6 +40,7 @@ import {
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
 import { useConfirmDialog } from "../common/ConfirmDialog";
+import LabListSection from "./LabListSection";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -820,8 +821,7 @@ const OrganizationDetailPage = () => {
   const isMember = !!org.myRole;
   const canManage = isOwner || isOrgAdmin;
 
-  const TABS = [isMember ? "MEMBERS" : "ADMINS"];
-  // Future tabs: CONTESTS, LABS
+  const TABS = isMember ? ["MEMBERS", "LABS"] : ["ADMINS"];
 
   return (
     <Box minH="100vh" bg="gray.50" py={8}>
@@ -1399,6 +1399,20 @@ const OrganizationDetailPage = () => {
               )}
             </Box>
           </>
+          )}
+
+          {/* Labs Tab */}
+          {activeTab === "LABS" && isMember && (
+            <LabListSection
+              org={org}
+              canManage={canManage}
+              onNavigateToLab={(labSlug) =>
+                navigate(`/organizations/${org.slug}/labs/${labSlug}`)
+              }
+              onCreateLab={() =>
+                navigate(`/organizations/${org.slug}/labs/new`)
+              }
+            />
           )}
         </VStack>
       </Container>

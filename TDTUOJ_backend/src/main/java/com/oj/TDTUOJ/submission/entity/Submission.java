@@ -57,4 +57,6 @@ public class Submission {
     private Long userId;
 
     private Long contestId;
+
+    private Long labId;
 }

@@ -26,6 +26,10 @@ import AdminContestPage from "./components/admin/AdminContestPage";
 import AdminContestFormPage from "./components/admin/AdminContestFormPage";
 import OrganizationPage from "./components/organizations/OrganizationPage";
 import OrganizationDetailPage from "./components/organizations/OrganizationDetailPage";
+import LabFormPage from "./components/organizations/LabFormPage";
+import LabDetailPage from "./components/organizations/LabDetailPage";
+import LabProgressPage from "./components/organizations/LabProgressPage";
+import LabProblemPage from "./components/organizations/LabProblemPage";
 import AdminOrganizationPage from "./components/admin/AdminOrganizationPage";
 import { ToastProvider } from "./components/common/ToastMessage";
 
@@ -51,6 +55,11 @@ function App() {
                 <Route path="/contests/:slug" element={<ContestDetailPage />} />
                 <Route path="/organizations" element={<OrganizationPage />} />
                 <Route path="/organizations/:slug" element={<OrganizationDetailPage />} />
+                <Route path="/organizations/:orgSlug/labs/new" element={<LabFormPage />} />
+                <Route path="/organizations/:orgSlug/labs/:labSlug/edit" element={<LabFormPage />} />
+                <Route path="/organizations/:orgSlug/labs/:labSlug" element={<LabDetailPage />} />
+                <Route path="/organizations/:orgSlug/labs/:labSlug/progress" element={<LabProgressPage />} />
+                <Route path="/organizations/:orgSlug/labs/:labSlug/problems/:problemSlug" element={<LabProblemPage />} />
                 <Route path="/users" element={<UserPage />} />
                 <Route
                   path="/problems/:slug"

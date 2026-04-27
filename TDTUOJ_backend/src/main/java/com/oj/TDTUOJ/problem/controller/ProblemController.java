@@ -41,6 +41,17 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.getProblemBySlug(slug));
     }
 
+    /** Lecturer's problem repository — problems authored by current user. */
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
+    @GetMapping("/my")
+    public ResponseEntity<Response<Page<ProblemDTO>>> getMyProblems(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "") String search
+    ) {
+        return ResponseEntity.ok(problemService.getMyProblems(page, size, search));
+    }
+
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Response<ProblemDTO>> createProblem(

@@ -104,4 +104,10 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
             String title, ProblemDifficulty difficulty, Pageable pageable) {
         return findByTitleContainingIgnoreCaseAndProblemDifficulty(title, difficulty, pageable);
     }
+
+    // ── Lecturer's problem repository ─────────────────────────────────────── //
+
+    Page<Problem> findByAuthorId(Long authorId, Pageable pageable);
+
+    Page<Problem> findByAuthorIdAndTitleContainingIgnoreCase(Long authorId, String title, Pageable pageable);
 }

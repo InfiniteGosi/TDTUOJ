@@ -9,6 +9,7 @@ import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.judge0.Judge0Result;
 import com.oj.TDTUOJ.judge0.Judge0Service;
+import com.oj.TDTUOJ.lab.repository.LabRepository;
 import com.oj.TDTUOJ.problem.entity.Problem;
 import com.oj.TDTUOJ.problem.repository.ProblemRepository;
 import com.oj.TDTUOJ.submission.dto.SubmissionDTO;
@@ -41,6 +42,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     private final ModelMapper            modelMapper;
     private final ProblemRepository      problemRepository;
     private final SubmissionQueueService submissionQueueService;
+    private final LabRepository          labRepository;
 
     @Override
     public Response<SubmissionDTO> createSubmission(SubmissionDTO submissionDTO) {
@@ -59,6 +61,19 @@ public class SubmissionServiceImpl implements SubmissionService {
         Problem problem = problemRepository.findById(submissionDTO.getProblemId())
                 .orElseThrow(() -> new NotFoundException("Problem not found"));
 
+        // 2a. Lab deadline enforcement — hard lock
+        if (submissionDTO.getLabId() != null) {
+            var lab = labRepository.findById(submissionDTO.getLabId()).orElse(null);
+            if (lab != null && lab.getDeadline() != null
+                    && LocalDateTime.now().isAfter(lab.getDeadline())) {
+                return Response.<SubmissionDTO>builder()
+                        .statusCode(HttpStatus.FORBIDDEN.value())
+                        .message("Lab deadline has passed. Submissions are no longer accepted.")
+                        .data(null)
+                        .build();
+            }
+        }
+
         // 2. Save as PENDING immediately
         Submission submission = Submission.builder()
                 .sourceCode(submissionDTO.getSourceCode())
@@ -69,6 +84,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                 .problem(problem)
                 .userId(currentUser.getId())
                 .contestId(submissionDTO.getContestId())
+                .labId(submissionDTO.getLabId())
                 .build();
         submission = submissionRepository.save(submission);
 

@@ -439,6 +439,27 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
+    @Override
+    public Response<Page<ProblemDTO>> getMyProblems(int page, int size, String search) {
+        User currentUser = userService.getCurrentLoggedInUser();
+        if (size <= 0) size = 10;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Page<Problem> problems;
+        if (search != null && !search.isBlank()) {
+            problems = problemRepository.findByAuthorIdAndTitleContainingIgnoreCase(
+                    currentUser.getId(), search.trim(), pageable);
+        } else {
+            problems = problemRepository.findByAuthorId(currentUser.getId(), pageable);
+        }
+
+        return Response.<Page<ProblemDTO>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("My problems retrieved successfully")
+                .data(problems.map(this::mapToResponseDTO))
+                .build();
+    }
+
     // ─── Helpers ────────────────────────────────────────────────────────────────
 
     /**

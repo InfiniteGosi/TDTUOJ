@@ -24,5 +24,8 @@ public interface ProblemService {
     Response<ProblemDTO> updateProblemTags(Long problemId, ProblemDTO problemDTO);
 
     Response<?> deleteProblem(Long id);
+
+    /** Lecturer's problem repository — returns problems authored by current user. */
+    Response<Page<ProblemDTO>> getMyProblems(int page, int size, String search);
 }
 

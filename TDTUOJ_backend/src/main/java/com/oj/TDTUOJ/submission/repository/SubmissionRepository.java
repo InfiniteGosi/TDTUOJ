@@ -44,4 +44,16 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     // Full (unpaged) list used by the backfill path in UserStatisticsServiceImpl.
     List<Submission> findAllByUserId(Long userId);
+
+    // ── Lab-scoped queries ────────────────────────────────────────────────── //
+
+    /** All submissions by a user for a problem within a specific lab. */
+    List<Submission> findByUserIdAndProblemIdAndLabId(Long userId, Long problemId, Long labId);
+
+    /** Check if user has an AC submission for a problem in a lab. */
+    boolean existsByUserIdAndProblemIdAndLabIdAndSubmissionVerdict(
+            Long userId, Long problemId, Long labId, SubmissionVerdict verdict);
+
+    /** Count submissions for a problem within a lab. */
+    long countByUserIdAndProblemIdAndLabId(Long userId, Long problemId, Long labId);
 }

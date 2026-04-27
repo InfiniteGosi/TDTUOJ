@@ -48,6 +48,8 @@ public class Problem {
 
     private String statementFileUrl; // S3 URL to problem statement (.md file)
 
+    private String solutionFileUrl;  // S3 URL to solution (.md file), set by author
+
     private Integer point;
 
     private Double timeLimit; // in seconds
