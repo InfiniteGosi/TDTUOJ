@@ -31,6 +31,8 @@ import LabDetailPage from "./components/organizations/LabDetailPage";
 import LabProgressPage from "./components/organizations/LabProgressPage";
 import LabProblemPage from "./components/organizations/LabProblemPage";
 import AdminOrganizationPage from "./components/admin/AdminOrganizationPage";
+import MyProblemsPage from "./components/problems/MyProblemsPage";
+import MyProblemFormPage from "./components/problems/MyProblemFormPage";
 import { ToastProvider } from "./components/common/ToastMessage";
 
 function App() {
@@ -104,6 +106,10 @@ function App() {
                   />
 
                   <Route path="organizations" element={<AdminOrganizationPage />} />
+
+                  <Route path="my-problems" element={<MyProblemsPage />} />
+                  <Route path="my-problems/new" element={<MyProblemFormPage />} />
+                  <Route path="my-problems/:id/edit" element={<MyProblemFormPage />} />
 
                   <Route path="users" element={<AdminRoute element={<AdminUserPage />} />} />
                   <Route

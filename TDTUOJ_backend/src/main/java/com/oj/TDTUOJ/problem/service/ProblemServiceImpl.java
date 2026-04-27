@@ -98,13 +98,13 @@ public class ProblemServiceImpl implements ProblemService {
             problemPage = problemRepository.findByTagNamesAndDifficulty(
                     activeTagNames, (long) activeTagNames.size(), difficultyEnum, pageable);
         } else if (hasTitle) {
-            problemPage = problemRepository.findByTitleContainingIgnoreCase(title, pageable);
+            problemPage = problemRepository.findByTitleContainingIgnoreCaseAndIsPublicTrue(title, pageable);
         } else if (hasTags) {
             problemPage = problemRepository.findByTagNames(activeTagNames, (long) activeTagNames.size(), pageable);
         } else if (hasDiff) {
-            problemPage = problemRepository.findByProblemDifficulty(difficultyEnum, pageable);
+            problemPage = problemRepository.findByProblemDifficultyAndIsPublicTrue(difficultyEnum, pageable);
         } else {
-            problemPage = problemRepository.findAll(pageable);
+            problemPage = problemRepository.findByIsPublicTrue(pageable);
         }
 
         return Response.<Page<ProblemDTO>>builder()
@@ -167,6 +167,9 @@ public class ProblemServiceImpl implements ProblemService {
                     .memoryLimit(problemDTO.getMemoryLimit())
                     .author(author)
                     .problemDifficulty(problemDTO.getProblemDifficulty())
+                    .isPublic(problemDTO.getIsPublic() != null ? problemDTO.getIsPublic() : true)
+                    .solutionCode(problemDTO.getSolutionCode())
+                    .solutionLanguage(problemDTO.getSolutionLanguage())
                     .testCases(new ArrayList<>())
                     .tags(problemTags)
                     .build();
@@ -224,24 +227,30 @@ public class ProblemServiceImpl implements ProblemService {
             Problem problem = problemRepository.findById(problemDTO.getId())
                     .orElseThrow(() -> new NotFoundException("Problem not found with id: " + problemDTO.getId()));
 
-            if (!problem.getTitle().equals(problemDTO.getTitle()) &&
-                    problemRepository.existsByTitle(problemDTO.getTitle())) {
-                throw new IllegalArgumentException("Problem with title '" + problemDTO.getTitle() + "' already exists");
-            }
-
             String oldBasePath = String.format("problems/%d-%s", problem.getId(), sanitize(problem.getTitle()));
+            String newBasePath = oldBasePath;
+            boolean pathChanged = false;
 
-            if (!problem.getTitle().equals(problemDTO.getTitle())) {
-                problem.setSlug(generateUniqueSlugExcludingCurrent(
-                        ProblemSlugUtils.generateSlug(problemDTO.getTitle()), problemDTO.getId()));
+            // Title change — only process when title is provided
+            if (problemDTO.getTitle() != null) {
+                if (!problem.getTitle().equals(problemDTO.getTitle()) &&
+                        problemRepository.existsByTitle(problemDTO.getTitle())) {
+                    throw new IllegalArgumentException("Problem with title '" + problemDTO.getTitle() + "' already exists");
+                }
+
+                if (!problem.getTitle().equals(problemDTO.getTitle())) {
+                    problem.setSlug(generateUniqueSlugExcludingCurrent(
+                            ProblemSlugUtils.generateSlug(problemDTO.getTitle()), problemDTO.getId()));
+                }
+                problem.setTitle(problemDTO.getTitle());
+
+                newBasePath = String.format("problems/%d-%s", problem.getId(), sanitize(problemDTO.getTitle()));
+                pathChanged = !oldBasePath.equals(newBasePath);
             }
-            problem.setTitle(problemDTO.getTitle());
-            problem.setPoint(problemDTO.getPoint());
-            problem.setTimeLimit(problemDTO.getTimeLimit());
-            problem.setMemoryLimit(problemDTO.getMemoryLimit());
 
-            String newBasePath = String.format("problems/%d-%s", problem.getId(), sanitize(problemDTO.getTitle()));
-            boolean pathChanged = !oldBasePath.equals(newBasePath);
+            if (problemDTO.getPoint() != null) problem.setPoint(problemDTO.getPoint());
+            if (problemDTO.getTimeLimit() != null) problem.setTimeLimit(problemDTO.getTimeLimit());
+            if (problemDTO.getMemoryLimit() != null) problem.setMemoryLimit(problemDTO.getMemoryLimit());
 
             // Statement file
             if (problemDTO.getStatementFile() != null && !problemDTO.getStatementFile().isEmpty()) {
@@ -351,6 +360,17 @@ public class ProblemServiceImpl implements ProblemService {
             // Update tags only when the caller explicitly provides them
             if (problemDTO.getTagNames() != null || problemDTO.getTags() != null) {
                 problem.setTags(resolveTagsFromDTO(problemDTO));
+            }
+
+            // Solution code
+            if (problemDTO.getSolutionCode() != null) {
+                problem.setSolutionCode(problemDTO.getSolutionCode());
+            }
+            if (problemDTO.getSolutionLanguage() != null) {
+                problem.setSolutionLanguage(problemDTO.getSolutionLanguage());
+            }
+            if (problemDTO.getIsPublic() != null) {
+                problem.setIsPublic(problemDTO.getIsPublic());
             }
 
             problem.setUpdatedAt(LocalDateTime.now());
@@ -562,6 +582,8 @@ public class ProblemServiceImpl implements ProblemService {
         dto.setMemoryLimit(problem.getMemoryLimit());
         dto.setCreatedAt(problem.getCreatedAt());
         dto.setUpdatedAt(problem.getUpdatedAt());
+        dto.setSolutionCode(problem.getSolutionCode());
+        dto.setSolutionLanguage(problem.getSolutionLanguage());
 
         if (problem.getTestCases() != null) {
             dto.setTestCases(problem.getTestCases().stream()

@@ -22,6 +22,8 @@ public class LabExerciseDTO {
 
     // Solution (only visible when lab.solutionsPublished = true)
     private String solutionFileUrl;
+    private String solutionCode;
+    private String solutionLanguage;
 
     // Student's status for this exercise (SOLVED, ATTEMPTED, NOT_STARTED)
     private String status;

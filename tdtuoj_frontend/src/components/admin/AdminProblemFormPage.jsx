@@ -31,6 +31,7 @@ import {
 import ReactMarkdown from "react-markdown";
 import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
+import Editor from "@monaco-editor/react";
 
 const STATEMENT_PLACEHOLDER = `## Two sum
 Find the sum of two given elements. Both the numbers will always be 0 or positive.
@@ -78,7 +79,7 @@ const getPointRange = (difficulty) => {
   return POINT_RANGES[difficulty] || { min: 1, max: 300 };
 };
 
-const AdminProblemFormPage = () => {
+const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showMessage } = useToast();
@@ -96,6 +97,7 @@ const AdminProblemFormPage = () => {
     memoryLimit: "",
     statement: "",
     problemDifficulty: "",
+    solutionCode: "",
   });
 
   const [testCases, setTestCases] = useState([
@@ -151,6 +153,7 @@ const AdminProblemFormPage = () => {
         memoryLimit: "",
         statement: "",
         problemDifficulty: "",
+        solutionCode: "",
       });
       setTestCases([{ input: "", expectedOutput: "" }]);
       setSelectedTags([]);
@@ -189,6 +192,7 @@ const AdminProblemFormPage = () => {
             memoryLimit: problem.memoryLimit || "",
             statement: statementContent,
             problemDifficulty: problem.problemDifficulty || "",
+            solutionCode: problem.solutionCode || "",
           });
 
           if (problem.testCases && problem.testCases.length > 0) {
@@ -402,6 +406,17 @@ const AdminProblemFormPage = () => {
         stringToFile(problemData.statement, "statement.md", "text/markdown"),
       );
 
+      // Solution code (for My Problems flow)
+      if (problemData.solutionCode) {
+        formData.append("solutionCode", problemData.solutionCode);
+        formData.append("solutionLanguage", "CPP");
+      }
+
+      // Private by default for "my" mode, public for admin
+      if (mode === "my" && !id) {
+        formData.append("isPublic", false);
+      }
+
       // Pass active tag IDs via tagNames field (names used server-side for lookup)
       const activeSelectedTags = selectedTags.filter(
         (t) => t.isActive !== false,
@@ -443,7 +458,8 @@ const AdminProblemFormPage = () => {
         if (id) {
           setTimeout(() => setDataVersion((v) => v + 1), 1000);
         } else {
-          setTimeout(() => navigate("/admin/problems"), 1500);
+          const dest = backPath || (mode === "my" ? "/admin/my-problems" : "/admin/problems");
+          setTimeout(() => navigate(dest), 1500);
         }
       } else {
         showMessage(
@@ -513,7 +529,7 @@ const AdminProblemFormPage = () => {
             <Button
               leftIcon={<ArrowLeft size={20} />}
               variant="ghost"
-              onClick={() => navigate("/admin/problems")}
+              onClick={() => navigate(backPath || (mode === "my" ? "/admin/my-problems" : "/admin/problems"))}
             >
               Back to Problems
             </Button>
@@ -964,18 +980,29 @@ const AdminProblemFormPage = () => {
 
                   {!previewMode ? (
                     <>
-                      <Textarea
-                        value={problemData.statement}
-                        onChange={(e) =>
-                          handleProblemChange("statement", e.target.value)
-                        }
-                        placeholder={STATEMENT_PLACEHOLDER}
-                        minH="300px"
-                        fontFamily="monospace"
-                        fontSize="sm"
-                        bg="gray.50"
+                      <Box
+                        border="1px solid"
                         borderColor="gray.300"
-                      />
+                        borderRadius="md"
+                        overflow="hidden"
+                        h="350px"
+                      >
+                        <Editor
+                          height="100%"
+                          theme="vs-dark"
+                          language="markdown"
+                          value={problemData.statement}
+                          onChange={(val) => handleProblemChange("statement", val || "")}
+                          options={{
+                            minimap: { enabled: false },
+                            fontSize: 14,
+                            lineNumbers: "on",
+                            wordWrap: "on",
+                            scrollBeyondLastLine: false,
+                            automaticLayout: true,
+                          }}
+                        />
+                      </Box>
                       <Text fontSize="xs" color="gray.600" mt={2}>
                         This will be converted to a .md file. Use Markdown
                         syntax for formatting.
@@ -1050,6 +1077,40 @@ const AdminProblemFormPage = () => {
                 </Box>
               </VStack>
             </Box>
+
+            {/* Solution Code (My Problems mode only) */}
+            {mode === "my" && (
+              <Box borderBottomWidth="1px" pb={6}>
+                <Heading size="xl" color="gray.700" mb={4}>
+                  Solution Code (C++)
+                </Heading>
+                <Text fontSize="sm" color="gray.500" mb={3}>
+                  Optional. This code will be shown to students when you publish solutions in a lab.
+                </Text>
+                <Box
+                  border="1px solid"
+                  borderColor="gray.300"
+                  borderRadius="md"
+                  overflow="hidden"
+                  h="350px"
+                >
+                  <Editor
+                    height="100%"
+                    theme="vs-dark"
+                    language="cpp"
+                    value={problemData.solutionCode}
+                    onChange={(val) => handleProblemChange("solutionCode", val || "")}
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 14,
+                      lineNumbers: "on",
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                    }}
+                  />
+                </Box>
+              </Box>
+            )}
 
             {/* Test Cases */}
             <Box>

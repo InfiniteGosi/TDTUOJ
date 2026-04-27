@@ -555,9 +555,15 @@ public class LabServiceImpl implements LabService {
                 .problemDifficulty(p.getProblemDifficulty() != null ? p.getProblemDifficulty().name() : null)
                 .build();
 
-        // Solution URL — only when published
-        if (Boolean.TRUE.equals(lab.getSolutionsPublished()) && p.getSolutionFileUrl() != null) {
-            dto.setSolutionFileUrl(p.getSolutionFileUrl());
+        // Solution — only when published
+        if (Boolean.TRUE.equals(lab.getSolutionsPublished())) {
+            if (p.getSolutionFileUrl() != null) {
+                dto.setSolutionFileUrl(p.getSolutionFileUrl());
+            }
+            if (p.getSolutionCode() != null) {
+                dto.setSolutionCode(p.getSolutionCode());
+                dto.setSolutionLanguage(p.getSolutionLanguage());
+            }
         }
 
         // Student status

@@ -24,11 +24,11 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
 
     boolean existsBySlugAndIdNot(String slug, Long id);
 
-    Page<Problem> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+    Page<Problem> findByTitleContainingIgnoreCaseAndIsPublicTrue(String title, Pageable pageable);
 
-    Page<Problem> findByProblemDifficulty(ProblemDifficulty difficulty, Pageable pageable);
+    Page<Problem> findByProblemDifficultyAndIsPublicTrue(ProblemDifficulty difficulty, Pageable pageable);
 
-    Page<Problem> findByTitleContainingIgnoreCaseAndProblemDifficulty(
+    Page<Problem> findByTitleContainingIgnoreCaseAndProblemDifficultyAndIsPublicTrue(
             String title, ProblemDifficulty difficulty, Pageable pageable);
 
     /**
@@ -39,6 +39,7 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
             JOIN p.tags t
             WHERE t.name IN :tagNames
               AND t.isActive = true
+              AND p.isPublic = true
             GROUP BY p
             HAVING COUNT(DISTINCT t.name) = :tagCount
             """)
@@ -54,6 +55,7 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
             JOIN p.tags t
             WHERE t.name IN :tagNames
               AND t.isActive = true
+              AND p.isPublic = true
               AND p.problemDifficulty = :difficulty
             GROUP BY p
             HAVING COUNT(DISTINCT t.name) = :tagCount
@@ -72,6 +74,7 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
             WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :title, '%'))
               AND t.name IN :tagNames
               AND t.isActive = true
+              AND p.isPublic = true
             GROUP BY p
             HAVING COUNT(DISTINCT t.name) = :tagCount
             """)
@@ -89,6 +92,7 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
             WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :title, '%'))
               AND t.name IN :tagNames
               AND t.isActive = true
+              AND p.isPublic = true
               AND p.problemDifficulty = :difficulty
             GROUP BY p
             HAVING COUNT(DISTINCT t.name) = :tagCount
@@ -102,8 +106,12 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
     // Spring Data derives this from the method name — kept as alias for clarity
     default Page<Problem> findByTitleContainingIgnoreCaseAndDifficulty(
             String title, ProblemDifficulty difficulty, Pageable pageable) {
-        return findByTitleContainingIgnoreCaseAndProblemDifficulty(title, difficulty, pageable);
+        return findByTitleContainingIgnoreCaseAndProblemDifficultyAndIsPublicTrue(title, difficulty, pageable);
     }
+
+    // ── Public problem listing ─────────────────────────────────────────── //
+
+    Page<Problem> findByIsPublicTrue(Pageable pageable);
 
     // ── Lecturer's problem repository ─────────────────────────────────────── //
 

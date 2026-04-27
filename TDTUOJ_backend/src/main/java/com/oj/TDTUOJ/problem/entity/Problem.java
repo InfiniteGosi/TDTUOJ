@@ -50,6 +50,11 @@ public class Problem {
 
     private String solutionFileUrl;  // S3 URL to solution (.md file), set by author
 
+    @Column(columnDefinition = "TEXT")
+    private String solutionCode;     // Plain-text solution source code
+
+    private String solutionLanguage; // e.g. "CPP", "JAVA", "PYTHON", "C"
+
     private Integer point;
 
     private Double timeLimit; // in seconds

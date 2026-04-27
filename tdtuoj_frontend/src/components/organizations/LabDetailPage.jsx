@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Editor from "@monaco-editor/react";
 import {
   Box,
   Container,
@@ -23,11 +24,16 @@ import {
   Trash2,
   FileText,
   Pencil,
+  Code,
+  X,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
 import { useConfirmDialog } from "../common/ConfirmDialog";
+
+// State for solution viewer
+const LANG_LABELS = { CPP: "C++", JAVA: "Java", PYTHON: "Python", C: "C" };
 
 /* ── Status badge ──────────────────────────────────────────────────────────── */
 
@@ -115,6 +121,7 @@ const LabDetailPage = () => {
   const [org, setOrg] = useState(null);
   const [lab, setLab] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [viewingSolution, setViewingSolution] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -343,7 +350,18 @@ const LabDetailPage = () => {
                       </Table.Cell>
                       {lab.solutionsPublished && (
                         <Table.Cell>
-                          {ex.solutionFileUrl ? (
+                          {ex.solutionCode ? (
+                            <Box
+                              as="button"
+                              onClick={(e) => { e.stopPropagation(); setViewingSolution(ex); }}
+                              bg="transparent" border="none" cursor="pointer"
+                            >
+                              <HStack gap={1} color="purple.500" _hover={{ color: "purple.700" }}>
+                                <Code size={14} />
+                                <Text fontSize="xs" fontWeight="500">View</Text>
+                              </HStack>
+                            </Box>
+                          ) : ex.solutionFileUrl ? (
                             <Box
                               as="a"
                               href={ex.solutionFileUrl}
@@ -353,7 +371,7 @@ const LabDetailPage = () => {
                             >
                               <HStack gap={1} color="blue.500" _hover={{ color: "blue.700" }}>
                                 <FileText size={14} />
-                                <Text fontSize="xs" fontWeight="500">View</Text>
+                                <Text fontSize="xs" fontWeight="500">File</Text>
                               </HStack>
                             </Box>
                           ) : (
@@ -370,6 +388,61 @@ const LabDetailPage = () => {
         </VStack>
       </Container>
       <ConfirmDialog />
+
+      {/* Solution Code Modal */}
+      {viewingSolution && (
+        <Box
+          position="fixed" top={0} left={0} right={0} bottom={0}
+          bg="blackAlpha.700" zIndex={1000}
+          display="flex" alignItems="center" justifyContent="center"
+          onClick={() => setViewingSolution(null)}
+        >
+          <Box
+            bg="gray.900" borderRadius="xl" p={6} maxW="700px" w="90%"
+            maxH="80vh" overflow="auto" position="relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <HStack justify="space-between" mb={4}>
+              <VStack align="start" gap={0}>
+                <Text color="white" fontWeight="700" fontSize="lg">
+                  {viewingSolution.problemTitle}
+                </Text>
+                <Text color="gray.400" fontSize="xs">
+                  Solution · {LANG_LABELS[viewingSolution.solutionLanguage] || "C++"}
+                </Text>
+              </VStack>
+              <Box
+                as="button" bg="transparent" border="none" cursor="pointer"
+                color="gray.400" _hover={{ color: "white" }}
+                onClick={() => setViewingSolution(null)}
+              >
+                <X size={20} />
+              </Box>
+            </HStack>
+            <Box
+              borderRadius="md"
+              overflow="hidden"
+              h="400px"
+              border="1px solid" borderColor="gray.700"
+            >
+              <Editor
+                height="100%"
+                theme="vs-dark"
+                language="cpp"
+                value={viewingSolution.solutionCode}
+                options={{
+                  readOnly: true,
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  lineNumbers: "on",
+                  scrollBeyondLastLine: false,
+                  domReadOnly: true,
+                }}
+              />
+            </Box>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };

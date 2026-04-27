@@ -23,6 +23,7 @@ import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
 import ReactMarkdown from "react-markdown";
 import CodeEditor from "../CodeEditor/CodeEditor";
+import Editor from "@monaco-editor/react";
 import hljs from "highlight.js/lib/core";
 import cpp from "highlight.js/lib/languages/cpp";
 import java from "highlight.js/lib/languages/java";
@@ -686,6 +687,9 @@ const LabProblemPage = () => {
   const basePath = `/organizations/${orgSlug}/labs/${labSlug}/problems`;
   const goTo = (p) => navigate(`${basePath}/${p.problemSlug}`);
 
+  // Current exercise — carries solutionCode when published
+  const currentExercise = exercises.find((ex) => ex.problemSlug === problemSlug);
+
   const activeTags = (problem?.tags || []).filter((t) => t.isActive !== false);
 
   // ── Loading ──
@@ -712,6 +716,9 @@ const LabProblemPage = () => {
     { id: "description", label: "Description" },
     { id: "testcases", label: `Test Cases (${testCases.length})` },
     { id: "submissions", label: "Submissions" },
+    ...(currentExercise?.solutionCode
+      ? [{ id: "solution", label: "Solution" }]
+      : []),
     ...(results || submitting
       ? [
           {
@@ -1555,6 +1562,43 @@ const LabProblemPage = () => {
                       </VStack>
                     )}
                   </Box>
+                )}
+
+                {/* ── Solution ── */}
+                {activeTab === "solution" && currentExercise?.solutionCode && (
+                  <VStack align="stretch" gap={3}>
+                    <Box
+                      p={3}
+                      borderRadius="8px"
+                      bg={`${T.green}15`}
+                      border={`1px solid ${T.green}44`}
+                    >
+                      <Text fontSize="sm" color={T.green} fontWeight="500">
+                        ✅ Solution published by the instructor
+                      </Text>
+                    </Box>
+                    <Box
+                      borderRadius="8px"
+                      overflow="hidden"
+                      border={`1px solid ${T.border}`}
+                      h="450px"
+                    >
+                      <Editor
+                        height="100%"
+                        theme="vs-dark"
+                        language="cpp"
+                        value={currentExercise.solutionCode}
+                        options={{
+                          readOnly: true,
+                          minimap: { enabled: false },
+                          fontSize: 14,
+                          lineNumbers: "on",
+                          scrollBeyondLastLine: false,
+                          domReadOnly: true,
+                        }}
+                      />
+                    </Box>
+                  </VStack>
                 )}
 
                 {/* ── Results ── */}

@@ -6,6 +6,7 @@ import {
   faUser,
   faTrophy,
   faBuilding,
+  faBook,
 } from "@fortawesome/free-solid-svg-icons";
 import ApiService from "../../services/ApiService";
 
@@ -31,6 +32,17 @@ const AdminSidebar = () => {
             >
               <FontAwesomeIcon icon={faList} />
               <span>Problems</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to="/admin/my-problems"
+              className={
+                location.pathname.includes("/admin/my-problems") ? "active" : ""
+              }
+            >
+              <FontAwesomeIcon icon={faBook} />
+              <span>My Problems</span>
             </NavLink>
           </li>
           <li>

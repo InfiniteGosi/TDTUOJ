@@ -35,6 +35,10 @@ public class ProblemDTO {
 
     private Integer point;
 
+    private String solutionCode;
+
+    private String solutionLanguage;
+
     private Double timeLimit;  // in seconds
 
     private Integer memoryLimit; // in KB
