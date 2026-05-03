@@ -1,4 +1,4 @@
-package com.oj.TDTUOJ.userstatistics.service;
+package com.oj.TDTUOJ.userStatistics.service;
 
 import com.oj.TDTUOJ.common.enums.SubmissionVerdict;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
@@ -6,9 +6,9 @@ import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.submission.entity.Submission;
 import com.oj.TDTUOJ.submission.repository.SubmissionRepository;
 import com.oj.TDTUOJ.user.repository.UserRepository;
-import com.oj.TDTUOJ.userstatistics.dto.UserStatisticsDTO;
-import com.oj.TDTUOJ.userstatistics.entity.UserStatistics;
-import com.oj.TDTUOJ.userstatistics.repository.UserStatisticsRepository;
+import com.oj.TDTUOJ.userStatistics.dto.UserStatisticsDTO;
+import com.oj.TDTUOJ.userStatistics.entity.UserStatistics;
+import com.oj.TDTUOJ.userStatistics.repository.UserStatisticsRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;

@@ -1,24 +1,17 @@
 package com.oj.TDTUOJ.submission.service;
 
 import com.oj.TDTUOJ.submission.dto.SubmissionJobDTO;
-import com.oj.TDTUOJ.userdailyactivity.service.UserActivityService;
-import com.oj.TDTUOJ.common.aws.AwsS3Service;
 import com.oj.TDTUOJ.common.enums.SubmissionStatus;
-import com.oj.TDTUOJ.common.enums.SubmissionVerdict;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.common.response.Response;
-import com.oj.TDTUOJ.judge0.Judge0Result;
-import com.oj.TDTUOJ.judge0.Judge0Service;
 import com.oj.TDTUOJ.lab.repository.LabRepository;
 import com.oj.TDTUOJ.problem.entity.Problem;
 import com.oj.TDTUOJ.problem.repository.ProblemRepository;
 import com.oj.TDTUOJ.submission.dto.SubmissionDTO;
 import com.oj.TDTUOJ.submission.entity.Submission;
 import com.oj.TDTUOJ.submission.repository.SubmissionRepository;
-import com.oj.TDTUOJ.testcase.entity.TestCase;
 import com.oj.TDTUOJ.user.entity.User;
 import com.oj.TDTUOJ.user.service.UserService;
-import com.oj.TDTUOJ.userstatistics.service.UserStatisticsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -30,7 +23,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor

@@ -29,6 +29,7 @@ import {
   RotateCcw,
   CheckCircle,
   Clock,
+  Star,
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
@@ -348,6 +349,9 @@ const ProblemPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(true);
+  const [favoritesMode, setFavoritesMode] = useState(false);
+  const [favorites, setFavorites] = useState([]);
+  const [favLoading, setFavLoading] = useState(false);
   const [pagination, setPagination] = useState({
     limit: 10,
     offset: 0,
@@ -404,6 +408,29 @@ const ProblemPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchFavorites = async () => {
+    if (!ApiService.isAuthenticated()) {
+      showMessage("Please log in to view favorites", "warning");
+      setFavoritesMode(false);
+      return;
+    }
+    setFavLoading(true);
+    try {
+      const resp = await ApiService.getFavoriteProblems();
+      if (resp.statusCode === 200) setFavorites(resp.data || []);
+    } catch (error) {
+      showMessage(error.response?.data?.message || error.message, "error");
+    } finally {
+      setFavLoading(false);
+    }
+  };
+
+  const toggleFavoritesMode = () => {
+    const next = !favoritesMode;
+    setFavoritesMode(next);
+    if (next) fetchFavorites();
   };
 
   useEffect(() => {
@@ -483,16 +510,63 @@ const ProblemPage = () => {
             <Heading size="2xl" color="gray.800">
               Problems
             </Heading>
-            <Badge
-              colorScheme="purple"
-              fontSize="md"
-              px={3}
-              py={1}
-              borderRadius="full"
-            >
-              {pagination.totalElements}{" "}
-              {pagination.totalElements === 1 ? "problem" : "problems"}
-            </Badge>
+            <HStack gap={3}>
+              {/* Favorites toggle */}
+              {ApiService.isAuthenticated() && (
+                <Box
+                  as="button"
+                  display="flex"
+                  alignItems="center"
+                  gap={2}
+                  px={4}
+                  py={2}
+                  borderRadius="lg"
+                  boxShadow="sm"
+                  border="1px solid"
+                  bg={favoritesMode ? "yellow.400" : "white"}
+                  borderColor={favoritesMode ? "yellow.400" : "gray.200"}
+                  color={favoritesMode ? "white" : "gray.600"}
+                  cursor="pointer"
+                  transition="all 0.15s"
+                  _hover={{
+                    borderColor: "yellow.400",
+                    color: favoritesMode ? "white" : "yellow.500",
+                  }}
+                  onClick={toggleFavoritesMode}
+                  style={{ outline: "none", whiteSpace: "nowrap" }}
+                >
+                  <Star size={15} fill={favoritesMode ? "white" : "none"} />
+                  <Text fontSize="sm" fontWeight="500">
+                    {favoritesMode ? "All Problems" : "Favorites"}
+                    {!favoritesMode && favorites.length > 0 && (
+                      <Box
+                        as="span"
+                        ml={2}
+                        bg="yellow.400"
+                        color="white"
+                        borderRadius="full"
+                        px={2}
+                        py="1px"
+                        fontSize="xs"
+                        fontWeight="bold"
+                      >
+                        {favorites.length}
+                      </Box>
+                    )}
+                  </Text>
+                </Box>
+              )}
+              <Badge
+                colorScheme="purple"
+                fontSize="md"
+                px={3}
+                py={1}
+                borderRadius="full"
+              >
+                {favoritesMode ? favorites.length : pagination.totalElements}{" "}
+                {(favoritesMode ? favorites.length : pagination.totalElements) === 1 ? "problem" : "problems"}
+              </Badge>
+            </HStack>
           </HStack>
 
           {/* Search + Sort + Filters toggle */}
@@ -621,8 +695,8 @@ const ProblemPage = () => {
             </Box>
           </HStack>
 
-          {/* Filter panel */}
-          {showFilters && (
+          {/* Filter panel — hidden in favorites mode */}
+          {showFilters && !favoritesMode && (
             <FilterPanel
               availableTags={availableTags}
               selectedDifficulty={selectedDifficulty}
@@ -634,14 +708,131 @@ const ProblemPage = () => {
             />
           )}
 
-          {/* Table */}
-          <Box
-            bg="white"
-            borderRadius="xl"
-            boxShadow="md"
-            overflow="hidden"
-            position="relative"
-          >
+          {/* ── Favorites grid ── */}
+          {favoritesMode ? (
+            <Box
+              bg="white"
+              borderRadius="xl"
+              boxShadow="md"
+              overflow="hidden"
+              position="relative"
+            >
+              {favLoading ? (
+                <Box py={20} display="flex" justifyContent="center">
+                  <Spinner size="lg" color="yellow.400" thickness="3px" />
+                </Box>
+              ) : favorites.length === 0 ? (
+                <Box py={16} textAlign="center">
+                  <VStack gap={3}>
+                    <Star size={44} color="#CBD5E0" />
+                    <Text fontSize="lg" color="gray.500" fontWeight="medium">
+                      No favorites yet
+                    </Text>
+                    <Text fontSize="sm" color="gray.400">
+                      Open a problem and click Save to bookmark it
+                    </Text>
+                  </VStack>
+                </Box>
+              ) : (
+                <Table.Root variant="line" size="md">
+                  <Table.Header bg="yellow.50">
+                    <Table.Row>
+                      <Table.ColumnHeader textAlign="center" w="7%">
+                        <Text fontWeight="bold" color="yellow.700" fontSize="sm">#</Text>
+                      </Table.ColumnHeader>
+                      <Table.ColumnHeader w="30%">
+                        <Text fontWeight="bold" color="yellow.700" fontSize="sm">Problem</Text>
+                      </Table.ColumnHeader>
+                      <Table.ColumnHeader w="12%">
+                        <Text fontWeight="bold" color="yellow.700" fontSize="sm">Difficulty</Text>
+                      </Table.ColumnHeader>
+                      <Table.ColumnHeader w="30%">
+                        <Text fontWeight="bold" color="yellow.700" fontSize="sm">Topics</Text>
+                      </Table.ColumnHeader>
+                      <Table.ColumnHeader textAlign="center" w="12%">
+                        <Text fontWeight="bold" color="yellow.700" fontSize="sm">Points</Text>
+                      </Table.ColumnHeader>
+                      <Table.ColumnHeader textAlign="center" w="9%">
+                        <Text fontWeight="bold" color="yellow.700" fontSize="sm">Status</Text>
+                      </Table.ColumnHeader>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
+                    {favorites.map((problem, index) => {
+                      const activeTags = (problem.tags || []).filter((t) => t.isActive !== false);
+                      return (
+                        <Table.Row
+                          key={problem.id}
+                          _hover={{ bg: "yellow.50", cursor: "pointer" }}
+                          transition="background 0.15s"
+                          bg={index % 2 === 0 ? "white" : "gray.50"}
+                          onClick={() => navigate(`/problems/${problem.slug}`)}
+                        >
+                          <Table.Cell textAlign="center">
+                            <Text fontSize="sm" fontWeight="600" color="gray.500">{problem.id}</Text>
+                          </Table.Cell>
+                          <Table.Cell>
+                            <HStack gap={2}>
+                              <Star size={12} color="#F6C90E" fill="#F6C90E" />
+                              <Text fontSize="sm" fontWeight="600" color="gray.800">
+                                {problem.title}
+                              </Text>
+                            </HStack>
+                          </Table.Cell>
+                          <Table.Cell>
+                            <DiffBadge difficulty={problem.problemDifficulty} />
+                          </Table.Cell>
+                          <Table.Cell onClick={(e) => e.stopPropagation()}>
+                            <Wrap gap={1}>
+                              {activeTags.length > 0 ? (
+                                activeTags.map((tag) => (
+                                  <WrapItem key={tag.id}>
+                                    <Badge colorScheme="gray" variant="subtle" fontSize="xs" px={2} py="1px" borderRadius="full">
+                                      {tag.name}
+                                    </Badge>
+                                  </WrapItem>
+                                ))
+                              ) : (
+                                <Text fontSize="xs" color="gray.400" fontStyle="italic">—</Text>
+                              )}
+                            </Wrap>
+                          </Table.Cell>
+                          <Table.Cell textAlign="center">
+                            <HStack justify="center" gap={1}>
+                              <Trophy size={14} color="#805AD5" />
+                              <Text fontSize="sm" fontWeight="700" color="purple.600">{problem.point}</Text>
+                            </HStack>
+                          </Table.Cell>
+                          <Table.Cell textAlign="center">
+                            {problem.solved ? (
+                              <Box display="inline-flex" p={2} borderRadius="md" bg="green.100" color="green.600">
+                                <CheckCircle size={18} />
+                              </Box>
+                            ) : problem.attempted ? (
+                              <Box display="inline-flex" p={2} borderRadius="md" bg="orange.100" color="orange.500">
+                                <Clock size={18} />
+                              </Box>
+                            ) : (
+                              <Box display="inline-flex" p={2} borderRadius="md" bg="purple.100" color="purple.600">
+                                <Book size={18} />
+                              </Box>
+                            )}
+                          </Table.Cell>
+                        </Table.Row>
+                      );
+                    })}
+                  </Table.Body>
+                </Table.Root>
+              )}
+            </Box>
+          ) : (
+            <Box
+              bg="white"
+              borderRadius="xl"
+              boxShadow="md"
+              overflow="hidden"
+              position="relative"
+            >
             {loading && (
               <Box
                 position="absolute"
@@ -950,6 +1141,7 @@ const ProblemPage = () => {
               </Box>
             )}
           </Box>
+          )}
         </VStack>
       </Container>
     </Box>

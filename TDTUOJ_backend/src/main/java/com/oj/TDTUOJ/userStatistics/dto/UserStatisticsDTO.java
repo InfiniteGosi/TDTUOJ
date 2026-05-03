@@ -1,4 +1,4 @@
-package com.oj.TDTUOJ.userstatistics.dto;
+package com.oj.TDTUOJ.userStatistics.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

@@ -1,6 +1,6 @@
-package com.oj.TDTUOJ.userdailyactivity.service;
+package com.oj.TDTUOJ.userDailyActivity.service;
 
-import com.oj.TDTUOJ.userdailyactivity.dto.UserDailyActivityDTO;
+import com.oj.TDTUOJ.userDailyActivity.dto.UserDailyActivityDTO;
 import com.oj.TDTUOJ.common.response.Response;
 
 import java.util.List;

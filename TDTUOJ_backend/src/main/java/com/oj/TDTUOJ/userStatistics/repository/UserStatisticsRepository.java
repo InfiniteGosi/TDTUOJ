@@ -1,6 +1,6 @@
-package com.oj.TDTUOJ.userstatistics.repository;
+package com.oj.TDTUOJ.userStatistics.repository;
 
-import com.oj.TDTUOJ.userstatistics.entity.UserStatistics;
+import com.oj.TDTUOJ.userStatistics.entity.UserStatistics;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

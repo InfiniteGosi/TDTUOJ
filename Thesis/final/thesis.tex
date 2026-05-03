@@ -1,0 +1,658 @@
+% ============================================================
+% KHÓA LUẬN / DỰ ÁN TỐT NGHIỆP
+% TRƯỜNG ĐẠI HỌC TÔN ĐỨC THẮNG – KHOA CÔNG NGHỆ THÔNG TIN
+% Theo Quyết định số 884/2020/QĐ-TĐT, ngày 01/12/2020
+% ============================================================
+
+\documentclass[12pt, a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese, english]{babel}
+\usepackage{csquotes}
+\usepackage{mathptmx}
+
+% Fix for texttt overflow: allow line breaks in \texttt
+\usepackage[htt]{hyphenat}
+\sloppy
+
+\usepackage[
+  a4paper,
+  top    = 3.5cm,
+  bottom = 3.0cm,
+  left   = 3.5cm,
+  right  = 2.0cm,
+  headheight = 15pt,
+]{geometry}
+
+\usepackage{setspace}
+\setstretch{1.5}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyhead[C]{\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+\usepackage{indentfirst}
+\setlength{\parindent}{1.27cm}
+
+\usepackage{graphicx}
+\usepackage{float}
+
+\usepackage{caption}
+\captionsetup{font=normalsize, labelsep=colon, justification=centering}
+
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{array}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+\usepackage[table]{xcolor}
+
+\usepackage[
+  colorlinks = true,
+  linkcolor  = black,
+  citecolor  = black,
+  urlcolor   = blue,
+]{hyperref}
+
+\usepackage[
+  style   = apa,
+  backend = biber,
+  sorting = nyt,
+]{biblatex}
+\addbibresource{references.bib}
+
+\usepackage{acronym}
+\usepackage{appendix}
+
+\usepackage{titlesec}
+
+% Chapter heading: "CHƯƠNG X.  TITLE" on a single line, bold, left-aligned
+\titleformat{\chapter}[hang]
+  {\normalfont\large\bfseries}
+  {CHƯƠNG \thechapter.}
+  {1em}
+  {\large\bfseries\MakeUppercase}
+\titlespacing*{\chapter}{0pt}{-20pt}{20pt}
+
+% Starred chapters (LỜI CẢM ƠN, TÓM TẮT, etc.): centered, no prefix
+\titleformat{name=\chapter,numberless}[block]
+  {\normalfont\large\bfseries\centering}
+  {}
+  {0pt}
+  {\large\bfseries}
+\titlespacing*{name=\chapter,numberless}{0pt}{-20pt}{20pt}
+
+\titleformat{\section}
+  {\normalfont\normalsize\bfseries}{\thesection}{1em}{}
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+
+\titleformat{\subsection}
+  {\normalfont\normalsize\bfseries}{\thesubsection}{1em}{}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+\titlespacing*{\subsubsection}{0pt}{8pt}{4pt}
+
+\usepackage{chngcntr}
+\counterwithin{figure}{chapter}
+\counterwithin{table}{chapter}
+\counterwithin{equation}{chapter}
+\renewcommand{\theequation}{\thechapter.\arabic{equation}}
+
+\addto\captionsenglish{%
+  \renewcommand{\figurename}{Hình}%
+  \renewcommand{\tablename}{Bảng}%
+  \renewcommand{\contentsname}{MỤC LỤC}%
+  \renewcommand{\listfigurename}{DANH MỤC HÌNH VẼ}%
+  \renewcommand{\listtablename}{DANH MỤC BẢNG BIỂU}%
+  \renewcommand{\bibname}{TÀI LIỆU THAM KHẢO}%
+  \renewcommand{\chaptername}{CHƯƠNG}%
+  \renewcommand{\appendixname}{PHỤ LỤC}%
+}
+
+\newcommand{\thesistitle}{HỆ THỐNG CHẤM BÀI TRỰC TUYẾN - TDTUOJ}
+\newcommand{\thesistitleen}{ONLINE JUDGE SYSTEM - TDTUOJ}
+\newcommand{\studentone}{Hồ Nguyễn An Khang -- 52200020}
+\newcommand{\supervisor}{ThS. Doãn Xuân Thanh}
+\newcommand{\major}{Kỹ thuật phần mềm}
+\newcommand{\submityear}{2026}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+\fontsize{13pt}{15.6pt}\selectfont
+\pagenumbering{gobble}
+
+% ------------------------------------------------------------
+% TRANG BÌA CHÍNH (Mẫu 1)
+% ------------------------------------------------------------
+\begin{titlepage}
+  \begin{center}
+    \textbf{TỔNG LIÊN ĐOÀN LAO ĐỘNG VIỆT NAM}\\[0.3cm]
+    \textbf{TRƯỜNG ĐẠI HỌC TÔN ĐỨC THẮNG}\\[0.3cm]
+    \textbf{KHOA CÔNG NGHỆ THÔNG TIN}\\[1cm]
+    \includegraphics[width=0.25\textwidth]{figures/logo.png}\\[1cm]
+    {\large\textbf{\studentone}}\\[2.5cm]
+    {\Large\textbf{\MakeUppercase{\thesistitle}}}\\[1.5cm]
+    {\large\textbf{KHÓA LUẬN TỐT NGHIỆP}}\\[0.5cm]
+    {\normalsize\textbf{\major}}\\[0.5cm]
+    \vfill
+    \textbf{THÀNH PHỐ HỒ CHÍ MINH, NĂM \submityear}
+  \end{center}
+\end{titlepage}
+
+% ------------------------------------------------------------
+% TRANG BÌA PHỤ (Mẫu 2)
+% ------------------------------------------------------------
+\begin{titlepage}
+  \begin{center}
+    \textbf{TỔNG LIÊN ĐOÀN LAO ĐỘNG VIỆT NAM}\\[0.3cm]
+    \textbf{TRƯỜNG ĐẠI HỌC TÔN ĐỨC THẮNG}\\[0.3cm]
+    \textbf{KHOA CÔNG NGHỆ THÔNG TIN}\\[1cm]
+    \includegraphics[width=0.25\textwidth]{figures/logo.png}\\[1cm]
+    {\large\textbf{\studentone}}\\[2.5cm]
+    {\Large\textbf{\MakeUppercase{\thesistitle}}}\\[1.5cm]
+    {\large\textbf{KHÓA LUẬN TỐT NGHIỆP}}\\[0.5cm]
+    {\normalsize\textbf{\major}}\\[1.5cm]
+    Người hướng dẫn:\\[0.2cm]
+    \textbf{\supervisor}
+    \vfill
+    \textbf{THÀNH PHỐ HỒ CHÍ MINH, NĂM \submityear}
+  \end{center}
+\end{titlepage}
+
+% ------------------------------------------------------------
+% LỜI CẢM ƠN
+% ------------------------------------------------------------
+\chapter*{LỜI CẢM ƠN}
+\addcontentsline{toc}{chapter}{LỜI CẢM ƠN}
+
+Em xin chân thành cảm ơn quý thầy cô Khoa Công nghệ Thông tin, Trường Đại học Tôn Đức Thắng đã tận tình giảng dạy và trang bị cho em những kiến thức nền tảng vững chắc trong suốt quá trình học tập. Đặc biệt, em xin gửi lời cảm ơn sâu sắc đến giảng viên hướng dẫn \textbf{\supervisor} đã dành thời gian định hướng, góp ý và hỗ trợ em trong từng giai đoạn thực hiện đề tài này. Bên cạnh đó, em xin cảm ơn gia đình và bạn bè đã luôn động viên, tạo điều kiện để em có thể hoàn thành tốt dự án.
+
+\vspace{3cm}
+\begin{flushright}
+  \begin{minipage}{10cm}
+    \centering
+    TP. Hồ Chí Minh, ngày \ldots{} tháng \ldots{} năm 20\ldots{}\\[1cm]
+    \textbf{Tác giả}\\[0.3cm]
+    (\textit{Ký tên và ghi rõ họ tên})
+  \end{minipage}
+\end{flushright}
+\newpage
+
+% ------------------------------------------------------------
+% LỜI CAM ĐOAN
+% ------------------------------------------------------------
+\chapter*{LỜI CAM ĐOAN}
+\addcontentsline{toc}{chapter}{LỜI CAM ĐOAN}
+
+\begin{center}
+  \textbf{CÔNG TRÌNH ĐƯỢC HOÀN THÀNH\\
+  TẠI TRƯỜNG ĐẠI HỌC TÔN ĐỨC THẮNG}
+\end{center}
+
+\noindent Tôi xin cam đoan đây là công trình nghiên cứu của riêng tôi và được sự hướng dẫn khoa học của \textbf{\supervisor}. Các nội dung nghiên cứu, kết quả trong đề tài này là trung thực và chưa công bố dưới bất kỳ hình thức nào trước đây. Những số liệu trong các bảng biểu phục vụ cho việc phân tích, nhận xét, đánh giá được chính tác giả thu thập từ các nguồn khác nhau có ghi rõ trong phần tài liệu tham khảo.
+
+\noindent Ngoài ra, trong Dự án còn sử dụng một số nhận xét, đánh giá cũng như số liệu của các tác giả khác, cơ quan tổ chức khác đều có trích dẫn và chú thích nguồn gốc.
+
+\noindent Nếu phát hiện có bất kỳ sự gian lận nào tôi xin hoàn toàn chịu trách nhiệm về nội dung Dự án của mình. Trường Đại học Tôn Đức Thắng không liên quan đến những vi phạm tác quyền, bản quyền do tôi gây ra trong quá trình thực hiện (nếu có).
+
+\vspace{3cm}
+\begin{flushright}
+  \begin{minipage}{10cm}
+    \centering
+    TP. Hồ Chí Minh, ngày \ldots{} tháng \ldots{} năm 20\ldots{}\\[1cm]
+    \textbf{Tác giả}\\[0.3cm]
+    (\textit{Ký tên và ghi rõ họ tên})
+  \end{minipage}
+\end{flushright}
+\newpage
+
+% ------------------------------------------------------------
+% TÓM TẮT (Tiếng Việt)
+% ------------------------------------------------------------
+\chapter*{\thesistitle}
+\addcontentsline{toc}{chapter}{TÓM TẮT}
+\begin{center}\textbf{TÓM TẮT}\end{center}
+
+\noindent Dự án này trình bày quá trình nghiên cứu, thiết kế và triển khai ban đầu của Hệ thống Chấm bài Trực tuyến TDTUOJ -- một nền tảng được xây dựng nhằm tự động hóa quy trình chấm bài lập trình và hỗ trợ tổ chức thi cử cho sinh viên Khoa Công nghệ Thông tin, Trường Đại học Tôn Đức Thắng.
+
+\noindent Hệ thống được thiết kế để phục vụ ba nhóm người dùng chính gồm sinh viên, giảng viên và quản trị viên, với các chức năng cốt lõi bao gồm nộp và chấm bài tự động cho nhiều ngôn ngữ lập trình, quản lý cuộc thi và bài toán, và phân tích hỗ trợ học tập thông minh bằng \ac{LLM}. Kiến trúc hệ thống được xây dựng theo mô hình hai lớp tách biệt rõ ràng giữa backend và frontend, tích hợp với ba dịch vụ bên ngoài gồm Judging Service (Judge0), \ac{LLM} và AI Parser Service.
+
+\noindent Đến thời điểm báo cáo giữa kỳ, hệ thống đã hoàn thành phần lớn các chức năng cốt lõi. Phía backend được xây dựng bằng Java với Spring Boot, đã hiện thực hóa đầy đủ các \ac{API} quản lý người dùng, quản lý bài toán và luồng xử lý bài nộp tích hợp Judge0. Phía frontend được xây dựng bằng React, đã hoàn thiện giao diện xem chi tiết bài toán theo slug, quản lý người dùng, tính năng nộp bài và hỗ trợ học tập bằng \ac{LLM}.
+
+\newpage
+
+% ------------------------------------------------------------
+% ABSTRACT (Tiếng Anh)
+% ------------------------------------------------------------
+\chapter*{\thesistitleen}
+\addcontentsline{toc}{chapter}{ABSTRACT}
+\begin{center}\textbf{ABSTRACT}\end{center}
+
+\noindent This project presents the research, design, and initial implementation of the TDTUOJ Online Judge System -- a platform built to automate programming submission grading and support examination organization for students of the Faculty of Information Technology at Ton Duc Thang University.
+
+\noindent The system is designed to serve three main user groups: students, lecturers, and administrators, with core features including automatic submission judging for multiple programming languages via Judge0, contest and problem management, and AI-powered learning support via \ac{LLM} integration. The system architecture follows a clear two-layer separation between a Java Spring Boot backend and a React frontend, integrated with three external services: Judging Service (Judge0), \ac{LLM}, and AI Parser Service.
+
+\noindent As of the midterm report, the majority of core features have been implemented. The backend provides complete \ac{API} coverage for user management, problem management, and Judge0-integrated submission processing. The frontend has completed the problem detail view by slug, user management interface, submission functionality, and \ac{LLM}-powered hint and code explanation features.
+
+\newpage
+
+% ── Roman page numbers ───────────────────────────────────────
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\tableofcontents
+\newpage
+
+\listoffigures
+\addcontentsline{toc}{chapter}{DANH MỤC HÌNH VẼ}
+\newpage
+
+\listoftables
+\addcontentsline{toc}{chapter}{DANH MỤC BẢNG BIỂU}
+\newpage
+
+% ------------------------------------------------------------
+% DANH MỤC CÁC CHỮ VIẾT TẮT
+% ------------------------------------------------------------
+\chapter*{DANH MỤC CÁC CHỮ VIẾT TẮT}
+\addcontentsline{toc}{chapter}{DANH MỤC CÁC CHỮ VIẾT TẮT}
+
+\begin{acronym}[XXXXXXXX]
+  \acro{AC}{Accepted}
+  \acro{AI}{Artificial Intelligence -- Trí tuệ nhân tạo}
+  \acro{API}{Application Programming Interface}
+  \acro{CE}{Compilation Error}
+  \acro{CNTT}{Công nghệ Thông tin}
+  \acro{CSS}{Cascading Style Sheets}
+  \acro{ERD}{Entity-Relationship Diagram -- Sơ đồ thực thể quan hệ}
+  \acro{HTTP}{Hypertext Transfer Protocol}
+  \acro{JPA}{Java Persistence API}
+  \acro{JSON}{JavaScript Object Notation}
+  \acro{JWT}{JSON Web Token}
+  \acro{LLM}{Large Language Model -- Mô hình ngôn ngữ lớn}
+  \acro{MLE}{Memory Limit Exceeded}
+  \acro{MVC}{Model-View-Controller}
+  \acro{OJ}{Online Judge}
+  \acro{PDF}{Portable Document Format}
+  \acro{PK}{Primary Key -- Khóa chính}
+  \acro{FK}{Foreign Key -- Khóa ngoại}
+  \acro{RE}{Runtime Error}
+  \acro{REST}{Representational State Transfer}
+  \acro{TDTU}{Trường Đại học Tôn Đức Thắng}
+  \acro{TLE}{Time Limit Exceeded}
+  \acro{UI}{User Interface}
+  \acro{UX}{User Experience}
+  \acro{WA}{Wrong Answer}
+\end{acronym}
+\newpage
+
+% ── Arabic page numbers from 1 ───────────────────────────────
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ============================================================
+% CHƯƠNG 1 – MỞ ĐẦU VÀ TỔNG QUAN ĐỀ TÀI
+% ============================================================
+\chapter{Mở đầu và tổng quan đề tài}
+
+\section{Lý do chọn đề tài}
+
+Hiện nay, việc tổ chức các kỳ thi lập trình và rèn luyện kỹ năng giải thuật cho sinh viên tại Trường Đại học Tôn Đức Thắng vẫn còn nhiều hạn chế về mặt công cụ hỗ trợ. Chấm bài thủ công tiêu tốn nhiều thời gian và công sức của giảng viên, đồng thời khó đảm bảo tính nhất quán khi số lượng sinh viên ngày càng tăng. Bên cạnh đó, sinh viên thiếu một môi trường luyện tập chủ động với phản hồi tức thì để tự nâng cao kỹ năng lập trình ngoài giờ học.
+
+Để giải quyết những vấn đề này, đề tài đề xuất xây dựng Hệ thống Chấm bài Trực tuyến TDTUOJ -- một nền tảng tự động hóa toàn bộ quy trình chấm bài, hỗ trợ tổ chức thi cử quy mô lớn và tạo ra môi trường luyện tập lập trình chuyên nghiệp trong khuôn khổ học thuật của nhà trường.
+
+\section{Khảo sát}
+
+Trước khi xây dựng TDTUOJ, nhóm đã tiến hành khảo sát một số hệ thống \ac{OJ} phổ biến hiện có nhằm đánh giá ưu nhược điểm và xác định khoảng trống mà hệ thống cần lấp đầy.
+
+\textbf{Codeforces} là một trong những nền tảng thi lập trình lớn nhất thế giới, nổi bật với hệ thống rating Elo uy tín, kho bài toán phong phú và hạ tầng chịu tải cao. Tuy nhiên, Codeforces hoàn toàn là nền tảng công cộng và không cung cấp cơ chế quản lý lớp học, phân quyền theo tổ chức hay tích hợp với quy trình đào tạo nội bộ của một trường đại học cụ thể.
+
+\textbf{LeetCode} tập trung vào luyện tập kỹ năng phỏng vấn với giao diện hiện đại và tính năng giải thích lời giải chi tiết. Mặc dù vậy, nền tảng này không hỗ trợ tổ chức thi cử theo lịch học, không có cơ chế phân quyền giảng viên -- sinh viên và không thể tùy biến theo nhu cầu học thuật nội bộ.
+
+\textbf{VNOJ} (Vietnam Online Judge) là hệ thống \ac{OJ} mã nguồn mở phổ biến tại Việt Nam, hỗ trợ tiếng Việt và có cộng đồng người dùng trong nước lớn. Dù VNOJ phù hợp cho luyện tập cá nhân và một số kỳ thi học sinh sinh viên, hệ thống vẫn thiếu các tính năng nâng cao như hỗ trợ học tập bằng \ac{LLM}, nhập đề bài tự động từ \ac{PDF} và cơ chế quản lý tổ chức linh hoạt theo mô hình đại học.
+
+Qua khảo sát, nhóm nhận thấy các hệ thống hiện có đều không được thiết kế để phục vụ nhu cầu đặc thù của một đơn vị đào tạo cụ thể: quản lý phân quyền theo vai trò giảng viên và sinh viên, tích hợp \ac{AI} hỗ trợ học tập trực tiếp trong luồng nộp bài, và khả năng vận hành độc lập trong môi trường nội bộ của nhà trường. Đây chính là khoảng trống mà TDTUOJ được xây dựng để lấp đầy.
+
+\section{Mục đích nghiên cứu}
+
+TDTUOJ được xây dựng nhằm đạt một tập hợp các mục tiêu cụ thể và có tính ứng dụng cao. Về mặt kỹ thuật, hệ thống hỗ trợ đa ngôn ngữ lập trình, cho phép người dùng nộp bài viết bằng C, C++, Java và Python, đáp ứng nhu cầu đa dạng của sinh viên ở nhiều trình độ và môn học khác nhau. Song song với đó, hệ thống cung cấp đầy đủ công cụ để quản lý cuộc thi và bài tập, bao gồm tổ chức contest, quản lý danh sách bài toán, chấm điểm tự động và xếp hạng người tham gia theo thời gian thực.
+
+Ngoài các chức năng cốt lõi, hệ thống tích hợp một số tính năng nâng cao phục vụ học tập. Tính năng phân tích mã nguồn bằng \ac{LLM} cho phép giải thích code, gợi ý hướng giải và phân tích độ phức tạp thuật toán ngay trên giao diện -- giúp sinh viên hiểu rõ hơn về hiệu suất và logic của giải pháp mình đề xuất. Ngoài ra, hệ thống tích hợp AI Parser Service để tự động đọc đề bài từ file \ac{PDF} và chuyển đổi thành dữ liệu có cấu trúc, giúp giảng viên tiết kiệm đáng kể thời gian soạn thảo.
+
+\section{Phạm vi nghiên cứu}
+
+Đề tài tập trung xây dựng một hệ thống hoàn chỉnh phục vụ sinh viên và giảng viên Khoa Công nghệ Thông tin, Trường Đại học Tôn Đức Thắng. Hệ thống quản lý ba vai trò với phân quyền rõ ràng: User (người dùng thông thường), Contest Creator (người tổ chức và quản lý cuộc thi), và Admin (quản trị viên với toàn quyền điều hành). Về mặt kiến trúc, phạm vi đề tài bao gồm phát triển một backend \ac{REST}ful \ac{API} bằng Java Spring Boot, một giao diện người dùng bằng React, và tích hợp ba dịch vụ bên ngoài: Judging Service (Judge0), \ac{LLM} và AI Parser Service.
+
+Những nội dung nằm ngoài phạm vi của đề tài bao gồm: phát triển ứng dụng di động, tích hợp hệ thống quản lý học tập (LMS) hiện có của nhà trường, xây dựng hạ tầng chấm bài tùy chỉnh thay thế Judge0, và hỗ trợ các ngôn ngữ lập trình ngoài bốn ngôn ngữ đã nêu ở giai đoạn đầu.
+
+\section{Ý nghĩa nghiên cứu}
+
+TDTUOJ không chỉ là một công cụ hỗ trợ giảng dạy đơn thuần mà là một nền tảng tổng thể có khả năng tạo ra tác động tích cực và lâu dài cho cộng đồng học thuật của nhà trường.
+
+Về ý nghĩa thực tiễn, với sinh viên, hệ thống tạo ra môi trường luyện tập lập trình chuyên nghiệp với phản hồi tức thì, phân tích thuật toán chuyên sâu và hỗ trợ học tập thông minh từ \ac{LLM} -- những yếu tố giúp người học phát triển tư duy giải quyết vấn đề một cách chủ động và hiệu quả. Với giảng viên, hệ thống giải phóng nguồn lực khỏi các công việc lặp đi lặp lại như chấm bài thủ công và soạn thảo đề bài, từ đó tập trung nhiều hơn vào việc thiết kế nội dung học thuật chất lượng cao.
+
+Về ý nghĩa khoa học, đề tài đặt ra và giải quyết một số bài toán kỹ thuật có giá trị nghiên cứu: xây dựng luồng xử lý bài nộp bất đồng bộ có khả năng mở rộng theo chiều ngang, tích hợp \ac{LLM} vào quy trình đánh giá học tập, và áp dụng chiến lược cache phân tầng để phục vụ bảng xếp hạng thời gian thực. Ở tầm nhìn rộng hơn, TDTUOJ góp phần xây dựng văn hóa lập trình thi đấu tại \ac{TDTU}, đồng thời thể hiện năng lực nghiên cứu và phát triển phần mềm thực tiễn của sinh viên Khoa \ac{CNTT}.
+
+% ============================================================
+% CHƯƠNG 2 – KIẾN TRÚC NỀN TẢNG
+% ============================================================
+\chapter{Kiến trúc nền tảng}
+
+\section{Vòng đời phát triển phần mềm}
+
+Để phù hợp với bối cảnh phát triển cá nhân, yêu cầu hệ thống có thể thay đổi trong quá trình triển khai và thời gian thực hiện có hạn của một đề tài tốt nghiệp, dự án TDTUOJ áp dụng phương pháp phát triển theo hướng Agile kết hợp với mô hình quản lý công việc bằng Kanban board trên nền tảng Trello.
+
+Thay vì chia dự án thành các sprint có độ dài cố định như Scrum, phương pháp tiếp cận được chọn là luồng công việc liên tục (continuous flow): các hạng mục công việc được đưa vào thực hiện tuần tự dựa trên mức độ ưu tiên, và tiến độ được điều chỉnh linh hoạt theo từng giai đoạn phát triển thực tế. Đây là lựa chọn thực tế và hiệu quả cho một dự án cá nhân, nơi việc tổ chức họp sprint hay điều phối nhóm không phát sinh và mọi quyết định kỹ thuật được đưa ra trực tiếp dựa trên kết quả của từng tác vụ đã hoàn thành.
+
+Kanban board trong Trello được tổ chức thành bốn cột có ý nghĩa rõ ràng và liên kết trực tiếp với vòng đời của từng hạng mục công việc. Cột \textbf{Backlog} tập hợp toàn bộ các tính năng, yêu cầu kỹ thuật và tác vụ đã được xác định nhưng chưa được lên lịch thực hiện -- đây là nguồn dữ liệu đầu vào chính để lập kế hoạch công việc theo từng giai đoạn. Cột \textbf{To Do} chứa các hạng mục đã được phân tích, ưu tiên hóa và sẵn sàng để bắt đầu thực hiện trong thời gian sắp tới. Cột \textbf{Doing} phản ánh các tác vụ đang được triển khai tích cực, với nguyên tắc giới hạn số lượng công việc đồng thời (\ac{WIP} limit) để tránh phân tán tập trung. Cột \textbf{Done} ghi nhận tất cả hạng mục đã hoàn thành, đã kiểm thử và được tích hợp vào nhánh chính -- đây cũng là cơ sở để đánh giá tiến độ tổng thể của dự án.
+
+Quá trình phát triển được chia thành ba giai đoạn lớn, phản ánh thứ tự ưu tiên kỹ thuật từ nền tảng đến tính năng nâng cao. Giai đoạn đầu tập trung vào việc xây dựng nền tảng kiến trúc và các tính năng cốt lõi: thiết lập cấu trúc dự án Spring Boot, cấu hình PostgreSQL và Docker Compose, hiện thực hóa hệ thống xác thực và phân quyền bằng \ac{JWT}, và hoàn thiện luồng nộp bài tích hợp Judge0. Giai đoạn thứ hai mở rộng sang quản lý cuộc thi và bảng xếp hạng: xây dựng các \ac{API} quản lý contest, tích hợp Redis cho submission queue và leaderboard cache, và phát triển giao diện frontend tương ứng bằng React. Giai đoạn thứ ba bổ sung các tính năng nâng cao: tích hợp \ac{LLM} cho hỗ trợ học tập, xây dựng AI Parser Service để nhập đề bài từ \ac{PDF}, và hoàn thiện giao diện quản trị.
+
+Mỗi hạng mục trong Backlog được mô tả đủ chi tiết để có thể ước lượng thời gian thực hiện và xác định các phụ thuộc kỹ thuật trước khi chuyển sang cột To Do. Cách tổ chức này giúp đảm bảo luôn có sự rõ ràng về công việc tiếp theo cần làm, đồng thời tạo ra cơ sở hữu hình để đánh giá tiến độ so với kế hoạch tổng thể của đề tài.
+
+\section{Các công nghệ sử dụng}
+
+Hệ thống TDTUOJ được xây dựng trên một tập hợp các công nghệ được lựa chọn có chủ đích, đảm bảo sự cân bằng giữa hiệu năng, khả năng bảo trì và tính phù hợp với quy mô của một dự án học thuật. Phần này trình bày lần lượt từng công nghệ, lý do lựa chọn và vai trò cụ thể của nó trong kiến trúc tổng thể.
+
+\subsection{Backend -- Java và Spring Boot}
+
+Backend của TDTUOJ được xây dựng bằng ngôn ngữ Java với framework Spring Boot. Spring Boot là một framework phát triển ứng dụng doanh nghiệp trưởng thành, cung cấp cơ chế cấu hình tự động (auto-configuration) giúp rút ngắn đáng kể thời gian thiết lập dự án so với Spring thuần túy, đồng thời tích hợp sẵn một hệ sinh thái phong phú gồm Spring Security, Spring Data \ac{JPA} và Spring Web.
+
+Kiến trúc backend tuân theo mô hình \ac{MVC} phân lớp rõ ràng. Lớp Controller tiếp nhận các yêu cầu \ac{HTTP} và định tuyến đến lớp Service tương ứng. Lớp Service chứa toàn bộ logic nghiệp vụ, thực hiện xác thực dữ liệu và điều phối các thao tác cần thiết. Lớp Repository, được hiện thực hóa thông qua Spring Data \ac{JPA}, chịu trách nhiệm tương tác với cơ sở dữ liệu thông qua các entity và query có kiểu dữ liệu tường minh.
+
+Bảo mật được xử lý thông qua Spring Security kết hợp với \ac{JWT}. Khi người dùng đăng nhập thành công, hệ thống tạo ra một access token có thời hạn ngắn và một refresh token có thời hạn dài hơn. Mọi yêu cầu \ac{API} sau đó cần đính kèm access token trong header Authorization; Spring Security sẽ xác thực token, giải mã thông tin người dùng và kiểm tra quyền hạn trước khi cho phép yêu cầu tiếp tục xử lý. Cơ chế này đảm bảo hệ thống hoàn toàn không lưu trạng thái phiên (stateless) ở phía server, phù hợp với kiến trúc \ac{REST}ful và dễ dàng mở rộng theo chiều ngang khi cần.
+
+\subsection{Cơ sở dữ liệu -- PostgreSQL}
+
+PostgreSQL được chọn làm hệ quản trị cơ sở dữ liệu chính của hệ thống. So với MySQL, PostgreSQL cung cấp hỗ trợ tốt hơn cho các kiểu dữ liệu phức tạp như \texttt{JSONB}, kiểu mảng và các biểu thức chỉ mục nâng cao -- những tính năng phát huy giá trị trong ngữ cảnh lưu trữ cấu hình bài toán và kết quả chấm bài đa dạng. Ngoài ra, PostgreSQL có cơ chế xử lý giao dịch đồng thời (MVCC) mạnh mẽ, đảm bảo tính toàn vẹn dữ liệu trong các tình huống nhiều bài nộp được xử lý đồng thời.
+
+Kết nối giữa Spring Boot và PostgreSQL được quản lý thông qua HikariCP -- connection pool mặc định của Spring Boot, nổi bật với hiệu năng cao và overhead thấp. Các tham số pool như kích thước tối đa, thời gian chờ kết nối và thời gian nhàn rỗi được cấu hình phù hợp với tải dự kiến của hệ thống, đảm bảo việc tái sử dụng kết nối hiệu quả và tránh tình trạng cạn kiệt kết nối trong giờ cao điểm.
+
+\subsection{Containerization -- Docker}
+
+Toàn bộ hệ thống TDTUOJ được đóng gói và triển khai bằng Docker, với Docker Compose đóng vai trò điều phối các service chạy cùng nhau trong một môi trường thống nhất. Cách tiếp cận này mang lại lợi thế quan trọng là tính nhất quán giữa môi trường phát triển và môi trường triển khai: mọi thành phần từ backend, database đến judging service đều chạy trong container có cấu hình xác định, loại bỏ hoàn toàn các vấn đề phụ thuộc môi trường.
+
+Hạng mục đặc biệt cần lưu ý là Judge0 -- dịch vụ chấm bài mã nguồn mở -- được tự triển khai (self-hosted) thông qua Docker Compose thay vì sử dụng API công cộng có phí. Judge0 yêu cầu quyền truy cập đặc quyền (privileged container) để có thể tạo môi trường sandbox cô lập khi thực thi mã nguồn người dùng, và Docker cung cấp đúng cấp độ kiểm soát cần thiết cho yêu cầu này. Việc tự triển khai Judge0 cũng đảm bảo hệ thống hoạt động hoàn toàn nội bộ mà không phụ thuộc vào dịch vụ bên ngoài, phù hợp với yêu cầu vận hành độc lập của một nền tảng học thuật.
+
+\subsection{Hàng đợi và Bộ nhớ đệm -- Redis}
+
+Redis được tích hợp vào hệ thống để phục vụ hai mục đích có tính chất khác nhau nhưng đều đòi hỏi tốc độ truy cập cao.
+
+Mục đích thứ nhất là hàng đợi bài nộp (submission queue). Khi người dùng nộp bài, yêu cầu không được gửi đồng bộ trực tiếp đến Judge0 mà được đặt vào hàng đợi Redis. Một worker riêng biệt lấy yêu cầu từ hàng đợi và gửi đến Judge0 theo thứ tự, sau đó cập nhật kết quả vào cơ sở dữ liệu khi có phản hồi. Cơ chế này tách biệt luồng tiếp nhận yêu cầu khỏi luồng xử lý chấm bài, giúp hệ thống phản hồi người dùng ngay lập tức và xử lý bài nộp bất đồng bộ một cách có kiểm soát, đặc biệt quan trọng trong các thời điểm nhiều người nộp bài đồng thời.
+
+Mục đích thứ hai là cache bảng xếp hạng (leaderboard cache). Dữ liệu bảng xếp hạng của một cuộc thi cần được truy vấn thường xuyên và có tính chất thay đổi theo từng lần nộp bài thành công -- việc tính toán lại từ cơ sở dữ liệu quan hệ mỗi lần có yêu cầu sẽ gây tải không cần thiết. Redis lưu trữ bảng xếp hạng đã tính sẵn và chỉ làm mới khi có bài nộp mới ảnh hưởng đến thứ hạng, giảm đáng kể số lượng truy vấn nặng đến PostgreSQL.
+
+\subsection{Dịch vụ chấm bài -- Judge0}
+
+Judge0 là dịch vụ thực thi mã nguồn mã nguồn mở, cung cấp khả năng biên dịch và chạy mã trong môi trường sandbox cô lập với giới hạn thời gian và bộ nhớ được kiểm soát chặt chẽ. Judge0 hỗ trợ hơn 60 ngôn ngữ lập trình, trong đó TDTUOJ hiện khai thác bốn ngôn ngữ chính gồm C, C++, Java và Python.
+
+Luồng tích hợp hoạt động như sau: sau khi một yêu cầu chấm bài được lấy ra từ hàng đợi Redis, hệ thống gửi mã nguồn cùng với các test case tương ứng đến \ac{API} của Judge0 thông qua giao thức \ac{HTTP}. Judge0 thực thi mã trong container sandbox, so sánh đầu ra với đáp án mẫu và trả về kết quả bao gồm trạng thái (\ac{AC}, \ac{WA}, \ac{TLE}, \ac{MLE}, \ac{RE}, \ac{CE}) cùng với thời gian thực thi và lượng bộ nhớ sử dụng. Hệ thống sau đó cập nhật bản ghi submission trong PostgreSQL và thông báo kết quả đến frontend thông qua cơ chế polling hoặc WebSocket.
+
+\subsection{Frontend -- React}
+
+Giao diện người dùng của TDTUOJ được xây dựng bằng React -- thư viện JavaScript phổ biến cho phép xây dựng giao diện theo mô hình component và quản lý trạng thái ứng dụng một cách có cấu trúc. React cho phép xây dựng \ac{SPA} (Single-Page Application) trong đó việc điều hướng giữa các trang diễn ra hoàn toàn ở phía client mà không cần tải lại trang, mang lại trải nghiệm người dùng mượt mà và phản hồi nhanh.
+
+Giao tiếp giữa frontend và backend được thực hiện thông qua các \ac{REST}ful \ac{API} \ac{HTTP}. Toàn bộ dữ liệu trao đổi sử dụng định dạng \ac{JSON}, và access token \ac{JWT} được đính kèm trong header của mỗi yêu cầu cần xác thực. Cấu trúc component của ứng dụng được tổ chức theo từng domain chức năng -- người dùng, bài toán, cuộc thi, bài nộp -- giúp việc bảo trì và mở rộng tính năng trở nên thuận tiện.
+
+\subsection{Lưu trữ file -- AWS S3}
+
+Hệ thống sử dụng AWS S3 (Simple Storage Service) để lưu trữ các tệp nội dung bài toán thay vì nhúng trực tiếp vào cơ sở dữ liệu quan hệ. Cụ thể, S3 được dùng để lưu trữ hai loại nội dung chính: tệp Markdown (\texttt{.md}) chứa đề bài của từng bài toán, và các tệp văn bản (\texttt{.txt}) chứa dữ liệu đầu vào và đầu ra kỳ vọng của từng test case.
+
+Việc tách nội dung đề bài và test case ra khỏi PostgreSQL mang lại một số lợi thế thực tế. Đề bài dạng Markdown có thể chứa các đoạn mô tả dài, công thức toán học và ví dụ minh họa -- những nội dung có kích thước biến động lớn và không cần lập chỉ mục tìm kiếm ở cấp cơ sở dữ liệu. Tương tự, dữ liệu test case có thể bao gồm đầu vào nhiều dòng với kích thước đáng kể tùy theo bài toán; lưu trữ chúng trên S3 giúp tránh làm phình to bảng dữ liệu và đơn giản hóa quy trình thêm hoặc cập nhật test case mà không cần thay đổi schema.
+
+Chiến lược lưu trữ trên S3 được tổ chức theo cấu trúc key có phân cấp rõ ràng, phân tách theo loại nội dung và định danh bài toán, giúp việc truy xuất và quản lý vòng đời của tệp được thực hiện một cách hệ thống. Backend chỉ lưu trữ đường dẫn S3 tham chiếu trong PostgreSQL; khi cần phục vụ nội dung cho người dùng hoặc cho Judge0, hệ thống đọc trực tiếp nội dung tệp từ S3 thông qua \ac{API} nội bộ. Về định hướng phát triển, hệ thống có thể mở rộng để hỗ trợ lưu trữ tệp \ac{PDF} đề bài gốc khi tính năng nhập đề từ \ac{PDF} được tích hợp đầy đủ trong tương lai.
+
+\subsection{Tích hợp LLM}
+
+TDTUOJ tích hợp \ac{LLM} như một lớp hỗ trợ học tập thông minh, được thiết kế để bổ sung vào luồng giải bài của sinh viên mà không thay thế quá trình tư duy độc lập. Tích hợp này hoạt động theo mô hình proxy: backend đóng vai trò trung gian giữa frontend và \ac{LLM} API bên ngoài, cho phép kiểm soát nội dung yêu cầu, giới hạn tần suất gọi và ghi nhật ký sử dụng.
+
+Hệ thống cung cấp hai nhóm tính năng hỗ trợ học tập chính. Nhóm tính năng thứ nhất phục vụ sinh viên trực tiếp trong quá trình giải bài: tính năng \textbf{gợi ý hướng giải} (hint generation) cung cấp một gợi ý có định hướng mà không tiết lộ lời giải hoàn chỉnh, giúp sinh viên tự tìm ra bước tiếp theo; tính năng \textbf{phân tích độ phức tạp} (complexity analysis) nhận vào đoạn mã nguồn và bài toán tương ứng, sau đó trả về đánh giá độ phức tạc thời gian và không gian kèm theo giải thích chi tiết. Nhóm tính năng thứ hai phục vụ giảng viên trong quá trình soạn thảo nội dung: tính năng \textbf{AI Parser} cho phép tải lên tệp \ac{PDF} đề bài, \ac{LLM} sẽ phân tích cấu trúc tài liệu và tự động điền các trường thông tin bài toán bao gồm tiêu đề, mô tả, định dạng đầu vào -- đầu ra và ví dụ mẫu, giúp giảng viên tiết kiệm đáng kể thời gian nhập liệu thủ công.
+
+Tất cả các yêu cầu đến \ac{LLM} đều được xây dựng với prompt có cấu trúc rõ ràng ở phía backend, trong đó ngữ cảnh bài toán (đề bài, giới hạn, ví dụ) được đưa vào system prompt để đảm bảo phản hồi của \ac{LLM} luôn liên quan và chính xác theo từng bài toán cụ thể.
+
+% ============================================================
+% CHƯƠNG 3 – PHÂN TÍCH HỆ THỐNG
+% ============================================================
+\chapter{Phân tích hệ thống}
+
+\section{Thu thập yêu cầu}
+
+% TODO: Mô tả quy trình thu thập yêu cầu: phỏng vấn, khảo sát sinh viên/giảng viên,
+%       phân tích hệ thống hiện có
+
+\section{Xử lý nghiệp vụ}
+
+% TODO: Mô tả các quy trình nghiệp vụ chính: nộp bài và chấm bài, tổ chức cuộc thi,
+%       quản lý bài toán, hỗ trợ học tập bằng LLM
+
+\section{Yêu cầu chức năng (Functional Requirements)}
+
+\subsection{Tổng quan Use Case}
+
+% TODO: Mô tả sơ đồ Use Case tổng quan, ba nhóm tác nhân (User, Contest Creator, Admin)
+%       và ba hệ thống bên ngoài (Judge0, LLM, AI Parser Service)
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=0.92\textwidth]{figures/usecase.png}
+  \caption{Sơ đồ Use Case tổng quan của hệ thống TDTUOJ}
+  \label{fig:usecase}
+\end{figure}
+
+\subsection{Các Use Case chính}
+
+% ── UC01 ─────────────────────────────────────────────────────
+\subsubsection{UC01: Đăng ký tài khoản}
+
+% TODO: Specification table
+
+% TODO: Activity diagram (Hình~\ref{fig:act-uc01})
+
+% TODO: Sequence diagram (Hình~\ref{fig:seq-uc01})
+
+% ── UC02 ─────────────────────────────────────────────────────
+\subsubsection{UC02: Đăng nhập}
+
+% TODO: Specification table
+
+% TODO: Activity diagram
+
+% TODO: Sequence diagram
+
+% ── UC03 ─────────────────────────────────────────────────────
+\subsubsection{UC03: Nộp bài và xem kết quả}
+
+% TODO: Specification table
+
+% TODO: Activity diagram
+
+% TODO: Sequence diagram
+
+% ── UC04 ─────────────────────────────────────────────────────
+\subsubsection{UC04: Quản lý bài toán}
+
+% TODO: Specification table
+
+% TODO: Activity diagram
+
+% TODO: Sequence diagram
+
+% ── UC05 ─────────────────────────────────────────────────────
+\subsubsection{UC05: Tạo và quản lý cuộc thi}
+
+% TODO: Specification table
+
+% TODO: Activity diagram
+
+% TODO: Sequence diagram
+
+% ── UC06 ─────────────────────────────────────────────────────
+\subsubsection{UC06: Tham gia cuộc thi}
+
+% TODO: Specification table
+
+% TODO: Activity diagram
+
+% TODO: Sequence diagram
+
+% ── UC07 ─────────────────────────────────────────────────────
+\subsubsection{UC07: Xem bảng xếp hạng}
+
+% TODO: Specification table
+
+% TODO: Activity diagram
+
+% TODO: Sequence diagram
+
+% ── UC08 ─────────────────────────────────────────────────────
+\subsubsection{UC08: Hỗ trợ học tập bằng LLM}
+
+% TODO: Specification table (phân tích độ phức tạp, giải thích code, gợi ý hướng giải)
+
+% TODO: Activity diagram
+
+% TODO: Sequence diagram
+
+% ── UC09 ─────────────────────────────────────────────────────
+\subsubsection{UC09: Nhập đề bài từ PDF (AI Parser)}
+
+% TODO: Specification table
+
+% TODO: Activity diagram
+
+% TODO: Sequence diagram
+
+% ── UC10 ─────────────────────────────────────────────────────
+\subsubsection{UC10: Quản lý người dùng (Admin)}
+
+% TODO: Specification table
+
+% TODO: Activity diagram
+
+% TODO: Sequence diagram
+
+\section{Yêu cầu phi chức năng (Non-functional Requirements)}
+
+% TODO: Hiệu năng (performance), bảo mật (security), khả năng mở rộng (scalability),
+%       tính sẵn sàng (availability), khả năng bảo trì (maintainability), UX
+
+% ============================================================
+% CHƯƠNG 4 – THIẾT KẾ HỆ THỐNG
+% ============================================================
+\chapter{Thiết kế hệ thống}
+
+\section{Thiết kế kiến trúc}
+
+% TODO: Mô tả kiến trúc tổng thể: tách biệt backend/frontend, ba dịch vụ bên ngoài,
+%       sơ đồ kiến trúc hệ thống (deployment diagram / component diagram)
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=\textwidth]{figures/architecture.png}
+  \caption{Kiến trúc tổng quan của hệ thống TDTUOJ}
+  \label{fig:architecture}
+\end{figure}
+
+\section{Thiết kế cơ sở dữ liệu / ERD}
+
+% TODO: Trình bày sơ đồ ERD và mô tả chi tiết từng nhóm bảng
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=\textwidth]{figures/erd.png}
+  \caption{Sơ đồ thực thể -- quan hệ của hệ thống TDTUOJ}
+  \label{fig:erd}
+\end{figure}
+
+\subsection{Nhóm bảng quản lý người dùng}
+
+% TODO: users, roles, users_roles, organizations, users_organizations,
+%       user_statistics, user_daily_activity, rating_history
+
+\subsection{Nhóm bảng quản lý bài toán}
+
+% TODO: problems, test_cases, problem_points, tags, problems_tags, users_problems
+
+\subsection{Nhóm bảng quản lý cuộc thi}
+
+% TODO: contests, contests_problems, contest_registration,
+%       contest_participations, leaderboard_cache
+
+\subsection{Nhóm bảng quản lý bài nộp}
+
+% TODO: submissions
+
+\section{Thiết kế lớp}
+
+% TODO: Class diagram cho các module chính (User, Problem, Contest, Submission);
+%       mô tả quan hệ giữa các lớp Entity, Repository, Service, Controller
+
+\begin{figure}[H]
+  \centering
+  % \includegraphics[width=\textwidth]{figures/class_diagram.png}
+  \caption{Sơ đồ lớp của hệ thống TDTUOJ}
+  \label{fig:classdiagram}
+\end{figure}
+
+\section{Thiết kế giao diện}
+
+% TODO: Wireframe / mockup các màn hình chính:
+%       trang chủ, danh sách bài toán, chi tiết bài toán, nộp bài,
+%       danh sách cuộc thi, bảng xếp hạng, trang quản trị người dùng
+
+\subsection{Trang chủ}
+
+% TODO: Mô tả layout và các thành phần UI
+
+\subsection{Trang danh sách bài toán}
+
+% TODO
+
+\subsection{Trang chi tiết bài toán và nộp bài}
+
+% TODO
+
+\subsection{Trang cuộc thi và bảng xếp hạng}
+
+% TODO
+
+\subsection{Trang quản trị}
+
+% ============================================================
+% CHƯƠNG 5 – CÀI ĐẶT VÀ KIỂM THỬ
+% ============================================================
+\chapter{Cài đặt và kiểm thử}
+
+
+% ============================================================
+% CHƯƠNG 6 – KẾT LUẬN
+% ============================================================
+\chapter{Kết luận}
+
+% ============================================================
+% TÀI LIỆU THAM KHẢO
+% ============================================================
+\newpage
+\nocite{*}
+\printbibliography[
+  title   = {TÀI LIỆU THAM KHẢO},
+  heading = bibintoc,
+]
+
+\end{document}

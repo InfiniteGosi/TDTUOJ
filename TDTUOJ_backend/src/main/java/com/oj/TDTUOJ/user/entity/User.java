@@ -1,5 +1,6 @@
 package com.oj.TDTUOJ.user.entity;
 
+import com.oj.TDTUOJ.problemFavorite.entity.ProblemFavorite;
 import com.oj.TDTUOJ.role.entity.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -9,7 +10,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -48,6 +51,10 @@ public class User {
     )
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<ProblemFavorite> favoriteProblems = new ArrayList<>();
 
     private LocalDateTime createdAt;
 

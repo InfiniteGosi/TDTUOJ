@@ -655,4 +655,22 @@ export default class ApiService {
     );
     return resp.data;
   }
+
+  // ── Favorites ─────────────────────────────────────────────────────────── //
+
+  static async getFavoriteProblems() {
+    const resp = await axios.get(`${this.BASE_URL}/favorites`, {
+      headers: this.getHeader(),
+    });
+    return resp.data; // Response<List<ProblemDTO>>
+  }
+
+  static async toggleFavorite(problemId) {
+    const resp = await axios.post(
+      `${this.BASE_URL}/favorites/${problemId}`,
+      {},
+      { headers: this.getHeader() },
+    );
+    return resp.data; // Response<ProblemFavoriteDTO> with isFavorited
+  }
 }

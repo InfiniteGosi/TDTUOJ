@@ -1,7 +1,7 @@
-package com.oj.TDTUOJ.userstatistics.service;
+package com.oj.TDTUOJ.userStatistics.service;
 
 import com.oj.TDTUOJ.common.response.Response;
-import com.oj.TDTUOJ.userstatistics.dto.UserStatisticsDTO;
+import com.oj.TDTUOJ.userStatistics.dto.UserStatisticsDTO;
 
 public interface UserStatisticsService {
     void recordSubmission(Long userId, boolean isAccepted, Integer points);

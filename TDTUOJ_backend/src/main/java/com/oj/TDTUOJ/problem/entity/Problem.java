@@ -2,6 +2,7 @@ package com.oj.TDTUOJ.problem.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.oj.TDTUOJ.common.enums.ProblemDifficulty;
+import com.oj.TDTUOJ.problemFavorite.entity.ProblemFavorite;
 import com.oj.TDTUOJ.problemTag.entity.Tag;
 import com.oj.TDTUOJ.submission.entity.Submission;
 import com.oj.TDTUOJ.testcase.entity.TestCase;
@@ -78,6 +79,10 @@ public class Problem {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Set<Tag> tags = new HashSet<>();
+
+    @OneToMany(mappedBy = "problem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<ProblemFavorite> favorites = new ArrayList<>();
 
     @CreationTimestamp
     private LocalDateTime createdAt;

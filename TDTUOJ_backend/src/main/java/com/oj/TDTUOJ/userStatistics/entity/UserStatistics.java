@@ -1,4 +1,4 @@
-package com.oj.TDTUOJ.userstatistics.entity;
+package com.oj.TDTUOJ.userStatistics.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

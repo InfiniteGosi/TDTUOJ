@@ -10,7 +10,7 @@ import {
   Wrap,
   WrapItem,
 } from "@chakra-ui/react";
-import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Bookmark, BookmarkCheck } from "lucide-react";
 import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
 import ReactMarkdown from "react-markdown";
@@ -284,6 +284,8 @@ const ProblemDetailsPage = () => {
   const [hintPanelWidth, setHintPanelWidth] = useState(340);
   const [isDraggingHint, setIsDraggingHint] = useState(false);
   const [vizOpen, setVizOpen] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   const { showMessage } = useToast();
   const codeEditorRef = useRef(null);
@@ -308,11 +310,45 @@ const ProblemDetailsPage = () => {
           })),
         );
         setTestCases(fetched);
+
+        // Load favorite status if logged in
+        if (ApiService.isAuthenticated()) {
+          try {
+            const favResp = await ApiService.getFavoriteProblems();
+            if (favResp.statusCode === 200) {
+              const favIds = (favResp.data || []).map((p) => p.id);
+              setIsFavorited(favIds.includes(response.data.id));
+            }
+          } catch (_) { /* ignore — user may not be logged in */ }
+        }
       }
     } catch (error) {
       showMessage(error.response?.data?.message || error.message, "error");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!ApiService.isAuthenticated()) {
+      showMessage("Please log in to save favorites", "warning");
+      return;
+    }
+    if (favoriteLoading || !problem) return;
+    setFavoriteLoading(true);
+    try {
+      const resp = await ApiService.toggleFavorite(problem.id);
+      if (resp.statusCode === 200) {
+        setIsFavorited(resp.data.isFavorited);
+        showMessage(
+          resp.data.isFavorited ? "Added to favorites ★" : "Removed from favorites",
+          resp.data.isFavorited ? "success" : "info",
+        );
+      }
+    } catch (error) {
+      showMessage(error.response?.data?.message || error.message, "error");
+    } finally {
+      setFavoriteLoading(false);
     }
   };
 
@@ -566,6 +602,34 @@ const ProblemDetailsPage = () => {
           {"<OJ/>"}
         </Text>
         <Box flex={1} />
+
+        {/* Bookmark / Favorite button */}
+        <Box
+          as="button"
+          onClick={handleToggleFavorite}
+          display="flex"
+          alignItems="center"
+          gap={1.5}
+          px={3}
+          py={1}
+          borderRadius="6px"
+          bg={isFavorited ? "rgba(251,191,36,0.12)" : "transparent"}
+          border={`1px solid ${isFavorited ? "#fbbf24" : T.border}`}
+          color={isFavorited ? "#fbbf24" : T.textMuted}
+          fontSize="xs"
+          fontWeight="600"
+          cursor={favoriteLoading ? "not-allowed" : "pointer"}
+          opacity={favoriteLoading ? 0.6 : 1}
+          transition="all 0.15s"
+          style={{ outline: "none" }}
+          title={isFavorited ? "Remove from favorites" : "Add to favorites"}
+        >
+          {isFavorited
+            ? <BookmarkCheck size={14} />
+            : <Bookmark size={14} />}
+          <Text ml={1}>{isFavorited ? "Saved" : "Save"}</Text>
+        </Box>
+
         <Box
           as="button"
           onClick={() => setHintPanelOpen((prev) => !prev)}

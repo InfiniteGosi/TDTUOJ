@@ -2,14 +2,14 @@ package com.oj.TDTUOJ.user.controller;
 
 import com.oj.TDTUOJ.contest.dto.RatingHistoryDTO;
 
-import com.oj.TDTUOJ.userdailyactivity.dto.UserDailyActivityDTO;
-import com.oj.TDTUOJ.userdailyactivity.service.UserActivityService;
+import com.oj.TDTUOJ.userDailyActivity.dto.UserDailyActivityDTO;
+import com.oj.TDTUOJ.userDailyActivity.service.UserActivityService;
 import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.user.dto.ChangePasswordRequest;
 import com.oj.TDTUOJ.user.dto.UserDTO;
 import com.oj.TDTUOJ.user.service.UserService;
-import com.oj.TDTUOJ.userstatistics.dto.UserStatisticsDTO;
-import com.oj.TDTUOJ.userstatistics.service.UserStatisticsService;
+import com.oj.TDTUOJ.userStatistics.dto.UserStatisticsDTO;
+import com.oj.TDTUOJ.userStatistics.service.UserStatisticsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
