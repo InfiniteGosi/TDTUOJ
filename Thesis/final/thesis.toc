@@ -25,35 +25,41 @@
 \contentsline {subsection}{\numberline {2.2.8}Tích hợp LLM}{9}{subsection.2.2.8}%
 \contentsline {chapter}{\numberline {3}Phân tích hệ thống}{11}{chapter.3}%
 \contentsline {section}{\numberline {3.1}Thu thập yêu cầu}{11}{section.3.1}%
-\contentsline {section}{\numberline {3.2}Xử lý nghiệp vụ}{11}{section.3.2}%
-\contentsline {section}{\numberline {3.3}Yêu cầu chức năng (Functional Requirements)}{11}{section.3.3}%
-\contentsline {subsection}{\numberline {3.3.1}Tổng quan Use Case}{11}{subsection.3.3.1}%
-\contentsline {subsection}{\numberline {3.3.2}Các Use Case chính}{11}{subsection.3.3.2}%
-\contentsline {subsubsection}{UC01: Đăng ký tài khoản}{11}{subsection.3.3.2}%
-\contentsline {subsubsection}{UC02: Đăng nhập}{11}{subsection.3.3.2}%
-\contentsline {subsubsection}{UC03: Nộp bài và xem kết quả}{11}{subsection.3.3.2}%
-\contentsline {subsubsection}{UC04: Quản lý bài toán}{11}{subsection.3.3.2}%
-\contentsline {subsubsection}{UC05: Tạo và quản lý cuộc thi}{11}{subsection.3.3.2}%
-\contentsline {subsubsection}{UC06: Tham gia cuộc thi}{11}{subsection.3.3.2}%
-\contentsline {subsubsection}{UC07: Xem bảng xếp hạng}{11}{subsection.3.3.2}%
-\contentsline {subsubsection}{UC08: Hỗ trợ học tập bằng LLM}{11}{subsection.3.3.2}%
-\contentsline {subsubsection}{UC09: Nhập đề bài từ PDF (AI Parser)}{11}{subsection.3.3.2}%
-\contentsline {subsubsection}{UC10: Quản lý người dùng (Admin)}{11}{subsection.3.3.2}%
-\contentsline {section}{\numberline {3.4}Yêu cầu phi chức năng (Non-functional Requirements)}{11}{section.3.4}%
-\contentsline {chapter}{\numberline {4}Thiết kế hệ thống}{12}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Thiết kế kiến trúc}{12}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Thiết kế cơ sở dữ liệu / ERD}{12}{section.4.2}%
-\contentsline {subsection}{\numberline {4.2.1}Nhóm bảng quản lý người dùng}{12}{subsection.4.2.1}%
-\contentsline {subsection}{\numberline {4.2.2}Nhóm bảng quản lý bài toán}{12}{subsection.4.2.2}%
-\contentsline {subsection}{\numberline {4.2.3}Nhóm bảng quản lý cuộc thi}{12}{subsection.4.2.3}%
-\contentsline {subsection}{\numberline {4.2.4}Nhóm bảng quản lý bài nộp}{12}{subsection.4.2.4}%
-\contentsline {section}{\numberline {4.3}Thiết kế lớp}{12}{section.4.3}%
-\contentsline {section}{\numberline {4.4}Thiết kế giao diện}{12}{section.4.4}%
-\contentsline {subsection}{\numberline {4.4.1}Trang chủ}{12}{subsection.4.4.1}%
-\contentsline {subsection}{\numberline {4.4.2}Trang danh sách bài toán}{12}{subsection.4.4.2}%
-\contentsline {subsection}{\numberline {4.4.3}Trang chi tiết bài toán và nộp bài}{12}{subsection.4.4.3}%
-\contentsline {subsection}{\numberline {4.4.4}Trang cuộc thi và bảng xếp hạng}{12}{subsection.4.4.4}%
-\contentsline {subsection}{\numberline {4.4.5}Trang quản trị}{12}{subsection.4.4.5}%
-\contentsline {chapter}{\numberline {5}Cài đặt và kiểm thử}{13}{chapter.5}%
-\contentsline {chapter}{\numberline {6}Kết luận}{14}{chapter.6}%
-\contentsline {chapter}{TÀI LIỆU THAM KHẢO}{15}{chapter*.34}%
+\contentsline {section}{\numberline {3.2}Xử lý nghiệp vụ}{12}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Các bên liên quan và thực thể nghiệp vụ}{12}{subsection.3.2.1}%
+\contentsline {subsubsection}{Bài toán (Problem)}{12}{subsection.3.2.1}%
+\contentsline {subsubsection}{Bài nộp (Submission)}{13}{subsection.3.2.1}%
+\contentsline {subsubsection}{Cuộc thi (Contest)}{13}{subsection.3.2.1}%
+\contentsline {subsubsection}{Kết quả chấm bài (Judge Result)}{13}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Các tác nhân hệ thống}{13}{subsection.3.2.2}%
+\contentsline {section}{\numberline {3.3}Yêu cầu chức năng (Functional Requirements)}{16}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Tổng quan Use Case}{16}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Các Use Case chính}{23}{subsection.3.3.2}%
+\contentsline {subsubsection}{UC01: Đăng ký tài khoản}{23}{subsection.3.3.2}%
+\contentsline {subsubsection}{UC02: Đăng nhập}{23}{subsection.3.3.2}%
+\contentsline {subsubsection}{UC03: Nộp bài và xem kết quả}{23}{subsection.3.3.2}%
+\contentsline {subsubsection}{UC04: Quản lý bài toán}{23}{subsection.3.3.2}%
+\contentsline {subsubsection}{UC05: Tạo và quản lý cuộc thi}{23}{subsection.3.3.2}%
+\contentsline {subsubsection}{UC06: Tham gia cuộc thi}{23}{subsection.3.3.2}%
+\contentsline {subsubsection}{UC07: Xem bảng xếp hạng}{23}{subsection.3.3.2}%
+\contentsline {subsubsection}{UC08: Hỗ trợ học tập bằng LLM}{23}{subsection.3.3.2}%
+\contentsline {subsubsection}{UC09: Nhập đề bài từ PDF (AI Parser)}{23}{subsection.3.3.2}%
+\contentsline {subsubsection}{UC10: Quản lý người dùng (Admin)}{23}{subsection.3.3.2}%
+\contentsline {section}{\numberline {3.4}Yêu cầu phi chức năng (Non-functional Requirements)}{23}{section.3.4}%
+\contentsline {chapter}{\numberline {4}Thiết kế hệ thống}{24}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Thiết kế kiến trúc}{24}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Thiết kế cơ sở dữ liệu / ERD}{24}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Nhóm bảng quản lý người dùng}{24}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}Nhóm bảng quản lý bài toán}{24}{subsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.2.3}Nhóm bảng quản lý cuộc thi}{24}{subsection.4.2.3}%
+\contentsline {subsection}{\numberline {4.2.4}Nhóm bảng quản lý bài nộp}{24}{subsection.4.2.4}%
+\contentsline {section}{\numberline {4.3}Thiết kế lớp}{24}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Thiết kế giao diện}{24}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Trang chủ}{24}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}Trang danh sách bài toán}{24}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}Trang chi tiết bài toán và nộp bài}{24}{subsection.4.4.3}%
+\contentsline {subsection}{\numberline {4.4.4}Trang cuộc thi và bảng xếp hạng}{24}{subsection.4.4.4}%
+\contentsline {subsection}{\numberline {4.4.5}Trang quản trị}{24}{subsection.4.4.5}%
+\contentsline {chapter}{\numberline {5}Cài đặt và kiểm thử}{25}{chapter.5}%
+\contentsline {chapter}{\numberline {6}Kết luận}{26}{chapter.6}%
+\contentsline {chapter}{TÀI LIỆU THAM KHẢO}{27}{chapter*.32}%

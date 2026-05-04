@@ -673,4 +673,49 @@ export default class ApiService {
     );
     return resp.data; // Response<ProblemFavoriteDTO> with isFavorited
   }
+
+  // ── Comments ───────────────────────────────────────────────────────────── //
+
+  static async getComments(problemId, page = 0, size = 10) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/problems/${problemId}/comments`,
+      { headers: this.getHeader(), params: { page, size } },
+    );
+    return resp.data;
+  }
+
+  static async createComment(problemId, { content, parentId = null }) {
+    const resp = await axios.post(
+      `${this.BASE_URL}/problems/${problemId}/comments`,
+      { content, parentId },
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async editComment(problemId, commentId, content) {
+    const resp = await axios.put(
+      `${this.BASE_URL}/problems/${problemId}/comments/${commentId}`,
+      { content },
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async deleteComment(problemId, commentId) {
+    const resp = await axios.delete(
+      `${this.BASE_URL}/problems/${problemId}/comments/${commentId}`,
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async voteComment(problemId, commentId, voteType) {
+    const resp = await axios.post(
+      `${this.BASE_URL}/problems/${problemId}/comments/${commentId}/vote`,
+      { voteType },
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
 }

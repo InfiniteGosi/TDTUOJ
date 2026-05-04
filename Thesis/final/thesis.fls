@@ -353,6 +353,13 @@ INPUT .\thesis.lot
 INPUT thesis.lot
 OUTPUT thesis.lot
 INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX\fonts\tfm\vntex\vnr\vntt12.tfm
+INPUT .\figures\usecase.png
+INPUT .\figures\usecase.png
+INPUT .\figures\usecase.png
+INPUT .\figures\usecase.png
+INPUT .\figures\usecase.png
+INPUT .\figures\usecase.png
+INPUT .\figures\usecase.png
 INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX\fonts\tfm\vntex\urwvn\utmri8v.tfm
 INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\times\zptmcm7t.tfm
 INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\times\zptmcm7t.tfm

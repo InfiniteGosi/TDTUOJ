@@ -1,12 +1,12 @@
 # Fdb version 4
-["biber thesis"] 1777558816.20266 "thesis.bcf" "thesis.bbl" "thesis" 1777734677.87426 0
+["biber thesis"] 1777558816.20266 "thesis.bcf" "thesis.bbl" "thesis" 1777818648.7741 0
   "C:/Users/Admin/AppData/Local/Programs/MiKTeX/bibtex/bib/feupphdteses/references.bib" 1366811700 2206 985e03fb36d872d306e76cfacc160693 ""
-  "thesis.bcf" 1777734676 133417 a5c5e869f83a03e0989cbfdc3cddc1c1 "pdflatex"
+  "thesis.bcf" 1777818648 133417 a5c5e869f83a03e0989cbfdc3cddc1c1 "pdflatex"
   (generated)
   "thesis.bbl"
   "thesis.blg"
   (rewritten before read)
-["pdflatex"] 1777734674.75064 "d:/OJ/Thesis/final/thesis.tex" "thesis.pdf" "thesis" 1777734677.87793 0
+["pdflatex"] 1777818646.37376 "d:/OJ/Thesis/final/thesis.tex" "thesis.pdf" "thesis" 1777818648.77474 0
   "C:/Users/Admin/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1777361112 89969 e95579120a3aa0ebc21d2737ca2ba701 ""
   "C:/Users/Admin/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1773461709 13333849 43471f1263d570959c72314a0a64f3f7 ""
   "C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/vntex/t5.enc" 1368738347 7824 21ade6c3c7fd67cb4ace8dbc91c53118 ""
@@ -145,16 +145,17 @@
   "C:/Users/Admin/AppData/Local/Programs/MiKTeX/tex/latex/vntex/t5ptm.fd" 1368738347 1100 803888e7a6edcd8c143317c75deceb08 ""
   "C:/Users/Admin/AppData/Local/Programs/MiKTeX/tex/latex/xcolor/xcolor.sty" 1729265222 55384 b454dec21c2d9f45ec0b793f0995b992 ""
   "C:/Users/Admin/AppData/Local/Programs/MiKTeX/tex/latex/xstring/xstring.sty" 1693735632 123 a302f2c651a95033260db60e51527ae8 ""
-  "d:/OJ/Thesis/final/thesis.tex" 1777734668 44545 16af1c64f80804d7a580c3c9a6234da8 ""
+  "d:/OJ/Thesis/final/thesis.tex" 1777818643 64121 543ac73db6108f90dd62c95c380b2f75 ""
   "figures/logo.png" 1773480023 77325 45c75036e5c3b0ddebaee8b860697579 ""
-  "thesis.aux" 1777734676 14755 f4a0555669c323c7e19fc8e0f51e0664 "pdflatex"
+  "figures/usecase.png" 1777817163 1156957 a4b944e1f7cbc82fe716cda23b143510 ""
+  "thesis.aux" 1777818648 16397 8a7dea6ce4e7bd9b71153d4221c7bc43 "pdflatex"
   "thesis.bbl" 1777558931 13347 bef546fb3684849d9aa996bcd0f9b1ef "biber thesis"
-  "thesis.lof" 1777734676 686 3de6ba8c533985b33ceef5769f64e198 "pdflatex"
-  "thesis.lot" 1777734676 150 7460b00ca4c2d98f724b7acc062e00fd "pdflatex"
-  "thesis.out" 1777734676 8635 cbbaa097bc56d45e3e82c072b6c36042 "pdflatex"
-  "thesis.run.xml" 1777734676 2441 3427f53b410abb4036b71acb0c017962 "pdflatex"
-  "thesis.tex" 1777734668 44545 16af1c64f80804d7a580c3c9a6234da8 ""
-  "thesis.toc" 1777734676 5104 d36fcaa6ed192c1e4c17e65205eb4aa9 "pdflatex"
+  "thesis.lof" 1777818648 686 04b36de1522a9988b0453baa766f0922 "pdflatex"
+  "thesis.lot" 1777818648 387 617bfa27e757feaefe1f1d65d5218311 "pdflatex"
+  "thesis.out" 1777818648 9134 47a165102f431af257f2705ad4d9f9f3 "pdflatex"
+  "thesis.run.xml" 1777818648 2441 3427f53b410abb4036b71acb0c017962 "pdflatex"
+  "thesis.tex" 1777818643 64121 543ac73db6108f90dd62c95c380b2f75 ""
+  "thesis.toc" 1777818648 5646 bd8917d51742024cd0e896801eb02dcc "pdflatex"
   (generated)
   "thesis.aux"
   "thesis.bcf"

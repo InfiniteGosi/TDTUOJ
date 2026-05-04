@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.3.14)  2 MAY 2026 22:11
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.3.14)  3 MAY 2026 21:30
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1249,7 +1249,7 @@ Package biblatex Info: ... file 'thesis.bbl' found.
 (thesis.bbl)
 Package biblatex Info: Reference section=0 on input line 134.
 Package biblatex Info: Reference segment=0 on input line 134.
-<figures/logo.png, id=195, 1204.5pt x 665.48625pt>
+<figures/logo.png, id=203, 1204.5pt x 665.48625pt>
 File: figures/logo.png Graphic file (type png)
 <use figures/logo.png>
 Package pdftex.def Info: figures/logo.png  used on input line 148.
@@ -1405,14 +1405,6 @@ Package acronym Info: Label `acro:CNTT' newly defined as it shall be overridden
 although it is yet undefined on input line 350.
  [3]
 CHÆ¯Æ NG 2.
-Package acronym Info: Label `acro:WIP' newly defined as it shall be overridden
-although it is yet undefined on input line 363.
-
-Package acronym Warning: Acronym WIP is not defined on input line 363.
-
-
-Package acronym Warning: Acronym WIP is not defined on input line 363.
-
 Package acronym Info: Label `acro:JWT' newly defined as it shall be overridden
 although it is yet undefined on input line 365.
 [4
@@ -1437,49 +1429,72 @@ Package acronym Info: Label `acro:RE' newly defined as it shall be overridden
 although it is yet undefined on input line 405.
 Package acronym Info: Label `acro:CE' newly defined as it shall be overridden
 although it is yet undefined on input line 405.
-Package acronym Info: Label `acro:SPA' newly defined as it shall be overridden
-although it is yet undefined on input line 409.
-
-
-Package acronym Warning: Acronym SPA is not defined on input line 409.
-
-
-Package acronym Warning: Acronym SPA is not defined on input line 409.
-
 Package acronym Info: Label `acro:JSON' newly defined as it shall be overridden
 although it is yet undefined on input line 411.
-[8] [9] [10]
+ [8] [9] [10]
 CHÆ¯Æ NG 3.
 [11
 
-]
+] [12]
+Underfull \hbox (badness 10000) in paragraph at lines 497--497
+[]|\T5/ptm/m/n/13 Contest Cre-ator
+ []
+
+[13]
+ignored: Infinite glue shrinkage found in box being split [14]
+ignored: Infinite glue shrinkage found in box being split [15]
+Underfull \hbox (badness 4467) in paragraph at lines 578--578
+[]|\T5/ptm/m/n/13 Xem danh s¡ch b i
+ []
+
+
+Underfull \hbox (badness 1990) in paragraph at lines 588--589
+[]|\T5/ptm/m/n/13 Contest Cre-ator ho°c Ad-min cªp nhªt
+ []
+
+
+Underfull \hbox (badness 1990) in paragraph at lines 614--615
+[]|\T5/ptm/m/n/13 Contest Cre-ator ho°c Ad-min cªp nhªt
+ []
+
+[16]
+ignored: Infinite glue shrinkage found in box being split [17]
+ignored: Infinite glue shrinkage found in box being split [18]
+ignored: Infinite glue shrinkage found in box being split [19]
+ignored: Infinite glue shrinkage found in box being split [20]
+<figures/usecase.png, id=571, 1438.37375pt x 1687.30376pt>
+File: figures/usecase.png Graphic file (type png)
+<use figures/usecase.png>
+Package pdftex.def Info: figures/usecase.png  used on input line 667.
+(pdftex.def)             Requested size: 405.7355pt x 475.94331pt.
+ [21] [22 <./figures/usecase.png>] [23]
 CHÆ¯Æ NG 4.
-[12
+[24
 
 ]
 CHÆ¯Æ NG 5.
-[13
+[25
 
 ]
 CHÆ¯Æ NG 6.
-[14
+[26
 
 ]
 
 Package csquotes Warning: No space factor codes for 'T5' encoding.
-(csquotes)                Punctuation tracker may fail on input line 653.
+(csquotes)                Punctuation tracker may fail on input line 867.
 
 
 Package biblatex Warning: No driver for 'ieeetranbstctl'.
-(biblatex)                Using fallback driver on input line 653.
+(biblatex)                Using fallback driver on input line 867.
 
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 653.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 867.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <9> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 653.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 867.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <7> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 653.
-[15
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 867.
+[27
 
 ] (thesis.aux)
  ***********
@@ -1494,23 +1509,23 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 LaTeX Warning: There were undefined references.
 
 Package rerunfilecheck Info: File `thesis.out' has not changed.
-(rerunfilecheck)             Checksum: CBBAA097BC56D45E3E82C072B6C36042;8635.
+(rerunfilecheck)             Checksum: 47A165102F431AF257F2705AD4D9F9F3;9134.
 Package logreq Info: Writing requests to 'thesis.run.xml'.
 \openout1 = `thesis.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 24975 strings out of 467867
- 433244 string characters out of 5418334
- 1394691 words of memory out of 5000000
- 53395 multiletter control sequences out of 15000+600000
+ 24999 strings out of 467867
+ 433628 string characters out of 5418334
+ 1425829 words of memory out of 5000000
+ 53405 multiletter control sequences out of 15000+600000
  671851 words of font info for 105 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,12n,83p,1171b,5054s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,12n,83p,1218b,5054s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmb8v.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmr8v.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmri8v.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/vnr/vntt12.pfb>
-Output written on thesis.pdf (28 pages, 263930 bytes).
+Output written on thesis.pdf (40 pages, 557709 bytes).
 PDF statistics:
- 563 PDF objects out of 1000 (max. 8388607)
- 127 named destinations out of 1000 (max. 500000)
- 390 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 660 PDF objects out of 1000 (max. 8388607)
+ 141 named destinations out of 1000 (max. 500000)
+ 411 words of extra memory for PDF output out of 10000 (max. 10000000)
 

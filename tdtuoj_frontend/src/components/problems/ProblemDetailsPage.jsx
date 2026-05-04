@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Spinner,
@@ -10,7 +10,7 @@ import {
   Wrap,
   WrapItem,
 } from "@chakra-ui/react";
-import { CheckCircle, XCircle, Clock, Bookmark, BookmarkCheck } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Bookmark, BookmarkCheck, MessageSquare, MessageCircle, ThumbsUp, ThumbsDown, Pencil, Trash2, CornerDownRight, Send } from "lucide-react";
 import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
 import ReactMarkdown from "react-markdown";
@@ -247,10 +247,275 @@ const TagChip = ({ name }) => (
   </Box>
 );
 
+// ─── Comment Block ────────────────────────────────────────────────────────────
+const CommentBlock = ({
+  comment, T, currentUsername, navigate,
+  replyingTo, setReplyingTo, replyInput, setReplyInput,
+  editingComment, setEditingComment, editInput, setEditInput,
+  commentSubmitting, onVote, onReply, onEditSave, onDelete, formatDate,
+  isReply = false,
+  rootId = null,   // top-level comment id — for replies-on-replies
+}) => {
+  const [showReplies, setShowReplies] = useState(false);
+  const isDeleted = comment.isDeleted;
+  const isAuthor  = currentUsername && comment.username === currentUsername;
+  const isEditing = editingComment?.id === comment.id;
+
+  // For replies: reply box lives on the top-level comment — use rootId
+  const replyTargetId = isReply ? rootId : comment.id;
+  const isReplying    = replyingTo?.id === (isReply ? rootId : comment.id)
+                     && replyingTo?.replyTo === comment.id;
+
+  const replyCount = comment.replies?.length ?? 0;
+
+  return (
+    <Box
+      borderTop={`1px solid ${T.border}`}
+      pt={3} pb={isReply ? 2 : 3}
+      pl={isReply ? 4 : 0}
+      ml={isReply ? 3 : 0}
+      borderLeft={isReply ? `2px solid ${T.borderBright}` : "none"}
+    >
+      {/* Author row */}
+      <Box display="flex" alignItems="center" gap={2} mb={isDeleted ? 1 : 2}>
+        {/* Avatar */}
+        <Box
+          w="26px" h="26px" borderRadius="full" overflow="hidden"
+          bg={isDeleted ? T.borderBright : T.accentDim}
+          display="flex" alignItems="center" justifyContent="center"
+          flexShrink={0}
+          cursor={isDeleted ? "default" : "pointer"}
+          onClick={() => !isDeleted && window.open(`/users/${comment.username}`, '_blank')}
+          title={isDeleted ? undefined : `View ${comment.username}'s profile`}
+        >
+          {!isDeleted && comment.userProfileUrl ? (
+            <img src={comment.userProfileUrl} alt={comment.username}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              onError={(e) => { e.target.style.display = "none"; }} />
+          ) : !isDeleted ? (
+            <Text fontSize="10px" fontWeight="700" color={T.accent}>
+              {comment.username?.[0]?.toUpperCase() ?? "?"}
+            </Text>
+          ) : null}
+        </Box>
+
+        {/* Username */}
+        <Text fontSize="xs" fontWeight="600"
+          color={isDeleted ? T.textDim : T.textMuted}
+          cursor={isDeleted ? "default" : "pointer"}
+          _hover={isDeleted ? {} : { color: T.accent, textDecoration: "underline" }}
+          onClick={() => !isDeleted && window.open(`/users/${comment.username}`, '_blank')}
+        >
+          {isDeleted ? "[deleted]" : comment.username}
+        </Text>
+        <Text fontSize="xs" color={T.textDim}>·</Text>
+        <Text fontSize="xs" color={T.textDim}>{formatDate(comment.createdAt)}</Text>
+        {comment.updatedAt && comment.updatedAt !== comment.createdAt && !isDeleted && (
+          <Text fontSize="xs" color={T.textDim} fontStyle="italic">(edited)</Text>
+        )}
+      </Box>
+
+      {/* Content / edit box */}
+      {isEditing ? (
+        <Box mb={2}>
+          <textarea value={editInput} onChange={(e) => setEditInput(e.target.value)}
+            rows={3} autoFocus
+            style={{
+              width: "100%", background: T.bg, border: `1px solid ${T.borderBright}`,
+              borderRadius: "6px", padding: "8px", outline: "none", resize: "vertical",
+              color: T.text, fontSize: "13px", lineHeight: "1.6",
+              fontFamily: "'Inter', system-ui, sans-serif",
+            }}
+          />
+          <Box display="flex" gap={2} mt={1}>
+            <Box as="button" onClick={() => onEditSave(comment.id)}
+              px={3} py={1} borderRadius="6px" bg={T.accent} color="#000"
+              fontSize="xs" fontWeight="700" cursor="pointer"
+              style={{ outline: "none", border: "none" }}>Save</Box>
+            <Box as="button" onClick={() => { setEditingComment(null); setEditInput(""); }}
+              px={3} py={1} borderRadius="6px" bg={T.borderBright} color={T.textMuted}
+              fontSize="xs" fontWeight="600" cursor="pointer"
+              style={{ outline: "none", border: "none" }}>Cancel</Box>
+          </Box>
+        </Box>
+      ) : (
+        <Text fontSize="sm" color={isDeleted ? T.textDim : T.text}
+          lineHeight="1.7" mb={2} fontStyle={isDeleted ? "italic" : "normal"}
+        >
+          {isDeleted ? "[deleted]" : renderCommentContent(comment.content, T)}
+        </Text>
+      )}
+
+      {/* Action row */}
+      {!isEditing && (
+        <Box display="flex" alignItems="center" gap={3} flexWrap="wrap">
+
+          {/* Upvote */}
+          <Box as="button" display="flex" alignItems="center" gap={1}
+            color={comment.userVote === "UPVOTE" ? T.accent : T.textDim}
+            bg="transparent" border="none" cursor="pointer"
+            fontSize="xs" fontWeight="600" _hover={{ color: T.accent }}
+            onClick={() => onVote(comment.id, "UPVOTE")} style={{ outline: "none" }}>
+            <ThumbsUp size={13} />
+            <span>{comment.upvoteCount ?? 0}</span>
+          </Box>
+
+          {/* Downvote */}
+          <Box as="button" display="flex" alignItems="center" gap={1}
+            color={comment.userVote === "DOWNVOTE" ? T.red : T.textDim}
+            bg="transparent" border="none" cursor="pointer"
+            fontSize="xs" fontWeight="600" _hover={{ color: T.red }}
+            onClick={() => onVote(comment.id, "DOWNVOTE")} style={{ outline: "none" }}>
+            <ThumbsDown size={13} />
+            <span>{comment.downvoteCount ?? 0}</span>
+          </Box>
+
+          {/* Hide/Show Replies — top-level only */}
+          {!isReply && replyCount > 0 && (
+            <Box as="button" display="flex" alignItems="center" gap={1}
+              color={T.textDim} bg="transparent" border="none" cursor="pointer"
+              fontSize="xs" fontWeight="600" _hover={{ color: T.text }}
+              onClick={() => setShowReplies((v) => !v)} style={{ outline: "none" }}>
+              <MessageCircle size={13} />
+              <span>{showReplies ? `Hide Replies (${replyCount})` : `Show Replies (${replyCount})`}</span>
+            </Box>
+          )}
+
+          {/* Reply button — works for both top-level and replies */}
+          {!isDeleted && currentUsername && (
+            <Box as="button" display="flex" alignItems="center" gap={1}
+              color={isReplying ? T.accent : T.textDim}
+              bg="transparent" border="none" cursor="pointer"
+              fontSize="xs" fontWeight="600" _hover={{ color: T.text }}
+              onClick={() => {
+                if (isReplying) {
+                  setReplyingTo(null);
+                  setReplyInput("");
+                } else {
+                  // Always target the root (top-level) comment's reply box
+                  setReplyingTo({ id: replyTargetId, replyTo: comment.id, username: comment.username });
+                  setReplyInput(`@${comment.username} `);
+                  // Auto-expand replies so the box is visible
+                  if (isReply) setShowReplies(true);
+                }
+              }}
+              style={{ outline: "none" }}>
+              <CornerDownRight size={13} />
+              <span>Reply</span>
+            </Box>
+          )}
+
+          {/* Edit / Delete — author only, no isReply guard */}
+          {isAuthor && !isDeleted && (
+            <>
+              <Box as="button" display="flex" alignItems="center" gap={1}
+                color={T.textDim} bg="transparent" border="none" cursor="pointer"
+                fontSize="xs" _hover={{ color: T.text }}
+                onClick={() => { setEditingComment({ id: comment.id }); setEditInput(comment.content); }}
+                style={{ outline: "none" }}>
+                <Pencil size={12} />
+              </Box>
+              <Box as="button" display="flex" alignItems="center" gap={1}
+                color={T.textDim} bg="transparent" border="none" cursor="pointer"
+                fontSize="xs" _hover={{ color: T.red }}
+                onClick={() => onDelete(comment.id)}
+                style={{ outline: "none" }}>
+                <Trash2 size={12} />
+              </Box>
+            </>
+          )}
+        </Box>
+      )}
+
+      {/* Inline reply box — shown on top-level comment when replyingTo targets this comment */}
+      {!isReply && replyingTo?.id === comment.id && (
+        <Box mt={3} pl={2}>
+          <textarea value={replyInput} onChange={(e) => setReplyInput(e.target.value)}
+            placeholder={`Reply to ${replyingTo.username}...`}
+            rows={2} autoFocus
+            style={{
+              width: "100%", background: T.bg, border: `1px solid ${T.borderBright}`,
+              borderRadius: "6px", padding: "8px", outline: "none", resize: "vertical",
+              color: T.text, fontSize: "13px", lineHeight: "1.6",
+              fontFamily: "'Inter', system-ui, sans-serif",
+            }}
+          />
+          <Box display="flex" gap={2} mt={1}>
+            <Box as="button" onClick={() => onReply(comment.id)}
+              px={3} py={1} borderRadius="6px" bg={T.accent} color="#000"
+              fontSize="xs" fontWeight="700"
+              cursor={commentSubmitting ? "not-allowed" : "pointer"}
+              opacity={commentSubmitting ? 0.6 : 1}
+              style={{ outline: "none", border: "none" }}>Post Reply</Box>
+            <Box as="button" onClick={() => { setReplyingTo(null); setReplyInput(""); }}
+              px={3} py={1} borderRadius="6px" bg={T.borderBright} color={T.textMuted}
+              fontSize="xs" fontWeight="600" cursor="pointer"
+              style={{ outline: "none", border: "none" }}>Cancel</Box>
+          </Box>
+        </Box>
+      )}
+
+      {/* Replies list — collapsible */}
+      {!isReply && replyCount > 0 && showReplies && (
+        <Box mt={2}>
+          {comment.replies.map((reply) => (
+            <CommentBlock
+              key={reply.id}
+              comment={reply}
+              T={T}
+              currentUsername={currentUsername}
+              navigate={navigate}
+              replyingTo={replyingTo}
+              setReplyingTo={setReplyingTo}
+              replyInput={replyInput}
+              setReplyInput={setReplyInput}
+              editingComment={editingComment}
+              setEditingComment={setEditingComment}
+              editInput={editInput}
+              setEditInput={setEditInput}
+              commentSubmitting={commentSubmitting}
+              onVote={onVote}
+              onReply={onReply}
+              onEditSave={onEditSave}
+              onDelete={onDelete}
+              formatDate={formatDate}
+              isReply
+              rootId={comment.id}
+            />
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+// Render comment text — parse @username tokens into clickable mentions (open new tab)
+const renderCommentContent = (content, T) => {
+  if (!content) return null;
+  const parts = content.split(/(@\w+)/g);
+  return parts.map((part, i) => {
+    if (/^@\w+$/.test(part)) {
+      const username = part.slice(1);
+      return (
+        <Box
+          key={i} as="span"
+          color={T.accent} fontWeight="600" cursor="pointer"
+          _hover={{ textDecoration: "underline" }}
+          onClick={(e) => { e.stopPropagation(); window.open(`/users/${username}`, '_blank'); }}
+        >
+          {part}
+        </Box>
+      );
+    }
+    return <Box key={i} as="span">{part}</Box>;
+  });
+};
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const ProblemDetailsPage = () => {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   // contestId is passed as ?contestId=<id> when navigating from a contest
   const contestId = searchParams.get("contestId")
     ? Number(searchParams.get("contestId"))
@@ -287,6 +552,22 @@ const ProblemDetailsPage = () => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
 
+  // ── Comments state ────────────────────────────────────────────────────────
+  const COMMENTS_PER_PAGE = 5;
+  const [comments, setComments] = useState([]);
+  const [commentsTotalElements, setCommentsTotalElements] = useState(0);
+  const [commentsTotalPages, setCommentsTotalPages] = useState(0);
+  const [commentPage, setCommentPage] = useState(0);
+  const [commentsLoaded, setCommentsLoaded] = useState(false);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null); // { username, profileUrl }
+  const [commentInput, setCommentInput] = useState("");
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);   // { id, username }
+  const [replyInput, setReplyInput] = useState("");
+  const [editingComment, setEditingComment] = useState(null); // { id, content }
+  const [editInput, setEditInput] = useState("");
+
   const { showMessage } = useToast();
   const codeEditorRef = useRef(null);
 
@@ -311,7 +592,7 @@ const ProblemDetailsPage = () => {
         );
         setTestCases(fetched);
 
-        // Load favorite status if logged in
+        // Load favorite status + current user profile if logged in
         if (ApiService.isAuthenticated()) {
           try {
             const favResp = await ApiService.getFavoriteProblems();
@@ -319,7 +600,17 @@ const ProblemDetailsPage = () => {
               const favIds = (favResp.data || []).map((p) => p.id);
               setIsFavorited(favIds.includes(response.data.id));
             }
-          } catch (_) { /* ignore — user may not be logged in */ }
+          } catch (_) { /* ignore */ }
+
+          try {
+            const meResp = await ApiService.getOwnProfile();
+            if (meResp.statusCode === 200) {
+              setCurrentUser({
+                username: meResp.data.username,
+                profileUrl: meResp.data.profileUrl,
+              });
+            }
+          } catch (_) { /* ignore */ }
         }
       }
     } catch (error) {
@@ -554,10 +845,135 @@ const ProblemDetailsPage = () => {
     );
   }
 
+  // ── Comment helpers ───────────────────────────────────────────────────────
+  const fetchComments = async (page = commentPage) => {
+    if (!problem?.id) return;
+    setCommentsLoading(true);
+    try {
+      const resp = await ApiService.getComments(problem.id, page, COMMENTS_PER_PAGE);
+      if (resp.statusCode === 200 && resp.data) {
+        setComments(resp.data.content || []);
+        // Spring Boot 3.x puts pagination metadata under data.page
+        const pageInfo = resp.data.page ?? resp.data; // fallback for older Spring
+        setCommentsTotalElements(pageInfo.totalElements ?? 0);
+        setCommentsTotalPages(pageInfo.totalPages ?? 0);
+        setCommentPage(page);
+        setCommentsLoaded(true);
+      }
+    } catch (e) {
+      showMessage(e.response?.data?.message || e.message, "error");
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const handlePostComment = async () => {
+    if (!commentInput.trim()) return;
+    setCommentSubmitting(true);
+    try {
+      const resp = await ApiService.createComment(problem.id, { content: commentInput.trim() });
+      if (resp.statusCode === 201) {
+        setCommentInput("");
+        await fetchComments(0); // newest comment → page 0
+      }
+    } catch (e) {
+      showMessage(e.response?.data?.message || e.message, "error");
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
+
+  const handlePostReply = async (parentId) => {
+    if (!replyInput.trim()) return;
+    setCommentSubmitting(true);
+    try {
+      const resp = await ApiService.createComment(problem.id, {
+        content: replyInput.trim(),
+        parentId,
+      });
+      if (resp.statusCode === 201) {
+        setReplyInput("");
+        setReplyingTo(null);
+        await fetchComments(commentPage); // stay on current page after reply
+      }
+    } catch (e) {
+      showMessage(e.response?.data?.message || e.message, "error");
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
+
+  const handleVote = async (commentId, voteType) => {
+    if (!ApiService.isAuthenticated()) {
+      showMessage("Login to vote", "warning");
+      return;
+    }
+    try {
+      const resp = await ApiService.voteComment(problem.id, commentId, voteType);
+      if (resp.statusCode === 200) {
+        // Patch updated counts into local state without full reload
+        const updated = resp.data;
+        setComments((prev) => patchComment(prev, updated));
+      }
+    } catch (e) {
+      showMessage(e.response?.data?.message || e.message, "error");
+    }
+  };
+
+  const patchComment = (list, updated) =>
+    list.map((c) => {
+      if (c.id === updated.id) return { ...c, ...updated };
+      return {
+        ...c,
+        replies: c.replies ? patchComment(c.replies, updated) : c.replies,
+      };
+    });
+
+  const handleEditSave = async (commentId) => {
+    if (!editInput.trim()) return;
+    try {
+      const resp = await ApiService.editComment(problem.id, commentId, editInput.trim());
+      if (resp.statusCode === 200) {
+        setEditingComment(null);
+        setEditInput("");
+        await fetchComments();
+      }
+    } catch (e) {
+      showMessage(e.response?.data?.message || e.message, "error");
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await ApiService.deleteComment(problem.id, commentId);
+      await fetchComments();
+    } catch (e) {
+      showMessage(e.response?.data?.message || e.message, "error");
+    }
+  };
+
+  const formatCommentDate = (iso) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    const now = new Date();
+    const diffMs = now - d;
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return "just now";
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffH = Math.floor(diffMin / 60);
+    if (diffH < 24) return `${diffH}h ago`;
+    const diffD = Math.floor(diffH / 24);
+    if (diffD < 30) return `${diffD}d ago`;
+    return d.toLocaleDateString();
+  };
+
+  const currentUsername = currentUser?.username ?? null;
+
   const tabs = [
     { id: "description", label: "Description" },
     { id: "testcases", label: `Test Cases (${testCases.length})` },
     { id: "submissions", label: "Submissions" },
+    { id: "comments", label: `Comments${commentsTotalElements > 0 ? ` (${commentsTotalElements})` : ""}` },
     ...(results || submitting
       ? [
           {
@@ -806,6 +1222,9 @@ const ProblemDetailsPage = () => {
                       setActiveTab(tab.id);
                       if (tab.id === "submissions" && !submissionsLoaded) {
                         await fetchSubmissions();
+                      }
+                      if (tab.id === "comments" && !commentsLoaded) {
+                        await fetchComments();
                       }
                     }}
                     style={{ outline: "none" }}
@@ -1452,6 +1871,170 @@ const ProblemDetailsPage = () => {
                           </Box>
                         )}
                       </>
+                    )}
+                  </VStack>
+                )}
+
+                {/* ── Comments ── */}
+                {activeTab === "comments" && (
+                  <VStack align="stretch" gap={0}>
+
+                    {/* ── Compose box ── */}
+                    {ApiService.isAuthenticated() ? (
+                      <Box
+                        mb={5}
+                        p={3}
+                        borderRadius="8px"
+                        border={`1px solid ${T.border}`}
+                        bg={T.surface}
+                      >
+                        <textarea
+                          value={commentInput}
+                          onChange={(e) => setCommentInput(e.target.value)}
+                          placeholder="Share your thoughts or ask a question..."
+                          rows={3}
+                          style={{
+                            width: "100%",
+                            background: "transparent",
+                            border: "none",
+                            outline: "none",
+                            resize: "vertical",
+                            color: T.text,
+                            fontSize: "13px",
+                            lineHeight: "1.6",
+                            fontFamily: "'Inter', system-ui, sans-serif",
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && e.ctrlKey) handlePostComment();
+                          }}
+                        />
+                        <Box display="flex" justifyContent="flex-end" mt={2}>
+                          <Box
+                            as="button"
+                            display="flex" alignItems="center" gap={1.5}
+                            px={3} py={1.5}
+                            borderRadius="6px"
+                            bg={T.accent}
+                            color="#000"
+                            fontSize="xs" fontWeight="700"
+                            cursor={commentSubmitting ? "not-allowed" : "pointer"}
+                            opacity={commentSubmitting ? 0.6 : 1}
+                            onClick={handlePostComment}
+                            style={{ outline: "none", border: "none" }}
+                          >
+                            <Send size={12} />
+                            <span>Post</span>
+                          </Box>
+                        </Box>
+                      </Box>
+                    ) : (
+                      <Box
+                        mb={5} p={3}
+                        borderRadius="8px"
+                        border={`1px solid ${T.border}`}
+                        bg={T.surface}
+                        textAlign="center"
+                      >
+                        <Text fontSize="sm" color={T.textMuted}>
+                          <Box as="span" color={T.accent} fontWeight="600">Log in</Box> to join the discussion
+                        </Text>
+                      </Box>
+                    )}
+
+                    {/* ── Comment list ── */}
+                    {commentsLoading ? (
+                      <Box py={10} display="flex" justifyContent="center">
+                        <Spinner color={T.accent} size="md" />
+                      </Box>
+                    ) : comments.length === 0 ? (
+                      <Box py={10} textAlign="center">
+                        <MessageSquare size={36} color={T.textDim} />
+                        <Text mt={3} color={T.textMuted} fontSize="sm">No comments yet. Be the first!</Text>
+                      </Box>
+                    ) : (
+                      <VStack align="stretch" gap={0}>
+                        {comments.map((comment) => (
+                          <CommentBlock
+                            key={comment.id}
+                            comment={comment}
+                            T={T}
+                            currentUsername={currentUsername}
+                            navigate={navigate}
+                            replyingTo={replyingTo}
+                            setReplyingTo={setReplyingTo}
+                            replyInput={replyInput}
+                            setReplyInput={setReplyInput}
+                            editingComment={editingComment}
+                            setEditingComment={setEditingComment}
+                            editInput={editInput}
+                            setEditInput={setEditInput}
+                            commentSubmitting={commentSubmitting}
+                            onVote={handleVote}
+                            onReply={handlePostReply}
+                            onEditSave={handleEditSave}
+                            onDelete={handleDeleteComment}
+                            formatDate={formatCommentDate}
+                          />
+                        ))}
+
+                        {/* Pagination bar */}
+                        {commentsTotalPages > 1 && (
+                          <Box
+                            display="flex" alignItems="center" justifyContent="center"
+                            gap={1} pt={4} pb={2} flexWrap="wrap"
+                          >
+                            {/* Prev */}
+                            <Box as="button"
+                              px={3} py={1} borderRadius="6px" fontSize="xs" fontWeight="600"
+                              bg={commentPage === 0 ? T.borderBright : T.surface2}
+                              color={commentPage === 0 ? T.textDim : T.textMuted}
+                              border={`1px solid ${T.border}`}
+                              cursor={commentPage === 0 ? "not-allowed" : "pointer"}
+                              _hover={commentPage > 0 ? { borderColor: T.accent, color: T.accent } : {}}
+                              onClick={() => commentPage > 0 && fetchComments(commentPage - 1)}
+                              style={{ outline: "none" }}
+                            >
+                              ← Prev
+                            </Box>
+
+                            {/* Page numbers */}
+                            {Array.from({ length: commentsTotalPages }, (_, i) => i).map((p) => (
+                              <Box as="button" key={p}
+                                px={3} py={1} borderRadius="6px" fontSize="xs" fontWeight="700"
+                                bg={p === commentPage ? T.accent : T.surface2}
+                                color={p === commentPage ? "#000" : T.textMuted}
+                                border={`1px solid ${p === commentPage ? T.accent : T.border}`}
+                                cursor={p === commentPage ? "default" : "pointer"}
+                                _hover={p !== commentPage ? { borderColor: T.accent, color: T.accent } : {}}
+                                onClick={() => p !== commentPage && fetchComments(p)}
+                                style={{ outline: "none" }}
+                              >
+                                {p + 1}
+                              </Box>
+                            ))}
+
+                            {/* Next */}
+                            <Box as="button"
+                              px={3} py={1} borderRadius="6px" fontSize="xs" fontWeight="600"
+                              bg={commentPage >= commentsTotalPages - 1 ? T.borderBright : T.surface2}
+                              color={commentPage >= commentsTotalPages - 1 ? T.textDim : T.textMuted}
+                              border={`1px solid ${T.border}`}
+                              cursor={commentPage >= commentsTotalPages - 1 ? "not-allowed" : "pointer"}
+                              _hover={commentPage < commentsTotalPages - 1 ? { borderColor: T.accent, color: T.accent } : {}}
+                              onClick={() => commentPage < commentsTotalPages - 1 && fetchComments(commentPage + 1)}
+                              style={{ outline: "none" }}
+                            >
+                              Next →
+                            </Box>
+
+                            {/* Info */}
+                            <Text fontSize="xs" color={T.textDim} ml={2}>
+                              Page {commentPage + 1} of {commentsTotalPages}
+                              {commentsTotalElements > 0 && ` · ${commentsTotalElements} total`}
+                            </Text>
+                          </Box>
+                        )}
+                      </VStack>
                     )}
                   </VStack>
                 )}
