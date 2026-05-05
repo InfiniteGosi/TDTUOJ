@@ -88,6 +88,101 @@ const fmtDate = (dateStr) =>
     year: "numeric",
   });
 
+// ─── Language Donut Chart (pure SVG) ────────────────────────────────────────
+
+const LANG_COLORS = {
+  CPP:    "#4f46e5",
+  C:      "#06b6d4",
+  JAVA:   "#f59e0b",
+  PYTHON: "#10b981",
+};
+const LANG_LABELS = { CPP: "C++", C: "C", JAVA: "Java", PYTHON: "Python" };
+
+const LanguageDonutChart = ({ langStats }) => {
+  const [hovered, setHovered] = useState(null);
+  const entries = Object.entries(langStats).filter(([, v]) => v > 0);
+  const total = entries.reduce((s, [, v]) => s + Number(v), 0);
+  if (total === 0) return null;
+
+  const R = 70, cx = 90, cy = 90, strokeW = 26;
+  const circumference = 2 * Math.PI * R;
+  let offset = 0;
+
+  const segments = entries.map(([lang, count]) => {
+    const pct = Number(count) / total;
+    const dash = pct * circumference;
+    const seg = { lang, count: Number(count), pct, dash, offset, color: LANG_COLORS[lang] || "#6b7280" };
+    offset += dash;
+    return seg;
+  });
+
+  return (
+    <Box display="flex" alignItems="center" gap={6} flexWrap="wrap">
+      {/* Donut */}
+      <Box flexShrink={0}>
+        <svg width={180} height={180} viewBox="0 0 180 180">
+          {/* Background ring */}
+          <circle cx={cx} cy={cy} r={R} fill="none" stroke="#f3f4f6" strokeWidth={strokeW} />
+          {segments.map((seg) => (
+            <circle
+              key={seg.lang}
+              cx={cx} cy={cy} r={R}
+              fill="none"
+              stroke={seg.color}
+              strokeWidth={hovered === seg.lang ? strokeW + 4 : strokeW}
+              strokeDasharray={`${seg.dash} ${circumference - seg.dash}`}
+              strokeDashoffset={-seg.offset + circumference / 4}
+              style={{ cursor: "pointer", transition: "stroke-width 0.15s", transform: "rotate(-90deg)", transformOrigin: `${cx}px ${cy}px` }}
+              onMouseEnter={() => setHovered(seg.lang)}
+              onMouseLeave={() => setHovered(null)}
+            />
+          ))}
+          {/* Center label */}
+          {hovered ? (
+            <>
+              <text x={cx} y={cy - 8} textAnchor="middle" fontSize="11" fill="#374151" fontWeight="700">
+                {LANG_LABELS[hovered] || hovered}
+              </text>
+              <text x={cx} y={cy + 8} textAnchor="middle" fontSize="18" fill="#111827" fontWeight="900">
+                {segments.find(s => s.lang === hovered)?.count}
+              </text>
+              <text x={cx} y={cy + 22} textAnchor="middle" fontSize="10" fill="#9ca3af">
+                {Math.round((segments.find(s => s.lang === hovered)?.pct ?? 0) * 100)}%
+              </text>
+            </>
+          ) : (
+            <>
+              <text x={cx} y={cy - 4} textAnchor="middle" fontSize="22" fill="#111827" fontWeight="900">{total}</text>
+              <text x={cx} y={cy + 14} textAnchor="middle" fontSize="11" fill="#9ca3af">AC subs</text>
+            </>
+          )}
+        </svg>
+      </Box>
+
+      {/* Legend */}
+      <Box>
+        {segments.map((seg) => (
+          <Box key={seg.lang}
+            display="flex" alignItems="center" gap={3} mb={2}
+            opacity={hovered && hovered !== seg.lang ? 0.35 : 1}
+            style={{ transition: "opacity 0.15s", cursor: "default" }}
+            onMouseEnter={() => setHovered(seg.lang)}
+            onMouseLeave={() => setHovered(null)}
+          >
+            <Box w="12px" h="12px" borderRadius="3px" bg={seg.color} flexShrink={0} />
+            <Text fontSize="sm" fontWeight="600" color="gray.700" minW="52px">
+              {LANG_LABELS[seg.lang] || seg.lang}
+            </Text>
+            <Text fontSize="sm" color="gray.500">
+              {seg.count} ({Math.round(seg.pct * 100)}%)
+            </Text>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
 // ─── StatTile ─────────────────────────────────────────────────────────────────
 
 const StatTile = ({ icon: Icon, iconColor, label, value, sub }) => (
@@ -261,6 +356,7 @@ const ProfilePage = () => {
   const [stats, setStats] = useState(null);
   const [activity, setActivity] = useState([]);
   const [ratingHistory, setRatingHistory] = useState([]);
+  const [langStats, setLangStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [tooltip, setTooltip] = useState(null);
 
@@ -269,16 +365,18 @@ const ProfilePage = () => {
     const fetchAll = async () => {
       try {
         setLoading(true);
-        const [userRes, statsRes, activityRes, ratingRes] = await Promise.all([
+        const [userRes, statsRes, activityRes, ratingRes, langRes] = await Promise.all([
           ApiService.getUserByUsername(username),
           ApiService.getUserStatistics(username),
           ApiService.getUserActivity(username),
           ApiService.getRatingHistory(username).catch(() => ({ statusCode: 200, data: [] })),
+          ApiService.getUserLanguageStats(username).catch(() => ({ statusCode: 200, data: {} })),
         ]);
         if (userRes.statusCode === 200) setUser(userRes.data);
         if (statsRes.statusCode === 200) setStats(statsRes.data);
         if (activityRes.statusCode === 200) setActivity(activityRes.data);
         if (ratingRes.statusCode === 200) setRatingHistory(ratingRes.data || []);
+        if (langRes.statusCode === 200) setLangStats(langRes.data || {});
       } catch (err) {
         showMessage(err.response?.data?.message || err.message, "error");
       } finally {
@@ -593,6 +691,20 @@ const ProfilePage = () => {
                   ))}
                 </Grid>
               </Box>
+
+              {/* Language Distribution */}
+              {Object.keys(langStats).length > 0 && (
+                <Box bg="white" borderRadius="2xl" boxShadow="sm" p={5}>
+                  <HStack gap={2} mb={4}>
+                    <Code2 size={15} color="#7C3AED" />
+                    <Text fontSize="xs" fontWeight="700" color="gray.600" letterSpacing="0.06em">
+                      LANGUAGE DISTRIBUTION
+                    </Text>
+                    <Text fontSize="xs" color="gray.400" ml="auto">AC submissions only</Text>
+                  </HStack>
+                  <LanguageDonutChart langStats={langStats} />
+                </Box>
+              )}
 
               {/* Rating Chart */}
               {ratingHistory.length > 0 && (

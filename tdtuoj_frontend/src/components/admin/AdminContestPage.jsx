@@ -28,6 +28,7 @@ import {
   Globe,
   Calendar,
   Users,
+  BarChart2,
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useConfirmDialog } from "../common/ConfirmDialog";
@@ -352,6 +353,19 @@ const AdminContestPage = () => {
                             }
                           >
                             <Eye size={16} />
+                          </Box>
+                          <Box
+                            as="button"
+                            p={1}
+                            borderRadius="md"
+                            color="purple.500"
+                            _hover={{ bg: "purple.50" }}
+                            title="Monitor"
+                            onClick={() =>
+                              navigate(`/admin/contests/monitor/${contest.id}`)
+                            }
+                          >
+                            <BarChart2 size={16} />
                           </Box>
                           <Box
                             as="button"

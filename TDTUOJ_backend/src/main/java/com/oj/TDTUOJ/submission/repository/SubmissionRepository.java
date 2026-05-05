@@ -56,4 +56,39 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     /** Count submissions for a problem within a lab. */
     long countByUserIdAndProblemIdAndLabId(Long userId, Long problemId, Long labId);
+
+    // ── Contest monitor queries ───────────────────────────────────────────── //
+
+    /** All submissions for a contest — used to compute problem/participant stats. */
+    List<Submission> findByContestId(Long contestId);
+
+    /** Count total submissions for a contest. */
+    long countByContestId(Long contestId);
+
+    /** Count submissions with given statuses (PENDING/RUNNING) in a contest. */
+    long countByContestIdAndSubmissionStatusIn(Long contestId, Collection<SubmissionStatus> statuses);
+
+    /**
+     * All submissions by a specific user in a contest, newest first.
+     * Admin code viewer: returns submissions across ALL problems for that user.
+     */
+    List<Submission> findByContestIdAndUserIdOrderBySubmissionDateDesc(Long contestId, Long userId);
+
+    /**
+     * All submissions by a user for a specific problem in a contest, newest first.
+     * Admin drills into (user, problem) pair.
+     */
+    List<Submission> findByContestIdAndUserIdAndProblemIdOrderBySubmissionDateDesc(
+            Long contestId, Long userId, Long problemId);
+
+    // ── Language stats ───────────────────────────────────────────────────── //
+
+    /** AC submission counts grouped by language for a user. */
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT s.submissionLanguage, COUNT(s) FROM Submission s " +
+        "WHERE s.userId = :userId " +
+        "AND s.submissionVerdict = com.oj.TDTUOJ.common.enums.SubmissionVerdict.AC " +
+        "GROUP BY s.submissionLanguage"
+    )
+    List<Object[]> countAcByLanguage(@org.springframework.data.repository.query.Param("userId") Long userId);
 }

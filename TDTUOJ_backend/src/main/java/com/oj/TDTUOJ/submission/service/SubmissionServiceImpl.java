@@ -1,9 +1,13 @@
 package com.oj.TDTUOJ.submission.service;
 
 import com.oj.TDTUOJ.submission.dto.SubmissionJobDTO;
+import com.oj.TDTUOJ.common.enums.ContestRegistrationStatus;
 import com.oj.TDTUOJ.common.enums.SubmissionStatus;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.common.response.Response;
+import com.oj.TDTUOJ.contest.entity.Contest;
+import com.oj.TDTUOJ.contest.repository.ContestRegistrationRepository;
+import com.oj.TDTUOJ.contest.repository.ContestRepository;
 import com.oj.TDTUOJ.lab.repository.LabRepository;
 import com.oj.TDTUOJ.problem.entity.Problem;
 import com.oj.TDTUOJ.problem.repository.ProblemRepository;
@@ -29,12 +33,14 @@ import java.time.LocalDateTime;
 @Slf4j
 public class SubmissionServiceImpl implements SubmissionService {
 
-    private final SubmissionRepository   submissionRepository;
-    private final UserService            userService;
-    private final ModelMapper            modelMapper;
-    private final ProblemRepository      problemRepository;
-    private final SubmissionQueueService submissionQueueService;
-    private final LabRepository          labRepository;
+    private final SubmissionRepository          submissionRepository;
+    private final UserService                   userService;
+    private final ModelMapper                   modelMapper;
+    private final ProblemRepository             problemRepository;
+    private final SubmissionQueueService        submissionQueueService;
+    private final LabRepository                 labRepository;
+    private final ContestRepository             contestRepository;
+    private final ContestRegistrationRepository contestRegistrationRepository;
 
     @Override
     public Response<SubmissionDTO> createSubmission(SubmissionDTO submissionDTO) {
@@ -53,7 +59,32 @@ public class SubmissionServiceImpl implements SubmissionService {
         Problem problem = problemRepository.findById(submissionDTO.getProblemId())
                 .orElseThrow(() -> new NotFoundException("Problem not found"));
 
-        // 2a. Lab deadline enforcement — hard lock
+        // 2b. Contest registration guard
+        if (submissionDTO.getContestId() != null) {
+            Long contestId = submissionDTO.getContestId();
+            Contest contest = contestRepository.findById(contestId).orElse(null);
+            if (contest != null) {
+                boolean isAdmin   = currentUser.getRoles().stream()
+                        .anyMatch(r -> r.getName().equalsIgnoreCase("ADMIN"));
+                boolean isCreator = contest.getCreator() != null
+                        && contest.getCreator().getId().equals(currentUser.getId());
+                if (!isAdmin && !isCreator) {
+                    boolean isApproved = contestRegistrationRepository
+                            .existsByContestIdAndUserIdAndStatus(
+                                    contestId, currentUser.getId(),
+                                    ContestRegistrationStatus.APPROVED);
+                    if (!isApproved) {
+                        return Response.<SubmissionDTO>builder()
+                                .statusCode(HttpStatus.FORBIDDEN.value())
+                                .message("You are not registered for this contest.")
+                                .data(null)
+                                .build();
+                    }
+                }
+            }
+        }
+
+        // 2c. Lab deadline enforcement — hard lock
         if (submissionDTO.getLabId() != null) {
             var lab = labRepository.findById(submissionDTO.getLabId()).orElse(null);
             if (lab != null && lab.getDeadline() != null

@@ -2,9 +2,11 @@ package com.oj.TDTUOJ.contest.controller;
 
 import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.contest.dto.ContestDTO;
+import com.oj.TDTUOJ.contest.dto.ContestMonitorDTO;
 import com.oj.TDTUOJ.contest.dto.LeaderboardDTO;
 import com.oj.TDTUOJ.contest.dto.ScoreboardEntryDTO;
 import com.oj.TDTUOJ.contest.service.ContestService;
+import com.oj.TDTUOJ.submission.dto.SubmissionDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -116,5 +118,36 @@ public class ContestController {
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
     public ResponseEntity<Response<Void>> deleteContest(@PathVariable Long id) {
         return ResponseEntity.ok(contestService.deleteContest(id));
+    }
+
+    // ── Admin monitor ─────────────────────────────────────────────────────── //
+
+    /**
+     * Real-time contest monitoring dashboard.
+     * Returns problem verdict stats and per-participant activity.
+     * Requires ADMIN or contest CREATOR (enforced in service layer).
+     */
+    @GetMapping("/{id}/monitor")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
+    public ResponseEntity<Response<ContestMonitorDTO>> getContestMonitor(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(contestService.getContestMonitor(id));
+    }
+
+    /**
+     * Returns all submissions of a participant in a contest, newest first.
+     * Optional {@code problemId} narrows to a single problem.
+     * Used by the admin code-viewer panel.
+     */
+    @GetMapping("/{id}/monitor/submissions")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
+    public ResponseEntity<Response<List<SubmissionDTO>>> getParticipantSubmissions(
+            @PathVariable Long id,
+            @RequestParam Long userId,
+            @RequestParam(required = false) Long problemId
+    ) {
+        return ResponseEntity.ok(
+                contestService.getParticipantSubmissions(id, userId, problemId));
     }
 }

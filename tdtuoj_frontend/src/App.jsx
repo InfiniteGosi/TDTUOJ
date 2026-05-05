@@ -24,6 +24,7 @@ import ContestDetailPage from "./components/contests/ContestDetailPage";
 import ContestProblemPage from "./components/contests/ContestProblemPage";
 import AdminContestPage from "./components/admin/AdminContestPage";
 import AdminContestFormPage from "./components/admin/AdminContestFormPage";
+import AdminContestMonitorPage from "./components/admin/AdminContestMonitorPage";
 import OrganizationPage from "./components/organizations/OrganizationPage";
 import OrganizationDetailPage from "./components/organizations/OrganizationDetailPage";
 import LabFormPage from "./components/organizations/LabFormPage";
@@ -103,6 +104,10 @@ function App() {
                   <Route
                     path="contests/edit/:id"
                     element={<AdminContestFormPage />}
+                  />
+                  <Route
+                    path="contests/monitor/:id"
+                    element={<AdminContestMonitorPage />}
                   />
 
                   <Route path="organizations" element={<AdminOrganizationPage />} />

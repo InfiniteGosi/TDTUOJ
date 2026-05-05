@@ -2,22 +2,27 @@ package com.oj.TDTUOJ.contest.service;
 
 import com.oj.TDTUOJ.common.enums.ContestRegistrationStatus;
 import com.oj.TDTUOJ.common.enums.ContestStyle;
+import com.oj.TDTUOJ.common.enums.SubmissionStatus;
+import com.oj.TDTUOJ.common.enums.SubmissionVerdict;
 import com.oj.TDTUOJ.common.exceptions.BadRequestException;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.common.exceptions.UnauthorizedAccessException;
 import com.oj.TDTUOJ.common.response.Response;
-import com.oj.TDTUOJ.contest.dto.ContestDTO;
-import com.oj.TDTUOJ.contest.dto.ContestProblemDTO;
-import com.oj.TDTUOJ.contest.dto.LeaderboardDTO;
-import com.oj.TDTUOJ.contest.dto.ScoreboardEntryDTO;
+import com.oj.TDTUOJ.contest.dto.*;
 import com.oj.TDTUOJ.contest.entity.Contest;
+import com.oj.TDTUOJ.contest.entity.ContestParticipation;
 import com.oj.TDTUOJ.contest.entity.ContestProblem;
 import com.oj.TDTUOJ.contest.entity.ContestRegistration;
 import com.oj.TDTUOJ.contest.repository.*;
 import com.oj.TDTUOJ.problem.entity.Problem;
 import com.oj.TDTUOJ.problem.repository.ProblemRepository;
+import com.oj.TDTUOJ.submission.dto.SubmissionDTO;
+import com.oj.TDTUOJ.submission.entity.Submission;
+import com.oj.TDTUOJ.submission.repository.SubmissionRepository;
 import com.oj.TDTUOJ.user.entity.User;
+import com.oj.TDTUOJ.user.repository.UserRepository;
 import com.oj.TDTUOJ.user.service.UserService;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -33,9 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Locale;
-import java.util.regex.Pattern;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,6 +54,8 @@ public class ContestServiceImpl implements ContestService {
     private final ContestLeaderboardService      leaderboardService;
     private final UserService                    userService;
     private final ModelMapper                    modelMapper;
+    private final SubmissionRepository           submissionRepository;
+    private final UserRepository                 userRepository;
 
     // ── Read operations ───────────────────────────────────────────────────── //
 
@@ -422,5 +427,164 @@ public class ContestServiceImpl implements ContestService {
                 .message("Success")
                 .data(data)
                 .build();
+    }
+
+    // ── Admin monitor ────────────────────────────────────────────────────── //
+
+    @Override
+    @Transactional(readOnly = true)
+    public Response<ContestMonitorDTO> getContestMonitor(Long contestId) {
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(() -> new NotFoundException("Contest not found: " + contestId));
+
+        User caller = userService.getCurrentLoggedInUser();
+        if (!hasRole(caller, "ADMIN")) {
+            assertOwner(contest, caller);
+        }
+
+        // Load all submissions for this contest
+        List<Submission> submissions = submissionRepository.findByContestId(contestId);
+
+        // Problem stats — group by problemId
+        List<ContestProblem> contestProblems =
+                contestProblemRepository.findByContestIdOrderByProblemOrderAsc(contestId);
+
+        Map<Long, List<Submission>> byProblem = submissions.stream()
+                .filter(s -> s.getProblem() != null)
+                .collect(Collectors.groupingBy(s -> s.getProblem().getId()));
+
+        List<ProblemStatsDTO> problemStats = contestProblems.stream().map(cp -> {
+            Long pid = cp.getProblem().getId();
+            List<Submission> ps = byProblem.getOrDefault(pid, Collections.emptyList());
+            int total   = ps.size();
+            int ac      = (int) ps.stream().filter(s -> s.getSubmissionVerdict() == SubmissionVerdict.AC).count();
+            int wa      = (int) ps.stream().filter(s -> s.getSubmissionVerdict() == SubmissionVerdict.WA).count();
+            int tle     = (int) ps.stream().filter(s -> s.getSubmissionVerdict() == SubmissionVerdict.TLE).count();
+            int ce      = (int) ps.stream().filter(s -> s.getSubmissionVerdict() == SubmissionVerdict.CE).count();
+            int mle     = (int) ps.stream().filter(s -> s.getSubmissionVerdict() == SubmissionVerdict.MLE).count();
+            int sf      = (int) ps.stream().filter(s -> s.getSubmissionVerdict() == SubmissionVerdict.SF).count();
+            int pending = (int) ps.stream()
+                    .filter(s -> s.getSubmissionStatus() != SubmissionStatus.COMPLETED).count();
+            double acRate = total == 0 ? 0.0
+                    : Math.round(ac * 1000.0 / total) / 10.0;
+
+            return ProblemStatsDTO.builder()
+                    .problemId(pid)
+                    .problemTitle(cp.getProblem().getTitle())
+                    .problemSlug(cp.getProblem().getSlug())
+                    .problemOrder(cp.getProblemOrder())
+                    .totalSubmissions(total)
+                    .acCount(ac).waCount(wa).tleCount(tle)
+                    .ceCount(ce).mleCount(mle).sfCount(sf)
+                    .pendingCount(pending)
+                    .acRate(acRate)
+                    .build();
+        }).collect(Collectors.toList());
+
+        // Participant stats — group by userId
+        // Primary source: participations (user eagerly loaded via JOIN FETCH)
+        List<ContestParticipation> participations =
+                contestParticipationRepository.findByContestIdWithUserOrderByRankAsc(contestId);
+        Map<Long, String> usernameMap = new HashMap<>(participations.stream()
+                .collect(Collectors.toMap(
+                        p -> p.getUser().getId(),
+                        p -> p.getUser().getUsername(),
+                        (a, b) -> a)));
+        Map<Long, String> profileUrlMap = new HashMap<>(participations.stream()
+                .collect(Collectors.toMap(
+                        p -> p.getUser().getId(),
+                        p -> p.getUser().getProfileUrl() != null ? p.getUser().getProfileUrl() : "",
+                        (a, b) -> a)));
+
+        Map<Long, List<Submission>> byUser = submissions.stream()
+                .collect(Collectors.groupingBy(Submission::getUserId));
+
+        // Fallback: any userId in submissions but missing from participations
+        // (e.g. user submitted but participation record was never created)
+        Set<Long> missingUserIds = byUser.keySet().stream()
+                .filter(uid -> !usernameMap.containsKey(uid))
+                .collect(Collectors.toSet());
+        if (!missingUserIds.isEmpty()) {
+            userRepository.findAllById(missingUserIds).forEach(u -> {
+                usernameMap.put(u.getId(), u.getUsername());
+                profileUrlMap.put(u.getId(), u.getProfileUrl() != null ? u.getProfileUrl() : "");
+            });
+        }
+
+        List<ParticipantStatsDTO> participantStats = byUser.entrySet().stream().map(e -> {
+            Long uid = e.getKey();
+            List<Submission> us = e.getValue();
+            long solved = us.stream()
+                    .filter(s -> s.getSubmissionVerdict() == SubmissionVerdict.AC && s.getProblem() != null)
+                    .map(s -> s.getProblem().getId())
+                    .distinct()
+                    .count();
+            LocalDateTime lastSub = us.stream()
+                    .map(Submission::getSubmissionDate)
+                    .filter(Objects::nonNull)
+                    .max(Comparator.naturalOrder())
+                    .orElse(null);
+            return ParticipantStatsDTO.builder()
+                    .userId(uid)
+                    .username(usernameMap.getOrDefault(uid, "user#" + uid))
+                    .profileUrl(profileUrlMap.get(uid))
+                    .totalSubmissions(us.size())
+                    .problemsSolved((int) solved)
+                    .lastSubmissionTime(lastSub)
+                    .build();
+        }).sorted(Comparator.comparing(
+                p -> p.getLastSubmissionTime() == null ? LocalDateTime.MIN : p.getLastSubmissionTime(),
+                Comparator.reverseOrder()
+        )).collect(Collectors.toList());
+
+        // totalRegistered = approved registrations in contest_registrations
+        // totalActiveParticipants = distinct users who actually submitted
+        // These two may differ when users submit without going through registration
+        // (e.g. CREATOR role). Use participantStats.size() as the single source of truth
+        // for the participant list length so both numbers are consistent.
+        long registrantCount = contestRegistrationRepository.countByContestId(contestId);
+        int activeCount = byUser.size(); // = participantStats.size()
+        int pendingCount = (int) submissions.stream()
+                .filter(s -> s.getSubmissionStatus() != SubmissionStatus.COMPLETED).count();
+
+        return ok(ContestMonitorDTO.builder()
+                .contestId(contestId)
+                .contestName(contest.getName())
+                .contestSlug(contest.getSlug())
+                .totalRegistered((int) registrantCount)
+                .totalActiveParticipants(activeCount)
+                .totalSubmissions(submissions.size())
+                .pendingSubmissions(pendingCount)
+                .problemStats(problemStats)
+                .participantStats(participantStats)
+                .lastUpdated(LocalDateTime.now())
+                .build());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Response<List<SubmissionDTO>> getParticipantSubmissions(
+            Long contestId, Long userId, Long problemId) {
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(() -> new NotFoundException("Contest not found: " + contestId));
+
+        User caller = userService.getCurrentLoggedInUser();
+        if (!hasRole(caller, "ADMIN")) {
+            assertOwner(contest, caller);
+        }
+
+        List<Submission> submissions = (problemId != null)
+                ? submissionRepository.findByContestIdAndUserIdAndProblemIdOrderBySubmissionDateDesc(
+                        contestId, userId, problemId)
+                : submissionRepository.findByContestIdAndUserIdOrderBySubmissionDateDesc(
+                        contestId, userId);
+
+        List<SubmissionDTO> dtos = submissions.stream().map(s -> {
+            SubmissionDTO dto = modelMapper.map(s, SubmissionDTO.class);
+            dto.setProblemId(s.getProblem() != null ? s.getProblem().getId() : null);
+            return dto;
+        }).collect(Collectors.toList());
+
+        return ok(dtos);
     }
 }

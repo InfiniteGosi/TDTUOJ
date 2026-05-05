@@ -18,18 +18,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.oj.TDTUOJ.submission.repository.SubmissionRepository;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/users")
 public class UserController {
-    private final UserService userService;
-
-    private final UserActivityService userActivityService;
-
-    private final UserStatisticsService userStatisticsService;
+    private final UserService             userService;
+    private final UserActivityService     userActivityService;
+    private final UserStatisticsService   userStatisticsService;
+    private final SubmissionRepository    submissionRepository;
 
     @GetMapping
     public ResponseEntity<Response<Page<UserDTO>>> getAllUsers(
@@ -89,5 +91,24 @@ public class UserController {
     public ResponseEntity<Response<List<RatingHistoryDTO>>> getRatingHistory(
             @PathVariable String username) {
         return ResponseEntity.ok(userService.getRatingHistory(username));
+    }
+
+    @GetMapping("/{username}/language-stats")
+    public ResponseEntity<Response<Map<String, Long>>> getLanguageStats(
+            @PathVariable String username) {
+        var userResp = userService.getUserByUsername(username);
+        Long userId = userResp.getData().getId();
+        List<Object[]> rows = submissionRepository.countAcByLanguage(userId);
+        Map<String, Long> result = new LinkedHashMap<>();
+        for (Object[] row : rows) {
+            result.put(row[0].toString(), (Long) row[1]);
+        }
+        return ResponseEntity.ok(
+            Response.<Map<String, Long>>builder()
+                .statusCode(200)
+                .message("Language stats retrieved")
+                .data(result)
+                .build()
+        );
     }
 }

@@ -463,6 +463,31 @@ export default class ApiService {
     return resp.data;
   }
 
+  // ── Contest monitor (admin / creator) ─────────────────────────────────── //
+
+  static async getContestMonitor(id) {
+    const resp = await axios.get(`${this.BASE_URL}/contests/${id}/monitor`, {
+      headers: this.getHeader(),
+    });
+    return resp.data; // Response<ContestMonitorDTO>
+  }
+
+  /**
+   * Fetch all submissions of a participant in a contest.
+   * @param {number} id       – contest id
+   * @param {number} userId   – participant's user id
+   * @param {number|null} problemId – optional filter to one problem
+   */
+  static async getContestMonitorSubmissions(id, userId, problemId = null) {
+    const params = { userId };
+    if (problemId != null) params.problemId = problemId;
+    const resp = await axios.get(
+      `${this.BASE_URL}/contests/${id}/monitor/submissions`,
+      { headers: this.getHeader(), params },
+    );
+    return resp.data; // Response<List<SubmissionDTO>>
+  }
+
   // ─── Organizations ──────────────────────────────────────────────────────────
 
   static async getOrganizations({ page = 0, size = 12, search = "" } = {}) {
@@ -714,6 +739,14 @@ export default class ApiService {
     const resp = await axios.post(
       `${this.BASE_URL}/problems/${problemId}/comments/${commentId}/vote`,
       { voteType },
+      { headers: this.getHeader() },
+    );
+    return resp.data;
+  }
+
+  static async getUserLanguageStats(username) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/users/${username}/language-stats`,
       { headers: this.getHeader() },
     );
     return resp.data;
