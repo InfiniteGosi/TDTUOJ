@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -27,6 +27,7 @@ import {
   Tag as TagIcon,
   X,
   AlertTriangle,
+  Sparkles,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useToast } from "../common/ToastMessage";
@@ -79,6 +80,210 @@ const getPointRange = (difficulty) => {
   return POINT_RANGES[difficulty] || { min: 1, max: 300 };
 };
 
+// ─── AI Loading Messages ─────────────────────────────────────────────────────
+
+const PDF_MESSAGES = [
+  { emoji: "📄", text: "Reading your PDF..." },
+  { emoji: "🔍", text: "Scanning problem statement..." },
+  { emoji: "🧠", text: "Analyzing constraints..." },
+  { emoji: "⚙️", text: "Extracting test cases..." },
+  { emoji: "🏷️", text: "Suggesting relevant tags..." },
+  { emoji: "📊", text: "Assessing difficulty level..." },
+  { emoji: "✨", text: "Polishing results..." },
+  { emoji: "🚀", text: "Almost there..." },
+];
+
+const GEN_MESSAGES = [
+  { emoji: "🤔", text: "Thinking about the problem..." },
+  { emoji: "📐", text: "Designing edge cases..." },
+  { emoji: "🔢", text: "Computing expected outputs..." },
+  { emoji: "🧪", text: "Creating test scenarios..." },
+  { emoji: "🎯", text: "Checking boundary conditions..." },
+  { emoji: "📊", text: "Validating inputs..." },
+  { emoji: "✅", text: "Verifying correctness..." },
+  { emoji: "✨", text: "Finalizing test cases..." },
+];
+
+// Inject keyframe CSS once
+if (typeof document !== "undefined" && !document.getElementById("ai-loading-styles")) {
+  const style = document.createElement("style");
+  style.id = "ai-loading-styles";
+  style.textContent = `
+    @keyframes ai-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes ai-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.95); }
+    }
+    @keyframes ai-fade-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes ai-dot {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes ai-shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+const AILoadingOverlay = ({ mode }) => {
+  const [msgIndex, setMsgIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+  const messages = mode === "pdf" ? PDF_MESSAGES : GEN_MESSAGES;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setMsgIndex((i) => (i + 1) % messages.length);
+        setVisible(true);
+      }, 300);
+    }, 2200);
+    return () => clearInterval(interval);
+  }, [messages.length]);
+
+  const msg = messages[msgIndex];
+  const title = mode === "pdf" ? "AI Reading PDF" : "AI Generating Test Cases";
+
+  return (
+    <Box
+      position="fixed"
+      inset={0}
+      zIndex={9999}
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      bg="rgba(0,0,0,0.55)"
+      style={{ backdropFilter: "blur(6px)" }}
+    >
+      <Box
+        bg="white"
+        borderRadius="2xl"
+        p={10}
+        maxW="420px"
+        w="90%"
+        boxShadow="0 25px 60px rgba(0,0,0,0.3)"
+        textAlign="center"
+        position="relative"
+        overflow="hidden"
+      >
+        {/* Gradient shimmer top bar */}
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          h="4px"
+          style={{
+            background: "linear-gradient(90deg, #667eea, #a855f7, #ec4899, #667eea)",
+            backgroundSize: "200% auto",
+            animation: "ai-shimmer 2s linear infinite",
+          }}
+        />
+
+        {/* Spinner ring */}
+        <Box display="flex" justifyContent="center" mb={6}>
+          <Box
+            position="relative"
+            w="72px"
+            h="72px"
+          >
+            {/* Outer ring */}
+            <Box
+              position="absolute"
+              inset={0}
+              borderRadius="full"
+              border="3px solid"
+              borderColor="purple.100"
+            />
+            {/* Spinning arc */}
+            <Box
+              position="absolute"
+              inset={0}
+              borderRadius="full"
+              border="3px solid transparent"
+              style={{
+                borderTopColor: "#667eea",
+                borderRightColor: "#a855f7",
+                animation: "ai-spin 1s linear infinite",
+              }}
+            />
+            {/* Center emoji */}
+            <Box
+              position="absolute"
+              inset={0}
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              fontSize="26px"
+              style={{ animation: "ai-pulse 2s ease-in-out infinite" }}
+            >
+              ✨
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Title */}
+        <Text
+          fontSize="lg"
+          fontWeight="700"
+          color="gray.800"
+          mb={2}
+          style={{
+            background: "linear-gradient(90deg, #667eea, #a855f7)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          {title}
+        </Text>
+
+        {/* Rotating message */}
+        <Box minH="52px" display="flex" alignItems="center" justifyContent="center">
+          <Text
+            fontSize="md"
+            color="gray.600"
+            style={{
+              animation: visible ? "ai-fade-in 0.3s ease-out" : "none",
+              opacity: visible ? 1 : 0,
+              transition: "opacity 0.3s",
+            }}
+          >
+            {msg.emoji} {msg.text}
+          </Text>
+        </Box>
+
+        {/* Bouncing dots */}
+        <Box display="flex" justifyContent="center" gap={2} mt={4}>
+          {[0, 1, 2].map((i) => (
+            <Box
+              key={i}
+              w="8px"
+              h="8px"
+              borderRadius="full"
+              bg="purple.400"
+              style={{
+                animation: `ai-dot 1.4s ease-in-out ${i * 0.16}s infinite`,
+              }}
+            />
+          ))}
+        </Box>
+
+        <Text fontSize="xs" color="gray.400" mt={5}>
+          This may take up to 30 seconds — Gemini is working hard!
+        </Text>
+      </Box>
+    </Box>
+  );
+};
+
 const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -89,6 +294,10 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
   const [dataVersion, setDataVersion] = useState(0);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [authorInfo, setAuthorInfo] = useState({ id: null, username: null });
+  const [aiExtracting, setAiExtracting] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [generateCount, setGenerateCount] = useState(5);
+  const pdfInputRef = useRef(null);
 
   const [problemData, setProblemData] = useState({
     title: "",
@@ -318,6 +527,116 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
       type: mimeType,
     });
 
+  // ─── AI PDF Import ────────────────────────────────────────────────────────
+
+  const handlePdfImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      showMessage("PDF must be under 4MB", "error");
+      e.target.value = "";
+      return;
+    }
+    setAiExtracting(true);
+    try {
+      const response = await ApiService.extractProblemFromPdf(file);
+      if (response.statusCode === 200 && response.data) {
+        const d = response.data;
+        setProblemData((prev) => ({
+          title: d.title || "",
+          point: d.point || "",
+          timeLimit: d.timeLimit || "",
+          memoryLimit: d.memoryLimit || "",
+          statement: d.statement || "",
+          problemDifficulty: d.difficulty || "",
+          solutionCode: prev.solutionCode, // keep existing solution
+        }));
+        if (d.testCases && d.testCases.length > 0) {
+          setTestCases(
+            d.testCases.map((tc) => ({
+              input: tc.input || "",
+              expectedOutput: tc.expectedOutput || "",
+              isSample: tc.isSample ?? false,
+              dirty: true,
+            }))
+          );
+        }
+        // Auto-add AI-suggested tags that exist in available tags
+        if (d.suggestedTags && d.suggestedTags.length > 0) {
+          const matched = availableTags.filter((t) =>
+            d.suggestedTags.includes(t.name)
+          );
+          if (matched.length > 0) {
+            setSelectedTags((prev) => {
+              const existingIds = new Set(prev.map((t) => t.id));
+              const newTags = matched.filter((t) => !existingIds.has(t.id));
+              return [...prev, ...newTags];
+            });
+          }
+        }
+        const msg = d.testCasesGenerated
+          ? `Extracted! ${d.testCases?.length || 0} test cases generated by AI — please review before saving.`
+          : `Problem extracted from PDF — please review all fields before saving.`;
+        showMessage(msg, "success");
+      } else {
+        showMessage(response.message || "Failed to extract from PDF", "error");
+      }
+    } catch (err) {
+      showMessage(
+        err.response?.data?.message || err.message || "Failed to extract from PDF",
+        "error"
+      );
+    } finally {
+      setAiExtracting(false);
+      e.target.value = ""; // reset so same file can be re-selected
+    }
+  };
+
+  // ─── AI Test Case Generation ──────────────────────────────────────────────
+
+  const handleGenerateTestCases = async () => {
+    if (!problemData.statement.trim()) {
+      showMessage("Write problem statement first", "error");
+      return;
+    }
+    setAiGenerating(true);
+    try {
+      const response = await ApiService.generateTestCases(
+        problemData.statement,
+        generateCount
+      );
+      if (response.statusCode === 200 && response.data?.testCases) {
+        const generated = response.data.testCases.map((tc) => ({
+          input: tc.input || "",
+          expectedOutput: tc.expectedOutput || "",
+          isSample: tc.isSample ?? false,
+          dirty: true,
+        }));
+        setTestCases((prev) => {
+          // Replace if only one empty placeholder exists
+          const hasOnlyEmpty =
+            prev.length === 1 &&
+            !prev[0].input.trim() &&
+            !prev[0].expectedOutput.trim();
+          return hasOnlyEmpty ? generated : [...prev, ...generated];
+        });
+        showMessage(
+          `${generated.length} test cases generated by AI — please review!`,
+          "success"
+        );
+      } else {
+        showMessage(response.message || "Failed to generate test cases", "error");
+      }
+    } catch (err) {
+      showMessage(
+        err.response?.data?.message || err.message || "Failed to generate test cases",
+        "error"
+      );
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
   const validateForm = () => {
     if (!problemData.title.trim()) {
       showMessage("Problem title is required", "error");
@@ -517,6 +836,10 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
       px={4}
       onClick={() => showTagDropdown && setShowTagDropdown(false)}
     >
+      {/* AI Loading Overlay */}
+      {(aiExtracting || aiGenerating) && (
+        <AILoadingOverlay mode={aiExtracting ? "pdf" : "gen"} />
+      )}
       <Box maxW="1200px" mx="auto">
         <Card.Root bg="white" borderRadius="xl" p={8} boxShadow="2xl">
           <HStack mb={6} gap={3} justify="space-between">
@@ -526,13 +849,35 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
                 {id ? "Edit Problem" : "Create New Problem"}
               </Heading>
             </HStack>
-            <Button
-              leftIcon={<ArrowLeft size={20} />}
-              variant="ghost"
-              onClick={() => navigate(backPath || (mode === "my" ? "/admin/my-problems" : "/admin/problems"))}
-            >
-              Back to Problems
-            </Button>
+            <HStack gap={2}>
+              {/* Hidden file input for PDF */}
+              <input
+                type="file"
+                accept=".pdf"
+                ref={pdfInputRef}
+                style={{ display: "none" }}
+                onChange={handlePdfImport}
+              />
+              <Button
+                size="sm"
+                colorScheme="purple"
+                variant="outline"
+                leftIcon={<Sparkles size={16} />}
+                onClick={() => pdfInputRef.current?.click()}
+                isLoading={aiExtracting}
+                loadingText="AI Reading PDF..."
+                title="Import problem data from a PDF file"
+              >
+                Import from PDF
+              </Button>
+              <Button
+                leftIcon={<ArrowLeft size={20} />}
+                variant="ghost"
+                onClick={() => navigate(backPath || (mode === "my" ? "/admin/my-problems" : "/admin/problems"))}
+              >
+                Back to Problems
+              </Button>
+            </HStack>
           </HStack>
 
           <VStack gap={6} align="stretch">
@@ -1114,9 +1459,44 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
 
             {/* Test Cases */}
             <Box>
-              <Heading size="xl" color="gray.700" mb={4}>
-                Test Cases
-              </Heading>
+              <HStack justify="space-between" align="center" mb={4}>
+                <Heading size="xl" color="gray.700">
+                  Test Cases
+                </Heading>
+                <HStack gap={2}>
+                  <Input
+                    type="number"
+                    size="sm"
+                    w="70px"
+                    min={1}
+                    max={50}
+                    value={generateCount}
+                    onChange={(e) =>
+                      setGenerateCount(
+                        Math.min(50, Math.max(1, parseInt(e.target.value) || 1))
+                      )
+                    }
+                    title="Number of test cases to generate (max 50)"
+                  />
+                  <Button
+                    size="sm"
+                    colorScheme="purple"
+                    variant="outline"
+                    leftIcon={<Sparkles size={14} />}
+                    onClick={handleGenerateTestCases}
+                    isLoading={aiGenerating}
+                    loadingText="Generating..."
+                    isDisabled={!problemData.statement.trim()}
+                    title={
+                      !problemData.statement.trim()
+                        ? "Write problem statement first"
+                        : `Generate ${generateCount} test case(s) using AI`
+                    }
+                  >
+                    AI Generate
+                  </Button>
+                </HStack>
+              </HStack>
               <VStack gap={4} align="stretch">
                 {testCases.map((testCase, index) => (
                   <Card.Root key={index} bg="gray.50" p={4} borderRadius="lg">

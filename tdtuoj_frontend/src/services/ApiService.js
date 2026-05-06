@@ -356,6 +356,32 @@ export default class ApiService {
     return resp.data;
   }
 
+  static async extractProblemFromPdf(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const resp = await axios.post(
+      `${this.BASE_URL}/problem-ai/extract-pdf`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${this.getToken()}`,
+          // Let browser set Content-Type with boundary for multipart
+        },
+        timeout: 120000,
+      },
+    );
+    return resp.data;
+  }
+
+  static async generateTestCases(problemStatement, count) {
+    const resp = await axios.post(
+      `${this.BASE_URL}/problem-ai/generate-test-cases`,
+      { problemStatement, count },
+      { headers: this.getHeader(), timeout: 120000 },
+    );
+    return resp.data;
+  }
+
   // ─── Visualizer ─────────────────────────────────────────────────────────────
   static async visualize({
     sourceCode,
