@@ -17,6 +17,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findByUsernameContainingIgnoreCase(String username, Pageable pageable);
     boolean existsByEmail(String email);
     boolean existsByUsername(String username);
+    Optional<User> findByProviderIdAndAuthProvider(String providerId, String authProvider);
 
     /** Search users NOT in a given org, by username. */
     @Query("SELECT u FROM User u WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :q, '%')) " +

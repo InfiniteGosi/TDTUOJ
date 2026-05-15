@@ -34,8 +34,13 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    @NotBlank(message = "Password is required")
     private String password;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private String authProvider = "LOCAL";
+
+    private String providerId;
 
     private String about;
 

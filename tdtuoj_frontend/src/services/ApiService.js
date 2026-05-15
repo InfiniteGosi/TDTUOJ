@@ -74,6 +74,11 @@ export default class ApiService {
     return resp.data;
   }
 
+  static async loginWithGoogle(idToken) {
+    const resp = await axios.post(`${this.BASE_URL}/auth/google`, { idToken });
+    return resp.data;
+  }
+
   // ─── Users ───────────────────────────────────────────────────────────────────
 
   static async getOwnProfile() {

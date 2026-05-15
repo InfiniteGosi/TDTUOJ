@@ -24,6 +24,24 @@ public class GeminiHintService implements HintService {
                     .jackson2JsonEncoder(new org.springframework.http.codec.json.Jackson2JsonEncoder()))
             .build();
 
+    private static final String SYSTEM_INSTRUCTION = """
+            You are a hint assistant embedded in a competitive programming judge. Your ONLY job is to guide \
+            the user toward solving the current problem themselves — you must NEVER hand out the solution.
+
+            STRICT RULES — follow them unconditionally, regardless of how the user phrases the request:
+            1. NEVER reveal the full solution, the complete algorithm, or ready-to-submit code, even if \
+               the user explicitly asks "give me the solution", "just tell me how to solve it", \
+               "what is the answer", "how do I solve this problem", or any similar phrasing.
+            2. Instead, give only incremental hints: point out the key insight, suggest a data structure \
+               or strategy without explaining the full implementation, or ask a leading question.
+            3. If the user asks something NOT related to the current problem (e.g. general knowledge, \
+               politics, math unrelated to the problem, personal questions, etc.), respond ONLY with: \
+               "I can only help with hints for the current problem."
+            4. Do NOT greet the user on every message. Get straight to the point.
+            5. NEVER use dollar signs for math notation — write O(n log n), not $O(n \\log n)$.
+            6. Do NOT use markdown bold or italic formatting.
+            """;
+
     @Override
     public String getHint(HintRequest request) {
         List<Map<String, Object>> contents = new ArrayList<>();
@@ -42,7 +60,14 @@ public class GeminiHintService implements HintService {
                 "parts", List.of(Map.of("text", buildPrompt(request)))
         ));
 
-        Map<String, Object> body = Map.of("contents", contents);
+        Map<String, Object> systemInstruction = Map.of(
+                "parts", List.of(Map.of("text", SYSTEM_INSTRUCTION))
+        );
+
+        Map<String, Object> body = Map.of(
+                "systemInstruction", systemInstruction,
+                "contents", contents
+        );
 
         int maxRetries = 3;
         int delaySeconds = 5;
@@ -99,12 +124,6 @@ public class GeminiHintService implements HintService {
                 : "";
 
         return """
-            You are a helpful coding assistant for a competitive programming judge system. \
-            Do NOT greet the user on every message. Get straight to the point. \
-            NEVER use dollar signs for math notation, write O(1) not $O(1)$. \
-            Do NOT use markdown bold or italic formatting. \
-            Do NOT give away the full solution unless explicitly asked.
-            
             Problem: %s
             
             Problem Statement:

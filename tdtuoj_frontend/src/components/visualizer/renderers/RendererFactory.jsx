@@ -1,6 +1,6 @@
 // src/components/visualizer/renderers/RendererFactory.jsx
 import ArrayRenderer from "./ArrayRenderer";
-import TreeRenderer from "./TreeRendererer";
+import TreeRenderer from "./TreeRenderer";
 import GraphRenderer from "./GraphRenderer";
 import LinkedListRenderer from "./LinkedListRenderer";
 import StackRenderer from "./StackRenderer";

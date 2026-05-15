@@ -11,6 +11,7 @@ import com.oj.TDTUOJ.userStatistics.entity.UserStatistics;
 import com.oj.TDTUOJ.userStatistics.repository.UserStatisticsRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +35,15 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
      */
     private UserStatistics getOrCreate(Long userId) {
         return statisticsRepository.findByUserId(userId)
-                .orElseGet(() -> backfillFromSubmissions(userId));
+                .orElseGet(() -> {
+                    try {
+                        return backfillFromSubmissions(userId);
+                    } catch (DataIntegrityViolationException e) {
+                        // Concurrent request already inserted — just fetch
+                        return statisticsRepository.findByUserId(userId)
+                                .orElseThrow(() -> new RuntimeException("UserStatistics missing after concurrent insert", e));
+                    }
+                });
     }
 
     private UserStatistics backfillFromSubmissions(Long userId) {

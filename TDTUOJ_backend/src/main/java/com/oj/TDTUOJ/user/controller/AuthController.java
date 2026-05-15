@@ -1,6 +1,7 @@
 package com.oj.TDTUOJ.user.controller;
 
 import com.oj.TDTUOJ.common.response.Response;
+import com.oj.TDTUOJ.user.dto.GoogleAuthRequest;
 import com.oj.TDTUOJ.user.dto.LoginRequest;
 import com.oj.TDTUOJ.user.dto.LoginResponse;
 import com.oj.TDTUOJ.user.dto.RegistrationRequest;
@@ -27,5 +28,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<Response<LoginResponse>> login(@RequestBody @Valid LoginRequest loginRequest) {
         return ResponseEntity.ok(authService.login(loginRequest));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<Response<LoginResponse>> loginWithGoogle(@RequestBody @Valid GoogleAuthRequest googleAuthRequest) {
+        return ResponseEntity.ok(authService.loginWithGoogle(googleAuthRequest));
     }
 }
