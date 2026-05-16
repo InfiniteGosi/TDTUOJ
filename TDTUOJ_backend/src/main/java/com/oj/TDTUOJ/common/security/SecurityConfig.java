@@ -2,7 +2,9 @@ package com.oj.TDTUOJ.common.security;
 
 import com.oj.TDTUOJ.common.exceptions.CustomAccessDenialHandler;
 import com.oj.TDTUOJ.common.exceptions.CustomAuthenticationEntryPoint;
+import com.oj.TDTUOJ.common.ratelimit.RateLimitFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,13 +26,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    // Custom JWT authentication filter
     private final AuthFilter authFilter;
-
-    // Custom handler for when a user is authenticated but lacks permission (403 Forbidden)
+    private final RateLimitFilter rateLimitFilter;
     private final CustomAccessDenialHandler customAccessDenialHandler;
-
-    // Custom handler for when authentication fails (401 Unauthorized)
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     /**
@@ -70,11 +68,19 @@ public class SecurityConfig {
                 // Configure session management → stateless (no sessions stored on server)
                 .sessionManagement(man -> man.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // Add custom JWT filter before Spring's UsernamePasswordAuthenticationFilter
-                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(rateLimitFilter, AuthFilter.class);
 
-        // Build and return the security filter chain
         return http.build();
+    }
+
+    // Prevent Spring Boot from auto-registering RateLimitFilter as a plain servlet filter
+    // (it's already registered inside the Spring Security filter chain above)
+    @Bean
+    public FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(RateLimitFilter filter) {
+        FilterRegistrationBean<RateLimitFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     /**

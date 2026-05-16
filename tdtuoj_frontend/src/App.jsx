@@ -34,12 +34,25 @@ import LabProblemPage from "./components/organizations/LabProblemPage";
 import AdminOrganizationPage from "./components/admin/AdminOrganizationPage";
 import MyProblemsPage from "./components/problems/MyProblemsPage";
 import MyProblemFormPage from "./components/problems/MyProblemFormPage";
-import { ToastProvider } from "./components/common/ToastMessage";
+import { ToastProvider, useToast } from "./components/common/ToastMessage";
+import { useEffect } from "react";
+
+function RateLimitEventHandler() {
+  const { showMessage } = useToast();
+  useEffect(() => {
+    const handler = (e) =>
+      showMessage(`Too many requests. Retry in ${e.detail.seconds}s.`, "warning");
+    window.addEventListener("api:rate-limited", handler);
+    return () => window.removeEventListener("api:rate-limited", handler);
+  }, [showMessage]);
+  return null;
+}
 
 function App() {
   return (
     <ChakraProvider value={defaultSystem}>
       <ToastProvider>
+        <RateLimitEventHandler />
         <BrowserRouter>
           <div className="App">
             <NavBar />

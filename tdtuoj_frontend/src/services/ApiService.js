@@ -1,5 +1,20 @@
 import axios from "axios";
 
+// Global 429 interceptor — dispatches a browser event so any React component can react
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 429) {
+      const retryAfter = parseInt(error.response.headers["retry-after"] ?? "60", 10);
+      const tier = error.response.headers["x-ratelimit-tier"] ?? "unknown";
+      window.dispatchEvent(
+        new CustomEvent("api:rate-limited", { detail: { seconds: retryAfter, tier } })
+      );
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default class ApiService {
   static BASE_URL = "http://localhost:8090/api";
   static JUDGE0_BASE_URL = "http://localhost:2358";

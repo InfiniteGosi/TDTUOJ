@@ -2,6 +2,7 @@ package com.oj.TDTUOJ.user.service;
 
 import com.oj.TDTUOJ.common.exceptions.BadRequestException;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
+import com.oj.TDTUOJ.common.exceptions.UnauthorizedAccessException;
 import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.role.entity.Role;
 import com.oj.TDTUOJ.role.repository.RoleRepository;
@@ -92,16 +93,16 @@ public class AuthServiceImpl implements AuthService {
     public Response<LoginResponse> login(LoginRequest loginRequest) {
         // Step 1: Find user by email or fail
         User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new NotFoundException("Email not found"));
+                .orElseThrow(() -> new UnauthorizedAccessException("Invalid email or password"));
 
         // Step 2: Ensure account is active
         if (!user.getIsActive()) {
-            throw new NotFoundException("User not active, please contact customer support");
+            throw new BadRequestException("User not active, please contact customer support");
         }
 
         // Step 3: Verify password
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new BadRequestException("Wrong password");
+            throw new UnauthorizedAccessException("Invalid email or password");
         }
 
         // Step 4: Generate a JWT token
@@ -182,7 +183,7 @@ public class AuthServiceImpl implements AuthService {
         } else {
             // Existing user — check active status first
             if (!user.getIsActive()) {
-                throw new NotFoundException("User not active, please contact customer support");
+                throw new BadRequestException("User not active, please contact customer support");
             }
             // Auto-link if previously LOCAL
             if ("LOCAL".equals(user.getAuthProvider())) {

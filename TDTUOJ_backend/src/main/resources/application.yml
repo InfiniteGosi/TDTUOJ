@@ -55,3 +55,67 @@ management:
     web:
       exposure:
         include: '*'
+
+ratelimit:
+  enabled: true
+  admin-bypass: false
+  hash-ip: false
+  tiers:
+    default:
+      capacity: 60
+      window-seconds: 60
+      authenticated-capacity: 120
+    read-heavy:
+      capacity: 120
+      window-seconds: 60
+      authenticated-capacity: 240
+      paths:
+        - method: GET
+          pattern: "/api/problems/**"
+        - method: GET
+          pattern: "/api/contests/**"
+        - method: GET
+          pattern: "/api/users/**"
+        - method: GET
+          pattern: "/api/organizations/**"
+    auth:
+      capacity: 5
+      window-seconds: 60
+      authenticated-capacity: 10
+      paths:
+        - method: POST
+          pattern: "/api/auth/login"
+        - method: POST
+          pattern: "/api/auth/register"
+        - method: POST
+          pattern: "/api/auth/google"
+    submission:
+      capacity: 3
+      window-seconds: 60
+      authenticated-capacity: 10
+      paths:
+        - method: POST
+          pattern: "/api/submissions/**"
+    visualizer:
+      capacity: 5
+      window-seconds: 60
+      authenticated-capacity: 20
+      paths:
+        - method: POST
+          pattern: "/api/visualize"
+    ai:
+      capacity: 0
+      window-seconds: 60
+      authenticated-capacity: 10
+      paths:
+        - method: POST
+          pattern: "/api/hints"
+        - method: POST
+          pattern: "/api/problem-ai/**"
+    admin:
+      capacity: 0
+      window-seconds: 60
+      authenticated-capacity: 300
+      paths:
+        - method: "*"
+          pattern: "/api/admin/**"
