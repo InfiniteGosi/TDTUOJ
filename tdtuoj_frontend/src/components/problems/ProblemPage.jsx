@@ -1,28 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  Badge,
-  HStack,
-  VStack,
-  Spinner,
-  Input,
-  Button,
-  Wrap,
-  WrapItem,
-} from "@chakra-ui/react";
-import { Table } from "@chakra-ui/react";
-import {
   Book,
   Trophy,
   Search,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   SlidersHorizontal,
   X,
   ChevronDown,
@@ -33,40 +14,21 @@ import {
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
+import DifficultyChip from "../common/DifficultyChip";
+import TagPill from "../common/TagPill";
+import SuggestiveSearch from "../common/SuggestiveSearch";
+import FilterPills from "../common/FilterPills";
+import SortBar from "../common/SortBar";
+import Pagination from "../common/Pagination";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const DIFFICULTIES = ["EASY", "MEDIUM", "HARD"];
 
 const DIFF_STYLE = {
-  EASY: { label: "Easy", colorScheme: "green", hex: "#22c55e", bg: "#f0fdf4" },
-  MEDIUM: {
-    label: "Medium",
-    colorScheme: "orange",
-    hex: "#f97316",
-    bg: "#fff7ed",
-  },
-  HARD: { label: "Hard", colorScheme: "red", hex: "#ef4444", bg: "#fef2f2" },
-};
-
-// ─── Difficulty badge ─────────────────────────────────────────────────────────
-
-const DiffBadge = ({ difficulty }) => {
-  const s = DIFF_STYLE[difficulty];
-  if (!s) return null;
-  return (
-    <Badge
-      colorScheme={s.colorScheme}
-      variant="subtle"
-      fontSize="xs"
-      px={2}
-      py="2px"
-      borderRadius="full"
-      fontWeight="600"
-    >
-      {s.label}
-    </Badge>
-  );
+  EASY:   { label: "Easy",   hex: "#00E676", bg: "rgba(0,230,118,0.08)" },
+  MEDIUM: { label: "Medium", hex: "#FFB800", bg: "rgba(255,184,0,0.08)" },
+  HARD:   { label: "Hard",   hex: "#FF3B3B", bg: "rgba(255,59,59,0.08)" },
 };
 
 // ─── Filter panel ─────────────────────────────────────────────────────────────
@@ -100,167 +62,146 @@ const FilterPanel = ({
   );
 
   return (
-    <Box
-      bg="white"
-      borderRadius="xl"
-      border="1px solid"
-      borderColor="gray.200"
-      boxShadow="sm"
-      overflow="visible"
+    <div
+      style={{
+        background: "var(--bg-raised)",
+        borderRadius: "var(--radius-lg)",
+        border: "1px solid var(--border-subtle)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+        overflow: "visible",
+      }}
     >
       {/* Panel header */}
-      <HStack
-        px={5}
-        py={3}
-        borderBottomWidth="1px"
-        borderColor="gray.100"
-        justify="space-between"
+      <div
+        className="flex items-center justify-between"
+        style={{
+          padding: "8px 16px",
+          borderBottom: "1px solid var(--border-subtle)",
+        }}
       >
-        <HStack gap={2}>
-          <SlidersHorizontal size={14} color="#9CA3AF" />
-          <Text
-            fontSize="xs"
-            fontWeight="700"
-            color="gray.500"
-            letterSpacing="0.08em"
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal size={14} color="var(--text-muted)" />
+          <span
+            className="text-xs font-bold uppercase tracking-wider"
+            style={{ color: "var(--text-muted)" }}
           >
             FILTERS
-          </Text>
+          </span>
           {hasActiveFilters && (
-            <Badge
-              colorScheme="purple"
-              borderRadius="full"
-              fontSize="10px"
-              px={2}
-              py="1px"
+            <span
+              className="badge"
+              style={{
+                background: "var(--primary-subtle)",
+                color: "var(--primary)",
+                borderRadius: "var(--radius-pill)",
+                fontSize: "10px",
+                padding: "1px 8px",
+              }}
             >
               {(selectedDifficulty ? 1 : 0) + selectedTagNames.length} active
-            </Badge>
+            </span>
           )}
-        </HStack>
+        </div>
         {hasActiveFilters && (
-          <Button
-            size="xs"
-            variant="ghost"
-            color="gray.400"
-            _hover={{ color: "red.500", bg: "red.50" }}
+          <button
+            className="btn btn-ghost btn-sm"
             onClick={onReset}
-            gap={1}
+            style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--text-muted)" }}
           >
             <RotateCcw size={11} />
             Reset
-          </Button>
+          </button>
         )}
-      </HStack>
+      </div>
 
       {/* Filter rows */}
-      <VStack align="stretch" gap={0} divideColor="gray.100">
+      <div>
         {/* ── Difficulty row ── */}
-        <HStack
-          px={5}
-          py={4}
-          gap={6}
-          align="center"
-          borderBottomWidth="1px"
-          borderColor="gray.100"
+        <div
+          className="flex items-center"
+          style={{
+            padding: "10px 16px",
+            gap: 12,
+            borderBottom: "1px solid var(--border-subtle)",
+          }}
         >
-          <HStack gap={2} minW="90px">
-            <Text fontSize="sm" fontWeight="500" color="gray.500">
+          <div className="flex items-center" style={{ minWidth: 70, flexShrink: 0 }}>
+            <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
               Difficulty
-            </Text>
-          </HStack>
-          <HStack gap={2}>
-            {DIFFICULTIES.map((d) => {
-              const s = DIFF_STYLE[d];
-              const active = selectedDifficulty === d;
-              return (
-                <Box
-                  key={d}
-                  as="button"
-                  px={3}
-                  py="5px"
-                  borderRadius="full"
-                  fontSize="xs"
-                  fontWeight="600"
-                  border="1.5px solid"
-                  borderColor={active ? s.hex : "gray.200"}
-                  bg={active ? s.bg : "white"}
-                  color={active ? s.hex : "gray.500"}
-                  cursor="pointer"
-                  transition="all 0.15s"
-                  _hover={{ borderColor: s.hex, color: s.hex, bg: s.bg }}
-                  onClick={() => onDifficultyChange(active ? "" : d)}
-                  style={{ outline: "none" }}
-                >
-                  {s.label}
-                  {active && (
-                    <Box as="span" ml={1} fontWeight="400">
-                      ×
-                    </Box>
-                  )}
-                </Box>
-              );
-            })}
-          </HStack>
-        </HStack>
+            </span>
+          </div>
+          <FilterPills
+            value={selectedDifficulty}
+            onChange={(v) => onDifficultyChange(v)}
+            clearable
+            options={[
+              { value: "EASY",   label: "Easy",   accent: "var(--diff-easy)" },
+              { value: "MEDIUM", label: "Medium", accent: "var(--diff-medium)" },
+              { value: "HARD",   label: "Hard",   accent: "var(--diff-hard)" },
+            ]}
+          />
+        </div>
 
         {/* ── Topics row ── */}
-        <HStack px={5} py={4} gap={6} align="flex-start">
-          <HStack gap={2} minW="90px" mt="2px">
-            <Text fontSize="sm" fontWeight="500" color="gray.500">
+        <div
+          className="flex"
+          style={{ padding: "10px 16px", gap: 12, alignItems: "flex-start" }}
+        >
+          <div className="flex items-center" style={{ minWidth: 70, flexShrink: 0, marginTop: 2 }}>
+            <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
               Topics
-            </Text>
-          </HStack>
+            </span>
+          </div>
 
-          <Box flex={1}>
+          <div style={{ flex: 1 }}>
             {/* Selected topic chips */}
             {selectedTagNames.length > 0 && (
-              <Wrap gap={2} mb={3}>
+              <div className="flex flex-wrap gap-2" style={{ marginBottom: 12 }}>
                 {selectedTagNames.map((name) => (
-                  <WrapItem key={name}>
-                    <HStack
-                      gap={1}
-                      px={2}
-                      py="3px"
-                      borderRadius="full"
-                      bg="purple.100"
-                      color="purple.700"
-                      fontSize="xs"
-                      fontWeight="500"
-                      cursor="pointer"
-                      userSelect="none"
-                      onClick={() => toggleTag(name)}
-                      _hover={{ bg: "purple.200" }}
-                    >
-                      <Text>{name}</Text>
-                      <X size={10} />
-                    </HStack>
-                  </WrapItem>
+                  <button
+                    key={name}
+                    onClick={() => toggleTag(name)}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      padding: "3px 8px",
+                      borderRadius: "var(--radius-pill)",
+                      background: "var(--primary-subtle)",
+                      color: "var(--primary)",
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      border: "1px solid var(--border-accent)",
+                      outline: "none",
+                    }}
+                  >
+                    <span>{name}</span>
+                    <X size={10} />
+                  </button>
                 ))}
-              </Wrap>
+              </div>
             )}
 
             {/* Dropdown trigger */}
-            <Box position="relative" display="inline-block" ref={dropdownRef}>
-              <Box
-                as="button"
-                display="inline-flex"
-                alignItems="center"
-                gap={1}
-                px={3}
-                py="5px"
-                borderRadius="full"
-                border="1.5px dashed"
-                borderColor={tagDropdownOpen ? "purple.400" : "gray.300"}
-                bg="white"
-                color={tagDropdownOpen ? "purple.600" : "gray.500"}
-                fontSize="xs"
-                fontWeight="500"
-                cursor="pointer"
-                transition="all 0.15s"
-                _hover={{ borderColor: "purple.400", color: "purple.600" }}
+            <div style={{ position: "relative", display: "inline-block" }} ref={dropdownRef}>
+              <button
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "5px 12px",
+                  borderRadius: "var(--radius-pill)",
+                  border: `1.5px dashed ${tagDropdownOpen ? "var(--primary)" : "var(--border-default)"}`,
+                  background: "transparent",
+                  color: tagDropdownOpen ? "var(--primary)" : "var(--text-muted)",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  outline: "none",
+                }}
                 onClick={() => setTagDropdownOpen((v) => !v)}
-                style={{ outline: "none" }}
               >
                 + Add topic
                 <ChevronDown
@@ -270,72 +211,78 @@ const FilterPanel = ({
                     transition: "transform 0.15s",
                   }}
                 />
-              </Box>
+              </button>
 
               {tagDropdownOpen && (
-                <Box
-                  position="absolute"
-                  top="calc(100% + 6px)"
-                  left={0}
-                  zIndex={50}
-                  bg="white"
-                  border="1px solid"
-                  borderColor="gray.200"
-                  borderRadius="lg"
-                  boxShadow="xl"
-                  w="230px"
-                  maxH="260px"
-                  overflowY="auto"
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 6px)",
+                    left: 0,
+                    zIndex: 50,
+                    background: "var(--bg-raised)",
+                    border: "1px solid var(--border-subtle)",
+                    borderRadius: "var(--radius-lg)",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                    width: 230,
+                    maxHeight: 260,
+                    overflowY: "auto",
+                  }}
                 >
-                  <Box
-                    p={2}
-                    borderBottomWidth="1px"
-                    borderColor="gray.100"
-                    position="sticky"
-                    top={0}
-                    bg="white"
+                  <div
+                    style={{
+                      padding: 8,
+                      borderBottom: "1px solid var(--border-subtle)",
+                      position: "sticky",
+                      top: 0,
+                      background: "var(--bg-raised)",
+                    }}
                   >
-                    <Input
-                      size="sm"
+                    <input
+                      className="input"
+                      style={{ fontSize: 13, padding: "4px 8px" }}
                       placeholder="Search topics..."
                       value={tagSearch}
                       onChange={(e) => setTagSearch(e.target.value)}
                       autoFocus
                     />
-                  </Box>
+                  </div>
                   {filteredTags.length === 0 ? (
-                    <Box px={4} py={3}>
-                      <Text fontSize="xs" color="gray.400">
+                    <div style={{ padding: "12px 16px" }}>
+                      <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                         No topics found
-                      </Text>
-                    </Box>
+                      </span>
+                    </div>
                   ) : (
                     filteredTags.map((tag) => (
-                      <Box
+                      <div
                         key={tag.id}
-                        px={3}
-                        py={2}
-                        cursor="pointer"
-                        _hover={{ bg: "purple.50" }}
+                        style={{
+                          padding: "8px 12px",
+                          cursor: "pointer",
+                          fontSize: 13,
+                          color: "var(--text-secondary)",
+                          transition: "background 0.1s",
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                         onClick={() => {
                           toggleTag(tag.name);
                           setTagSearch("");
                           setTagDropdownOpen(false);
                         }}
                       >
-                        <Text fontSize="sm" color="gray.700">
-                          {tag.name}
-                        </Text>
-                      </Box>
+                        {tag.name}
+                      </div>
                     ))
                   )}
-                </Box>
+                </div>
               )}
-            </Box>
-          </Box>
-        </HStack>
-      </VStack>
-    </Box>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -348,7 +295,8 @@ const ProblemPage = () => {
   const [problems, setProblems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+  const filterWrapperRef = useRef(null);
   const [favoritesMode, setFavoritesMode] = useState(false);
   const [favorites, setFavorites] = useState([]);
   const [favLoading, setFavLoading] = useState(false);
@@ -452,6 +400,15 @@ const ProblemPage = () => {
     return () => clearTimeout(delay);
   }, [searchQuery]);
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (filterWrapperRef.current && !filterWrapperRef.current.contains(e.target))
+        setShowFilters(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const toggleTag = (name) => {
     setSelectedTagNames((prev) =>
       prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
@@ -473,678 +430,514 @@ const ProblemPage = () => {
   const handlePageChange = (o) => setPagination((p) => ({ ...p, offset: o }));
   const handleLimitChange = (l) =>
     setPagination((p) => ({ ...p, limit: parseInt(l), offset: 0 }));
-  const goToFirstPage = () => handlePageChange(0);
-  const goToLastPage = () =>
-    handlePageChange((pagination.totalPages - 1) * pagination.limit);
-  const goToPreviousPage = () =>
-    handlePageChange(Math.max(0, pagination.offset - pagination.limit));
-  const goToNextPage = () =>
-    handlePageChange(
-      Math.min(
-        (pagination.totalPages - 1) * pagination.limit,
-        pagination.offset + pagination.limit,
-      ),
-    );
-  const canGoPrevious = pagination.currentPage > 0;
-  const canGoNext = pagination.currentPage < pagination.totalPages - 1;
 
   if (loading && problems.length === 0) {
     return (
-      <Box minH="100vh" bg="gray.50" py={8}>
-        <Container maxW="container.xl">
-          <VStack gap={4} py={20}>
-            <Spinner size="xl" color="purple.500" thickness="4px" />
-            <Text color="gray.600">Loading problems...</Text>
-          </VStack>
-        </Container>
-      </Box>
+      <div className="page-container" style={{ minHeight: "100vh", paddingTop: 32 }}>
+        <div className="flex flex-col items-center justify-center" style={{ paddingTop: 80, paddingBottom: 80, gap: 16 }}>
+          <div className="spinner spinner-lg" />
+          <span style={{ color: "var(--text-muted)", fontSize: 14 }}>Loading problems...</span>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Container maxW="container.xl">
-        <VStack align="stretch" gap={5}>
-          {/* Header */}
-          <HStack justify="space-between">
-            <Heading size="2xl" color="gray.800">
-              Problems
-            </Heading>
-            <HStack gap={3}>
-              {/* Favorites toggle */}
-              {ApiService.isAuthenticated() && (
-                <Box
-                  as="button"
-                  display="flex"
-                  alignItems="center"
-                  gap={2}
-                  px={4}
-                  py={2}
-                  borderRadius="lg"
-                  boxShadow="sm"
-                  border="1px solid"
-                  bg={favoritesMode ? "yellow.400" : "white"}
-                  borderColor={favoritesMode ? "yellow.400" : "gray.200"}
-                  color={favoritesMode ? "white" : "gray.600"}
-                  cursor="pointer"
-                  transition="all 0.15s"
-                  _hover={{
-                    borderColor: "yellow.400",
-                    color: favoritesMode ? "white" : "yellow.500",
-                  }}
-                  onClick={toggleFavoritesMode}
-                  style={{ outline: "none", whiteSpace: "nowrap" }}
-                >
-                  <Star size={15} fill={favoritesMode ? "white" : "none"} />
-                  <Text fontSize="sm" fontWeight="500">
-                    {favoritesMode ? "All Problems" : "Favorites"}
-                    {!favoritesMode && favorites.length > 0 && (
-                      <Box
-                        as="span"
-                        ml={2}
-                        bg="yellow.400"
-                        color="white"
-                        borderRadius="full"
-                        px={2}
-                        py="1px"
-                        fontSize="xs"
-                        fontWeight="bold"
-                      >
-                        {favorites.length}
-                      </Box>
-                    )}
-                  </Text>
-                </Box>
-              )}
-              <Badge
-                colorScheme="purple"
-                fontSize="md"
-                px={3}
-                py={1}
-                borderRadius="full"
-              >
-                {favoritesMode ? favorites.length : pagination.totalElements}{" "}
-                {(favoritesMode ? favorites.length : pagination.totalElements) === 1 ? "problem" : "problems"}
-              </Badge>
-            </HStack>
-          </HStack>
+    <div className="page-container" style={{ minHeight: "100vh", paddingTop: 32, paddingBottom: 32 }}>
+      <div className="flex flex-col gap-5">
 
-          {/* Search + Sort + Filters toggle */}
-          <HStack gap={3} align="stretch">
-            {/* Search */}
-            <Box
-              flex={1}
-              bg="white"
-              px={4}
-              py={3}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px solid"
-              borderColor="gray.200"
-            >
-              <Box position="relative">
-                <Box
-                  position="absolute"
-                  left={2}
-                  top="50%"
-                  transform="translateY(-50%)"
-                >
-                  <Search size={18} color="#9CA3AF" />
-                </Box>
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by problem title..."
-                  pl={8}
-                  border="none"
-                  _focus={{ boxShadow: "none" }}
-                  fontSize="sm"
-                />
-              </Box>
-            </Box>
-
-            {/* Sort */}
-            <HStack
-              bg="white"
-              px={4}
-              py={3}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px solid"
-              borderColor="gray.200"
-              gap={2}
-            >
-              <Text fontSize="sm" color="gray.500" whiteSpace="nowrap">
-                Sort by
-              </Text>
-              <select
-                value={sortField}
-                onChange={(e) => setSortField(e.target.value)}
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+            Problems
+          </h2>
+          <div className="flex items-center gap-3">
+            {/* Favorites toggle */}
+            {ApiService.isAuthenticated() && (
+              <button
+                onClick={toggleFavoritesMode}
                 style={{
-                  padding: "4px 8px",
-                  borderRadius: "6px",
-                  border: "1px solid #E2E8F0",
-                  fontSize: "13px",
-                  background: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "8px 16px",
+                  borderRadius: "var(--radius-md)",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                  border: `1px solid ${favoritesMode ? "#F6C90E" : "var(--border-subtle)"}`,
+                  background: favoritesMode ? "#F6C90E" : "var(--bg-raised)",
+                  color: favoritesMode ? "#000" : "var(--text-secondary)",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  outline: "none",
+                  whiteSpace: "nowrap",
+                  fontSize: 14,
+                  fontWeight: 500,
                 }}
               >
-                <option value="id">ID</option>
-                <option value="title">Title</option>
-                <option value="point">Points</option>
-              </select>
-              <select
-                value={direction}
-                onChange={(e) => setDirection(e.target.value)}
-                style={{
-                  padding: "4px 8px",
-                  borderRadius: "6px",
-                  border: "1px solid #E2E8F0",
-                  fontSize: "13px",
-                  background: "white",
-                }}
-              >
-                <option value="asc">↑ Asc</option>
-                <option value="desc">↓ Desc</option>
-              </select>
-            </HStack>
-
-            {/* Filter toggle */}
-            <Box
-              as="button"
-              display="flex"
-              alignItems="center"
-              gap={2}
-              px={4}
-              bg={showFilters ? "purple.600" : "white"}
-              color={showFilters ? "white" : "gray.600"}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px solid"
-              borderColor={showFilters ? "purple.600" : "gray.200"}
-              cursor="pointer"
-              position="relative"
-              transition="all 0.15s"
-              _hover={{
-                borderColor: "purple.500",
-                color: showFilters ? "white" : "purple.600",
+                <Star size={15} fill={favoritesMode ? "#000" : "none"} />
+                <span>
+                  {favoritesMode ? "All Problems" : "Favorites"}
+                  {!favoritesMode && favorites.length > 0 && (
+                    <span
+                      style={{
+                        marginLeft: 8,
+                        background: "#F6C90E",
+                        color: "#000",
+                        borderRadius: "var(--radius-pill)",
+                        padding: "1px 8px",
+                        fontSize: 12,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {favorites.length}
+                    </span>
+                  )}
+                </span>
+              </button>
+            )}
+            <span
+              className="badge"
+              style={{
+                background: "var(--cyan-subtle)",
+                color: "var(--cyan)",
+                borderRadius: "var(--radius-pill)",
+                fontSize: 14,
+                padding: "4px 12px",
               }}
-              onClick={() => setShowFilters((v) => !v)}
-              style={{ outline: "none", whiteSpace: "nowrap" }}
             >
-              <SlidersHorizontal size={15} />
-              <Text fontSize="sm" fontWeight="500">
-                Filters
-              </Text>
+              {favoritesMode ? favorites.length : pagination.totalElements}{" "}
+              {(favoritesMode ? favorites.length : pagination.totalElements) === 1 ? "problem" : "problems"}
+            </span>
+          </div>
+        </div>
+
+        {/* Search + Sort + Filters toggle */}
+        <div className="flex items-center gap-3">
+          {/* Search */}
+          <SuggestiveSearch
+            value={searchQuery}
+            onChange={(val) => setSearchQuery(val)}
+            suggestions={[
+              "Search by problem title...",
+              "Try 'Two Sum'",
+              "Find 'Binary Search' problems",
+              "Explore 'Graph' algorithms",
+              "Look up 'Dynamic Programming'",
+            ]}
+            style={{ flex: 1, minWidth: 180, maxWidth: 320 }}
+          />
+
+          {/* Sort */}
+          <SortBar
+            field={sortField}
+            direction={direction}
+            onFieldChange={setSortField}
+            onDirectionChange={setDirection}
+            fields={[
+              { value: "id",    label: "ID" },
+              { value: "title", label: "Title" },
+              { value: "point", label: "Points" },
+            ]}
+          />
+
+          {/* Filter toggle + dropdown */}
+          <div ref={filterWrapperRef} style={{ position: "relative" }}>
+            <button
+              onClick={() => setShowFilters((v) => !v)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                padding: "6px 8px",
+                background: showFilters ? "var(--primary)" : "var(--bg-raised)",
+                color: showFilters ? "var(--text-inverse)" : "var(--text-secondary)",
+                borderRadius: "var(--radius-md)",
+                border: `1px solid ${showFilters ? "var(--primary)" : "var(--border-default)"}`,
+                cursor: "pointer",
+                transition: "all var(--transition-fast)",
+                outline: "none",
+                fontFamily: "var(--font-body)",
+              }}
+              title="Filters"
+            >
+              <SlidersHorizontal size={16} />
               {activeFilterCount > 0 && (
-                <Box
-                  bg={showFilters ? "white" : "purple.500"}
-                  color={showFilters ? "purple.600" : "white"}
-                  borderRadius="full"
-                  w="18px"
-                  h="18px"
-                  fontSize="10px"
-                  fontWeight="bold"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  ml={1}
+                <span
+                  style={{
+                    background: showFilters ? "var(--text-inverse)" : "var(--primary)",
+                    color: showFilters ? "var(--primary)" : "var(--text-inverse)",
+                    borderRadius: "var(--radius-pill)",
+                    width: 16,
+                    height: 16,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginLeft: 2,
+                  }}
                 >
                   {activeFilterCount}
-                </Box>
+                </span>
               )}
-            </Box>
-          </HStack>
+            </button>
 
-          {/* Filter panel — hidden in favorites mode */}
-          {showFilters && !favoritesMode && (
-            <FilterPanel
-              availableTags={availableTags}
-              selectedDifficulty={selectedDifficulty}
-              onDifficultyChange={handleDifficultyChange}
-              selectedTagNames={selectedTagNames}
-              toggleTag={toggleTag}
-              onReset={resetFilters}
-              hasActiveFilters={hasActiveFilters}
-            />
-          )}
+            {showFilters && !favoritesMode && (
+              <div style={{
+                position: "absolute",
+                top: "calc(100% + 6px)",
+                right: 0,
+                zIndex: 200,
+                animation: "fadeUp 0.18s ease both",
+                minWidth: 380,
+              }}>
+                <FilterPanel
+                  availableTags={availableTags}
+                  selectedDifficulty={selectedDifficulty}
+                  onDifficultyChange={handleDifficultyChange}
+                  selectedTagNames={selectedTagNames}
+                  toggleTag={toggleTag}
+                  onReset={resetFilters}
+                  hasActiveFilters={hasActiveFilters}
+                />
+              </div>
+            )}
+          </div>
+        </div>
 
-          {/* ── Favorites grid ── */}
-          {favoritesMode ? (
-            <Box
-              bg="white"
-              borderRadius="xl"
-              boxShadow="md"
-              overflow="hidden"
-              position="relative"
-            >
-              {favLoading ? (
-                <Box py={20} display="flex" justifyContent="center">
-                  <Spinner size="lg" color="yellow.400" thickness="3px" />
-                </Box>
-              ) : favorites.length === 0 ? (
-                <Box py={16} textAlign="center">
-                  <VStack gap={3}>
-                    <Star size={44} color="#CBD5E0" />
-                    <Text fontSize="lg" color="gray.500" fontWeight="medium">
-                      No favorites yet
-                    </Text>
-                    <Text fontSize="sm" color="gray.400">
-                      Open a problem and click Save to bookmark it
-                    </Text>
-                  </VStack>
-                </Box>
-              ) : (
-                <Table.Root variant="line" size="md">
-                  <Table.Header bg="yellow.50">
-                    <Table.Row>
-                      <Table.ColumnHeader textAlign="center" w="7%">
-                        <Text fontWeight="bold" color="yellow.700" fontSize="sm">#</Text>
-                      </Table.ColumnHeader>
-                      <Table.ColumnHeader w="30%">
-                        <Text fontWeight="bold" color="yellow.700" fontSize="sm">Problem</Text>
-                      </Table.ColumnHeader>
-                      <Table.ColumnHeader w="12%">
-                        <Text fontWeight="bold" color="yellow.700" fontSize="sm">Difficulty</Text>
-                      </Table.ColumnHeader>
-                      <Table.ColumnHeader w="30%">
-                        <Text fontWeight="bold" color="yellow.700" fontSize="sm">Topics</Text>
-                      </Table.ColumnHeader>
-                      <Table.ColumnHeader textAlign="center" w="12%">
-                        <Text fontWeight="bold" color="yellow.700" fontSize="sm">Points</Text>
-                      </Table.ColumnHeader>
-                      <Table.ColumnHeader textAlign="center" w="9%">
-                        <Text fontWeight="bold" color="yellow.700" fontSize="sm">Status</Text>
-                      </Table.ColumnHeader>
-                    </Table.Row>
-                  </Table.Header>
-                  <Table.Body>
-                    {favorites.map((problem, index) => {
-                      const activeTags = (problem.tags || []).filter((t) => t.isActive !== false);
-                      return (
-                        <Table.Row
-                          key={problem.id}
-                          _hover={{ bg: "yellow.50", cursor: "pointer" }}
-                          transition="background 0.15s"
-                          bg={index % 2 === 0 ? "white" : "gray.50"}
-                          onClick={() => navigate(`/problems/${problem.slug}`)}
-                        >
-                          <Table.Cell textAlign="center">
-                            <Text fontSize="sm" fontWeight="600" color="gray.500">{problem.id}</Text>
-                          </Table.Cell>
-                          <Table.Cell>
-                            <HStack gap={2}>
-                              <Star size={12} color="#F6C90E" fill="#F6C90E" />
-                              <Text fontSize="sm" fontWeight="600" color="gray.800">
-                                {problem.title}
-                              </Text>
-                            </HStack>
-                          </Table.Cell>
-                          <Table.Cell>
-                            <DiffBadge difficulty={problem.problemDifficulty} />
-                          </Table.Cell>
-                          <Table.Cell onClick={(e) => e.stopPropagation()}>
-                            <Wrap gap={1}>
-                              {activeTags.length > 0 ? (
-                                activeTags.map((tag) => (
-                                  <WrapItem key={tag.id}>
-                                    <Badge colorScheme="gray" variant="subtle" fontSize="xs" px={2} py="1px" borderRadius="full">
-                                      {tag.name}
-                                    </Badge>
-                                  </WrapItem>
-                                ))
-                              ) : (
-                                <Text fontSize="xs" color="gray.400" fontStyle="italic">—</Text>
-                              )}
-                            </Wrap>
-                          </Table.Cell>
-                          <Table.Cell textAlign="center">
-                            <HStack justify="center" gap={1}>
-                              <Trophy size={14} color="#805AD5" />
-                              <Text fontSize="sm" fontWeight="700" color="purple.600">{problem.point}</Text>
-                            </HStack>
-                          </Table.Cell>
-                          <Table.Cell textAlign="center">
-                            {problem.solved ? (
-                              <Box display="inline-flex" p={2} borderRadius="md" bg="green.100" color="green.600">
-                                <CheckCircle size={18} />
-                              </Box>
-                            ) : problem.attempted ? (
-                              <Box display="inline-flex" p={2} borderRadius="md" bg="orange.100" color="orange.500">
-                                <Clock size={18} />
-                              </Box>
-                            ) : (
-                              <Box display="inline-flex" p={2} borderRadius="md" bg="purple.100" color="purple.600">
-                                <Book size={18} />
-                              </Box>
-                            )}
-                          </Table.Cell>
-                        </Table.Row>
-                      );
-                    })}
-                  </Table.Body>
-                </Table.Root>
-              )}
-            </Box>
-          ) : (
-            <Box
-              bg="white"
-              borderRadius="xl"
-              boxShadow="md"
-              overflow="hidden"
-              position="relative"
-            >
-            {loading && (
-              <Box
-                position="absolute"
-                inset={0}
-                bg="whiteAlpha.700"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                zIndex={10}
+        {/* ── Favorites table ── */}
+        {favoritesMode ? (
+          <div
+            style={{
+              background: "var(--bg-raised)",
+              borderRadius: "var(--radius-lg)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+              overflow: "hidden",
+              position: "relative",
+            }}
+          >
+            {favLoading ? (
+              <div
+                className="flex justify-center"
+                style={{ padding: "80px 0" }}
               >
-                <Spinner size="lg" color="purple.500" thickness="3px" />
-              </Box>
+                <div className="spinner" />
+              </div>
+            ) : favorites.length === 0 ? (
+              <div style={{ padding: "64px 0", textAlign: "center" }}>
+                <div className="flex flex-col items-center gap-3">
+                  <Star size={44} color="var(--border-default)" />
+                  <span className="text-lg font-medium" style={{ color: "var(--text-muted)" }}>
+                    No favorites yet
+                  </span>
+                  <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                    Open a problem and click Save to bookmark it
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <table className="table" style={{ width: "100%" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "center", width: "7%", fontSize: 13, fontWeight: 700 }}>#</th>
+                    <th style={{ width: "30%", fontSize: 13, fontWeight: 700 }}>Problem</th>
+                    <th style={{ width: "12%", fontSize: 13, fontWeight: 700 }}>Difficulty</th>
+                    <th style={{ width: "30%", fontSize: 13, fontWeight: 700 }}>Topics</th>
+                    <th style={{ textAlign: "center", width: "12%", fontSize: 13, fontWeight: 700 }}>Points</th>
+                    <th style={{ textAlign: "center", width: "9%", fontSize: 13, fontWeight: 700 }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {favorites.map((problem, index) => {
+                    const activeTags = (problem.tags || []).filter((t) => t.isActive !== false);
+                    return (
+                      <tr
+                        key={problem.id}
+                        style={{
+                          background: index % 2 === 0 ? "var(--bg-raised)" : "var(--bg-overlay)",
+                          cursor: "pointer",
+                          transition: "background 0.15s",
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(246,201,14,0.06)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = index % 2 === 0 ? "var(--bg-raised)" : "var(--bg-overlay)"; }}
+                        onClick={() => navigate(`/problems/${problem.slug}`)}
+                      >
+                        <td style={{ textAlign: "center" }}>
+                          <span className="text-sm font-semibold" style={{ color: "var(--text-muted)" }}>{problem.id}</span>
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <Star size={12} color="#F6C90E" fill="#F6C90E" />
+                            <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                              {problem.title}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <DifficultyChip difficulty={problem.problemDifficulty} />
+                        </td>
+                        <td onClick={(e) => e.stopPropagation()}>
+                          <div className="flex flex-wrap gap-1">
+                            {activeTags.length > 0 ? (
+                              activeTags.map((tag) => (
+                                <TagPill key={tag.id} label={tag.name} />
+                              ))
+                            ) : (
+                              <span className="text-xs" style={{ color: "var(--text-muted)", fontStyle: "italic" }}>—</span>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <div className="flex items-center justify-center gap-1">
+                            <Trophy size={14} color="var(--cyan)" />
+                            <span className="text-sm font-bold" style={{ color: "var(--cyan)" }}>{problem.point}</span>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          {problem.solved ? (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                padding: 8,
+                                borderRadius: "var(--radius-md)",
+                                background: "rgba(44,187,93,0.12)",
+                                color: "#2cbb5d",
+                              }}
+                            >
+                              <CheckCircle size={18} />
+                            </span>
+                          ) : problem.attempted ? (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                padding: 8,
+                                borderRadius: "var(--radius-md)",
+                                background: "rgba(249,115,22,0.12)",
+                                color: "#f97316",
+                              }}
+                            >
+                              <Clock size={18} />
+                            </span>
+                          ) : (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                padding: 8,
+                                borderRadius: "var(--radius-md)",
+                                background: "var(--cyan-subtle)",
+                                color: "var(--cyan)",
+                              }}
+                            >
+                              <Book size={18} />
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        ) : (
+          /* ── Problems table ── */
+          <div
+            style={{
+              background: "var(--bg-raised)",
+              borderRadius: "var(--radius-lg)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+              overflow: "hidden",
+              position: "relative",
+            }}
+          >
+            {loading && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "rgba(15,15,15,0.5)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 10,
+                }}
+              >
+                <div className="spinner" />
+              </div>
             )}
 
-            <Table.Root variant="line" size="md">
-              <Table.Header bg="purple.50">
-                <Table.Row>
-                  <Table.ColumnHeader textAlign="center" w="7%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      #
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="30%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Problem
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="12%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Difficulty
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="30%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Topics
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="center" w="12%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Points
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="center" w="9%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Solve
-                    </Text>
-                  </Table.ColumnHeader>
-                </Table.Row>
-              </Table.Header>
+            <table className="table" style={{ width: "100%" }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "center", width: "7%", fontSize: 13, fontWeight: 700 }}>#</th>
+                  <th style={{ width: "30%", fontSize: 13, fontWeight: 700 }}>Problem</th>
+                  <th style={{ width: "12%", fontSize: 13, fontWeight: 700 }}>Difficulty</th>
+                  <th style={{ width: "30%", fontSize: 13, fontWeight: 700 }}>Topics</th>
+                  <th style={{ textAlign: "center", width: "12%", fontSize: 13, fontWeight: 700 }}>Points</th>
+                  <th style={{ textAlign: "center", width: "9%", fontSize: 13, fontWeight: 700 }}>Solve</th>
+                </tr>
+              </thead>
 
-              <Table.Body>
+              <tbody>
                 {problems.length > 0 ? (
                   problems.map((problem, index) => {
                     const activeTags = (problem.tags || []).filter(
                       (t) => t.isActive !== false,
                     );
                     return (
-                      <Table.Row
+                      <tr
                         key={problem.id}
-                        _hover={{ bg: "purple.50", cursor: "pointer" }}
-                        transition="background 0.15s"
-                        bg={index % 2 === 0 ? "white" : "gray.50"}
+                        style={{
+                          background: index % 2 === 0 ? "var(--bg-raised)" : "var(--bg-overlay)",
+                          cursor: "pointer",
+                          transition: "background 0.15s",
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--cyan-subtle)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = index % 2 === 0 ? "var(--bg-raised)" : "var(--bg-overlay)"; }}
                         onClick={() => navigate(`/problems/${problem.slug}`)}
                       >
                         {/* ID */}
-                        <Table.Cell textAlign="center">
-                          <Text fontSize="sm" fontWeight="600" color="gray.500">
+                        <td style={{ textAlign: "center" }}>
+                          <span className="text-sm font-semibold" style={{ color: "var(--text-muted)" }}>
                             {problem.id}
-                          </Text>
-                        </Table.Cell>
+                          </span>
+                        </td>
 
                         {/* Title */}
-                        <Table.Cell>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="600"
-                            color="gray.800"
-                            _hover={{ color: "purple.600" }}
-                          >
+                        <td>
+                          <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                             {problem.title}
-                          </Text>
-                        </Table.Cell>
+                          </span>
+                        </td>
 
                         {/* Difficulty */}
-                        <Table.Cell>
-                          <DiffBadge difficulty={problem.problemDifficulty} />
-                        </Table.Cell>
+                        <td>
+                          <DifficultyChip difficulty={problem.problemDifficulty} />
+                        </td>
 
                         {/* Active tags — clicking a tag adds it as a filter */}
-                        <Table.Cell onClick={(e) => e.stopPropagation()}>
-                          <Wrap gap={1}>
+                        <td onClick={(e) => e.stopPropagation()}>
+                          <div className="flex flex-wrap gap-1">
                             {activeTags.length > 0 ? (
                               activeTags.map((tag) => (
-                                <WrapItem key={tag.id}>
-                                  <Badge
-                                    colorScheme={
-                                      selectedTagNames.includes(tag.name)
-                                        ? "purple"
-                                        : "gray"
-                                    }
-                                    variant={
-                                      selectedTagNames.includes(tag.name)
-                                        ? "solid"
-                                        : "subtle"
-                                    }
-                                    fontSize="xs"
-                                    px={2}
-                                    py="1px"
-                                    borderRadius="full"
-                                    cursor="pointer"
-                                    userSelect="none"
-                                    _hover={{ opacity: 0.75 }}
-                                    onClick={() => {
-                                      toggleTag(tag.name);
-                                      if (!showFilters) setShowFilters(true);
-                                    }}
-                                  >
-                                    {tag.name}
-                                  </Badge>
-                                </WrapItem>
+                                <TagPill
+                                  key={tag.id}
+                                  label={tag.name}
+                                  active={selectedTagNames.includes(tag.name)}
+                                  onClick={() => {
+                                    toggleTag(tag.name);
+                                    if (!showFilters) setShowFilters(true);
+                                  }}
+                                />
                               ))
                             ) : (
-                              <Text
-                                fontSize="xs"
-                                color="gray.400"
-                                fontStyle="italic"
-                              >
+                              <span className="text-xs" style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
                                 —
-                              </Text>
+                              </span>
                             )}
-                          </Wrap>
-                        </Table.Cell>
+                          </div>
+                        </td>
 
                         {/* Points */}
-                        <Table.Cell textAlign="center">
-                          <HStack justify="center" gap={1}>
-                            <Trophy size={14} color="#805AD5" />
-                            <Text
-                              fontSize="sm"
-                              fontWeight="700"
-                              color="purple.600"
-                            >
+                        <td style={{ textAlign: "center" }}>
+                          <div className="flex items-center justify-center gap-1">
+                            <Trophy size={14} color="var(--cyan)" />
+                            <span className="text-sm font-bold" style={{ color: "var(--cyan)" }}>
                               {problem.point}
-                            </Text>
-                          </HStack>
-                        </Table.Cell>
+                            </span>
+                          </div>
+                        </td>
 
-                        {/* Solve */}
-                        <Table.Cell textAlign="center">
+                        {/* Solve status */}
+                        <td style={{ textAlign: "center" }}>
                           {problem.solved ? (
-                            <Box
-                              display="inline-flex"
-                              p={2}
-                              borderRadius="md"
-                              bg="green.100"
-                              color="green.600"
-                              transition="all 0.15s"
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                padding: 8,
+                                borderRadius: "var(--radius-md)",
+                                background: "rgba(44,187,93,0.12)",
+                                color: "#2cbb5d",
+                                transition: "all 0.15s",
+                              }}
                             >
                               <CheckCircle size={18} />
-                            </Box>
+                            </span>
                           ) : problem.attempted ? (
-                            <Box
-                              display="inline-flex"
-                              p={2}
-                              borderRadius="md"
-                              bg="orange.100"
-                              color="orange.500"
-                              transition="all 0.15s"
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                padding: 8,
+                                borderRadius: "var(--radius-md)",
+                                background: "rgba(249,115,22,0.12)",
+                                color: "#f97316",
+                                transition: "all 0.15s",
+                              }}
                             >
                               <Clock size={18} />
-                            </Box>
+                            </span>
                           ) : (
-                            <Box
-                              display="inline-flex"
-                              p={2}
-                              borderRadius="md"
-                              bg="purple.100"
-                              color="purple.600"
-                              _hover={{ bg: "purple.200" }}
-                              transition="all 0.15s"
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                padding: 8,
+                                borderRadius: "var(--radius-md)",
+                                background: "var(--cyan-subtle)",
+                                color: "var(--cyan)",
+                                transition: "all 0.15s",
+                              }}
                             >
                               <Book size={18} />
-                            </Box>
+                            </span>
                           )}
-                        </Table.Cell>
-                      </Table.Row>
+                        </td>
+                      </tr>
                     );
                   })
                 ) : (
-                  <Table.Row>
-                    <Table.Cell colSpan={6} textAlign="center" py={12}>
-                      <VStack gap={3}>
-                        <Book size={44} color="#CBD5E0" />
-                        <Text
-                          fontSize="lg"
-                          color="gray.500"
-                          fontWeight="medium"
-                        >
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: "center", padding: "48px 0" }}>
+                      <div className="flex flex-col items-center gap-3">
+                        <Book size={44} color="var(--border-default)" />
+                        <span className="text-lg font-medium" style={{ color: "var(--text-muted)" }}>
                           {hasActiveFilters || searchQuery
                             ? "No problems match your filters"
                             : "No problems yet"}
-                        </Text>
-                        <Text fontSize="sm" color="gray.400">
+                        </span>
+                        <span className="text-sm" style={{ color: "var(--text-muted)" }}>
                           {hasActiveFilters || searchQuery
                             ? "Try adjusting your search or filters"
                             : "Check back later!"}
-                        </Text>
+                        </span>
                         {hasActiveFilters && (
-                          <Button
-                            size="sm"
-                            colorScheme="purple"
-                            variant="outline"
-                            onClick={resetFilters}
-                          >
+                          <button className="btn btn-ghost btn-sm" onClick={resetFilters}>
                             Clear all filters
-                          </Button>
+                          </button>
                         )}
-                      </VStack>
-                    </Table.Cell>
-                  </Table.Row>
+                      </div>
+                    </td>
+                  </tr>
                 )}
-              </Table.Body>
-            </Table.Root>
+              </tbody>
+            </table>
 
             {/* Pagination */}
             {pagination.totalPages > 0 && (
-              <Box borderTopWidth="1px" p={4} bg="gray.50">
-                <HStack justify="space-between">
-                  <HStack gap={2}>
-                    <Text fontSize="sm" color="gray.500">
-                      Rows:
-                    </Text>
-                    <select
-                      value={pagination.limit}
-                      onChange={(e) => handleLimitChange(e.target.value)}
-                      style={{
-                        padding: "4px 8px",
-                        borderRadius: "6px",
-                        border: "1px solid #E2E8F0",
-                        fontSize: "13px",
-                      }}
-                    >
-                      <option value="5">5</option>
-                      <option value="10">10</option>
-                      <option value="20">20</option>
-                      <option value="50">50</option>
-                    </select>
-                  </HStack>
-
-                  <Text fontSize="sm" color="gray.500">
-                    {pagination.offset + 1}–
-                    {Math.min(
-                      pagination.offset + pagination.limit,
-                      pagination.totalElements,
-                    )}{" "}
-                    of {pagination.totalElements}
-                  </Text>
-
-                  <HStack gap={1}>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToFirstPage}
-                      disabled={!canGoPrevious}
-                      _disabled={{ opacity: 0.3, cursor: "not-allowed" }}
-                    >
-                      <ChevronsLeft size={16} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToPreviousPage}
-                      disabled={!canGoPrevious}
-                      _disabled={{ opacity: 0.3, cursor: "not-allowed" }}
-                    >
-                      <ChevronLeft size={16} />
-                    </Button>
-                    <Text
-                      fontSize="sm"
-                      px={2}
-                      color="gray.600"
-                      fontWeight="500"
-                    >
-                      {pagination.currentPage + 1} / {pagination.totalPages}
-                    </Text>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToNextPage}
-                      disabled={!canGoNext}
-                      _disabled={{ opacity: 0.3, cursor: "not-allowed" }}
-                    >
-                      <ChevronRight size={16} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToLastPage}
-                      disabled={!canGoNext}
-                      _disabled={{ opacity: 0.3, cursor: "not-allowed" }}
-                    >
-                      <ChevronsRight size={16} />
-                    </Button>
-                  </HStack>
-                </HStack>
-              </Box>
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={(p) => handlePageChange(p * pagination.limit)}
+                totalElements={pagination.totalElements}
+                limit={pagination.limit}
+                onLimitChange={handleLimitChange}
+                offset={pagination.offset}
+              />
             )}
-          </Box>
-          )}
-        </VStack>
-      </Container>
-    </Box>
+          </div>
+        )}
+
+      </div>
+    </div>
   );
 };
 

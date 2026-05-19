@@ -1,241 +1,244 @@
-import ApiService from "../../services/ApiService";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useConfirmDialog } from "./ConfirmDialog";
-import { useState, useEffect } from "react";
+import ThemeToggle from "./ThemeToggle";
+import ApiService from "../../services/ApiService";
+import { Menu, X, ChevronDown, LogOut, User, Settings, LayoutDashboard } from "lucide-react";
+import TDTULogo from "./TDTULogo";
 
 const NavBar = () => {
   const isAuthenticated = ApiService.isAuthenticated();
   const isAdmin = ApiService.isAdmin();
   const isCreator = ApiService.isCreator();
   const navigate = useNavigate();
+  const location = useLocation();
   const { ConfirmDialog, showConfirm } = useConfirmDialog();
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-  // Fetch user profile on mount if authenticated
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (isAuthenticated) {
-        try {
-          const response = await ApiService.getOwnProfile();
-          if (response.statusCode === 200) {
-            setUserProfile(response.data);
-          }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
-        }
-      }
-    };
-
-    fetchUserProfile();
+    if (!isAuthenticated) return;
+    ApiService.getOwnProfile()
+      .then((r) => { if (r.statusCode === 200) setUserProfile(r.data); })
+      .catch(() => {});
   }, [isAuthenticated]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
+        setDropdownOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Close mobile nav on route change
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
   const handleLogout = () => {
     showConfirm("Logout", "Are you sure you want to logout?", () => {
       ApiService.logout();
       navigate("/login");
     });
+    setDropdownOpen(false);
   };
 
-  const handleViewProfile = async (e) => {
-    e.preventDefault();
-
+  const handleViewProfile = async () => {
     if (isLoadingProfile) return;
-
     setIsLoadingProfile(true);
+    setDropdownOpen(false);
     try {
-      const response = await ApiService.getOwnProfile();
-      if (response.statusCode === 200) {
-        const username = response.data.username;
-        navigate(`/users/${username}`);
-      }
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-      navigate("/users");
-    } finally {
-      setIsLoadingProfile(false);
-    }
+      const r = await ApiService.getOwnProfile();
+      if (r.statusCode === 200) navigate(`/users/${r.data.username}`);
+    } catch { navigate("/users"); }
+    finally { setIsLoadingProfile(false); }
   };
 
-  const handleEditProfile = () => {
-    navigate("/profile");
-  };
+  const NAV_LINKS = [
+    { to: "/problems",      label: "Problems" },
+    { to: "/contests",      label: "Contests" },
+    { to: "/organizations", label: "Organizations" },
+    { to: "/users",         label: "Users" },
+  ];
 
-  // Get first letter of username for avatar placeholder
-  const getInitials = (username) => {
-    return username ? username.charAt(0).toUpperCase() : "U";
-  };
+  const isActive = (to) => location.pathname.startsWith(to);
+
+  const initials = userProfile?.username?.[0]?.toUpperCase() ?? "U";
 
   return (
     <>
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div className="container-fluid">
-          {/* Logo / Brand */}
-          <Link className="navbar-brand" to="/home">
-            TDTUOJ
+      <nav style={{
+        position: "sticky", top: 0, zIndex: 100,
+        background: "var(--bg-base)",
+        borderBottom: "1px solid var(--border-default)",
+        backdropFilter: "blur(12px)",
+      }}>
+        <div style={{
+          maxWidth: 1280, margin: "0 auto",
+          padding: "0 var(--space-6)",
+          height: 56,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: "var(--space-6)",
+        }}>
+          {/* Logo */}
+          <Link to="/home" style={{ textDecoration: "none", flexShrink: 0 }}>
+            <TDTULogo size={28} />
           </Link>
 
-          {/* Hamburger button for mobile */}
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarNav"
-            aria-controls="navbarNav"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
+          {/* Desktop nav links */}
+          <div className="flex items-center gap-1 hide-mobile" style={{ flex: 1 }}>
+            {NAV_LINKS.map(({ to, label }) => (
+              <Link key={to} to={to} style={{
+                padding: "var(--space-2) var(--space-3)",
+                fontSize: "var(--text-sm)",
+                fontWeight: 500,
+                color: isActive(to) ? "var(--cyan)" : "var(--text-secondary)",
+                textDecoration: "none",
+                borderRadius: "var(--radius-md)",
+                transition: "color var(--transition-fast), background var(--transition-fast)",
+                background: isActive(to) ? "var(--cyan-subtle)" : "transparent",
+              }}>
+                {label}
+              </Link>
+            ))}
+          </div>
 
-          {/* Collapsible content */}
-          <div className="collapse navbar-collapse" id="navbarNav">
-            {/* Left-side links */}
-            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              <li className="nav-item">
-                <Link className="nav-link" to="/problems">
-                  Problems
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/contests">
-                  Contests
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/organizations">
-                  Organizations
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/users">
-                  Users
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/status">
-                  Status
-                </Link>
-              </li>
-            </ul>
+          {/* Right side */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
 
-            {/* Right-side auth links */}
-            <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
-              {isAuthenticated ? (
-                <>
-                  {/* User Profile Dropdown */}
-                  {userProfile && (
-                    <li className="nav-item dropdown">
-                      <button
-                        className="nav-link dropdown-toggle d-flex align-items-center btn btn-dark border-0"
-                        id="profileDropdown"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                        style={{ cursor: "pointer" }}
-                      >
-                        {/* Avatar */}
-                        <div
-                          className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
-                          style={{
-                            width: "40px",
-                            height: "40px",
-                            fontSize: "16px",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {userProfile.profileUrl ? (
-                            <img
-                              src={userProfile.profileUrl}
-                              alt="Profile"
-                              className="rounded-circle"
-                              style={{
-                                width: "40px",
-                                height: "40px",
-                                objectFit: "cover",
-                              }}
-                            />
-                          ) : (
-                            getInitials(userProfile.username)
-                          )}
+            {isAuthenticated ? (
+              userProfile && (
+                <div ref={dropdownRef} style={{ position: "relative" }}>
+                  <button
+                    onClick={() => setDropdownOpen((v) => !v)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: "var(--space-2)",
+                      padding: "var(--space-1) var(--space-2)",
+                      borderRadius: "var(--radius-md)",
+                      background: dropdownOpen ? "var(--bg-hover)" : "transparent",
+                      border: "1px solid var(--border-default)",
+                      cursor: "pointer",
+                      transition: "background var(--transition-fast)",
+                    }}
+                    aria-label="User menu"
+                  >
+                    {/* Avatar */}
+                    <div style={{
+                      width: 30, height: 30, borderRadius: "50%",
+                      overflow: "hidden", flexShrink: 0,
+                      background: "var(--cyan-subtle)",
+                      border: "1px solid var(--border-accent)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      {userProfile.profileUrl ? (
+                        <img src={userProfile.profileUrl} alt="avatar"
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        <span style={{
+                          fontFamily: "var(--font-display)",
+                          fontSize: "var(--text-xs)",
+                          color: "var(--cyan)",
+                          fontWeight: 700,
+                        }}>{initials}</span>
+                      )}
+                    </div>
+                    <span style={{
+                      fontSize: "var(--text-sm)", fontWeight: 500,
+                      color: "var(--text-primary)",
+                    }} className="hide-mobile">
+                      {userProfile.username}
+                    </span>
+                    <ChevronDown size={13} color="var(--text-muted)"
+                      style={{ transform: dropdownOpen ? "rotate(180deg)" : "none", transition: "transform var(--transition-fast)" }} />
+                  </button>
+
+                  {dropdownOpen && (
+                    <div className="dropdown-content" style={{
+                      position: "absolute", right: 0, top: "calc(100% + 6px)",
+                      minWidth: 200,
+                    }}>
+                      <div style={{ padding: "var(--space-3)", borderBottom: "1px solid var(--border-subtle)" }}>
+                        <div style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-primary)" }}>
+                          {userProfile.name || userProfile.username}
                         </div>
-
-                        {/* User Info */}
-                        <div className="d-flex flex-column text-start">
-                          <span
-                            className="fw-semibold text-white"
-                            style={{ fontSize: "14px", lineHeight: "1.2" }}
-                          >
-                            {userProfile.name || userProfile.username}
-                          </span>
-                        </div>
-                      </button>
-
-                      {/* Dropdown Menu */}
-                      <ul
-                        className="dropdown-menu dropdown-menu-end"
-                        aria-labelledby="profileDropdown"
-                      >
-                        <li>
-                          <button
-                            className="dropdown-item"
-                            onClick={handleViewProfile}
-                            disabled={isLoadingProfile}
-                          >
-                            {isLoadingProfile ? "Loading..." : "View Profile"}
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            className="dropdown-item"
-                            onClick={handleEditProfile}
-                          >
-                            Settings
-                          </button>
-                        </li>
-
-                        {/* Admin / Creator Panel Link */}
-                        {(isAdmin || isCreator) && (
-                          <li>
-                            <Link className="dropdown-item" to="/admin">
-                              Panel
-                            </Link>
-                          </li>
+                        {userProfile.email && (
+                          <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: 2 }}>
+                            {userProfile.email}
+                          </div>
                         )}
-
-                        <li>
-                          <hr className="dropdown-divider" />
-                        </li>
-                        <li>
-                          <button
-                            className="dropdown-item text-danger"
-                            onClick={handleLogout}
-                          >
-                            Logout
-                          </button>
-                        </li>
-                      </ul>
-                    </li>
+                      </div>
+                      <button className="dropdown-item" onClick={handleViewProfile} disabled={isLoadingProfile}>
+                        <User size={14} /> {isLoadingProfile ? "Loading…" : "View Profile"}
+                      </button>
+                      <button className="dropdown-item" onClick={() => { navigate("/profile"); setDropdownOpen(false); }}>
+                        <Settings size={14} /> Settings
+                      </button>
+                      {(isAdmin || isCreator) && (
+                        <button className="dropdown-item" onClick={() => { navigate("/admin"); setDropdownOpen(false); }}>
+                          <LayoutDashboard size={14} /> Admin Panel
+                        </button>
+                      )}
+                      <div className="dropdown-separator" />
+                      <button className="dropdown-item" onClick={handleLogout}
+                        style={{ color: "var(--red-wa)" }}>
+                        <LogOut size={14} /> Logout
+                      </button>
+                    </div>
                   )}
-                </>
-              ) : (
-                <>
-                  <li className="nav-item">
-                    <Link className="nav-link" to="/login">
-                      Login
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link className="nav-link" to="/register">
-                      Register
-                    </Link>
-                  </li>
-                </>
-              )}
-            </ul>
+                </div>
+              )
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link to="/login" className="btn btn-ghost btn-sm">Login</Link>
+                <Link to="/register" className="btn btn-primary btn-sm">Register</Link>
+              </div>
+            )}
+
+            {/* Mobile hamburger */}
+            <button
+              className="btn btn-icon btn-ghost hide-desktop"
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
           </div>
         </div>
-      </nav>
 
+        {/* Mobile menu */}
+        {mobileOpen && (
+          <div style={{
+            borderTop: "1px solid var(--border-subtle)",
+            background: "var(--bg-base)",
+            padding: "var(--space-4) var(--space-4)",
+            display: "flex", flexDirection: "column", gap: "var(--space-1)",
+          }}>
+            {NAV_LINKS.map(({ to, label }) => (
+              <Link key={to} to={to} style={{
+                padding: "var(--space-3) var(--space-4)",
+                color: isActive(to) ? "var(--cyan)" : "var(--text-secondary)",
+                fontWeight: 500, fontSize: "var(--text-base)",
+                borderRadius: "var(--radius-md)",
+                background: isActive(to) ? "var(--cyan-subtle)" : "transparent",
+                textDecoration: "none",
+              }}>
+                {label}
+              </Link>
+            ))}
+            {!isAuthenticated && (
+              <>
+                <Link to="/login" className="btn btn-ghost" style={{ justifyContent: "flex-start" }}>Login</Link>
+                <Link to="/register" className="btn btn-primary" style={{ justifyContent: "flex-start" }}>Register</Link>
+              </>
+            )}
+          </div>
+        )}
+      </nav>
       <ConfirmDialog />
     </>
   );

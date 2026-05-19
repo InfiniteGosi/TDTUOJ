@@ -1,32 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  VStack,
-  HStack,
-  Button,
-  Input,
-  Spinner,
-} from "@chakra-ui/react";
-import {
-  ArrowLeft,
-  Plus,
-  Trash2,
-  GripVertical,
-  Search,
-  BookOpen,
-  Save,
-} from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Search, BookOpen, Save } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
+import SuggestiveSearch from "../common/SuggestiveSearch";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
 import DateTimePicker from "../common/DateTimePicker";
 
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*  LabFormPage — Create / Edit a lab                                        */
-/* ═══════════════════════════════════════════════════════════════════════════ */
+const DIFF_COLORS = {
+  EASY: { color: "#16a34a", bg: "#dcfce7" },
+  MEDIUM: { color: "#ea580c", bg: "#fff7ed" },
+  HARD: { color: "#dc2626", bg: "#fee2e2" },
+};
 
 const LabFormPage = () => {
   const { orgSlug, labSlug } = useParams();
@@ -38,12 +22,11 @@ const LabFormPage = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [deadline, setDeadline] = useState("");
-  const [exercises, setExercises] = useState([]); // [{problemId, problemTitle, points}]
+  const [exercises, setExercises] = useState([]);
   const [labId, setLabId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Problem search
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -54,8 +37,6 @@ const LabFormPage = () => {
         const resp = await ApiService.getOrganizationBySlug(orgSlug);
         if (resp.statusCode === 200) {
           setOrg(resp.data);
-
-          // If editing, load existing lab
           if (isEdit) {
             const labResp = await ApiService.getOrgLab(resp.data.id, labSlug);
             if (labResp.statusCode === 200) {
@@ -84,8 +65,6 @@ const LabFormPage = () => {
     })();
   }, [orgSlug, labSlug]);
 
-  /* ── Problem search ─────────────────────────────────────────────────────── */
-
   const searchProblems = useCallback(async () => {
     if (!searchQuery.trim()) { setSearchResults([]); return; }
     setSearching(true);
@@ -93,9 +72,7 @@ const LabFormPage = () => {
       const resp = await ApiService.getMyProblems({ page: 0, size: 20, search: searchQuery.trim() });
       if (resp.statusCode === 200) {
         const existing = new Set(exercises.map((e) => e.problemId));
-        setSearchResults(
-          (resp.data.content ?? []).filter((p) => !existing.has(p.id))
-        );
+        setSearchResults((resp.data.content ?? []).filter((p) => !existing.has(p.id)));
       }
     } catch (e) {
       console.error(e);
@@ -109,57 +86,34 @@ const LabFormPage = () => {
     return () => clearTimeout(t);
   }, [searchProblems]);
 
-  /* ── Exercise management ────────────────────────────────────────────────── */
-
   const addExercise = (problem) => {
     setExercises((prev) => [
       ...prev,
-      {
-        problemId: problem.id,
-        problemTitle: problem.title,
-        problemSlug: problem.slug,
-        problemDifficulty: problem.problemDifficulty,
-        points: problem.point || 100,
-      },
+      { problemId: problem.id, problemTitle: problem.title, problemSlug: problem.slug, problemDifficulty: problem.problemDifficulty, points: problem.point || 100 },
     ]);
     setSearchResults((prev) => prev.filter((p) => p.id !== problem.id));
   };
 
-  const removeExercise = (idx) => {
-    setExercises((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  const updatePoints = (idx, pts) => {
-    setExercises((prev) =>
-      prev.map((e, i) => (i === idx ? { ...e, points: parseInt(pts) || 0 } : e))
-    );
-  };
-
-  /* ── Save ────────────────────────────────────────────────────────────────── */
+  const removeExercise = (idx) => setExercises((prev) => prev.filter((_, i) => i !== idx));
+  const updatePoints = (idx, pts) => setExercises((prev) => prev.map((e, i) => (i === idx ? { ...e, points: parseInt(pts) || 0 } : e)));
 
   const handleSave = async () => {
     if (!title.trim()) { showMessage("Title is required", "error"); return; }
     if (exercises.length === 0) { showMessage("Add at least one exercise", "error"); return; }
-
     setSaving(true);
     try {
       const payload = {
         title: title.trim(),
         description: description.trim() || null,
         deadline: deadline || null,
-        exercises: exercises.map((e) => ({
-          problemId: e.problemId,
-          points: e.points,
-        })),
+        exercises: exercises.map((e) => ({ problemId: e.problemId, points: e.points })),
       };
-
       let resp;
       if (isEdit) {
         resp = await ApiService.updateLab(org.id, labId, payload);
       } else {
         resp = await ApiService.createLab(org.id, payload);
       }
-
       if (resp.statusCode === 201 || resp.statusCode === 200) {
         showMessage(isEdit ? "Lab updated!" : "Lab created!", "success");
         if (isEdit) {
@@ -175,221 +129,146 @@ const LabFormPage = () => {
     }
   };
 
-  /* ── Render ──────────────────────────────────────────────────────────────── */
-
   if (loading) {
     return (
-      <Box minH="100vh" bg="gray.50" display="flex" alignItems="center" justifyContent="center">
-        <Spinner size="xl" color="purple.500" thickness="3px" />
-      </Box>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="spinner" />
+      </div>
     );
   }
 
-  const DIFF_COLORS = {
-    EASY: { color: "green.600", bg: "green.50" },
-    MEDIUM: { color: "orange.500", bg: "orange.50" },
-    HARD: { color: "red.600", bg: "red.50" },
-  };
-
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Container maxW="container.lg">
-        <VStack align="stretch" gap={6}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+      <div className="page-container" style={{ maxWidth: 900 }}>
+        <div className="flex flex-col gap-6">
           {/* Back */}
-          <HStack
-            gap={2}
-            cursor="pointer"
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ alignSelf: "flex-start" }}
             onClick={() => navigate(`/organizations/${orgSlug}`)}
-            _hover={{ color: "purple.600" }}
-            color="gray.500"
-            transition="color 0.15s"
           >
-            <ArrowLeft size={18} />
-            <Text fontSize="sm" fontWeight="500">Back to {org?.name}</Text>
-          </HStack>
+            <ArrowLeft size={18} /> Back to {org?.name}
+          </button>
 
-          {/* Title */}
-          <Box bg="white" borderRadius="xl" boxShadow="md" p={6}>
-            <VStack align="stretch" gap={4}>
-              <HStack gap={2}>
+          {/* Info card */}
+          <div className="card" style={{ padding: 24 }}>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
                 <BookOpen size={22} color="#7c3aed" />
-                <Heading size="lg" color="gray.800">{isEdit ? "Edit Lab" : "Create Lab"}</Heading>
-              </HStack>
+                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>
+                  {isEdit ? "Edit Lab" : "Create Lab"}
+                </h2>
+              </div>
 
-              <VStack align="stretch" gap={3}>
-                <Box>
-                  <Text fontSize="sm" fontWeight="600" color="gray.600" mb={1}>Title *</Text>
-                  <Input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Lab 1 — Arrays & Strings"
-                    size="md"
-                  />
-                </Box>
-                <Box>
-                  <Text fontSize="sm" fontWeight="600" color="gray.600" mb={1}>Description</Text>
-                  <Input
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Optional description..."
-                    size="md"
-                  />
-                </Box>
-                <Box>
-                  <Text fontSize="sm" fontWeight="600" color="gray.600" mb={1}>Deadline</Text>
-                  <DateTimePicker
-                    value={deadline}
-                    onChange={setDeadline}
-                    placeholder="Pick deadline date & time"
-                  />
-                </Box>
-              </VStack>
-            </VStack>
-          </Box>
+              <div className="flex flex-col gap-3">
+                <div className="form-group">
+                  <label className="form-label">Title *</label>
+                  <input className="input w-full" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Lab 1 — Arrays & Strings" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Description</label>
+                  <input className="input w-full" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional description..." />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Deadline</label>
+                  <DateTimePicker value={deadline} onChange={setDeadline} placeholder="Pick deadline date & time" />
+                </div>
+              </div>
+            </div>
+          </div>
 
-          {/* Exercises */}
-          <Box bg="white" borderRadius="xl" boxShadow="md" p={6}>
-            <VStack align="stretch" gap={4}>
-              <Heading size="md" color="gray.800">
+          {/* Exercises card */}
+          <div className="card" style={{ padding: 24 }}>
+            <div className="flex flex-col gap-4">
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>
                 Exercises ({exercises.length})
-              </Heading>
+              </h3>
 
-              {/* Exercise list */}
               {exercises.map((ex, idx) => {
-                const dc = DIFF_COLORS[ex.problemDifficulty] || { color: "gray.600", bg: "gray.50" };
+                const dc = DIFF_COLORS[ex.problemDifficulty] || { color: "#6b7280", bg: "#f9fafb" };
                 return (
-                  <HStack
+                  <div
                     key={ex.problemId}
-                    bg="gray.50"
-                    borderRadius="lg"
-                    p={3}
-                    gap={3}
-                    border="1px solid"
-                    borderColor="gray.200"
+                    className="flex items-center gap-3"
+                    style={{ background: "var(--bg-raised)", borderRadius: 10, padding: 12, border: "1px solid var(--border-subtle)" }}
                   >
-                    <Box
-                      w="28px" h="28px" borderRadius="md" bg="purple.100"
-                      display="flex" alignItems="center" justifyContent="center"
-                    >
-                      <Text fontSize="sm" fontWeight="700" color="purple.700">
-                        {String.fromCharCode(65 + idx)}
-                      </Text>
-                    </Box>
-                    <VStack align="start" gap={0} flex={1}>
-                      <Text fontSize="sm" fontWeight="600" color="gray.800">
-                        {ex.problemTitle}
-                      </Text>
-                      <Box
-                        px={1.5} py={0.5} borderRadius="sm" fontSize="10px"
-                        fontWeight="700" bg={dc.bg} color={dc.color}
-                      >
+                    <div style={{ width: 28, height: 28, borderRadius: 6, background: "#ede9fe", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "#7c3aed" }}>{String.fromCharCode(65 + idx)}</span>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{ex.problemTitle}</p>
+                      <span style={{ display: "inline-block", padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 700, background: dc.bg, color: dc.color }}>
                         {ex.problemDifficulty || "—"}
-                      </Box>
-                    </VStack>
-                    <HStack gap={1}>
-                      <Text fontSize="xs" color="gray.500">pts:</Text>
-                      <Input
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-muted">pts:</span>
+                      <input
+                        type="number"
+                        className="input"
                         value={ex.points}
                         onChange={(e) => updatePoints(idx, e.target.value)}
-                        size="sm"
-                        w="60px"
-                        textAlign="center"
-                        type="number"
+                        style={{ width: 60, textAlign: "center", padding: "3px 6px" }}
                       />
-                    </HStack>
-                    <Box
-                      as="button"
-                      p={1.5}
-                      borderRadius="md"
-                      _hover={{ bg: "red.50" }}
-                      onClick={() => removeExercise(idx)}
-                    >
+                    </div>
+                    <button style={{ background: "none", border: "none", cursor: "pointer", padding: 6, borderRadius: 6 }} onClick={() => removeExercise(idx)}>
                       <Trash2 size={16} color="#ef4444" />
-                    </Box>
-                  </HStack>
+                    </button>
+                  </div>
                 );
               })}
 
               {/* Search problems */}
-              <Box>
-                <Text fontSize="sm" fontWeight="600" color="gray.600" mb={2}>
-                  Search your problems to add
-                </Text>
-                <Box position="relative">
-                  <Box position="absolute" left={3} top="50%" transform="translateY(-50%)">
-                    <Search size={14} color="#9ca3af" />
-                  </Box>
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by title..."
-                    pl={9}
-                    size="sm"
-                  />
-                </Box>
+              <div>
+                <label className="form-label" style={{ marginBottom: 8 }}>Search your problems to add</label>
+                <SuggestiveSearch
+                  value={searchQuery}
+                  onChange={(val) => setSearchQuery(val)}
+                  suggestions={["Search by title...", "Find problems to add"]}
+                  style={{ width: "100%" }}
+                />
 
                 {searching && (
-                  <Box py={3} textAlign="center">
-                    <Spinner size="sm" color="purple.400" />
-                  </Box>
+                  <div style={{ padding: 12, textAlign: "center" }}>
+                    <div className="spinner" style={{ width: 20, height: 20, margin: "0 auto" }} />
+                  </div>
                 )}
 
                 {!searching && searchResults.length > 0 && (
-                  <VStack align="stretch" gap={1} mt={2} maxH="250px" overflowY="auto">
+                  <div className="flex flex-col gap-1" style={{ marginTop: 8, maxHeight: 250, overflowY: "auto" }}>
                     {searchResults.map((p) => {
-                      const dc = DIFF_COLORS[p.problemDifficulty] || { color: "gray.600", bg: "gray.50" };
+                      const dc = DIFF_COLORS[p.problemDifficulty] || { color: "#6b7280", bg: "#f9fafb" };
                       return (
-                        <HStack
+                        <div
                           key={p.id}
-                          bg="white"
-                          border="1px solid"
-                          borderColor="gray.200"
-                          borderRadius="md"
-                          p={2}
-                          cursor="pointer"
-                          _hover={{ bg: "purple.50", borderColor: "purple.300" }}
-                          transition="all 0.1s"
+                          className="flex items-center gap-2"
+                          style={{ background: "var(--bg-raised)", border: "1px solid var(--border-subtle)", borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}
                           onClick={() => addExercise(p)}
                         >
                           <Plus size={14} color="#7c3aed" />
-                          <Text fontSize="sm" fontWeight="500" flex={1}>{p.title}</Text>
-                          <Box
-                            px={1.5} py={0.5} borderRadius="sm" fontSize="10px"
-                            fontWeight="700" bg={dc.bg} color={dc.color}
-                          >
-                            {p.problemDifficulty || "—"}
-                          </Box>
-                          <Text fontSize="xs" color="gray.400">{p.point}pts</Text>
-                        </HStack>
+                          <span style={{ fontSize: 13, fontWeight: 500, flex: 1, color: "var(--text-primary)" }}>{p.title}</span>
+                          <span style={{ padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 700, background: dc.bg, color: dc.color }}>{p.problemDifficulty || "—"}</span>
+                          <span className="text-xs text-muted">{p.point}pts</span>
+                        </div>
                       );
                     })}
-                  </VStack>
+                  </div>
                 )}
-              </Box>
-            </VStack>
-          </Box>
+              </div>
+            </div>
+          </div>
 
-          {/* Save */}
-          <HStack justify="flex-end" gap={3}>
-            <Button
-              variant="outline"
-              onClick={() => navigate(`/organizations/${orgSlug}`)}
-            >
-              Cancel
-            </Button>
-            <Button
-              colorScheme="purple"
-              gap={1}
-              onClick={handleSave}
-              disabled={saving}
-            >
-              {saving ? <Spinner size="sm" /> : <Save size={16} />}
+          {/* Actions */}
+          <div className="flex items-center justify-end gap-3">
+            <button className="btn btn-ghost" onClick={() => navigate(`/organizations/${orgSlug}`)}>Cancel</button>
+            <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+              {saving ? <div className="spinner" style={{ width: 16, height: 16 }} /> : <Save size={16} />}
               {saving ? "Saving..." : isEdit ? "Save Changes" : "Create Lab"}
-            </Button>
-          </HStack>
-        </VStack>
-      </Container>
-    </Box>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -790,6 +790,22 @@ export default class ApiService {
     return resp.data;
   }
 
+  static async getUserSubmissions(username, { limit = 20, offset = 0 } = {}) {
+    const resp = await axios.get(`${this.BASE_URL}/users/${username}/submissions`, {
+      headers: this.getHeader(),
+      params: { limit, offset },
+    });
+    return resp.data;
+  }
+
+  static async getUserOrganizations(username, { page = 0, size = 12 } = {}) {
+    const resp = await axios.get(`${this.BASE_URL}/users/${username}/organizations`, {
+      headers: this.getHeader(),
+      params: { page, size },
+    });
+    return resp.data;
+  }
+
   static async getUserLanguageStats(username) {
     const resp = await axios.get(
       `${this.BASE_URL}/users/${username}/language-stats`,

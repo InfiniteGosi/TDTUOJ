@@ -1,33 +1,20 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  Badge,
-  HStack,
-  VStack,
-  Spinner,
-  Input,
-  Button,
-  IconButton,
-  Avatar,
-} from "@chakra-ui/react";
-import { Table } from "@chakra-ui/react";
-import {
-  Users,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Plus,
-  Edit,
+  Users, Plus, Edit,
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
+import Pagination from "../common/Pagination";
+import SuggestiveSearch from "../common/SuggestiveSearch";
+import SortBar from "../common/SortBar";
 import { useConfirmDialog } from "../common/ConfirmDialog";
 import { useToast } from "../common/ToastMessage";
+
+const ROLE_BADGE = {
+  ADMIN:       { bg: "var(--red-subtle)",     color: "var(--red-wa)" },
+  CREATOR:     { bg: "var(--amber-subtle)",   color: "var(--amber-tle)" },
+  PARTICIPANT: { bg: "var(--primary-subtle)", color: "var(--primary)" },
+};
 
 const AdminUserPage = () => {
   const { ConfirmDialog } = useConfirmDialog();
@@ -36,13 +23,7 @@ const AdminUserPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({
-    limit: 10,
-    offset: 0,
-    totalElements: 0,
-    totalPages: 0,
-    currentPage: 0,
-  });
+  const [pagination, setPagination] = useState({ limit: 10, offset: 0, totalElements: 0, totalPages: 0, currentPage: 0 });
   const [sortField, setSortField] = useState("id");
   const [direction, setDirection] = useState("asc");
   const navigate = useNavigate();
@@ -50,537 +31,201 @@ const AdminUserPage = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await ApiService.getAllUsers({
-        limit: pagination.limit,
-        offset: pagination.offset,
-        sortField,
-        direction,
-        username: searchQuery,
-      });
-
+      const response = await ApiService.getAllUsers({ limit: pagination.limit, offset: pagination.offset, sortField, direction, username: searchQuery });
       if (response.statusCode === 200) {
         setUsers(response.data.content);
-        setPagination((prev) => ({
-          ...prev,
-          totalElements: response.data.page.totalElements,
-          totalPages: response.data.page.totalPages,
-          currentPage: response.data.page.number,
-        }));
+        setPagination((prev) => ({ ...prev, totalElements: response.data.page.totalElements, totalPages: response.data.page.totalPages, currentPage: response.data.page.number }));
       }
-    } catch (error) {
-      showMessage(error.response?.data?.message || error.message, "error");
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { showMessage(error.response?.data?.message || error.message, "error"); } finally { setLoading(false); }
   };
 
   useEffect(() => {
     const init = async () => {
       try {
         const meResponse = await ApiService.getOwnProfile();
-        if (meResponse.statusCode === 200) {
-          setCurrentUser(meResponse.data);
-        }
-      } catch (error) {
-        // non-critical, silently ignore
-      }
+        if (meResponse.statusCode === 200) setCurrentUser(meResponse.data);
+      } catch (error) { /* non-critical */ }
     };
     init();
   }, []);
 
+  useEffect(() => { fetchUsers(); }, [pagination.limit, pagination.offset, sortField, direction]);
   useEffect(() => {
-    fetchUsers();
-  }, [pagination.limit, pagination.offset, sortField, direction]);
-
-  // Debounced search
-  useEffect(() => {
-    const delaySearch = setTimeout(() => {
-      setPagination((prev) => ({ ...prev, offset: 0 }));
-      fetchUsers();
-    }, 500);
-
+    const delaySearch = setTimeout(() => { setPagination((prev) => ({ ...prev, offset: 0 })); fetchUsers(); }, 500);
     return () => clearTimeout(delaySearch);
   }, [searchQuery]);
 
-  const handleAddUser = () => {
-    navigate("/admin/users/register");
-  };
-
-  const handleEditUser = (userId) => {
-    navigate(`/admin/users/edit/${userId}`);
-  };
-
-  const handlePageChange = (newOffset) => {
-    setPagination((prev) => ({ ...prev, offset: newOffset }));
-  };
-
-  const handleLimitChange = (newLimit) => {
-    setPagination((prev) => ({
-      ...prev,
-      limit: parseInt(newLimit),
-      offset: 0,
-    }));
-  };
-
-  const goToFirstPage = () => handlePageChange(0);
-  const goToLastPage = () =>
-    handlePageChange((pagination.totalPages - 1) * pagination.limit);
-  const goToPreviousPage = () =>
-    handlePageChange(Math.max(0, pagination.offset - pagination.limit));
-  const goToNextPage = () =>
-    handlePageChange(
-      Math.min(
-        (pagination.totalPages - 1) * pagination.limit,
-        pagination.offset + pagination.limit,
-      ),
-    );
-
-  const canGoPrevious = pagination.currentPage > 0;
-  const canGoNext = pagination.currentPage < pagination.totalPages - 1;
-
-  const getRoleBadgeColor = (roleName) => {
-    switch (roleName) {
-      case "ADMIN":
-        return "red";
-      case "CREATOR":
-        return "orange";
-      case "PARTICIPANT":
-        return "blue";
-      default:
-        return "gray";
-    }
-  };
+  const handlePageChange = (newOffset) => setPagination((prev) => ({ ...prev, offset: newOffset }));
+  const handleLimitChange = (newLimit) => setPagination((prev) => ({ ...prev, limit: parseInt(newLimit), offset: 0 }));
 
   if (loading && users.length === 0) {
     return (
-      <Box minH="100vh" bg="gray.50" py={8}>
-        <Container maxW="container.xl">
-          <VStack gap={4} py={20}>
-            <Spinner size="xl" color="purple.500" thickness="4px" />
-            <Text color="gray.600">Loading users...</Text>
-          </VStack>
-        </Container>
-      </Box>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+        <div className="page-container">
+          <div className="flex flex-col items-center gap-4" style={{ padding: "80px 0" }}>
+            <div className="spinner" />
+            <span className="text-muted">Loading users...</span>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Container maxW="container.xl">
-        <VStack align="stretch" gap={6}>
-          {/* Header with Add Button */}
-          <HStack justify="space-between" align="center">
-            <HStack gap={3}>
-              <Heading size="2xl" color="gray.800">
-                Manage Users
-              </Heading>
-              <Badge
-                colorScheme="purple"
-                fontSize="md"
-                px={3}
-                py={1}
-                borderRadius="full"
-              >
-                {pagination.totalElements}{" "}
-                {pagination.totalElements === 1 ? "user" : "users"}
-              </Badge>
-            </HStack>
-            <Button
-              onClick={handleAddUser}
-              colorScheme="purple"
-              size="lg"
-              leftIcon={<Plus size={20} />}
-            >
-              Add User
-            </Button>
-          </HStack>
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+      <div className="page-container">
+        <div className="flex flex-col gap-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Manage Users</h2>
+              <span style={{ display: "inline-block", padding: "3px 12px", borderRadius: 9999, fontSize: 13, fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
+                {pagination.totalElements} {pagination.totalElements === 1 ? "user" : "users"}
+              </span>
+            </div>
+            <button className="btn btn-primary" onClick={() => navigate("/admin/users/register")}>
+              <Plus size={20} /> Add User
+            </button>
+          </div>
 
           <ConfirmDialog />
 
-          {/* Search and Filters */}
-          <HStack gap={4}>
-            <Box flex={1} bg="white" p={4} borderRadius="lg" boxShadow="sm">
-              <Box position="relative" w="full">
-                <Box
-                  position="absolute"
-                  left={3}
-                  top="50%"
-                  transform="translateY(-50%)"
-                  zIndex={2}
-                >
-                  <Search size={20} color="#9CA3AF" />
-                </Box>
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by username..."
-                  size="lg"
-                  pl={10}
-                  borderColor="gray.300"
-                  _hover={{ borderColor: "purple.400" }}
-                  _focus={{
-                    borderColor: "purple.500",
-                    boxShadow: "0 0 0 1px #805AD5",
-                  }}
-                />
-              </Box>
-            </Box>
+          {/* Search + Sort */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <SuggestiveSearch
+              value={searchQuery}
+              onChange={(val) => setSearchQuery(val)}
+              suggestions={["Search by username...", "Find a user", "Look up by name"]}
+              style={{ width: 320 }}
+            />
+            <SortBar
+              field={sortField}
+              direction={direction}
+              onFieldChange={setSortField}
+              onDirectionChange={setDirection}
+              fields={[
+                { value: "id",       label: "ID" },
+                { value: "username", label: "Username" },
+                { value: "email",    label: "Email" },
+              ]}
+            />
+          </div>
 
-            <Box bg="white" p={4} borderRadius="lg" boxShadow="sm">
-              <HStack gap={2}>
-                <Text fontSize="sm" fontWeight="medium" color="gray.700">
-                  Sort:
-                </Text>
-                <select
-                  value={sortField}
-                  onChange={(e) => setSortField(e.target.value)}
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid #E2E8F0",
-                    fontSize: "14px",
-                    width: "120px",
-                  }}
-                >
-                  <option value="id">ID</option>
-                  <option value="username">Username</option>
-                  <option value="email">Email</option>
-                </select>
-                <select
-                  value={direction}
-                  onChange={(e) => setDirection(e.target.value)}
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid #E2E8F0",
-                    fontSize: "14px",
-                    width: "100px",
-                  }}
-                >
-                  <option value="asc">Asc</option>
-                  <option value="desc">Desc</option>
-                </select>
-              </HStack>
-            </Box>
-          </HStack>
-
-          {/* Table Card */}
-          <Box
-            bg="white"
-            borderRadius="xl"
-            boxShadow="md"
-            overflow="hidden"
-            position="relative"
-          >
+          {/* Table */}
+          <div className="card" style={{ overflow: "hidden", position: "relative" }}>
             {loading && (
-              <Box
-                position="absolute"
-                top={0}
-                left={0}
-                right={0}
-                bottom={0}
-                bg="whiteAlpha.800"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                zIndex={10}
-              >
-                <Spinner size="lg" color="purple.500" thickness="3px" />
-              </Box>
+              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+                <div className="spinner" />
+              </div>
             )}
 
-            <Table.Root variant="line" size="lg">
-              <Table.Header bg="purple.50">
-                <Table.Row>
-                  <Table.ColumnHeader textAlign="center" w="8%">
-                    <Text fontWeight="bold" color="purple.700">
-                      ID
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="35%">
-                    <Text fontWeight="bold" color="purple.700">
-                      User
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="25%">
-                    <Text fontWeight="bold" color="purple.700">
-                      Email
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="17%">
-                    <Text fontWeight="bold" color="purple.700">
-                      Roles
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="center" w="10%">
-                    <Text fontWeight="bold" color="purple.700">
-                      Status
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="center" w="10%">
-                    <Text fontWeight="bold" color="purple.700">
-                      Actions
-                    </Text>
-                  </Table.ColumnHeader>
-                </Table.Row>
-              </Table.Header>
-
-              <Table.Body>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "center", width: "8%" }}>ID</th>
+                  <th style={{ width: "35%" }}>User</th>
+                  <th style={{ width: "25%" }}>Email</th>
+                  <th style={{ width: "17%" }}>Roles</th>
+                  <th style={{ textAlign: "center", width: "10%" }}>Status</th>
+                  <th style={{ textAlign: "center", width: "10%" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                 {users.length > 0 ? (
                   users.map((user, index) => {
                     const isSelf = currentUser?.id === user.id;
                     return (
-                      <Table.Row
-                        key={user.id}
-                        _hover={{ bg: "purple.50" }}
-                        transition="all 0.2s"
-                        bg={index % 2 === 0 ? "white" : "gray.50"}
-                      >
-                        {/* User ID */}
-                        <Table.Cell textAlign="center">
-                          <Badge
-                            colorScheme="purple"
-                            fontSize="md"
-                            px={3}
-                            py={1}
-                            borderRadius="md"
-                            fontWeight="bold"
-                          >
-                            #{user.id}
-                          </Badge>
-                        </Table.Cell>
-
-                        {/* User Info with Avatar */}
-                        <Table.Cell>
-                          <HStack gap={3}>
-                            <Avatar.Root
-                              size="md"
-                              bg="purple.400"
-                              color="white"
-                            >
-                              {user.profileUrl && (
-                                <Avatar.Image src={user.profileUrl} />
+                      <tr key={user.id} style={{ background: index % 2 === 0 ? "var(--bg-base)" : "var(--bg-raised)" }}>
+                        <td style={{ textAlign: "center" }}>
+                          <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 13, fontWeight: 700, background: "var(--primary-subtle)", color: "var(--primary)" }}>#{user.id}</span>
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-3">
+                            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "var(--primary-subtle)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, overflow: "hidden", flexShrink: 0 }}>
+                              {user.profileUrl ? (
+                                <img src={user.profileUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              ) : (
+                                (user.name || user.username).charAt(0).toUpperCase()
                               )}
-                              <Avatar.Fallback>
-                                {(user.name || user.username)
-                                  .charAt(0)
-                                  .toUpperCase()}
-                              </Avatar.Fallback>
-                            </Avatar.Root>
-                            <VStack align="start" gap={0}>
-                              <HStack gap={2}>
-                                <Text
-                                  fontSize="md"
-                                  fontWeight="semibold"
-                                  color="gray.800"
-                                >
-                                  {user.username}
-                                </Text>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{user.username}</span>
                                 {isSelf && (
-                                  <Badge
-                                    colorScheme="orange"
-                                    fontSize="xs"
-                                    px={2}
-                                    py={0.5}
-                                    borderRadius="md"
-                                  >
+                                  <span style={{ display: "inline-block", padding: "1px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: "var(--amber-subtle)", color: "var(--amber-tle)" }}>
                                     It&apos;s you
-                                  </Badge>
+                                  </span>
                                 )}
-                              </HStack>
-                              {user.name && (
-                                <Text fontSize="sm" color="gray.500">
-                                  {user.name}
-                                </Text>
-                              )}
-                            </VStack>
-                          </HStack>
-                        </Table.Cell>
-
-                        {/* Email */}
-                        <Table.Cell>
-                          <Text fontSize="sm" color="gray.600">
-                            {user.email}
-                          </Text>
-                        </Table.Cell>
-
-                        {/* Roles */}
-                        <Table.Cell>
-                          <HStack gap={1} flexWrap="wrap">
-                            {user.roles?.map((role) => (
-                              <Badge
-                                key={role.id}
-                                colorScheme={getRoleBadgeColor(role.name)}
-                                fontSize="xs"
-                                px={2}
-                                py={1}
-                                borderRadius="md"
-                              >
-                                {role.name}
-                              </Badge>
-                            ))}
-                          </HStack>
-                        </Table.Cell>
-
-                        {/* Active Status */}
-                        <Table.Cell textAlign="center">
-                          <Badge
-                            colorScheme={user.isActive ? "green" : "red"}
-                            fontSize="sm"
-                            px={3}
-                            py={1}
-                            borderRadius="md"
-                          >
+                              </div>
+                              {user.name && <p style={{ margin: 0, fontSize: 12, color: "var(--text-muted)" }}>{user.name}</p>}
+                            </div>
+                          </div>
+                        </td>
+                        <td><span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{user.email}</span></td>
+                        <td>
+                          <div className="flex flex-wrap gap-1">
+                            {user.roles?.map((role) => {
+                              const s = ROLE_BADGE[role.name] || { bg: "var(--bg-raised)", color: "var(--text-secondary)" };
+                              return (
+                                <span key={role.id} style={{ display: "inline-block", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: s.bg, color: s.color }}>
+                                  {role.name}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 600, background: user.isActive ? "var(--green-subtle)" : "var(--red-subtle)", color: user.isActive ? "var(--green-ac)" : "var(--red-wa)" }}>
                             {user.isActive ? "Active" : "Inactive"}
-                          </Badge>
-                        </Table.Cell>
-
-                        {/* Action Buttons */}
-                        <Table.Cell textAlign="center">
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
                           {isSelf ? (
-                            <Badge
-                              colorScheme="gray"
-                              fontSize="xs"
-                              px={3}
-                              py={1.5}
-                              borderRadius="md"
-                              color="gray.500"
-                            >
+                            <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: "var(--bg-raised)", color: "var(--text-muted)" }}>
                               It&apos;s you
-                            </Badge>
+                            </span>
                           ) : (
-                            <IconButton
-                              size="sm"
-                              colorScheme="blue"
-                              variant="ghost"
-                              onClick={() => handleEditUser(user.id)}
-                              title="Edit User"
-                            >
-                              <Edit size={18} />
-                            </IconButton>
+                            <button className="btn btn-ghost btn-sm" title="Edit User" style={{ padding: "5px 7px" }} onClick={() => navigate(`/admin/users/edit/${user.id}`)}>
+                              <Edit size={16} color="var(--primary)" />
+                            </button>
                           )}
-                        </Table.Cell>
-                      </Table.Row>
+                        </td>
+                      </tr>
                     );
                   })
                 ) : (
-                  <Table.Row>
-                    <Table.Cell colSpan={6} textAlign="center" py={10}>
-                      <VStack gap={3}>
-                        <Users size={48} color="#CBD5E0" />
-                        <Text
-                          fontSize="lg"
-                          color="gray.500"
-                          fontWeight="medium"
-                        >
-                          {searchQuery
-                            ? "No users match your search"
-                            : "No users found"}
-                        </Text>
-                        <Text fontSize="sm" color="gray.400">
-                          {searchQuery
-                            ? "Try adjusting your search terms"
-                            : "Click 'Add User' to create your first user!"}
-                        </Text>
-                      </VStack>
-                    </Table.Cell>
-                  </Table.Row>
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: "center", padding: "40px 0" }}>
+                      <div className="flex flex-col items-center gap-3">
+                        <Users size={48} color="var(--text-muted)" />
+                        <p style={{ fontSize: 16, color: "var(--text-muted)", margin: 0, fontWeight: 500 }}>
+                          {searchQuery ? "No users match your search" : "No users found"}
+                        </p>
+                        <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
+                          {searchQuery ? "Try adjusting your search terms" : "Click 'Add User' to create your first user!"}
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
                 )}
-              </Table.Body>
-            </Table.Root>
+              </tbody>
+            </table>
 
-            {/* Pagination */}
             {pagination.totalPages > 0 && (
-              <Box borderTopWidth="1px" p={4} bg="gray.50">
-                <HStack justify="space-between" align="center">
-                  {/* Items per page */}
-                  <HStack gap={2}>
-                    <Text fontSize="sm" color="gray.600">
-                      Items per page:
-                    </Text>
-                    <select
-                      value={pagination.limit}
-                      onChange={(e) => handleLimitChange(e.target.value)}
-                      style={{
-                        padding: "4px 8px",
-                        borderRadius: "6px",
-                        border: "1px solid #E2E8F0",
-                        fontSize: "14px",
-                        width: "80px",
-                      }}
-                    >
-                      <option value="5">5</option>
-                      <option value="10">10</option>
-                      <option value="20">20</option>
-                      <option value="50">50</option>
-                    </select>
-                  </HStack>
-
-                  {/* Page info */}
-                  <Text fontSize="sm" color="gray.600">
-                    Showing {pagination.offset + 1}-
-                    {Math.min(
-                      pagination.offset + pagination.limit,
-                      pagination.totalElements,
-                    )}{" "}
-                    of {pagination.totalElements}
-                  </Text>
-
-                  {/* Pagination controls */}
-                  <HStack gap={1}>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToFirstPage}
-                      disabled={!canGoPrevious}
-                      _disabled={{ opacity: 0.4, cursor: "not-allowed" }}
-                    >
-                      <ChevronsLeft size={18} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToPreviousPage}
-                      disabled={!canGoPrevious}
-                      _disabled={{ opacity: 0.4, cursor: "not-allowed" }}
-                    >
-                      <ChevronLeft size={18} />
-                    </Button>
-                    <Text
-                      fontSize="sm"
-                      px={3}
-                      color="gray.700"
-                      fontWeight="medium"
-                    >
-                      Page {pagination.currentPage + 1} of{" "}
-                      {pagination.totalPages}
-                    </Text>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToNextPage}
-                      disabled={!canGoNext}
-                      _disabled={{ opacity: 0.4, cursor: "not-allowed" }}
-                    >
-                      <ChevronRight size={18} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToLastPage}
-                      disabled={!canGoNext}
-                      _disabled={{ opacity: 0.4, cursor: "not-allowed" }}
-                    >
-                      <ChevronsRight size={18} />
-                    </Button>
-                  </HStack>
-                </HStack>
-              </Box>
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={(p) => handlePageChange(p * pagination.limit)}
+                totalElements={pagination.totalElements}
+                limit={pagination.limit}
+                onLimitChange={handleLimitChange}
+                offset={pagination.offset}
+              />
             )}
-          </Box>
-        </VStack>
-      </Container>
-    </Box>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

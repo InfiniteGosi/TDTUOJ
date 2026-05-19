@@ -1,20 +1,44 @@
 // AvatarUploadModal.jsx
-import { useState, useRef } from "react";
-import {
-  Box,
-  Button,
-  HStack,
-  VStack,
-  Text,
-  IconButton,
-} from "@chakra-ui/react";
+import { useState, useRef, useEffect } from "react";
 import { RotateCcw, RotateCw, X } from "lucide-react";
+
+// ── CSS injected once ─────────────────────────────────────────────────────────
+const injectStyles = () => {
+  if (document.getElementById("avatar-modal-styles")) return;
+  const style = document.createElement("style");
+  style.id = "avatar-modal-styles";
+  style.textContent = `
+    @keyframes avatar-backdrop-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes avatar-modal-in {
+      from { opacity: 0; transform: scale(0.96) translateY(-12px); }
+      to   { opacity: 1; transform: scale(1)    translateY(0); }
+    }
+  `;
+  document.head.appendChild(style);
+};
 
 const AvatarUploadModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(currentAvatar || null);
   const [rotation, setRotation] = useState(0);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    injectStyles();
+  }, []);
+
+  // Trap Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -31,81 +55,128 @@ const AvatarUploadModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
     }
   };
 
-  const handleRotateLeft = () => {
-    setRotation((prev) => prev - 90);
-  };
-
-  const handleRotateRight = () => {
-    setRotation((prev) => prev + 90);
-  };
+  const handleRotateLeft = () => setRotation((prev) => prev - 90);
+  const handleRotateRight = () => setRotation((prev) => prev + 90);
 
   const handleReset = () => {
     setSelectedImage(null);
     setPreviewUrl(currentAvatar || null);
     setRotation(0);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSave = () => {
-    // Here you would upload the image to your backend
-    // For now, just pass the preview URL
     onSave(previewUrl, selectedImage);
     onClose();
   };
 
   return (
-    <Box
-      position="fixed"
-      top={0}
-      left={0}
-      right={0}
-      bottom={0}
-      bg="blackAlpha.700"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      zIndex={9999}
-      onClick={onClose}
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 10000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "var(--space-4)",
+      }}
     >
-      <Box
-        bg="white"
-        borderRadius="lg"
-        boxShadow="2xl"
-        maxW="600px"
-        w="90%"
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(0,0,0,0.72)",
+          backdropFilter: "blur(3px)",
+          animation: "avatar-backdrop-in 150ms ease forwards",
+        }}
+      />
+
+      {/* Modal panel */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Upload a New Avatar"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          position: "relative",
+          background: "var(--bg-overlay)",
+          border: "1px solid var(--border-default)",
+          borderRadius: "var(--radius-lg)",
+          boxShadow: "var(--shadow-lg)",
+          width: "100%",
+          maxWidth: "520px",
+          animation: "avatar-modal-in 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
+          overflow: "hidden",
+        }}
       >
         {/* Header */}
-        <HStack justify="space-between" p={4} borderBottomWidth="1px">
-          <Text fontSize="xl" fontWeight="semibold">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "var(--space-4) var(--space-5)",
+            borderBottom: "1px solid var(--border-subtle)",
+          }}
+        >
+          <span
+            style={{
+              fontSize: "var(--text-lg)",
+              fontWeight: 600,
+              color: "var(--text-primary)",
+              fontFamily: "var(--font-body)",
+            }}
+          >
             Upload a New Avatar
-          </Text>
-          <IconButton
-            size="sm"
-            variant="ghost"
+          </span>
+          <button
             onClick={onClose}
+            style={{
+              width: "28px",
+              height: "28px",
+              borderRadius: "var(--radius-sm)",
+              border: "1px solid var(--border-default)",
+              background: "transparent",
+              color: "var(--text-muted)",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "var(--transition-fast)",
+            }}
             aria-label="Close"
           >
-            <X size={20} />
-          </IconButton>
-        </HStack>
+            <X size={16} />
+          </button>
+        </div>
 
         {/* Content */}
-        <VStack p={6} gap={4}>
+        <div
+          style={{
+            padding: "var(--space-6)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "var(--space-4)",
+          }}
+        >
           {/* Preview */}
-          <Box
-            w="280px"
-            h="280px"
-            borderRadius="xl"
-            border="4px solid"
-            borderColor="gray.200"
-            overflow="hidden"
-            bg="gray.100"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
+          <div
+            style={{
+              width: "240px",
+              height: "240px",
+              borderRadius: "var(--radius-lg)",
+              border: "2px solid var(--border-default)",
+              overflow: "hidden",
+              background: "var(--bg-raised)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
           >
             {previewUrl ? (
               <img
@@ -120,36 +191,46 @@ const AvatarUploadModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
                 }}
               />
             ) : (
-              <Text color="gray.400">No image selected</Text>
+              <span
+                style={{
+                  color: "var(--text-muted)",
+                  fontSize: "var(--text-sm)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                No image selected
+              </span>
             )}
-          </Box>
+          </div>
 
           {/* Rotation Controls */}
           {previewUrl && (
-            <HStack gap={2}>
-              <IconButton
-                size="lg"
-                variant="outline"
+            <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+              <button
                 onClick={handleRotateLeft}
+                className="btn btn-ghost btn-sm"
                 aria-label="Rotate left"
+                style={{ display: "flex", alignItems: "center", gap: "4px" }}
               >
-                <RotateCcw size={20} />
-              </IconButton>
-              <IconButton
-                size="lg"
-                variant="outline"
+                <RotateCcw size={16} />
+                Left
+              </button>
+              <button
                 onClick={handleRotateRight}
+                className="btn btn-ghost btn-sm"
                 aria-label="Rotate right"
+                style={{ display: "flex", alignItems: "center", gap: "4px" }}
               >
-                <RotateCw size={20} />
-              </IconButton>
-              <Button size="lg" variant="outline" onClick={handleReset}>
+                <RotateCw size={16} />
+                Right
+              </button>
+              <button onClick={handleReset} className="btn btn-ghost btn-sm">
                 Reset
-              </Button>
-            </HStack>
+              </button>
+            </div>
           )}
 
-          {/* File Input */}
+          {/* File Input (hidden) */}
           <input
             ref={fileInputRef}
             type="file"
@@ -158,40 +239,56 @@ const AvatarUploadModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
             style={{ display: "none" }}
           />
 
-          <Button
-            size="lg"
-            variant="outline"
+          <button
             onClick={() => fileInputRef.current?.click()}
-            leftIcon={
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-              >
-                <path d="M4.5 3A1.5 1.5 0 003 4.5v7A1.5 1.5 0 004.5 13h7a1.5 1.5 0 001.5-1.5v-7A1.5 1.5 0 0011.5 3h-7zM8 5a2 2 0 110 4 2 2 0 010-4z" />
-              </svg>
-            }
+            className="btn btn-ghost"
+            style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}
           >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
             Choose Image...
-          </Button>
+          </button>
 
-          {/* Action Buttons */}
-          <HStack gap={3} w="100%" justify="end" pt={4}>
-            <Button variant="ghost" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              colorScheme="blue"
-              onClick={handleSave}
-              isDisabled={!selectedImage}
-            >
-              Save
-            </Button>
-          </HStack>
-        </VStack>
-      </Box>
-    </Box>
+          {/* Helper text */}
+          <p
+            style={{
+              margin: 0,
+              fontSize: "var(--text-xs)",
+              color: "var(--text-muted)",
+              fontFamily: "var(--font-body)",
+              textAlign: "center",
+            }}
+          >
+            JPG, PNG or GIF. Max size 5 MB.
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "var(--space-3)",
+            padding: "var(--space-4) var(--space-5)",
+            borderTop: "1px solid var(--border-subtle)",
+          }}
+        >
+          <button onClick={onClose} className="btn btn-ghost btn-sm">
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!selectedImage}
+            className="btn btn-primary btn-sm"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

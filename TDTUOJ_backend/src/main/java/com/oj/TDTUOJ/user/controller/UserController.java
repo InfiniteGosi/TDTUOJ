@@ -10,15 +10,22 @@ import com.oj.TDTUOJ.user.dto.UserDTO;
 import com.oj.TDTUOJ.user.service.UserService;
 import com.oj.TDTUOJ.userStatistics.dto.UserStatisticsDTO;
 import com.oj.TDTUOJ.userStatistics.service.UserStatisticsService;
+import com.oj.TDTUOJ.submission.dto.SubmissionDTO;
+import com.oj.TDTUOJ.submission.repository.SubmissionRepository;
+import com.oj.TDTUOJ.organization.dto.OrganizationDTO;
+import com.oj.TDTUOJ.organization.repository.OrganizationMemberRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.oj.TDTUOJ.submission.repository.SubmissionRepository;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,10 +35,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("api/users")
 public class UserController {
-    private final UserService             userService;
-    private final UserActivityService     userActivityService;
-    private final UserStatisticsService   userStatisticsService;
-    private final SubmissionRepository    submissionRepository;
+    private final UserService                   userService;
+    private final UserActivityService           userActivityService;
+    private final UserStatisticsService         userStatisticsService;
+    private final SubmissionRepository          submissionRepository;
+    private final OrganizationMemberRepository  memberRepository;
+    private final ModelMapper                   modelMapper;
 
     @GetMapping
     public ResponseEntity<Response<Page<UserDTO>>> getAllUsers(
@@ -91,6 +100,37 @@ public class UserController {
     public ResponseEntity<Response<List<RatingHistoryDTO>>> getRatingHistory(
             @PathVariable String username) {
         return ResponseEntity.ok(userService.getRatingHistory(username));
+    }
+
+    @GetMapping("/{username}/submissions")
+    public ResponseEntity<Response<Page<SubmissionDTO>>> getUserSubmissions(
+            @PathVariable String username,
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(defaultValue = "0") int offset) {
+        Long userId = userService.getUserByUsername(username).getData().getId();
+        int page = (limit > 0) ? offset / limit : 0;
+        Pageable pageable = PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "submissionDate"));
+        Page<SubmissionDTO> result = submissionRepository.findByUserId(userId, pageable)
+                .map(s -> modelMapper.map(s, SubmissionDTO.class));
+        return ResponseEntity.ok(Response.<Page<SubmissionDTO>>builder()
+                .statusCode(200).message("ok").data(result).build());
+    }
+
+    @GetMapping("/{username}/organizations")
+    public ResponseEntity<Response<Page<OrganizationDTO>>> getUserOrganizations(
+            @PathVariable String username,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+        Long userId = userService.getUserByUsername(username).getData().getId();
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "joinedAt"));
+        Page<OrganizationDTO> result = memberRepository.findByUserId(userId, pageable)
+                .map(m -> {
+                    OrganizationDTO dto = modelMapper.map(m.getOrganization(), OrganizationDTO.class);
+                    dto.setMyRole(m.getRole().name());
+                    return dto;
+                });
+        return ResponseEntity.ok(Response.<Page<OrganizationDTO>>builder()
+                .statusCode(200).message("ok").data(result).build());
     }
 
     @GetMapping("/{username}/language-stats")

@@ -1,19 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  Badge,
-  HStack,
-  VStack,
-  Spinner,
-  Input,
-  Button,
-} from "@chakra-ui/react";
-import { Table } from "@chakra-ui/react";
-import {
   Building2,
   Users,
   Globe,
@@ -37,6 +24,7 @@ import {
   UserPlus,
   Search,
 } from "lucide-react";
+import SuggestiveSearch from "../common/SuggestiveSearch";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
 import { useConfirmDialog } from "../common/ConfirmDialog";
@@ -54,56 +42,73 @@ const fmt = (dt) => {
 };
 
 const ROLE_STYLE = {
-  OWNER: {
-    label: "Owner",
-    color: "#d97706",
-    bg: "#fffbeb",
-    icon: Crown,
-  },
-  ADMIN: {
-    label: "Admin",
-    color: "#3b82f6",
-    bg: "#eff6ff",
-    icon: ShieldCheck,
-  },
-  MEMBER: {
-    label: "Member",
-    color: "#16a34a",
-    bg: "#f0fdf4",
-    icon: Shield,
-  },
+  OWNER: { label: "Owner", color: "#d97706", bg: "#fffbeb", icon: Crown },
+  ADMIN: { label: "Admin", color: "#3b82f6", bg: "#eff6ff", icon: ShieldCheck },
+  MEMBER: { label: "Member", color: "#16a34a", bg: "#f0fdf4", icon: Shield },
 };
 
 const RoleBadge = ({ role }) => {
   const s = ROLE_STYLE[role] || ROLE_STYLE.MEMBER;
   const Icon = s.icon;
   return (
-    <Box
-      display="inline-flex"
-      alignItems="center"
-      gap={1}
-      px={2}
-      py="2px"
-      borderRadius="full"
-      fontSize="xs"
-      fontWeight="600"
-      bg={s.bg}
-      color={s.color}
-      border="1px solid"
-      borderColor={s.color + "33"}
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 4,
+        padding: "2px 8px",
+        borderRadius: 9999,
+        fontSize: 11,
+        fontWeight: 600,
+        background: s.bg,
+        color: s.color,
+        border: `1px solid ${s.color}33`,
+      }}
     >
       <Icon size={12} />
       {s.label}
-    </Box>
+    </span>
   );
 };
+
+// ─── Modal base ───────────────────────────────────────────────────────────────
+
+const ModalOverlay = ({ onClose, children }) => (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      zIndex: 1000,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    <div
+      style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }}
+      onClick={onClose}
+    />
+    <div
+      className="card"
+      style={{
+        position: "relative",
+        padding: 24,
+        width: 480,
+        maxWidth: "90vw",
+        zIndex: 1,
+        boxShadow: "0 25px 60px rgba(0,0,0,0.2)",
+      }}
+    >
+      {children}
+    </div>
+  </div>
+);
 
 // ─── Join Code Modal ──────────────────────────────────────────────────────────
 
 const JoinCodeModal = ({ isOpen, onClose, onJoin, orgName }) => {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
-
   if (!isOpen) return null;
 
   const handleJoin = async () => {
@@ -115,88 +120,42 @@ const JoinCodeModal = ({ isOpen, onClose, onJoin, orgName }) => {
   };
 
   return (
-    <Box
-      position="fixed"
-      inset={0}
-      zIndex={1000}
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-    >
-      <Box
-        position="absolute"
-        inset={0}
-        bg="blackAlpha.500"
-        onClick={onClose}
+    <ModalOverlay onClose={onClose}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <KeyRound size={20} color="var(--primary)" />
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>Enter Code</h3>
+        </div>
+        <button style={{ background: "none", border: "none", cursor: "pointer" }} onClick={onClose}>
+          <X size={18} color="#9ca3af" />
+        </button>
+      </div>
+
+      <p className="text-sm text-muted" style={{ marginBottom: 16 }}>
+        <strong style={{ color: "var(--text-primary)" }}>{orgName}</strong> is a private organization. Enter the invite code to join.
+      </p>
+
+      <input
+        className="input w-full"
+        value={code}
+        onChange={(e) => setCode(e.target.value.toUpperCase())}
+        placeholder="e.g. ABC123"
+        maxLength={10}
+        onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+        style={{ textAlign: "center", fontWeight: 700, letterSpacing: "0.15em", fontSize: 20, marginBottom: 16 }}
       />
-      <Box
-        position="relative"
-        bg="white"
-        borderRadius="xl"
-        boxShadow="2xl"
-        p={6}
-        w="400px"
-        maxW="90vw"
-      >
-        <HStack justify="space-between" mb={4}>
-          <HStack gap={2}>
-            <KeyRound size={20} color="#7c3aed" />
-            <Heading size="md" color="gray.800">
-              Enter Code
-            </Heading>
-          </HStack>
-          <Box
-            as="button"
-            p={1}
-            borderRadius="md"
-            _hover={{ bg: "gray.100" }}
-            onClick={onClose}
-          >
-            <X size={18} color="#9ca3af" />
-          </Box>
-        </HStack>
 
-        <Text fontSize="sm" color="gray.500" mb={4}>
-          <Text as="span" fontWeight="600" color="gray.700">
-            {orgName}
-          </Text>{" "}
-          is a private organization. Enter the invite code to join.
-        </Text>
-
-        <Input
-          value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase())}
-          placeholder="e.g. ABC123"
-          size="lg"
-          textAlign="center"
-          fontWeight="700"
-          letterSpacing="0.15em"
-          fontSize="xl"
-          mb={4}
-          maxLength={10}
-          onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-        />
-
-        <HStack gap={2}>
-          <Button
-            flex={1}
-            variant="outline"
-            colorScheme="gray"
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            flex={1}
-            colorScheme="purple"
-            onClick={handleJoin}
-            disabled={!code.trim() || loading}
-          >
-            {loading ? <Spinner size="sm" /> : "Join"}
-          </Button>
-        </HStack>
-      </Box>
-    </Box>
+      <div className="flex gap-2">
+        <button className="btn btn-ghost flex-1" onClick={onClose}>Cancel</button>
+        <button
+          className="btn btn-primary flex-1"
+          onClick={handleJoin}
+          disabled={!code.trim() || loading}
+        >
+          {loading ? <div className="spinner" style={{ width: 16, height: 16 }} /> : "Join"}
+        </button>
+      </div>
+    </ModalOverlay>
   );
 };
 
@@ -229,152 +188,63 @@ const EditModal = ({ isOpen, onClose, org, onSave }) => {
     setLoading(false);
   };
 
-  return (
-    <Box
-      position="fixed"
-      inset={0}
-      zIndex={1000}
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
+  const visBtn = (active, label, Icon, val) => (
+    <button
+      style={{
+        flex: 1, padding: "8px", borderRadius: 8, border: `2px solid ${active ? "var(--primary)" : "var(--border-default)"}`,
+        background: active ? "var(--bg-raised)" : "white", color: active ? "var(--primary)" : "#6b7280",
+        fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+      }}
+      onClick={() => setIsPublic(val)}
     >
-      <Box
-        position="absolute"
-        inset={0}
-        bg="blackAlpha.500"
-        onClick={onClose}
-      />
-      <Box
-        position="relative"
-        bg="white"
-        borderRadius="xl"
-        boxShadow="2xl"
-        p={6}
-        w="480px"
-        maxW="90vw"
-      >
-        <HStack justify="space-between" mb={4}>
-          <HStack gap={2}>
-            <Settings size={20} color="#7c3aed" />
-            <Heading size="md" color="gray.800">
-              Edit Organization
-            </Heading>
-          </HStack>
-          <Box
-            as="button"
-            p={1}
-            borderRadius="md"
-            _hover={{ bg: "gray.100" }}
-            onClick={onClose}
-          >
-            <X size={18} color="#9ca3af" />
-          </Box>
-        </HStack>
+      <Icon size={14} /> {label}
+    </button>
+  );
 
-        <VStack gap={3} align="stretch">
-          <Box>
-            <Text fontSize="sm" fontWeight="600" color="gray.700" mb={1}>
-              Name *
-            </Text>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Organization name"
-            />
-          </Box>
-          <Box>
-            <Text fontSize="sm" fontWeight="600" color="gray.700" mb={1}>
-              About
-            </Text>
-            <Input
-              value={about}
-              onChange={(e) => setAbout(e.target.value)}
-              placeholder="Short description"
-            />
-          </Box>
-          <Box>
-            <Text fontSize="sm" fontWeight="600" color="gray.700" mb={1}>
-              Join Code
-            </Text>
-            <Input
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="Current code"
-              maxLength={10}
-              fontFamily="mono"
-              letterSpacing="0.1em"
-            />
-          </Box>
-          <Box>
-            <Text fontSize="sm" fontWeight="600" color="gray.700" mb={1}>
-              Visibility
-            </Text>
-            <HStack gap={2}>
-              <Box
-                as="button"
-                flex={1}
-                py={2}
-                borderRadius="lg"
-                border="2px solid"
-                borderColor={isPublic ? "purple.500" : "gray.200"}
-                bg={isPublic ? "purple.50" : "white"}
-                color={isPublic ? "purple.700" : "gray.500"}
-                fontSize="sm"
-                fontWeight="600"
-                onClick={() => setIsPublic(true)}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                gap={1}
-              >
-                <Globe size={14} /> Public
-              </Box>
-              <Box
-                as="button"
-                flex={1}
-                py={2}
-                borderRadius="lg"
-                border="2px solid"
-                borderColor={!isPublic ? "purple.500" : "gray.200"}
-                bg={!isPublic ? "purple.50" : "white"}
-                color={!isPublic ? "purple.700" : "gray.500"}
-                fontSize="sm"
-                fontWeight="600"
-                onClick={() => setIsPublic(false)}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                gap={1}
-              >
-                <Lock size={14} /> Private
-              </Box>
-            </HStack>
-          </Box>
-        </VStack>
+  return (
+    <ModalOverlay onClose={onClose}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Settings size={20} color="var(--primary)" />
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Edit Organization</h3>
+        </div>
+        <button style={{ background: "none", border: "none", cursor: "pointer" }} onClick={onClose}>
+          <X size={18} color="#9ca3af" />
+        </button>
+      </div>
 
-        <HStack gap={2} mt={5}>
-          <Button
-            flex={1}
-            variant="outline"
-            colorScheme="gray"
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            flex={1}
-            colorScheme="purple"
-            onClick={handleSave}
-            disabled={!name.trim() || loading}
-            gap={1}
-          >
-            {loading ? <Spinner size="sm" /> : <><Save size={14} /> Save</>}
-          </Button>
-        </HStack>
-      </Box>
-    </Box>
+      <div className="flex flex-col gap-3">
+        <div className="form-group">
+          <label className="form-label">Name *</label>
+          <input className="input w-full" value={name} onChange={(e) => setName(e.target.value)} placeholder="Organization name" />
+        </div>
+        <div className="form-group">
+          <label className="form-label">About</label>
+          <input className="input w-full" value={about} onChange={(e) => setAbout(e.target.value)} placeholder="Short description" />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Join Code</label>
+          <input className="input w-full" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Current code" maxLength={10} style={{ fontFamily: "monospace", letterSpacing: "0.1em" }} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Visibility</label>
+          <div className="flex gap-2">
+            {visBtn(isPublic, "Public", Globe, true)}
+            {visBtn(!isPublic, "Private", Lock, false)}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-2 mt-4">
+        <button className="btn btn-ghost flex-1" onClick={onClose}>Cancel</button>
+        <button className="btn btn-primary flex-1" onClick={handleSave} disabled={!name.trim() || loading}>
+          {loading ? <div className="spinner" style={{ width: 16, height: 16 }} /> : <><Save size={14} /> Save</>}
+        </button>
+      </div>
+    </ModalOverlay>
   );
 };
+
 // ─── Add Member Modal ─────────────────────────────────────────────────────────
 
 const AddMemberModal = ({ isOpen, onClose, orgId, onAdd }) => {
@@ -384,15 +254,8 @@ const AddMemberModal = ({ isOpen, onClose, orgId, onAdd }) => {
   const [addingId, setAddingId] = useState(null);
 
   useEffect(() => {
-    if (!isOpen) {
-      setQuery("");
-      setResults([]);
-      return;
-    }
-    if (query.trim().length < 1) {
-      setResults([]);
-      return;
-    }
+    if (!isOpen) { setQuery(""); setResults([]); return; }
+    if (query.trim().length < 1) { setResults([]); return; }
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
@@ -401,11 +264,7 @@ const AddMemberModal = ({ isOpen, onClose, orgId, onAdd }) => {
           const data = resp.data;
           setResults(data.content ?? data);
         }
-      } catch {
-        setResults([]);
-      } finally {
-        setLoading(false);
-      }
+      } catch { setResults([]); } finally { setLoading(false); }
     }, 300);
     return () => clearTimeout(timer);
   }, [query, isOpen, orgId]);
@@ -420,153 +279,77 @@ const AddMemberModal = ({ isOpen, onClose, orgId, onAdd }) => {
   };
 
   return (
-    <Box
-      position="fixed"
-      inset={0}
-      zIndex={1000}
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-    >
-      <Box
-        position="absolute"
-        inset={0}
-        bg="blackAlpha.500"
-        onClick={onClose}
-      />
-      <Box
-        position="relative"
-        bg="white"
-        borderRadius="xl"
-        boxShadow="2xl"
-        p={6}
-        w="480px"
-        maxW="90vw"
-        maxH="80vh"
-        display="flex"
-        flexDirection="column"
-      >
-        <HStack justify="space-between" mb={4}>
-          <HStack gap={2}>
-            <UserPlus size={20} color="#7c3aed" />
-            <Heading size="md" color="gray.800">
-              Add Member
-            </Heading>
-          </HStack>
-          <Box
-            as="button"
-            p={1}
-            borderRadius="md"
-            _hover={{ bg: "gray.100" }}
-            onClick={onClose}
-          >
-            <X size={18} color="#9ca3af" />
-          </Box>
-        </HStack>
+    <ModalOverlay onClose={onClose}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <UserPlus size={20} color="var(--primary)" />
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Add Member</h3>
+        </div>
+        <button style={{ background: "none", border: "none", cursor: "pointer" }} onClick={onClose}>
+          <X size={18} color="#9ca3af" />
+        </button>
+      </div>
 
-        <Box position="relative" mb={3}>
-          <Box
-            position="absolute"
-            left={2}
-            top="50%"
-            transform="translateY(-50%)"
-          >
-            <Search size={16} color="#9CA3AF" />
-          </Box>
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by username..."
-            pl={8}
-            size="md"
-          />
-        </Box>
+      <div style={{ marginBottom: 12 }}>
+        <SuggestiveSearch
+          value={query}
+          onChange={(val) => setQuery(val)}
+          suggestions={["Search by username...", "Find a member"]}
+          style={{ width: "100%", maxWidth: 280 }}
+        />
+      </div>
 
-        <Box flex={1} overflow="auto" minH="200px">
-          {loading ? (
-            <VStack py={6}>
-              <Spinner size="md" color="purple.500" />
-            </VStack>
-          ) : results.length > 0 ? (
-            <VStack align="stretch" gap={1}>
-              {results.map((user) => (
-                <HStack
-                  key={user.userId}
-                  px={3}
-                  py={2}
-                  borderRadius="lg"
-                  _hover={{ bg: "purple.50" }}
-                  justify="space-between"
-                >
-                  <HStack gap={2}>
-                    <Box
-                      w="32px"
-                      h="32px"
-                      borderRadius="full"
-                      bg="purple.100"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      fontSize="sm"
-                      fontWeight="700"
-                      color="purple.700"
-                      overflow="hidden"
-                      flexShrink={0}
-                    >
-                      {user.profileUrl ? (
-                        <img
-                          src={user.profileUrl}
-                          alt=""
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        (user.username || "U").charAt(0).toUpperCase()
-                      )}
-                    </Box>
-                    <VStack align="start" gap={0}>
-                      <Text fontSize="sm" fontWeight="600" color="gray.800">
-                        {user.name || user.username}
-                      </Text>
-                      <Text fontSize="xs" color="gray.400">
-                        @{user.username}
-                      </Text>
-                    </VStack>
-                  </HStack>
-                  <Button
-                    size="xs"
-                    colorScheme="purple"
-                    onClick={() => handleAdd(user.userId)}
-                    disabled={addingId === user.userId}
+      <div style={{ flex: 1, overflowY: "auto", minHeight: 200 }}>
+        {loading ? (
+          <div style={{ display: "flex", justifyContent: "center", padding: 24 }}>
+            <div className="spinner" />
+          </div>
+        ) : results.length > 0 ? (
+          <div className="flex flex-col gap-1">
+            {results.map((user) => (
+              <div
+                key={user.userId}
+                className="flex items-center justify-between"
+                style={{ padding: "8px 12px", borderRadius: 8, background: "var(--bg-raised)" }}
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    style={{
+                      width: 32, height: 32, borderRadius: "50%", background: "var(--bg-overlay)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 13, fontWeight: 700, color: "var(--primary)", overflow: "hidden", flexShrink: 0,
+                    }}
                   >
-                    {addingId === user.userId ? (
-                      <Spinner size="xs" />
+                    {user.profileUrl ? (
+                      <img src={user.profileUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     ) : (
-                      "Add"
+                      (user.username || "U").charAt(0).toUpperCase()
                     )}
-                  </Button>
-                </HStack>
-              ))}
-            </VStack>
-          ) : query.trim().length > 0 ? (
-            <VStack py={6}>
-              <Text fontSize="sm" color="gray.400">
-                No users found
-              </Text>
-            </VStack>
-          ) : (
-            <VStack py={6}>
-              <Text fontSize="sm" color="gray.400">
-                Type a username to search
-              </Text>
-            </VStack>
-          )}
-        </Box>
-      </Box>
-    </Box>
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{user.name || user.username}</p>
+                    <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted)" }}>@{user.username}</p>
+                  </div>
+                </div>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => handleAdd(user.userId)}
+                  disabled={addingId === user.userId}
+                >
+                  {addingId === user.userId ? <div className="spinner" style={{ width: 14, height: 14 }} /> : "Add"}
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ padding: 24, textAlign: "center" }}>
+            <span className="text-sm text-muted">
+              {query.trim().length > 0 ? "No users found" : "Type a username to search"}
+            </span>
+          </div>
+        )}
+      </div>
+    </ModalOverlay>
   );
 };
 
@@ -598,9 +381,7 @@ const OrganizationDetailPage = () => {
     try {
       setLoading(true);
       const resp = await ApiService.getOrganizationBySlug(slug);
-      if (resp.statusCode === 200) {
-        setOrg(resp.data);
-      }
+      if (resp.statusCode === 200) setOrg(resp.data);
     } catch (err) {
       showMessage(err.response?.data?.message || err.message, "error");
       navigate("/organizations");
@@ -613,11 +394,7 @@ const OrganizationDetailPage = () => {
     if (!org) return;
     try {
       setMembersLoading(true);
-      const resp = await ApiService.getOrganizationMembers(org.id, {
-        page: p,
-        size: 20,
-        search: memberSearch,
-      });
+      const resp = await ApiService.getOrganizationMembers(org.id, { page: p, size: 20, search: memberSearch });
       if (resp.statusCode === 200) {
         const data = resp.data;
         setMembers(data.content ?? data);
@@ -631,21 +408,11 @@ const OrganizationDetailPage = () => {
     }
   };
 
-  useEffect(() => {
-    fetchOrg();
-  }, [slug]);
-
-  useEffect(() => {
-    if (org) fetchMembers(memberPage);
-  }, [org, memberPage]);
-
-  // Debounced member search
+  useEffect(() => { fetchOrg(); }, [slug]);
+  useEffect(() => { if (org) fetchMembers(memberPage); }, [org, memberPage]);
   useEffect(() => {
     if (org) {
-      const timer = setTimeout(() => {
-        setMemberPage(0);
-        fetchMembers(0);
-      }, 300);
+      const timer = setTimeout(() => { setMemberPage(0); fetchMembers(0); }, 300);
       return () => clearTimeout(timer);
     }
   }, [memberSearch]);
@@ -658,29 +425,15 @@ const OrganizationDetailPage = () => {
     }
   };
 
-  // ─── Join handler ───────────────────────────────────────────────────────
   const handleJoinClick = async () => {
-    if (!isAuthenticated) {
-      showMessage("Please log in to join an organization", "error");
-      return;
-    }
-
+    if (!isAuthenticated) { showMessage("Please log in to join an organization", "error"); return; }
     if (org.isPublic) {
-      // Public org — join directly, no code needed
       setJoinLoading(true);
       try {
         const resp = await ApiService.joinOrganization(org.id);
-        if (resp.statusCode === 200) {
-          showMessage("Joined organization successfully!", "success");
-          fetchOrg();
-        }
-      } catch (err) {
-        showMessage(err.response?.data?.message || err.message, "error");
-      } finally {
-        setJoinLoading(false);
-      }
+        if (resp.statusCode === 200) { showMessage("Joined organization successfully!", "success"); fetchOrg(); }
+      } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); } finally { setJoinLoading(false); }
     } else {
-      // Private org — show code prompt
       setJoinCodeOpen(true);
     }
   };
@@ -688,129 +441,69 @@ const OrganizationDetailPage = () => {
   const handleJoinWithCode = async (code) => {
     try {
       const resp = await ApiService.joinOrganization(org.id, code);
-      if (resp.statusCode === 200) {
-        showMessage("Joined organization successfully!", "success");
-        setJoinCodeOpen(false);
-        fetchOrg();
-      }
-    } catch (err) {
-      showMessage(err.response?.data?.message || err.message, "error");
-    }
+      if (resp.statusCode === 200) { showMessage("Joined organization successfully!", "success"); setJoinCodeOpen(false); fetchOrg(); }
+    } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); }
   };
 
   const handleLeave = () =>
-    showConfirm(
-      "Leave Organization",
-      `Are you sure you want to leave "${org.name}"?`,
-      async () => {
-        try {
-          const resp = await ApiService.leaveOrganization(org.id);
-          if (resp.statusCode === 200) {
-            showMessage("Left organization", "success");
-            fetchOrg();
-          }
-        } catch (err) {
-          showMessage(err.response?.data?.message || err.message, "error");
-        }
-      },
-    );
+    showConfirm("Leave Organization", `Are you sure you want to leave "${org.name}"?`, async () => {
+      try {
+        const resp = await ApiService.leaveOrganization(org.id);
+        if (resp.statusCode === 200) { showMessage("Left organization", "success"); fetchOrg(); }
+      } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); }
+    });
 
   const handleUpdateOrg = async (data) => {
     try {
       const resp = await ApiService.updateOrganization(org.id, data);
-      if (resp.statusCode === 200) {
-        showMessage("Organization updated!", "success");
-        setEditOpen(false);
-        fetchOrg();
-      }
-    } catch (err) {
-      showMessage(err.response?.data?.message || err.message, "error");
-    }
+      if (resp.statusCode === 200) { showMessage("Organization updated!", "success"); setEditOpen(false); fetchOrg(); }
+    } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); }
   };
 
   const handleAddMember = async (userId) => {
     try {
       const resp = await ApiService.addMember(org.id, userId);
-      if (resp.statusCode === 201) {
-        showMessage("Member added!", "success");
-        fetchMembers(memberPage);
-        fetchOrg();
-      }
-    } catch (err) {
-      showMessage(err.response?.data?.message || err.message, "error");
-    }
+      if (resp.statusCode === 201) { showMessage("Member added!", "success"); fetchMembers(memberPage); fetchOrg(); }
+    } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); }
   };
 
   const handleToggleRole = (member) => {
     const newRole = member.role === "ADMIN" ? "MEMBER" : "ADMIN";
-    const action =
-      newRole === "ADMIN" ? "promote to Admin" : "demote to Member";
-    showConfirm(
-      "Change Role",
-      `Are you sure you want to ${action} "${member.username}"?`,
-      async () => {
-        try {
-          const resp = await ApiService.updateMemberRole(
-            org.id,
-            member.userId,
-            newRole,
-          );
-          if (resp.statusCode === 200) {
-            showMessage(`Role updated to ${newRole}`, "success");
-            fetchMembers(memberPage);
-          }
-        } catch (err) {
-          showMessage(err.response?.data?.message || err.message, "error");
-        }
-      },
-    );
+    const action = newRole === "ADMIN" ? "promote to Admin" : "demote to Member";
+    showConfirm("Change Role", `Are you sure you want to ${action} "${member.username}"?`, async () => {
+      try {
+        const resp = await ApiService.updateMemberRole(org.id, member.userId, newRole);
+        if (resp.statusCode === 200) { showMessage(`Role updated to ${newRole}`, "success"); fetchMembers(memberPage); }
+      } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); }
+    });
   };
 
   const handleRemoveMember = (member) =>
-    showConfirm(
-      "Remove Member",
-      `Remove "${member.username}" from the organization?`,
-      async () => {
-        try {
-          const resp = await ApiService.removeMember(org.id, member.userId);
-          if (resp.statusCode === 200) {
-            showMessage("Member removed", "success");
-            fetchMembers(memberPage);
-            fetchOrg();
-          }
-        } catch (err) {
-          showMessage(err.response?.data?.message || err.message, "error");
-        }
-      },
-    );
+    showConfirm("Remove Member", `Remove "${member.username}" from the organization?`, async () => {
+      try {
+        const resp = await ApiService.removeMember(org.id, member.userId);
+        if (resp.statusCode === 200) { showMessage("Member removed", "success"); fetchMembers(memberPage); fetchOrg(); }
+      } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); }
+    });
 
   const handleDeleteOrg = () =>
-    showConfirm(
-      "Delete Organization",
-      `This will permanently delete "${org.name}" and remove all members. This cannot be undone.`,
-      async () => {
-        try {
-          const resp = await ApiService.deleteOrganization(org.id);
-          if (resp.statusCode === 200) {
-            showMessage("Organization deleted", "success");
-            navigate("/organizations");
-          }
-        } catch (err) {
-          showMessage(err.response?.data?.message || err.message, "error");
-        }
-      },
-    );
+    showConfirm("Delete Organization", `This will permanently delete "${org.name}" and remove all members. This cannot be undone.`, async () => {
+      try {
+        const resp = await ApiService.deleteOrganization(org.id);
+        if (resp.statusCode === 200) { showMessage("Organization deleted", "success"); navigate("/organizations"); }
+      } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); }
+    });
 
   if (loading) {
     return (
-      <Box minH="100vh" bg="gray.50" py={8}>
-        <Container maxW="container.xl">
-          <VStack gap={4} py={20}>
-            <Spinner size="xl" color="purple.500" thickness="4px" />
-            <Text color="gray.600">Loading organization...</Text>
-          </VStack>
-        </Container>
-      </Box>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+        <div className="page-container">
+          <div className="flex flex-col items-center gap-4" style={{ padding: "80px 0" }}>
+            <div className="spinner" />
+            <span className="text-muted">Loading organization...</span>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -824,581 +517,244 @@ const OrganizationDetailPage = () => {
   const TABS = isMember ? ["MEMBERS", "LABS"] : ["ADMINS"];
 
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Container maxW="container.xl">
-        <VStack align="stretch" gap={6}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+      <div className="page-container">
+        <div className="flex flex-col gap-6">
           {/* Back */}
-          <Box>
-            <Button
-              variant="ghost"
-              size="sm"
-              color="gray.500"
-              onClick={() => navigate("/organizations")}
-              gap={1}
-            >
+          <div>
+            <button className="btn btn-ghost btn-sm" onClick={() => navigate("/organizations")}>
               <ArrowLeft size={16} /> Back to Organizations
-            </Button>
-          </Box>
+            </button>
+          </div>
 
           {/* Hero */}
-          <Box
+          <div
             style={{
-              background:
-                "linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #6366f1 100%)",
+              background: "linear-gradient(135deg, var(--navy) 0%, var(--navy-bright) 100%)",
+              borderRadius: 16, padding: 32, color: "white", position: "relative", overflow: "hidden",
             }}
-            borderRadius="2xl"
-            p={8}
-            color="white"
-            position="relative"
-            overflow="hidden"
           >
-            <Box
-              position="absolute"
-              inset={0}
-              opacity={0.1}
-              backgroundImage="radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)"
-              backgroundSize="60px 60px"
-            />
-            <VStack align="flex-start" gap={3} position="relative">
-              <HStack gap={3} align="center">
+            <div style={{ position: "absolute", inset: 0, opacity: 0.1, backgroundImage: "radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+            <div className="flex flex-col gap-3" style={{ position: "relative" }}>
+              <div className="flex items-center gap-3">
                 <Building2 size={32} />
-                <Heading size="2xl" fontWeight="900">
-                  {org.name}
-                </Heading>
-                {org.isPublic ? (
-                  <Globe size={18} opacity={0.7} />
-                ) : (
-                  <Lock size={18} opacity={0.7} />
-                )}
-              </HStack>
-
-              {org.about && (
-                <Text fontSize="md" opacity={0.85} maxW="600px">
-                  {org.about}
-                </Text>
-              )}
-
-              <HStack gap={3} flexWrap="wrap">
-                <Badge
-                  bg="whiteAlpha.200"
-                  color="white"
-                  px={3}
-                  py={1}
-                  borderRadius="full"
-                  fontSize="sm"
-                  display="flex"
-                  alignItems="center"
-                  gap={1}
-                >
+                <h2 style={{ fontSize: 28, fontWeight: 900, margin: 0 }}>{org.name}</h2>
+                {org.isPublic ? <Globe size={18} style={{ opacity: 0.7 }} /> : <Lock size={18} style={{ opacity: 0.7 }} />}
+              </div>
+              {org.about && <p style={{ fontSize: 15, opacity: 0.85, margin: 0, maxWidth: 600 }}>{org.about}</p>}
+              <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.2)", color: "white", padding: "4px 12px", borderRadius: 9999, fontSize: 13 }}>
                   <Users size={14} /> {org.totalMembers} members
-                </Badge>
-                <Badge
-                  bg="whiteAlpha.200"
-                  color="white"
-                  px={3}
-                  py={1}
-                  borderRadius="full"
-                  fontSize="sm"
-                  display="flex"
-                  alignItems="center"
-                  gap={1}
-                >
+                </span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.2)", color: "white", padding: "4px 12px", borderRadius: 9999, fontSize: 13 }}>
                   <Calendar size={14} /> Created {fmt(org.createdAt)}
-                </Badge>
+                </span>
                 {isMember ? (
-                  <Badge
-                    bg={
-                      org.myRole === "OWNER"
-                        ? "yellow.400"
-                        : org.myRole === "ADMIN"
-                          ? "blue.400"
-                          : "green.400"
-                    }
-                    color="white"
-                    px={3}
-                    py={1}
-                    borderRadius="full"
-                    fontSize="sm"
-                  >
-                    You are{" "}
-                    {org.myRole.charAt(0) + org.myRole.slice(1).toLowerCase()}
-                  </Badge>
+                  <span style={{ background: org.myRole === "OWNER" ? "#facc15" : org.myRole === "ADMIN" ? "#60a5fa" : "#4ade80", color: "white", padding: "4px 12px", borderRadius: 9999, fontSize: 13, fontWeight: 600 }}>
+                    You are {org.myRole.charAt(0) + org.myRole.slice(1).toLowerCase()}
+                  </span>
                 ) : (
-                  <Badge
-                    bg="whiteAlpha.300"
-                    color="white"
-                    px={3}
-                    py={1}
-                    borderRadius="full"
-                    fontSize="sm"
-                  >
+                  <span style={{ background: "rgba(255,255,255,0.3)", color: "white", padding: "4px 12px", borderRadius: 9999, fontSize: 13 }}>
                     You are not a member
-                  </Badge>
+                  </span>
                 )}
-              </HStack>
-            </VStack>
-          </Box>
+              </div>
+            </div>
+          </div>
 
           {/* Action bar */}
-          <HStack gap={3} flexWrap="wrap">
-            {/* Join code (visible to OWNER/ADMIN) */}
+          <div className="flex items-center flex-wrap gap-3">
             {org.code && (
-              <HStack
-                bg="white"
-                px={4}
-                py={3}
-                borderRadius="lg"
-                boxShadow="sm"
-                border="1px solid"
-                borderColor="gray.200"
-                gap={2}
-              >
-                <Text fontSize="sm" color="gray.500" fontWeight="600">
-                  Join Code:
-                </Text>
-                <Text
-                  fontSize="lg"
-                  fontWeight="800"
-                  color="purple.600"
-                  letterSpacing="0.1em"
-                  fontFamily="mono"
-                >
-                  {org.code}
-                </Text>
-                <Box
-                  as="button"
-                  p={1}
-                  borderRadius="md"
-                  _hover={{ bg: "purple.50" }}
-                  onClick={handleCopyCode}
-                  title="Copy code"
-                >
-                  {codeCopied ? (
-                    <Check size={16} color="#16a34a" />
-                  ) : (
-                    <Copy size={16} color="#7c3aed" />
-                  )}
-                </Box>
-              </HStack>
+              <div className="flex items-center gap-2" style={{ background: "var(--bg-raised)", padding: "10px 16px", borderRadius: 10, border: "1px solid var(--border-default)" }}>
+                <span className="text-sm" style={{ fontWeight: 600, color: "var(--text-muted)" }}>Join Code:</span>
+                <span style={{ fontSize: 18, fontWeight: 800, color: "var(--primary)", letterSpacing: "0.1em", fontFamily: "monospace" }}>{org.code}</span>
+                <button style={{ background: "none", border: "none", cursor: "pointer", padding: 4, borderRadius: 6 }} onClick={handleCopyCode} title="Copy code">
+                  {codeCopied ? <Check size={16} color="#16a34a" /> : <Copy size={16} color="var(--primary)" />}
+                </button>
+              </div>
             )}
 
-            <Box flex={1} />
+            <div style={{ flex: 1 }} />
 
-            {/* Join button for non-members */}
             {!isMember && isAuthenticated && (
-              <Button
-                colorScheme="purple"
-                size="sm"
-                gap={1}
-                onClick={handleJoinClick}
-                disabled={joinLoading}
-              >
-                {joinLoading ? (
-                  <Spinner size="sm" />
-                ) : (
-                  <>
-                    {org.isPublic ? (
-                      <LogIn size={14} />
-                    ) : (
-                      <Lock size={14} />
-                    )}
-                    Join{org.isPublic ? "" : " 🔒"}
-                  </>
-                )}
-              </Button>
+              <button className="btn btn-primary btn-sm" onClick={handleJoinClick} disabled={joinLoading}>
+                {joinLoading ? <div className="spinner" style={{ width: 16, height: 16 }} /> : <>{org.isPublic ? <LogIn size={14} /> : <Lock size={14} />} Join{org.isPublic ? "" : " 🔒"}</>}
+              </button>
             )}
-
-            {/* Member actions */}
             {isMember && !isOwner && (
-              <Button
-                variant="outline"
-                colorScheme="red"
-                size="sm"
-                gap={1}
-                onClick={handleLeave}
-              >
+              <button className="btn btn-danger btn-sm" onClick={handleLeave}>
                 <LogOut size={14} /> Leave
-              </Button>
+              </button>
             )}
             {canManage && (
-              <Button
-                variant="outline"
-                colorScheme="purple"
-                size="sm"
-                gap={1}
-                onClick={() => setEditOpen(true)}
-              >
+              <button className="btn btn-ghost btn-sm" style={{ border: "1px solid var(--primary)", color: "var(--primary)" }} onClick={() => setEditOpen(true)}>
                 <Settings size={14} /> Edit
-              </Button>
+              </button>
             )}
             {isOwner && (
-              <Button
-                variant="outline"
-                colorScheme="red"
-                size="sm"
-                gap={1}
-                onClick={handleDeleteOrg}
-              >
+              <button className="btn btn-danger btn-sm" onClick={handleDeleteOrg}>
                 Delete
-              </Button>
+              </button>
             )}
-          </HStack>
+          </div>
 
           {/* Tabs */}
-          <HStack
-            bg="white"
-            px={3}
-            py={2}
-            borderRadius="lg"
-            boxShadow="sm"
-            border="1px solid"
-            borderColor="gray.200"
-            gap={1}
-          >
+          <div className="flex items-center gap-1" style={{ background: "var(--bg-raised)", padding: 6, borderRadius: 10, border: "1px solid var(--border-default)" }}>
             {TABS.map((t) => (
-              <Box
+              <button
                 key={t}
-                as="button"
-                px={4}
-                py={2}
-                borderRadius="md"
-                fontSize="sm"
-                fontWeight="600"
-                bg={activeTab === t ? "purple.600" : "transparent"}
-                color={activeTab === t ? "white" : "gray.500"}
-                transition="all 0.15s"
-                _hover={
-                  activeTab !== t
-                    ? { bg: "purple.50", color: "purple.600" }
-                    : {}
-                }
                 onClick={() => setActiveTab(t)}
-                style={{ outline: "none" }}
+                style={{
+                  padding: "6px 16px", borderRadius: 6, fontSize: 13, fontWeight: 600,
+                  background: activeTab === t ? "var(--primary)" : "transparent",
+                  color: activeTab === t ? "white" : "var(--text-muted)",
+                  border: "none", cursor: "pointer", transition: "all 0.15s",
+                }}
               >
                 {t.charAt(0) + t.slice(1).toLowerCase()}
-              </Box>
+              </button>
             ))}
-          </HStack>
+          </div>
 
           {/* Members Table */}
           {(activeTab === "MEMBERS" || activeTab === "ADMINS") && (
             <>
-              {/* Search + Add Member bar */}
               {isMember && (
-                <HStack gap={3}>
-                  <Box
-                    flex={1}
-                    bg="white"
-                    px={4}
-                    py={3}
-                    borderRadius="lg"
-                    boxShadow="sm"
-                    border="1px solid"
-                    borderColor="gray.200"
-                  >
-                    <Box position="relative">
-                      <Box
-                        position="absolute"
-                        left={2}
-                        top="50%"
-                        transform="translateY(-50%)"
-                      >
-                        <Search size={16} color="#9CA3AF" />
-                      </Box>
-                      <Input
-                        value={memberSearch}
-                        onChange={(e) => setMemberSearch(e.target.value)}
-                        placeholder="Search members by username..."
-                        pl={8}
-                        border="none"
-                        _focus={{ boxShadow: "none" }}
-                        fontSize="sm"
-                      />
-                    </Box>
-                  </Box>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 flex-1" style={{ background: "var(--bg-raised)", padding: "10px 16px", borderRadius: 10, border: "1px solid var(--border-default)" }}>
+                    <Search size={16} color="#9CA3AF" />
+                    <input
+                      className="input"
+                      value={memberSearch}
+                      onChange={(e) => setMemberSearch(e.target.value)}
+                      placeholder="Search members by username..."
+                      style={{ border: "none", background: "transparent", flex: 1, outline: "none" }}
+                    />
+                  </div>
                   {canManage && (
-                    <Button
-                      colorScheme="purple"
-                      size="md"
-                      gap={1}
-                      onClick={() => setAddMemberOpen(true)}
-                      flexShrink={0}
-                    >
+                    <button className="btn btn-primary btn-sm" onClick={() => setAddMemberOpen(true)}>
                       <UserPlus size={16} /> Add Member
-                    </Button>
+                    </button>
                   )}
-                </HStack>
+                </div>
               )}
 
-            <Box
-              bg="white"
-              borderRadius="xl"
-              boxShadow="md"
-              overflow="hidden"
-              position="relative"
-            >
-              {membersLoading && (
-                <Box
-                  position="absolute"
-                  inset={0}
-                  bg="whiteAlpha.700"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  zIndex={10}
-                >
-                  <Spinner size="lg" color="purple.500" thickness="3px" />
-                </Box>
-              )}
+              <div className="card" style={{ overflow: "hidden", position: "relative" }}>
+                {membersLoading && (
+                  <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+                    <div className="spinner" />
+                  </div>
+                )}
 
-              <Table.Root variant="line" size="md">
-                <Table.Header bg="purple.50">
-                  <Table.Row>
-                    <Table.ColumnHeader w="5%">
-                      <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                        #
-                      </Text>
-                    </Table.ColumnHeader>
-                    <Table.ColumnHeader w="35%">
-                      <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                        User
-                      </Text>
-                    </Table.ColumnHeader>
-                    <Table.ColumnHeader w="15%">
-                      <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                        Role
-                      </Text>
-                    </Table.ColumnHeader>
-                    <Table.ColumnHeader w="20%">
-                      <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                        Joined
-                      </Text>
-                    </Table.ColumnHeader>
-                    {canManage && (
-                      <Table.ColumnHeader w="15%" textAlign="center">
-                        <Text
-                          fontWeight="bold"
-                          color="purple.700"
-                          fontSize="sm"
-                        >
-                          Actions
-                        </Text>
-                      </Table.ColumnHeader>
-                    )}
-                  </Table.Row>
-                </Table.Header>
-
-                <Table.Body>
-                  {members.length > 0 ? (
-                    members.map((member, idx) => (
-                      <Table.Row
-                        key={member.id}
-                        _hover={{ bg: "purple.50" }}
-                        transition="background 0.15s"
-                        bg={idx % 2 === 0 ? "white" : "gray.50"}
-                      >
-                        <Table.Cell>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="600"
-                            color="gray.500"
-                          >
-                            {memberPage * 20 + idx + 1}
-                          </Text>
-                        </Table.Cell>
-
-                        <Table.Cell>
-                          <HStack gap={2}>
-                            <Box
-                              w="32px"
-                              h="32px"
-                              borderRadius="full"
-                              bg="purple.100"
-                              display="flex"
-                              alignItems="center"
-                              justifyContent="center"
-                              fontSize="sm"
-                              fontWeight="700"
-                              color="purple.700"
-                              overflow="hidden"
-                              flexShrink={0}
-                            >
-                              {member.profileUrl ? (
-                                <img
-                                  src={member.profileUrl}
-                                  alt=""
-                                  style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                  }}
-                                />
-                              ) : (
-                                (member.username || "U")
-                                  .charAt(0)
-                                  .toUpperCase()
-                              )}
-                            </Box>
-                            <VStack align="start" gap={0}>
-                              <Text
-                                fontSize="sm"
-                                fontWeight="700"
-                                color="gray.800"
-                                cursor="pointer"
-                                _hover={{ color: "purple.600" }}
-                                onClick={() =>
-                                  navigate(`/users/${member.username}`)
-                                }
-                              >
-                                {member.name || member.username}
-                              </Text>
-                              <Text fontSize="xs" color="gray.400">
-                                @{member.username}
-                              </Text>
-                            </VStack>
-                          </HStack>
-                        </Table.Cell>
-
-                        <Table.Cell>
-                          <RoleBadge role={member.role} />
-                        </Table.Cell>
-
-                        <Table.Cell>
-                          <Text fontSize="xs" color="gray.600">
-                            {fmt(member.joinedAt)}
-                          </Text>
-                        </Table.Cell>
-
-                        {canManage && (
-                          <Table.Cell>
-                            <HStack justify="center" gap={1}>
-                              {member.role !== "OWNER" && (
-                                <>
-                                  {isOwner && (
-                                    <Box
-                                      as="button"
-                                      px={2}
-                                      py={1}
-                                      borderRadius="md"
-                                      fontSize="xs"
-                                      fontWeight="600"
-                                      color={
-                                        member.role === "ADMIN"
-                                          ? "orange.600"
-                                          : "blue.600"
-                                      }
-                                      _hover={{
-                                        bg:
-                                          member.role === "ADMIN"
-                                            ? "orange.50"
-                                            : "blue.50",
-                                      }}
-                                      onClick={() => handleToggleRole(member)}
-                                      title={
-                                        member.role === "ADMIN"
-                                          ? "Demote to Member"
-                                          : "Promote to Admin"
-                                      }
+                <table className="table">
+                  <thead>
+                    <tr style={{ background: "var(--bg-raised)" }}>
+                      <th style={{ width: "5%" }}>#</th>
+                      <th style={{ width: "35%" }}>User</th>
+                      <th style={{ width: "15%" }}>Role</th>
+                      <th style={{ width: "20%" }}>Joined</th>
+                      {canManage && <th style={{ width: "15%", textAlign: "center" }}>Actions</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {members.length > 0 ? (
+                      members.map((member, idx) => (
+                        <tr key={member.id} style={{ background: idx % 2 === 0 ? "white" : "var(--bg-raised)" }}>
+                          <td>
+                            <span className="text-sm" style={{ fontWeight: 600, color: "var(--text-muted)" }}>
+                              {memberPage * 20 + idx + 1}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="flex items-center gap-2">
+                              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--bg-overlay)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "var(--primary)", overflow: "hidden", flexShrink: 0 }}>
+                                {member.profileUrl ? (
+                                  <img src={member.profileUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                ) : (
+                                  (member.username || "U").charAt(0).toUpperCase()
+                                )}
+                              </div>
+                              <div>
+                                <p
+                                  style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--text-primary)", cursor: "pointer" }}
+                                  onClick={() => navigate(`/users/${member.username}`)}
+                                >
+                                  {member.name || member.username}
+                                </p>
+                                <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted)" }}>@{member.username}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td><RoleBadge role={member.role} /></td>
+                          <td><span className="text-xs" style={{ color: "var(--text-secondary)" }}>{fmt(member.joinedAt)}</span></td>
+                          {canManage && (
+                            <td>
+                              <div className="flex items-center justify-center gap-1">
+                                {member.role !== "OWNER" && (
+                                  <>
+                                    {isOwner && (
+                                      <button
+                                        style={{
+                                          padding: "3px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer",
+                                          color: member.role === "ADMIN" ? "#ea580c" : "#2563eb",
+                                          background: "transparent",
+                                        }}
+                                        onClick={() => handleToggleRole(member)}
+                                        title={member.role === "ADMIN" ? "Demote to Member" : "Promote to Admin"}
+                                      >
+                                        {member.role === "ADMIN" ? "Demote" : "Promote"}
+                                      </button>
+                                    )}
+                                    <button
+                                      style={{ background: "none", border: "none", cursor: "pointer", padding: 4, borderRadius: 6, color: "#ef4444" }}
+                                      onClick={() => handleRemoveMember(member)}
+                                      title="Remove member"
                                     >
-                                      {member.role === "ADMIN"
-                                        ? "Demote"
-                                        : "Promote"}
-                                    </Box>
-                                  )}
-                                  <Box
-                                    as="button"
-                                    p={1}
-                                    borderRadius="md"
-                                    color="red.400"
-                                    _hover={{ bg: "red.50" }}
-                                    onClick={() => handleRemoveMember(member)}
-                                    title="Remove member"
-                                  >
-                                    <UserMinus size={14} />
-                                  </Box>
-                                </>
-                              )}
-                            </HStack>
-                          </Table.Cell>
-                        )}
-                      </Table.Row>
-                    ))
-                  ) : (
-                    <Table.Row>
-                      <Table.Cell
-                        colSpan={canManage ? 5 : 4}
-                        textAlign="center"
-                        py={10}
-                      >
-                        <VStack gap={2}>
-                          <Users size={32} color="#D1D5DB" />
-                          <Text color="gray.400" fontSize="sm">
-                            No members yet
-                          </Text>
-                        </VStack>
-                      </Table.Cell>
-                    </Table.Row>
-                  )}
-                </Table.Body>
-              </Table.Root>
+                                      <UserMinus size={14} />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={canManage ? 5 : 4} style={{ textAlign: "center", padding: "40px 0" }}>
+                          <div className="flex flex-col items-center gap-2">
+                            <Users size={32} color="#D1D5DB" />
+                            <span className="text-sm text-muted">No members yet</span>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
 
-              {/* Pagination */}
-              {memberTotalPages > 1 && (
-                <HStack
-                  justify="space-between"
-                  px={5}
-                  py={4}
-                  borderTopWidth="1px"
-                  borderColor="gray.100"
-                >
-                  <Text fontSize="sm" color="gray.500">
-                    Page {memberPage + 1} of {memberTotalPages}
-                  </Text>
-                  <HStack gap={1}>
-                    <Box
-                      as="button"
-                      p={1}
-                      borderRadius="md"
-                      color={memberPage === 0 ? "gray.300" : "gray.600"}
-                      _hover={
-                        memberPage > 0
-                          ? { bg: "purple.50", color: "purple.600" }
-                          : {}
-                      }
-                      onClick={() =>
-                        memberPage > 0 && setMemberPage((p) => p - 1)
-                      }
-                      disabled={memberPage === 0}
-                    >
-                      <ChevronLeft size={18} />
-                    </Box>
-                    <Box
-                      as="button"
-                      p={1}
-                      borderRadius="md"
-                      color={
-                        memberPage >= memberTotalPages - 1
-                          ? "gray.300"
-                          : "gray.600"
-                      }
-                      _hover={
-                        memberPage < memberTotalPages - 1
-                          ? { bg: "purple.50", color: "purple.600" }
-                          : {}
-                      }
-                      onClick={() =>
-                        memberPage < memberTotalPages - 1 &&
-                        setMemberPage((p) => p + 1)
-                      }
-                      disabled={memberPage >= memberTotalPages - 1}
-                    >
-                      <ChevronRight size={18} />
-                    </Box>
-                  </HStack>
-                </HStack>
-              )}
-            </Box>
-          </>
+                {memberTotalPages > 1 && (
+                  <div className="flex items-center justify-between" style={{ padding: "12px 20px", borderTop: "1px solid var(--border-subtle)" }}>
+                    <span className="text-sm text-muted">Page {memberPage + 1} of {memberTotalPages}</span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        style={{ background: "none", border: "none", cursor: memberPage === 0 ? "not-allowed" : "pointer", padding: 4, borderRadius: 6, color: memberPage === 0 ? "#d1d5db" : "var(--text-secondary)", opacity: memberPage === 0 ? 0.5 : 1 }}
+                        onClick={() => memberPage > 0 && setMemberPage((p) => p - 1)}
+                        disabled={memberPage === 0}
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+                      <button
+                        style={{ background: "none", border: "none", cursor: memberPage >= memberTotalPages - 1 ? "not-allowed" : "pointer", padding: 4, borderRadius: 6, color: memberPage >= memberTotalPages - 1 ? "#d1d5db" : "var(--text-secondary)", opacity: memberPage >= memberTotalPages - 1 ? 0.5 : 1 }}
+                        onClick={() => memberPage < memberTotalPages - 1 && setMemberPage((p) => p + 1)}
+                        disabled={memberPage >= memberTotalPages - 1}
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
           {/* Labs Tab */}
@@ -1406,37 +762,18 @@ const OrganizationDetailPage = () => {
             <LabListSection
               org={org}
               canManage={canManage}
-              onNavigateToLab={(labSlug) =>
-                navigate(`/organizations/${org.slug}/labs/${labSlug}`)
-              }
-              onCreateLab={() =>
-                navigate(`/organizations/${org.slug}/labs/new`)
-              }
+              onNavigateToLab={(labSlug) => navigate(`/organizations/${org.slug}/labs/${labSlug}`)}
+              onCreateLab={() => navigate(`/organizations/${org.slug}/labs/new`)}
             />
           )}
-        </VStack>
-      </Container>
+        </div>
+      </div>
 
       <ConfirmDialog />
-      <EditModal
-        isOpen={editOpen}
-        onClose={() => setEditOpen(false)}
-        org={org}
-        onSave={handleUpdateOrg}
-      />
-      <JoinCodeModal
-        isOpen={joinCodeOpen}
-        onClose={() => setJoinCodeOpen(false)}
-        onJoin={handleJoinWithCode}
-        orgName={org.name}
-      />
-      <AddMemberModal
-        isOpen={addMemberOpen}
-        onClose={() => setAddMemberOpen(false)}
-        orgId={org.id}
-        onAdd={handleAddMember}
-      />
-    </Box>
+      <EditModal isOpen={editOpen} onClose={() => setEditOpen(false)} org={org} onSave={handleUpdateOrg} />
+      <JoinCodeModal isOpen={joinCodeOpen} onClose={() => setJoinCodeOpen(false)} onJoin={handleJoinWithCode} orgName={org.name} />
+      <AddMemberModal isOpen={addMemberOpen} onClose={() => setAddMemberOpen(false)} orgId={org.id} onAdd={handleAddMember} />
+    </div>
   );
 };
 

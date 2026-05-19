@@ -1,346 +1,175 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  Badge,
-  HStack,
-  VStack,
-  Spinner,
-  Input,
-  Button,
-  Wrap,
-  WrapItem,
-} from "@chakra-ui/react";
-import { Table } from "@chakra-ui/react";
-import {
-  Book,
-  Trophy,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Plus,
-  Edit,
-  Trash2,
-  SlidersHorizontal,
-  X,
-  ChevronDown,
-  RotateCcw,
-  AlertTriangle,
+  Book, Trophy,
+  Plus, Edit, Trash2, SlidersHorizontal, X, ChevronDown, RotateCcw, AlertTriangle,
 } from "lucide-react";
+import SuggestiveSearch from "../common/SuggestiveSearch";
+import Pagination from "../common/Pagination";
+import FilterPills from "../common/FilterPills";
+import SortBar from "../common/SortBar";
 import ApiService from "../../services/ApiService";
 import { useConfirmDialog } from "../common/ConfirmDialog";
 import { useToast } from "../common/ToastMessage";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
 const DIFFICULTIES = ["EASY", "MEDIUM", "HARD"];
-
 const DIFF_STYLE = {
-  EASY: { label: "Easy", colorScheme: "green", hex: "#22c55e", bg: "#f0fdf4" },
-  MEDIUM: {
-    label: "Medium",
-    colorScheme: "orange",
-    hex: "#f97316",
-    bg: "#fff7ed",
-  },
-  HARD: { label: "Hard", colorScheme: "red", hex: "#ef4444", bg: "#fef2f2" },
+  EASY:   { hex: "var(--diff-easy)",   bg: "var(--green-subtle)",  label: "Easy" },
+  MEDIUM: { hex: "var(--diff-medium)", bg: "var(--amber-subtle)", label: "Medium" },
+  HARD:   { hex: "var(--diff-hard)",   bg: "var(--red-subtle)",   label: "Hard" },
 };
 
-// ─── Difficulty badge ─────────────────────────────────────────────────────────
 const DiffBadge = ({ difficulty }) => {
   const s = DIFF_STYLE[difficulty];
   if (!s) return null;
   return (
-    <Badge
-      colorScheme={s.colorScheme}
-      variant="subtle"
-      fontSize="xs"
-      px={2}
-      py="2px"
-      borderRadius="full"
-      fontWeight="600"
-    >
+    <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 9999, fontSize: 11, fontWeight: 600, background: s.bg, color: s.hex }}>
       {s.label}
-    </Badge>
+    </span>
   );
 };
 
-// ─── Filter panel ─────────────────────────────────────────────────────────────
-const FilterPanel = ({
-  availableTags,
-  selectedDifficulty,
-  onDifficultyChange,
-  selectedTagNames,
-  toggleTag,
-  onReset,
-  hasActiveFilters,
-}) => {
+const FilterPanel = ({ availableTags, selectedDifficulty, onDifficultyChange, selectedTagNames, toggleTag, onReset, hasActiveFilters }) => {
   const [tagSearch, setTagSearch] = useState("");
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
-        setTagDropdownOpen(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setTagDropdownOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   const filteredTags = availableTags.filter(
-    (t) =>
-      !selectedTagNames.includes(t.name) &&
-      t.name.toLowerCase().includes(tagSearch.toLowerCase()),
+    (t) => !selectedTagNames.includes(t.name) && t.name.toLowerCase().includes(tagSearch.toLowerCase())
   );
-
-  const activeFilterCount =
-    (selectedDifficulty ? 1 : 0) + selectedTagNames.length;
+  const activeFilterCount = (selectedDifficulty ? 1 : 0) + selectedTagNames.length;
 
   return (
-    <Box
-      bg="white"
-      borderRadius="xl"
-      border="1px solid"
-      borderColor="gray.200"
-      boxShadow="sm"
-      overflow="visible"
-    >
+    <div style={{
+      background: "var(--bg-raised)",
+      borderRadius: "var(--radius-lg)",
+      border: "1px solid var(--border-subtle)",
+      boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+      overflow: "visible",
+    }}>
       {/* Header */}
-      <HStack
-        px={5}
-        py={3}
-        borderBottomWidth="1px"
-        borderColor="gray.100"
-        justify="space-between"
-      >
-        <HStack gap={2}>
-          <SlidersHorizontal size={14} color="#9CA3AF" />
-          <Text
-            fontSize="xs"
-            fontWeight="700"
-            color="gray.500"
-            letterSpacing="0.08em"
-          >
-            FILTERS
-          </Text>
+      <div className="flex items-center justify-between" style={{ padding: "8px 16px", borderBottom: "1px solid var(--border-subtle)" }}>
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal size={14} color="var(--text-muted)" />
+          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em" }}>FILTERS</span>
           {hasActiveFilters && (
-            <Badge
-              colorScheme="purple"
-              borderRadius="full"
-              fontSize="10px"
-              px={2}
-              py="1px"
-            >
+            <span style={{ display: "inline-block", padding: "1px 8px", borderRadius: 9999, fontSize: 10, fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
               {activeFilterCount} active
-            </Badge>
+            </span>
           )}
-        </HStack>
+        </div>
         {hasActiveFilters && (
-          <Button
-            size="xs"
-            variant="ghost"
-            color="gray.400"
-            _hover={{ color: "red.500", bg: "red.50" }}
-            onClick={onReset}
-            gap={1}
-          >
-            <RotateCcw size={11} />
-            Reset
-          </Button>
+          <button className="btn btn-ghost btn-sm" style={{ color: "var(--text-muted)", gap: 4 }} onClick={onReset}>
+            <RotateCcw size={11} /> Reset
+          </button>
         )}
-      </HStack>
+      </div>
 
-      <VStack align="stretch" gap={0}>
-        {/* Difficulty */}
-        <HStack
-          px={5}
-          py={4}
-          gap={6}
-          align="center"
-          borderBottomWidth="1px"
-          borderColor="gray.100"
-        >
-          <Text fontSize="sm" fontWeight="500" color="gray.500" minW="90px">
-            Difficulty
-          </Text>
-          <HStack gap={2}>
-            {DIFFICULTIES.map((d) => {
-              const s = DIFF_STYLE[d];
-              const active = selectedDifficulty === d;
-              return (
-                <Box
-                  key={d}
-                  as="button"
-                  px={3}
-                  py="5px"
-                  borderRadius="full"
-                  fontSize="xs"
-                  fontWeight="600"
-                  border="1.5px solid"
-                  borderColor={active ? s.hex : "gray.200"}
-                  bg={active ? s.bg : "white"}
-                  color={active ? s.hex : "gray.500"}
-                  cursor="pointer"
-                  transition="all 0.15s"
-                  _hover={{ borderColor: s.hex, color: s.hex, bg: s.bg }}
-                  onClick={() => onDifficultyChange(active ? "" : d)}
-                  style={{ outline: "none" }}
-                >
-                  {s.label}
-                  {active && (
-                    <Box as="span" ml={1} fontWeight="400">
-                      ×
-                    </Box>
-                  )}
-                </Box>
-              );
-            })}
-          </HStack>
-        </HStack>
+      {/* Difficulty */}
+      <div className="flex items-center" style={{ padding: "10px 16px", gap: 12, borderBottom: "1px solid var(--border-subtle)" }}>
+        <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-muted)", minWidth: 70, flexShrink: 0 }}>Difficulty</span>
+        <FilterPills
+          value={selectedDifficulty}
+          onChange={(v) => onDifficultyChange(v)}
+          clearable
+          options={[
+            { value: "EASY",   label: "Easy",   accent: "var(--diff-easy)" },
+            { value: "MEDIUM", label: "Medium", accent: "var(--diff-medium)" },
+            { value: "HARD",   label: "Hard",   accent: "var(--diff-hard)" },
+          ]}
+        />
+      </div>
 
-        {/* Topics */}
-        <HStack px={5} py={4} gap={6} align="flex-start">
-          <Text
-            fontSize="sm"
-            fontWeight="500"
-            color="gray.500"
-            minW="90px"
-            mt="2px"
-          >
-            Topics
-          </Text>
-          <Box flex={1}>
-            {selectedTagNames.length > 0 && (
-              <Wrap gap={2} mb={3}>
-                {selectedTagNames.map((name) => (
-                  <WrapItem key={name}>
-                    <HStack
-                      gap={1}
-                      px={2}
-                      py="3px"
-                      borderRadius="full"
-                      bg="purple.100"
-                      color="purple.700"
-                      fontSize="xs"
-                      fontWeight="500"
-                      cursor="pointer"
-                      userSelect="none"
-                      onClick={() => toggleTag(name)}
-                      _hover={{ bg: "purple.200" }}
-                    >
-                      <Text>{name}</Text>
-                      <X size={10} />
-                    </HStack>
-                  </WrapItem>
-                ))}
-              </Wrap>
-            )}
-
-            <Box position="relative" display="inline-block" ref={dropdownRef}>
-              <Box
-                as="button"
-                display="inline-flex"
-                alignItems="center"
-                gap={1}
-                px={3}
-                py="5px"
-                borderRadius="full"
-                border="1.5px dashed"
-                borderColor={tagDropdownOpen ? "purple.400" : "gray.300"}
-                bg="white"
-                color={tagDropdownOpen ? "purple.600" : "gray.500"}
-                fontSize="xs"
-                fontWeight="500"
-                cursor="pointer"
-                transition="all 0.15s"
-                _hover={{ borderColor: "purple.400", color: "purple.600" }}
-                onClick={() => setTagDropdownOpen((v) => !v)}
-                style={{ outline: "none" }}
-              >
-                + Add topic
-                <ChevronDown
-                  size={11}
+      {/* Topics */}
+      <div className="flex" style={{ padding: "10px 16px", gap: 12, alignItems: "flex-start" }}>
+        <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-muted)", minWidth: 70, flexShrink: 0, marginTop: 2 }}>Topics</span>
+        <div style={{ flex: 1 }}>
+          {selectedTagNames.length > 0 && (
+            <div className="flex flex-wrap gap-2" style={{ marginBottom: 10 }}>
+              {selectedTagNames.map((name) => (
+                <button
+                  key={name}
+                  onClick={() => toggleTag(name)}
                   style={{
-                    transform: tagDropdownOpen ? "rotate(180deg)" : "none",
-                    transition: "transform 0.15s",
+                    display: "inline-flex", alignItems: "center", gap: 4,
+                    padding: "3px 8px", borderRadius: 9999,
+                    background: "var(--primary-subtle)", color: "var(--primary)",
+                    fontSize: 12, fontWeight: 500,
+                    border: "1px solid var(--border-accent)", cursor: "pointer",
                   }}
-                />
-              </Box>
-
-              {tagDropdownOpen && (
-                <Box
-                  position="absolute"
-                  top="calc(100% + 6px)"
-                  left={0}
-                  zIndex={50}
-                  bg="white"
-                  border="1px solid"
-                  borderColor="gray.200"
-                  borderRadius="lg"
-                  boxShadow="xl"
-                  w="230px"
-                  maxH="260px"
-                  overflowY="auto"
                 >
-                  <Box
-                    p={2}
-                    borderBottomWidth="1px"
-                    borderColor="gray.100"
-                    position="sticky"
-                    top={0}
-                    bg="white"
-                  >
-                    <Input
-                      size="sm"
-                      placeholder="Search topics..."
-                      value={tagSearch}
-                      onChange={(e) => setTagSearch(e.target.value)}
-                      autoFocus
-                    />
-                  </Box>
-                  {filteredTags.length === 0 ? (
-                    <Box px={4} py={3}>
-                      <Text fontSize="xs" color="gray.400">
-                        No topics found
-                      </Text>
-                    </Box>
-                  ) : (
-                    filteredTags.map((tag) => (
-                      <Box
-                        key={tag.id}
-                        px={3}
-                        py={2}
-                        cursor="pointer"
-                        _hover={{ bg: "purple.50" }}
-                        onClick={() => {
-                          toggleTag(tag.name);
-                          setTagSearch("");
-                          setTagDropdownOpen(false);
-                        }}
-                      >
-                        <Text fontSize="sm" color="gray.700">
-                          {tag.name}
-                        </Text>
-                      </Box>
-                    ))
-                  )}
-                </Box>
-              )}
-            </Box>
-          </Box>
-        </HStack>
-      </VStack>
-    </Box>
+                  {name} <X size={10} />
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div style={{ position: "relative", display: "inline-block" }} ref={dropdownRef}>
+            <button
+              onClick={() => setTagDropdownOpen((v) => !v)}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px",
+                borderRadius: 9999,
+                border: `1.5px dashed ${tagDropdownOpen ? "var(--primary)" : "var(--border-default)"}`,
+                background: "transparent",
+                color: tagDropdownOpen ? "var(--primary)" : "var(--text-muted)",
+                fontSize: 12, fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
+              }}
+            >
+              + Add topic
+              <ChevronDown size={11} style={{ transform: tagDropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
+            </button>
+
+            {tagDropdownOpen && (
+              <div style={{
+                position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 50,
+                background: "var(--bg-raised)", border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-lg)", boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                width: 230, maxHeight: 260, overflowY: "auto",
+              }}>
+                <div style={{ padding: 8, borderBottom: "1px solid var(--border-subtle)", position: "sticky", top: 0, background: "var(--bg-raised)" }}>
+                  <input
+                    className="input"
+                    style={{ fontSize: 13, padding: "4px 8px" }}
+                    placeholder="Search topics..."
+                    value={tagSearch}
+                    onChange={(e) => setTagSearch(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                {filteredTags.length === 0 ? (
+                  <div style={{ padding: "12px 16px" }}>
+                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>No topics found</span>
+                  </div>
+                ) : (
+                  filteredTags.map((tag) => (
+                    <div
+                      key={tag.id}
+                      style={{ padding: "8px 12px", cursor: "pointer", fontSize: 13, color: "var(--text-secondary)", transition: "background 0.1s" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                      onClick={() => { toggleTag(tag.name); setTagSearch(""); setTagDropdownOpen(false); }}
+                    >
+                      {tag.name}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
-
-// ─── Main page ────────────────────────────────────────────────────────────────
 
 const AdminProblemPage = () => {
   const { ConfirmDialog, showConfirm } = useConfirmDialog();
@@ -350,57 +179,31 @@ const AdminProblemPage = () => {
   const [problems, setProblems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [showFilters, setShowFilters] = useState(true);
-  const [pagination, setPagination] = useState({
-    limit: 10,
-    offset: 0,
-    totalElements: 0,
-    totalPages: 0,
-    currentPage: 0,
-  });
+  const [showFilters, setShowFilters] = useState(false);
+  const filterWrapperRef = useRef(null);
+  const [pagination, setPagination] = useState({ limit: 10, offset: 0, totalElements: 0, totalPages: 0, currentPage: 0 });
   const [sortField, setSortField] = useState("id");
   const [direction, setDirection] = useState("asc");
-
   const [availableTags, setAvailableTags] = useState([]);
   const [selectedTagNames, setSelectedTagNames] = useState([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
 
-  const hasActiveFilters =
-    selectedTagNames.length > 0 || selectedDifficulty !== "";
-  const activeFilterCount =
-    (selectedDifficulty ? 1 : 0) + selectedTagNames.length;
+  const hasActiveFilters = selectedTagNames.length > 0 || selectedDifficulty !== "";
+  const activeFilterCount = (selectedDifficulty ? 1 : 0) + selectedTagNames.length;
 
   useEffect(() => {
     ApiService.getAllTags({ limit: 200, offset: 0 })
-      .then((res) => {
-        if (res.statusCode === 200)
-          setAvailableTags(
-            (res.data.content || []).filter((t) => t.isActive === true),
-          );
-      })
+      .then((res) => { if (res.statusCode === 200) setAvailableTags((res.data.content || []).filter((t) => t.isActive === true)); })
       .catch(console.error);
   }, []);
 
   const fetchProblems = async () => {
     try {
       setLoading(true);
-      const response = await ApiService.getAllProblems({
-        limit: pagination.limit,
-        offset: pagination.offset,
-        sortField,
-        direction,
-        title: searchQuery,
-        tags: selectedTagNames,
-        difficulty: selectedDifficulty,
-      });
+      const response = await ApiService.getAllProblems({ limit: pagination.limit, offset: pagination.offset, sortField, direction, title: searchQuery, tags: selectedTagNames, difficulty: selectedDifficulty });
       if (response.statusCode === 200) {
         setProblems(response.data.content);
-        setPagination((prev) => ({
-          ...prev,
-          totalElements: response.data.page.totalElements,
-          totalPages: response.data.page.totalPages,
-          currentPage: response.data.page.number,
-        }));
+        setPagination((prev) => ({ ...prev, totalElements: response.data.page.totalElements, totalPages: response.data.page.totalPages, currentPage: response.data.page.number }));
       }
     } catch (error) {
       showMessage(error.response?.data?.message || error.message, "error");
@@ -409,603 +212,268 @@ const AdminProblemPage = () => {
     }
   };
 
+  useEffect(() => { fetchProblems(); }, [pagination.limit, pagination.offset, sortField, direction, selectedTagNames, selectedDifficulty]);
   useEffect(() => {
-    fetchProblems();
-  }, [
-    pagination.limit,
-    pagination.offset,
-    sortField,
-    direction,
-    selectedTagNames,
-    selectedDifficulty,
-  ]);
-
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      setPagination((prev) => ({ ...prev, offset: 0 }));
-      fetchProblems();
-    }, 500);
+    const delay = setTimeout(() => { setPagination((prev) => ({ ...prev, offset: 0 })); fetchProblems(); }, 500);
     return () => clearTimeout(delay);
   }, [searchQuery]);
+  useEffect(() => {
+    const handler = (e) => {
+      if (filterWrapperRef.current && !filterWrapperRef.current.contains(e.target))
+        setShowFilters(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const toggleTag = (name) => {
-    setSelectedTagNames((prev) =>
-      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
-    );
+    setSelectedTagNames((prev) => prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]);
     setPagination((prev) => ({ ...prev, offset: 0 }));
   };
-
-  const handleDifficultyChange = (d) => {
-    setSelectedDifficulty(d);
-    setPagination((prev) => ({ ...prev, offset: 0 }));
-  };
-
-  const resetFilters = () => {
-    setSelectedTagNames([]);
-    setSelectedDifficulty("");
-    setPagination((prev) => ({ ...prev, offset: 0 }));
-  };
-
-  const handleAddProblem = () => navigate("/admin/problems/new");
-  const handleEditProblem = (id) => navigate(`/admin/problems/edit/${id}`);
+  const handleDifficultyChange = (d) => { setSelectedDifficulty(d); setPagination((prev) => ({ ...prev, offset: 0 })); };
+  const resetFilters = () => { setSelectedTagNames([]); setSelectedDifficulty(""); setPagination((prev) => ({ ...prev, offset: 0 })); };
   const handleDeleteProblem = (id) =>
-    showConfirm(
-      "Delete Problem",
-      "Are you sure you want to delete this problem? This action cannot be undone.",
-      async () => {
-        try {
-          const response = await ApiService.deleteProblem(id);
-          if (response.statusCode === 200) {
-            showMessage("Problem deleted successfully", "success");
-            fetchProblems();
-          }
-        } catch (error) {
-          showMessage(error.response?.data?.message || error.message, "error");
-        }
-      },
-    );
+    showConfirm("Delete Problem", "Are you sure you want to delete this problem? This action cannot be undone.", async () => {
+      try {
+        const response = await ApiService.deleteProblem(id);
+        if (response.statusCode === 200) { showMessage("Problem deleted successfully", "success"); fetchProblems(); }
+      } catch (error) { showMessage(error.response?.data?.message || error.message, "error"); }
+    });
 
   const handlePageChange = (o) => setPagination((p) => ({ ...p, offset: o }));
-  const handleLimitChange = (l) =>
-    setPagination((p) => ({ ...p, limit: parseInt(l), offset: 0 }));
-  const goToFirstPage = () => handlePageChange(0);
-  const goToLastPage = () =>
-    handlePageChange((pagination.totalPages - 1) * pagination.limit);
-  const goToPreviousPage = () =>
-    handlePageChange(Math.max(0, pagination.offset - pagination.limit));
-  const goToNextPage = () =>
-    handlePageChange(
-      Math.min(
-        (pagination.totalPages - 1) * pagination.limit,
-        pagination.offset + pagination.limit,
-      ),
-    );
-  const canGoPrevious = pagination.currentPage > 0;
-  const canGoNext = pagination.currentPage < pagination.totalPages - 1;
-
-  const getInactiveTags = (problem) =>
-    (problem.tags || []).filter((t) => t.isActive === false);
+  const handleLimitChange = (l) => setPagination((p) => ({ ...p, limit: parseInt(l), offset: 0 }));
+  const getInactiveTags = (problem) => (problem.tags || []).filter((t) => t.isActive === false);
 
   if (loading && problems.length === 0) {
     return (
-      <Box minH="100vh" bg="gray.50" py={8}>
-        <Container maxW="container.xl">
-          <VStack gap={4} py={20}>
-            <Spinner size="xl" color="purple.500" thickness="4px" />
-            <Text color="gray.600">Loading problems...</Text>
-          </VStack>
-        </Container>
-      </Box>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+        <div className="page-container">
+          <div className="flex flex-col items-center gap-4" style={{ padding: "80px 0" }}>
+            <div className="spinner" />
+            <span className="text-muted">Loading problems...</span>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Container maxW="container.xl">
-        <VStack align="stretch" gap={5}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+      <div className="page-container">
+        <div className="flex flex-col gap-5">
           {/* Header */}
-          <HStack justify="space-between">
-            <HStack gap={3}>
-              <Heading size="2xl" color="gray.800">
-                Manage Problems
-              </Heading>
-              <Badge
-                colorScheme="purple"
-                fontSize="md"
-                px={3}
-                py={1}
-                borderRadius="full"
-              >
-                {pagination.totalElements}{" "}
-                {pagination.totalElements === 1 ? "problem" : "problems"}
-              </Badge>
-            </HStack>
-            <Button
-              onClick={handleAddProblem}
-              colorScheme="purple"
-              size="md"
-              gap={2}
-            >
-              <Plus size={18} />
-              Add Problem
-            </Button>
-          </HStack>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Manage Problems</h2>
+              <span style={{ display: "inline-block", padding: "3px 12px", borderRadius: 9999, fontSize: 13, fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
+                {pagination.totalElements} {pagination.totalElements === 1 ? "problem" : "problems"}
+              </span>
+            </div>
+            <button className="btn btn-primary" onClick={() => navigate("/admin/problems/new")}>
+              <Plus size={18} /> Add Problem
+            </button>
+          </div>
 
           <ConfirmDialog />
 
           {/* Search + Sort + Filters toggle */}
-          <HStack gap={3} align="stretch">
-            {/* Search */}
-            <Box
-              flex={1}
-              bg="white"
-              px={4}
-              py={3}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px solid"
-              borderColor="gray.200"
-            >
-              <Box position="relative">
-                <Box
-                  position="absolute"
-                  left={2}
-                  top="50%"
-                  transform="translateY(-50%)"
-                >
-                  <Search size={18} color="#9CA3AF" />
-                </Box>
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by problem title..."
-                  pl={8}
-                  border="none"
-                  _focus={{ boxShadow: "none" }}
-                  fontSize="sm"
-                />
-              </Box>
-            </Box>
-
-            {/* Sort */}
-            <HStack
-              bg="white"
-              px={4}
-              py={3}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px solid"
-              borderColor="gray.200"
-              gap={2}
-            >
-              <Text fontSize="sm" color="gray.500" whiteSpace="nowrap">
-                Sort by
-              </Text>
-              <select
-                value={sortField}
-                onChange={(e) => setSortField(e.target.value)}
-                style={{
-                  padding: "4px 8px",
-                  borderRadius: "6px",
-                  border: "1px solid #E2E8F0",
-                  fontSize: "13px",
-                  background: "white",
-                }}
-              >
-                <option value="id">ID</option>
-                <option value="title">Title</option>
-                <option value="point">Points</option>
-              </select>
-              <select
-                value={direction}
-                onChange={(e) => setDirection(e.target.value)}
-                style={{
-                  padding: "4px 8px",
-                  borderRadius: "6px",
-                  border: "1px solid #E2E8F0",
-                  fontSize: "13px",
-                  background: "white",
-                }}
-              >
-                <option value="asc">↑ Asc</option>
-                <option value="desc">↓ Desc</option>
-              </select>
-            </HStack>
-
-            {/* Filter toggle */}
-            <Box
-              as="button"
-              display="flex"
-              alignItems="center"
-              gap={2}
-              px={4}
-              bg={showFilters ? "purple.600" : "white"}
-              color={showFilters ? "white" : "gray.600"}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px solid"
-              borderColor={showFilters ? "purple.600" : "gray.200"}
-              cursor="pointer"
-              position="relative"
-              transition="all 0.15s"
-              _hover={{
-                borderColor: "purple.500",
-                color: showFilters ? "white" : "purple.600",
-              }}
-              onClick={() => setShowFilters((v) => !v)}
-              style={{ outline: "none", whiteSpace: "nowrap" }}
-            >
-              <SlidersHorizontal size={15} />
-              <Text fontSize="sm" fontWeight="500">
-                Filters
-              </Text>
-              {activeFilterCount > 0 && (
-                <Box
-                  bg={showFilters ? "white" : "purple.500"}
-                  color={showFilters ? "purple.600" : "white"}
-                  borderRadius="full"
-                  w="18px"
-                  h="18px"
-                  fontSize="10px"
-                  fontWeight="bold"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  ml={1}
-                >
-                  {activeFilterCount}
-                </Box>
-              )}
-            </Box>
-          </HStack>
-
-          {/* Filter panel */}
-          {showFilters && (
-            <FilterPanel
-              availableTags={availableTags}
-              selectedDifficulty={selectedDifficulty}
-              onDifficultyChange={handleDifficultyChange}
-              selectedTagNames={selectedTagNames}
-              toggleTag={toggleTag}
-              onReset={resetFilters}
-              hasActiveFilters={hasActiveFilters}
+          <div className="flex items-center gap-3 flex-wrap">
+            <SuggestiveSearch
+              value={searchQuery}
+              onChange={(val) => setSearchQuery(val)}
+              suggestions={[
+                "Search by problem title...",
+                "Find 'Two Sum'",
+                "Look up 'Graph' problems",
+              ]}
+              style={{ flex: 1, minWidth: 180, maxWidth: 320 }}
             />
-          )}
+
+            <SortBar
+              field={sortField}
+              direction={direction}
+              onFieldChange={setSortField}
+              onDirectionChange={setDirection}
+              fields={[
+                { value: "id",    label: "ID" },
+                { value: "title", label: "Title" },
+                { value: "point", label: "Points" },
+              ]}
+            />
+
+            <div ref={filterWrapperRef} style={{ position: "relative" }}>
+              <button
+                onClick={() => setShowFilters((v) => !v)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 4, padding: "6px 8px",
+                  background: showFilters ? "var(--primary)" : "var(--bg-raised)",
+                  color: showFilters ? "var(--text-inverse)" : "var(--text-secondary)",
+                  borderRadius: "var(--radius-md)",
+                  border: `1px solid ${showFilters ? "var(--primary)" : "var(--border-default)"}`,
+                  cursor: "pointer", transition: "all var(--transition-fast)",
+                  fontFamily: "var(--font-body)",
+                }}
+                title="Filters"
+              >
+                <SlidersHorizontal size={16} />
+                {activeFilterCount > 0 && (
+                  <span style={{
+                    background: showFilters ? "var(--text-inverse)" : "var(--primary)",
+                    color: showFilters ? "var(--primary)" : "var(--text-inverse)",
+                    borderRadius: 9999, width: 16, height: 16, fontSize: 10, fontWeight: 700,
+                    display: "flex", alignItems: "center", justifyContent: "center", marginLeft: 2,
+                  }}>
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+
+              {showFilters && (
+                <div style={{
+                  position: "absolute", top: "calc(100% + 6px)", right: 0,
+                  zIndex: 200, animation: "fadeUp 0.18s ease both", minWidth: 380,
+                }}>
+                  <FilterPanel
+                    availableTags={availableTags}
+                    selectedDifficulty={selectedDifficulty}
+                    onDifficultyChange={handleDifficultyChange}
+                    selectedTagNames={selectedTagNames}
+                    toggleTag={toggleTag}
+                    onReset={resetFilters}
+                    hasActiveFilters={hasActiveFilters}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Table */}
-          <Box
-            bg="white"
-            borderRadius="xl"
-            boxShadow="md"
-            overflow="hidden"
-            position="relative"
-          >
+          <div className="card" style={{ overflow: "hidden", position: "relative" }}>
             {loading && (
-              <Box
-                position="absolute"
-                inset={0}
-                bg="whiteAlpha.700"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                zIndex={10}
-              >
-                <Spinner size="lg" color="purple.500" thickness="3px" />
-              </Box>
+              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+                <div className="spinner" />
+              </div>
             )}
 
-            <Table.Root variant="line" size="md">
-              <Table.Header bg="purple.50">
-                <Table.Row>
-                  <Table.ColumnHeader textAlign="center" w="7%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      #
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="25%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Problem
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="10%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Difficulty
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="27%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Tags
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="center" w="10%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Points
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="center" w="10%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Time Limit
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="center" w="11%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Actions
-                    </Text>
-                  </Table.ColumnHeader>
-                </Table.Row>
-              </Table.Header>
-
-              <Table.Body>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "center", width: "7%" }}>#</th>
+                  <th style={{ width: "25%" }}>Problem</th>
+                  <th style={{ width: "10%" }}>Difficulty</th>
+                  <th style={{ width: "27%" }}>Tags</th>
+                  <th style={{ textAlign: "center", width: "10%" }}>Points</th>
+                  <th style={{ textAlign: "center", width: "10%" }}>Time Limit</th>
+                  <th style={{ textAlign: "center", width: "11%" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                 {problems.length > 0 ? (
                   problems.map((problem, index) => {
                     const inactiveTags = getInactiveTags(problem);
                     const hasInactiveTags = inactiveTags.length > 0;
-
                     return (
-                      <Table.Row
-                        key={problem.id}
-                        _hover={{ bg: "purple.50" }}
-                        transition="background 0.15s"
-                        bg={index % 2 === 0 ? "white" : "gray.50"}
-                      >
-                        {/* ID */}
-                        <Table.Cell textAlign="center">
-                          <Text fontSize="sm" fontWeight="600" color="gray.500">
-                            {problem.id}
-                          </Text>
-                        </Table.Cell>
-
-                        {/* Title + inactive tag warning */}
-                        <Table.Cell>
-                          <HStack gap={2} align="center">
-                            <Text
-                              fontSize="sm"
-                              fontWeight="600"
-                              color="gray.800"
-                            >
-                              {problem.title}
-                            </Text>
+                      <tr key={problem.id} style={{ background: index % 2 === 0 ? "var(--bg-base)" : "var(--bg-raised)" }}>
+                        <td style={{ textAlign: "center" }}>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{problem.id}</span>
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{problem.title}</span>
                             {hasInactiveTags && (
-                              <Box
-                                color="orange.400"
-                                cursor="help"
-                                title={`${inactiveTags.length} disabled tag${inactiveTags.length > 1 ? "s" : ""}: ${inactiveTags.map((t) => t.name).join(", ")}. Edit this problem to remove them.`}
-                              >
+                              <span title={`${inactiveTags.length} disabled tag(s): ${inactiveTags.map((t) => t.name).join(", ")}. Edit this problem to remove them.`} style={{ color: "var(--amber-tle)", cursor: "help" }}>
                                 <AlertTriangle size={14} />
-                              </Box>
+                              </span>
                             )}
-                          </HStack>
-                        </Table.Cell>
-
-                        {/* Difficulty */}
-                        <Table.Cell>
-                          <DiffBadge difficulty={problem.problemDifficulty} />
-                        </Table.Cell>
-
-                        {/* Tags — active shown normally, inactive shown with strikethrough */}
-                        <Table.Cell>
-                          <Wrap gap={1}>
+                          </div>
+                        </td>
+                        <td><DiffBadge difficulty={problem.problemDifficulty} /></td>
+                        <td>
+                          <div className="flex flex-wrap gap-1">
                             {(problem.tags || [])
                               .slice()
-                              .sort(
-                                (a, b) =>
-                                  (b.isActive ? 1 : 0) - (a.isActive ? 1 : 0),
-                              )
+                              .sort((a, b) => (b.isActive ? 1 : 0) - (a.isActive ? 1 : 0))
                               .map((tag) => (
-                                <WrapItem key={tag.id}>
-                                  <Badge
-                                    colorScheme={
-                                      tag.isActive === false ? "gray" : "purple"
-                                    }
-                                    variant={
-                                      tag.isActive === false
-                                        ? "outline"
-                                        : "subtle"
-                                    }
-                                    fontSize="xs"
-                                    px={2}
-                                    py="1px"
-                                    borderRadius="full"
-                                    opacity={tag.isActive === false ? 0.6 : 1}
-                                    textDecoration={
-                                      tag.isActive === false
-                                        ? "line-through"
-                                        : "none"
-                                    }
-                                    title={
-                                      tag.isActive === false
-                                        ? "This tag is disabled — it won't appear in filters"
-                                        : tag.name
-                                    }
-                                  >
-                                    {tag.name}
-                                  </Badge>
-                                </WrapItem>
+                                <span
+                                  key={tag.id}
+                                  style={{
+                                    display: "inline-block", padding: "1px 8px", borderRadius: 9999, fontSize: 11, fontWeight: 500,
+                                    background: tag.isActive === false ? "var(--bg-raised)" : "var(--primary-subtle)",
+                                    color: tag.isActive === false ? "var(--text-muted)" : "var(--primary)",
+                                    opacity: tag.isActive === false ? 0.6 : 1,
+                                    textDecoration: tag.isActive === false ? "line-through" : "none",
+                                    border: tag.isActive === false ? "1px solid var(--border-default)" : "none",
+                                  }}
+                                  title={tag.isActive === false ? "This tag is disabled" : tag.name}
+                                >
+                                  {tag.name}
+                                </span>
                               ))}
                             {(!problem.tags || problem.tags.length === 0) && (
-                              <Text
-                                fontSize="xs"
-                                color="gray.400"
-                                fontStyle="italic"
-                              >
-                                No tags
-                              </Text>
+                              <span style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>No tags</span>
                             )}
-                          </Wrap>
-                        </Table.Cell>
-
-                        {/* Points */}
-                        <Table.Cell textAlign="center">
-                          <HStack justify="center" gap={1}>
-                            <Trophy size={14} color="#805AD5" />
-                            <Text
-                              fontSize="sm"
-                              fontWeight="700"
-                              color="purple.600"
-                            >
-                              {problem.point}
-                            </Text>
-                          </HStack>
-                        </Table.Cell>
-
-                        {/* Time limit */}
-                        <Table.Cell textAlign="center">
-                          <Text fontSize="sm" color="gray.500">
-                            {problem.timeLimit}ms
-                          </Text>
-                        </Table.Cell>
-
-                        {/* Actions */}
-                        <Table.Cell textAlign="center">
-                          <HStack justify="center" gap={1}>
-                            <Button
-                              size="sm"
-                              colorScheme="green"
-                              variant="ghost"
-                              px={2}
-                              title="Edit Problem"
-                              onClick={() => handleEditProblem(problem.id)}
-                            >
-                              <Edit size={16} />
-                            </Button>
-                            <Button
-                              size="sm"
-                              colorScheme="red"
-                              variant="ghost"
-                              px={2}
-                              title="Delete Problem"
-                              onClick={() => handleDeleteProblem(problem.id)}
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </HStack>
-                        </Table.Cell>
-                      </Table.Row>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <div className="flex items-center justify-center gap-1">
+                            <Trophy size={14} color="var(--primary)" />
+                            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)" }}>{problem.point}</span>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>{problem.timeLimit}ms</span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <div className="flex items-center justify-center gap-1">
+                            <button className="btn btn-ghost btn-sm" title="Edit Problem" style={{ padding: "5px 7px" }} onClick={() => navigate(`/admin/problems/edit/${problem.id}`)}>
+                              <Edit size={16} color="var(--primary)" />
+                            </button>
+                            <button className="btn btn-ghost btn-sm" title="Delete Problem" style={{ padding: "5px 7px" }} onClick={() => handleDeleteProblem(problem.id)}>
+                              <Trash2 size={16} color="var(--red-wa)" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
                     );
                   })
                 ) : (
-                  <Table.Row>
-                    <Table.Cell colSpan={7} textAlign="center" py={12}>
-                      <VStack gap={3}>
-                        <Book size={44} color="#CBD5E0" />
-                        <Text
-                          fontSize="lg"
-                          color="gray.500"
-                          fontWeight="medium"
-                        >
-                          {hasActiveFilters || searchQuery
-                            ? "No problems match your filters"
-                            : "No problems yet"}
-                        </Text>
-                        <Text fontSize="sm" color="gray.400">
-                          {hasActiveFilters || searchQuery
-                            ? "Try adjusting your search or filters"
-                            : "Click 'Add Problem' to create your first problem!"}
-                        </Text>
+                  <tr>
+                    <td colSpan={7} style={{ textAlign: "center", padding: "48px 0" }}>
+                      <div className="flex flex-col items-center gap-3">
+                        <Book size={44} color="var(--text-muted)" />
+                        <p style={{ fontSize: 16, color: "var(--text-muted)", margin: 0, fontWeight: 500 }}>
+                          {hasActiveFilters || searchQuery ? "No problems match your filters" : "No problems yet"}
+                        </p>
+                        <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
+                          {hasActiveFilters || searchQuery ? "Try adjusting your search or filters" : "Click 'Add Problem' to create your first problem!"}
+                        </p>
                         {hasActiveFilters && (
-                          <Button
-                            size="sm"
-                            colorScheme="purple"
-                            variant="outline"
-                            onClick={resetFilters}
-                          >
+                          <button className="btn btn-ghost btn-sm" style={{ border: "1px solid var(--primary)", color: "var(--primary)" }} onClick={resetFilters}>
                             Clear all filters
-                          </Button>
+                          </button>
                         )}
-                      </VStack>
-                    </Table.Cell>
-                  </Table.Row>
+                      </div>
+                    </td>
+                  </tr>
                 )}
-              </Table.Body>
-            </Table.Root>
+              </tbody>
+            </table>
 
-            {/* Pagination */}
             {pagination.totalPages > 0 && (
-              <Box borderTopWidth="1px" p={4} bg="gray.50">
-                <HStack justify="space-between">
-                  <HStack gap={2}>
-                    <Text fontSize="sm" color="gray.500">
-                      Rows:
-                    </Text>
-                    <select
-                      value={pagination.limit}
-                      onChange={(e) => handleLimitChange(e.target.value)}
-                      style={{
-                        padding: "4px 8px",
-                        borderRadius: "6px",
-                        border: "1px solid #E2E8F0",
-                        fontSize: "13px",
-                      }}
-                    >
-                      <option value="5">5</option>
-                      <option value="10">10</option>
-                      <option value="20">20</option>
-                      <option value="50">50</option>
-                    </select>
-                  </HStack>
-
-                  <Text fontSize="sm" color="gray.500">
-                    {pagination.offset + 1}–
-                    {Math.min(
-                      pagination.offset + pagination.limit,
-                      pagination.totalElements,
-                    )}{" "}
-                    of {pagination.totalElements}
-                  </Text>
-
-                  <HStack gap={1}>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToFirstPage}
-                      disabled={!canGoPrevious}
-                      _disabled={{ opacity: 0.3, cursor: "not-allowed" }}
-                    >
-                      <ChevronsLeft size={16} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToPreviousPage}
-                      disabled={!canGoPrevious}
-                      _disabled={{ opacity: 0.3, cursor: "not-allowed" }}
-                    >
-                      <ChevronLeft size={16} />
-                    </Button>
-                    <Text
-                      fontSize="sm"
-                      px={2}
-                      color="gray.600"
-                      fontWeight="500"
-                    >
-                      {pagination.currentPage + 1} / {pagination.totalPages}
-                    </Text>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToNextPage}
-                      disabled={!canGoNext}
-                      _disabled={{ opacity: 0.3, cursor: "not-allowed" }}
-                    >
-                      <ChevronRight size={16} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToLastPage}
-                      disabled={!canGoNext}
-                      _disabled={{ opacity: 0.3, cursor: "not-allowed" }}
-                    >
-                      <ChevronsRight size={16} />
-                    </Button>
-                  </HStack>
-                </HStack>
-              </Box>
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={(p) => handlePageChange(p * pagination.limit)}
+                totalElements={pagination.totalElements}
+                limit={pagination.limit}
+                onLimitChange={handleLimitChange}
+                offset={pagination.offset}
+              />
             )}
-          </Box>
-        </VStack>
-      </Container>
-    </Box>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

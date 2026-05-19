@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(git grep *)",
-      "Bash(./mvnw clean *)"
+      "Bash(./mvnw clean *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\OJ\\\\tdtuoj_frontend\\\\src\" -Recurse -File)",
+      "Bash(Select-Object FullName, Length)",
+      "Bash(ConvertTo-Csv -NoTypeInformation)",
+      "Bash(Out-String)",
+      "Bash(npm run *)",
+      "Skill(frontend-design)",
+      "Read(//mnt/d/OJ/**)",
+      "Bash(npm install *)"
     ]
   }
 }

@@ -1,59 +1,31 @@
 import { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  VStack,
-  HStack,
-  Button,
-  Spinner,
-  Table,
-} from "@chakra-ui/react";
-import {
-  ArrowLeft,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
-  Circle,
-  BookOpen,
-  BarChart3,
-  Eye,
-  EyeOff,
-  Trash2,
-  FileText,
-  Pencil,
-  Code,
-  X,
+  ArrowLeft, Clock, CheckCircle, AlertTriangle, Circle,
+  BookOpen, BarChart3, Eye, EyeOff, Trash2, FileText, Pencil, Code, X,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
 import { useConfirmDialog } from "../common/ConfirmDialog";
 
-// State for solution viewer
 const LANG_LABELS = { CPP: "C++", JAVA: "Java", PYTHON: "Python", C: "C" };
-
-/* ── Status badge ──────────────────────────────────────────────────────────── */
 
 const StatusBadge = ({ status }) => {
   const MAP = {
-    SOLVED: { icon: CheckCircle, color: "green.600", bg: "green.50", label: "Solved" },
-    ATTEMPTED: { icon: AlertTriangle, color: "orange.500", bg: "orange.50", label: "Attempted" },
-    NOT_STARTED: { icon: Circle, color: "gray.400", bg: "gray.50", label: "Not started" },
+    SOLVED: { icon: CheckCircle, color: "#16a34a", bg: "#dcfce7", label: "Solved" },
+    ATTEMPTED: { icon: AlertTriangle, color: "#ea580c", bg: "#fff7ed", label: "Attempted" },
+    NOT_STARTED: { icon: Circle, color: "#9ca3af", bg: "#f9fafb", label: "Not started" },
   };
   const s = MAP[status] || MAP.NOT_STARTED;
   const Icon = s.icon;
   return (
-    <HStack gap={1} px={2} py={1} borderRadius="md" bg={s.bg}>
-      <Icon size={13} color="currentColor" style={{ color: "inherit" }} />
-      <Text fontSize="xs" fontWeight="600" color={s.color}>{s.label}</Text>
-    </HStack>
+    <div className="flex items-center gap-1" style={{ display: "inline-flex", padding: "3px 8px", borderRadius: 6, background: s.bg }}>
+      <Icon size={13} color={s.color} />
+      <span style={{ fontSize: 11, fontWeight: 600, color: s.color }}>{s.label}</span>
+    </div>
   );
 };
-
-/* ── Deadline countdown ────────────────────────────────────────────────────── */
 
 const DeadlineBanner = ({ deadline }) => {
   if (!deadline) return null;
@@ -61,12 +33,7 @@ const DeadlineBanner = ({ deadline }) => {
   const dl = new Date(deadline);
   const diff = dl - now;
   const isPast = diff < 0;
-
-  const fmt = dl.toLocaleString("en-GB", {
-    day: "2-digit", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
-
+  const fmt = dl.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
   let timeLeft = "";
   if (!isPast) {
     const days = Math.floor(diff / 86400000);
@@ -74,43 +41,26 @@ const DeadlineBanner = ({ deadline }) => {
     const mins = Math.floor((diff % 3600000) / 60000);
     timeLeft = days > 0 ? `${days}d ${hours}h left` : `${hours}h ${mins}m left`;
   }
-
   return (
-    <Box
-      bg={isPast ? "red.50" : "orange.50"}
-      border="1px solid"
-      borderColor={isPast ? "red.200" : "orange.200"}
-      borderRadius="lg"
-      px={4}
-      py={3}
-    >
-      <HStack gap={2}>
+    <div style={{ background: isPast ? "#fee2e2" : "#fff7ed", border: `1px solid ${isPast ? "#fca5a5" : "#fed7aa"}`, borderRadius: 10, padding: "10px 16px" }}>
+      <div className="flex items-center gap-2">
         <Clock size={16} color={isPast ? "#dc2626" : "#ea580c"} />
-        <Text fontSize="sm" fontWeight="600" color={isPast ? "red.700" : "orange.700"}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: isPast ? "#b91c1c" : "#c2410c" }}>
           {isPast ? "Deadline passed" : "Deadline"}: {fmt}
-        </Text>
+        </span>
         {!isPast && (
-          <Box
-            px={2} py={0.5} borderRadius="md" bg="orange.100"
-            fontSize="xs" fontWeight="700" color="orange.700"
-          >
-            {timeLeft}
-          </Box>
+          <span style={{ padding: "1px 8px", borderRadius: 6, background: "#fed7aa", fontSize: 11, fontWeight: 700, color: "#c2410c" }}>{timeLeft}</span>
         )}
-      </HStack>
-    </Box>
+      </div>
+    </div>
   );
 };
 
 const DIFF_COLORS = {
-  EASY: { color: "green.600", bg: "green.50" },
-  MEDIUM: { color: "orange.500", bg: "orange.50" },
-  HARD: { color: "red.600", bg: "red.50" },
+  EASY: { color: "#16a34a", bg: "#dcfce7" },
+  MEDIUM: { color: "#ea580c", bg: "#fff7ed" },
+  HARD: { color: "#dc2626", bg: "#fee2e2" },
 };
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*  LabDetailPage                                                            */
-/* ═══════════════════════════════════════════════════════════════════════════ */
 
 const LabDetailPage = () => {
   const { orgSlug, labSlug } = useParams();
@@ -143,22 +93,16 @@ const LabDetailPage = () => {
 
   const canManage = org && org.myRole === "OWNER";
 
-  /* ── Actions ─────────────────────────────────────────────────────────────── */
-
   const handleDelete = () => {
-    showConfirm(
-      "Delete Lab",
-      `Are you sure you want to delete "${lab.title}"? This cannot be undone.`,
-      async () => {
-        try {
-          await ApiService.deleteLab(org.id, lab.id);
-          showMessage("Lab deleted", "success");
-          navigate(`/organizations/${orgSlug}`);
-        } catch (e) {
-          showMessage(e.response?.data?.message || e.message, "error");
-        }
+    showConfirm("Delete Lab", `Are you sure you want to delete "${lab.title}"? This cannot be undone.`, async () => {
+      try {
+        await ApiService.deleteLab(org.id, lab.id);
+        showMessage("Lab deleted", "success");
+        navigate(`/organizations/${orgSlug}`);
+      } catch (e) {
+        showMessage(e.response?.data?.message || e.message, "error");
       }
-    );
+    });
   };
 
   const handlePublishSolutions = async () => {
@@ -166,284 +110,189 @@ const LabDetailPage = () => {
       const resp = await ApiService.publishSolutions(org.id, lab.id);
       if (resp.statusCode === 200) {
         setLab(resp.data);
-        showMessage(
-          resp.data.solutionsPublished ? "Solutions published!" : "Solutions unpublished",
-          "success"
-        );
+        showMessage(resp.data.solutionsPublished ? "Solutions published!" : "Solutions unpublished", "success");
       }
     } catch (e) {
       showMessage(e.response?.data?.message || e.message, "error");
     }
   };
 
-  /* ── Render ──────────────────────────────────────────────────────────────── */
-
   if (loading) {
     return (
-      <Box minH="100vh" bg="gray.50" display="flex" alignItems="center" justifyContent="center">
-        <Spinner size="xl" color="purple.500" thickness="3px" />
-      </Box>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="spinner" />
+      </div>
     );
   }
 
   if (!lab) {
     return (
-      <Box minH="100vh" bg="gray.50" py={20} textAlign="center">
-        <Text color="gray.500" fontSize="lg">Lab not found</Text>
-      </Box>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "80px 0", textAlign: "center" }}>
+        <span className="text-muted">Lab not found</span>
+      </div>
     );
   }
 
   const exercises = lab.exercises || [];
 
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Container maxW="container.xl">
-        <VStack align="stretch" gap={6}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+      <div className="page-container">
+        <div className="flex flex-col gap-6">
           {/* Back */}
-          <HStack
-            gap={2}
-            cursor="pointer"
-            onClick={() => navigate(`/organizations/${orgSlug}`)}
-            _hover={{ color: "purple.600" }}
-            color="gray.500"
-            transition="color 0.15s"
-          >
-            <ArrowLeft size={18} />
-            <Text fontSize="sm" fontWeight="500">Back to {org?.name}</Text>
-          </HStack>
+          <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }} onClick={() => navigate(`/organizations/${orgSlug}`)}>
+            <ArrowLeft size={18} /> Back to {org?.name}
+          </button>
 
           {/* Header */}
-          <Box bg="white" borderRadius="xl" boxShadow="md" p={6}>
-            <HStack justify="space-between" align="start">
-              <VStack align="start" gap={2}>
-                <HStack gap={2}>
-                  <BookOpen size={22} color="#7c3aed" />
-                  <Heading size="lg" color="gray.800">{lab.title}</Heading>
-                </HStack>
-                {lab.description && (
-                  <Text color="gray.500" fontSize="sm">{lab.description}</Text>
-                )}
-                <HStack gap={3}>
-                  <Text fontSize="xs" color="gray.400">
-                    {exercises.length} exercise{exercises.length !== 1 ? "s" : ""} ·{" "}
-                    {lab.totalPoints} pts total
-                  </Text>
+          <div className="card" style={{ padding: 24 }}>
+            <div className="flex items-center justify-between" style={{ alignItems: "flex-start" }}>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <BookOpen size={22} color="var(--primary)" />
+                  <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>{lab.title}</h2>
+                </div>
+                {lab.description && <p className="text-sm text-muted" style={{ margin: 0 }}>{lab.description}</p>}
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-muted">
+                    {exercises.length} exercise{exercises.length !== 1 ? "s" : ""} · {lab.totalPoints} pts total
+                  </span>
                   {lab.solutionsPublished && (
-                    <Box px={2} py={0.5} borderRadius="md" fontSize="xs" fontWeight="600" bg="blue.50" color="blue.600">
-                      Solutions published
-                    </Box>
+                    <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: "#dbeafe", color: "#2563eb" }}>Solutions published</span>
                   )}
-                </HStack>
-              </VStack>
+                </div>
+              </div>
 
-              {/* Admin actions */}
               {canManage && (
-                <HStack gap={2}>
-                  <Button
-                    size="sm" variant="outline" gap={1}
-                    onClick={() => navigate(`/organizations/${orgSlug}/labs/${labSlug}/edit`)}
-                  >
+                <div className="flex items-center gap-2">
+                  <button className="btn btn-ghost btn-sm" style={{ border: "1px solid var(--border-default)" }} onClick={() => navigate(`/organizations/${orgSlug}/labs/${labSlug}/edit`)}>
                     <Pencil size={14} /> Edit
-                  </Button>
-                  <Button
-                    size="sm" variant="outline" gap={1}
-                    onClick={() => navigate(`/organizations/${orgSlug}/labs/${labSlug}/progress`)}
-                  >
+                  </button>
+                  <button className="btn btn-ghost btn-sm" style={{ border: "1px solid var(--border-default)" }} onClick={() => navigate(`/organizations/${orgSlug}/labs/${labSlug}/progress`)}>
                     <BarChart3 size={14} /> Progress
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    gap={1}
+                  </button>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ border: `1px solid ${lab.solutionsPublished ? "#f97316" : "#3b82f6"}`, color: lab.solutionsPublished ? "#f97316" : "#3b82f6" }}
                     onClick={handlePublishSolutions}
-                    colorScheme={lab.solutionsPublished ? "orange" : "blue"}
                   >
                     {lab.solutionsPublished ? <EyeOff size={14} /> : <Eye size={14} />}
                     {lab.solutionsPublished ? "Unpublish" : "Publish"} Solutions
-                  </Button>
-                  <Button
-                    size="sm" variant="outline" colorScheme="red" gap={1}
-                    onClick={handleDelete}
-                  >
+                  </button>
+                  <button className="btn btn-danger btn-sm" onClick={handleDelete}>
                     <Trash2 size={14} /> Delete
-                  </Button>
-                </HStack>
+                  </button>
+                </div>
               )}
-            </HStack>
-          </Box>
+            </div>
+          </div>
 
           {/* Deadline */}
           <DeadlineBanner deadline={lab.deadline} />
 
           {/* Exercises table */}
-          <Box bg="white" borderRadius="xl" boxShadow="md" overflow="hidden">
-            <Table.Root variant="line" size="md">
-              <Table.Header bg="purple.50">
-                <Table.Row>
-                  <Table.ColumnHeader w="5%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">#</Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader>
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">Problem</Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="12%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">Difficulty</Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="10%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">Points</Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="12%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">Status</Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="8%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">Subs</Text>
-                  </Table.ColumnHeader>
-                  {lab.solutionsPublished && (
-                    <Table.ColumnHeader w="10%">
-                      <Text fontWeight="bold" color="purple.700" fontSize="sm">Solution</Text>
-                    </Table.ColumnHeader>
-                  )}
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>
+          <div className="card" style={{ overflow: "hidden" }}>
+            <table className="table">
+              <thead>
+                <tr style={{ background: "var(--bg-raised)" }}>
+                  <th style={{ width: "5%" }}>#</th>
+                  <th>Problem</th>
+                  <th style={{ width: "12%" }}>Difficulty</th>
+                  <th style={{ width: "10%" }}>Points</th>
+                  <th style={{ width: "12%" }}>Status</th>
+                  <th style={{ width: "8%" }}>Subs</th>
+                  {lab.solutionsPublished && <th style={{ width: "10%" }}>Solution</th>}
+                </tr>
+              </thead>
+              <tbody>
                 {exercises.map((ex) => {
-                  const dc = DIFF_COLORS[ex.problemDifficulty] || { color: "gray.600", bg: "gray.50" };
+                  const dc = DIFF_COLORS[ex.problemDifficulty] || { color: "#6b7280", bg: "#f9fafb" };
                   return (
-                    <Table.Row
+                    <tr
                       key={ex.id}
-                      _hover={{ bg: "purple.50" }}
-                      cursor="pointer"
+                      style={{ cursor: "pointer" }}
                       onClick={() => navigate(`/organizations/${orgSlug}/labs/${labSlug}/problems/${ex.problemSlug}`)}
                     >
-                      <Table.Cell>
-                        <Box
-                          w="28px" h="28px" borderRadius="md" bg="purple.100"
-                          display="flex" alignItems="center" justifyContent="center"
-                        >
-                          <Text fontSize="sm" fontWeight="700" color="purple.700">
-                            {String.fromCharCode(64 + ex.exerciseOrder)}
-                          </Text>
-                        </Box>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text fontWeight="600" color="gray.800" fontSize="sm">
-                          {ex.problemTitle}
-                        </Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Box
-                          display="inline-block" px={2} py={0.5} borderRadius="md"
-                          fontSize="xs" fontWeight="700" bg={dc.bg} color={dc.color}
-                        >
+                      <td>
+                        <div style={{ width: 28, height: 28, borderRadius: 6, background: "var(--bg-overlay)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)" }}>{String.fromCharCode(64 + ex.exerciseOrder)}</span>
+                        </div>
+                      </td>
+                      <td><span style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{ex.problemTitle}</span></td>
+                      <td>
+                        <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: dc.bg, color: dc.color }}>
                           {ex.problemDifficulty || "—"}
-                        </Box>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text fontSize="sm" fontWeight="600" color="gray.700">{ex.points}</Text>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <StatusBadge status={ex.status || "NOT_STARTED"} />
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Text fontSize="sm" color="gray.500">{ex.submissionCount ?? 0}</Text>
-                      </Table.Cell>
+                        </span>
+                      </td>
+                      <td><span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>{ex.points}</span></td>
+                      <td><StatusBadge status={ex.status || "NOT_STARTED"} /></td>
+                      <td><span className="text-sm text-muted">{ex.submissionCount ?? 0}</span></td>
                       {lab.solutionsPublished && (
-                        <Table.Cell>
+                        <td>
                           {ex.solutionCode ? (
-                            <Box
-                              as="button"
+                            <button
+                              style={{ background: "none", border: "none", cursor: "pointer" }}
                               onClick={(e) => { e.stopPropagation(); setViewingSolution(ex); }}
-                              bg="transparent" border="none" cursor="pointer"
                             >
-                              <HStack gap={1} color="purple.500" _hover={{ color: "purple.700" }}>
+                              <div className="flex items-center gap-1" style={{ color: "var(--primary)" }}>
                                 <Code size={14} />
-                                <Text fontSize="xs" fontWeight="500">View</Text>
-                              </HStack>
-                            </Box>
+                                <span style={{ fontSize: 11, fontWeight: 500 }}>View</span>
+                              </div>
+                            </button>
                           ) : ex.solutionFileUrl ? (
-                            <Box
-                              as="a"
-                              href={ex.solutionFileUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <HStack gap={1} color="blue.500" _hover={{ color: "blue.700" }}>
+                            <a href={ex.solutionFileUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center gap-1" style={{ color: "#3b82f6" }}>
                                 <FileText size={14} />
-                                <Text fontSize="xs" fontWeight="500">File</Text>
-                              </HStack>
-                            </Box>
+                                <span style={{ fontSize: 11, fontWeight: 500 }}>File</span>
+                              </div>
+                            </a>
                           ) : (
-                            <Text fontSize="xs" color="gray.400">—</Text>
+                            <span className="text-xs text-muted">—</span>
                           )}
-                        </Table.Cell>
+                        </td>
                       )}
-                    </Table.Row>
+                    </tr>
                   );
                 })}
-              </Table.Body>
-            </Table.Root>
-          </Box>
-        </VStack>
-      </Container>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
       <ConfirmDialog />
 
       {/* Solution Code Modal */}
       {viewingSolution && (
-        <Box
-          position="fixed" top={0} left={0} right={0} bottom={0}
-          bg="blackAlpha.700" zIndex={1000}
-          display="flex" alignItems="center" justifyContent="center"
+        <div
+          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}
           onClick={() => setViewingSolution(null)}
         >
-          <Box
-            bg="gray.900" borderRadius="xl" p={6} maxW="700px" w="90%"
-            maxH="80vh" overflow="auto" position="relative"
+          <div
+            style={{ background: "#111827", borderRadius: 14, padding: 24, maxWidth: 700, width: "90%", maxHeight: "80vh", overflow: "auto", position: "relative" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <HStack justify="space-between" mb={4}>
-              <VStack align="start" gap={0}>
-                <Text color="white" fontWeight="700" fontSize="lg">
-                  {viewingSolution.problemTitle}
-                </Text>
-                <Text color="gray.400" fontSize="xs">
-                  Solution · {LANG_LABELS[viewingSolution.solutionLanguage] || "C++"}
-                </Text>
-              </VStack>
-              <Box
-                as="button" bg="transparent" border="none" cursor="pointer"
-                color="gray.400" _hover={{ color: "white" }}
-                onClick={() => setViewingSolution(null)}
-              >
+            <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+              <div>
+                <p style={{ margin: 0, color: "white", fontWeight: 700, fontSize: 16 }}>{viewingSolution.problemTitle}</p>
+                <p style={{ margin: 0, color: "#9ca3af", fontSize: 11 }}>Solution · {LANG_LABELS[viewingSolution.solutionLanguage] || "C++"}</p>
+              </div>
+              <button style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }} onClick={() => setViewingSolution(null)}>
                 <X size={20} />
-              </Box>
-            </HStack>
-            <Box
-              borderRadius="md"
-              overflow="hidden"
-              h="400px"
-              border="1px solid" borderColor="gray.700"
-            >
+              </button>
+            </div>
+            <div style={{ borderRadius: 8, overflow: "hidden", height: 400, border: "1px solid #374151" }}>
               <Editor
                 height="100%"
                 theme="vs-dark"
                 language="cpp"
                 value={viewingSolution.solutionCode}
-                options={{
-                  readOnly: true,
-                  minimap: { enabled: false },
-                  fontSize: 14,
-                  lineNumbers: "on",
-                  scrollBeyondLastLine: false,
-                  domReadOnly: true,
-                }}
+                options={{ readOnly: true, minimap: { enabled: false }, fontSize: 14, lineNumbers: "on", scrollBeyondLastLine: false, domReadOnly: true }}
               />
-            </Box>
-          </Box>
-        </Box>
+            </div>
+          </div>
+        </div>
       )}
-    </Box>
+    </div>
   );
 };
 

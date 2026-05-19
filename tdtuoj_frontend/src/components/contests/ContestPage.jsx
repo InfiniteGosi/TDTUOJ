@@ -1,21 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  Badge,
-  HStack,
-  VStack,
-  Spinner,
-  Input,
-  Button,
-  SimpleGrid,
-} from "@chakra-ui/react";
-import {
   Trophy,
-  Search,
   Calendar,
   Users,
   Lock,
@@ -27,6 +13,9 @@ import {
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
+import SuggestiveSearch from "../common/SuggestiveSearch";
+import FilterPills from "../common/FilterPills";
+import MacbookAnimation from "../common/MacbookAnimation";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -51,12 +40,6 @@ const statusOf = (contest) => {
   return "RUNNING";
 };
 
-const STATUS = {
-  UPCOMING: { label: "Upcoming", color: "#3b82f6", bg: "#eff6ff", dot: "#93c5fd" },
-  RUNNING:  { label: "Live",     color: "#16a34a", bg: "#f0fdf4", dot: "#4ade80" },
-  ENDED:    { label: "Ended",    color: "#6b7280", bg: "#f9fafb", dot: "#d1d5db" },
-};
-
 const timeUntil = (dt) => {
   const diff = new Date(dt).getTime() - Date.now();
   if (diff <= 0) return null;
@@ -72,133 +55,176 @@ const timeUntil = (dt) => {
 
 const ContestCard = ({ contest, onEnter }) => {
   const status = statusOf(contest);
-  const s = STATUS[status];
   const countdown = status === "UPCOMING" ? timeUntil(contest.startTime) : null;
 
+  const statusStyle = {
+    RUNNING:  { label: "Live",     color: "var(--green-ac)",  bg: "var(--green-subtle)",  dot: true },
+    UPCOMING: { label: "Upcoming", color: "var(--amber-tle)", bg: "var(--amber-subtle)",  dot: false },
+    ENDED:    { label: "Ended",    color: "var(--text-muted)", bg: "var(--bg-hover)",      dot: false },
+  }[status];
+
+  const barColor = {
+    RUNNING: "var(--green-ac)",
+    UPCOMING: "var(--amber-tle)",
+    ENDED: "var(--text-muted)",
+  }[status];
+
   return (
-    <Box
-      bg="white"
-      borderRadius="xl"
-      border="1px solid"
-      borderColor="gray.200"
-      boxShadow="sm"
-      overflow="hidden"
-      transition="all 0.2s"
-      _hover={{ boxShadow: "md", borderColor: "purple.200", transform: "translateY(-2px)" }}
-      cursor="pointer"
+    <div
       onClick={() => onEnter(contest.slug)}
-      display="flex"
-      flexDirection="column"
+      style={{
+        background: "var(--bg-raised)",
+        borderRadius: "var(--radius-lg)",
+        border: "1px solid var(--border-default)",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        cursor: "pointer",
+        transition: "var(--transition-base)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.4)";
+        e.currentTarget.style.borderColor = "var(--border-accent)";
+        e.currentTarget.style.transform = "translateY(-2px)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.3)";
+        e.currentTarget.style.borderColor = "var(--border-default)";
+        e.currentTarget.style.transform = "translateY(0)";
+      }}
     >
       {/* Status bar */}
-      <Box h="4px" bg={s.color} />
+      <div style={{ height: "4px", background: barColor }} />
 
-      <Box p={5} flex={1} display="flex" flexDirection="column" gap={3}>
+      <div style={{ padding: "var(--space-5)", flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
         {/* Header */}
-        <HStack justify="space-between" align="flex-start">
-          <HStack gap={1}>
-            {contest.isPublic ? (
-              <Globe size={13} color="#9ca3af" />
-            ) : (
-              <Lock size={13} color="#9ca3af" />
-            )}
-            {contest.isRated && (
-              <Star size={13} color="#f59e0b" fill="#f59e0b" />
-            )}
-          </HStack>
-          <Box
-            display="inline-flex"
-            alignItems="center"
-            gap={1}
-            px={2}
-            py="2px"
-            borderRadius="full"
-            fontSize="xs"
-            fontWeight="600"
-            bg={s.bg}
-            color={s.color}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            {contest.isPublic
+              ? <Globe size={13} color="var(--text-muted)" />
+              : <Lock size={13} color="var(--text-muted)" />
+            }
+            {contest.isRated && <Star size={13} color="var(--amber-tle)" fill="var(--amber-tle)" />}
+          </div>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              padding: "2px 8px",
+              borderRadius: "var(--radius-pill)",
+              fontSize: "var(--text-xs)",
+              fontWeight: 600,
+              background: statusStyle.bg,
+              color: statusStyle.color,
+            }}
           >
-            {status === "RUNNING" && (
-              <Box
-                as="span"
-                w="6px"
-                h="6px"
-                borderRadius="full"
-                bg={s.dot}
-                display="inline-block"
-                style={{ animation: "pulse 1.5s infinite" }}
+            {statusStyle.dot && (
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: statusStyle.color,
+                  display: "inline-block",
+                  animation: "pulse 1.5s infinite",
+                }}
               />
             )}
-            {s.label}
-          </Box>
-        </HStack>
+            {statusStyle.label}
+          </span>
+        </div>
 
         {/* Title */}
-        <Box>
-          <Text fontSize="lg" fontWeight="800" color="gray.900" lineClamp={2}>
+        <div>
+          <p
+            className="font-bold text-primary"
+            style={{
+              fontSize: "var(--text-lg)",
+              fontWeight: 800,
+              margin: 0,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
             {contest.name}
-          </Text>
+          </p>
           {contest.description && (
-            <Text fontSize="sm" color="gray.500" mt={1} lineClamp={2}>
+            <p
+              className="text-secondary"
+              style={{
+                fontSize: "var(--text-sm)",
+                marginTop: "var(--space-1)",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
               {contest.description}
-            </Text>
+            </p>
           )}
-        </Box>
+        </div>
 
         {/* Countdown */}
         {countdown && (
-          <HStack gap={1}>
-            <Clock size={13} color="#3b82f6" />
-            <Text fontSize="xs" color="blue.500" fontWeight="600">
+          <div className="flex items-center gap-1">
+            <Clock size={13} color="var(--cyan)" />
+            <span style={{ fontSize: "var(--text-xs)", color: "var(--cyan)", fontWeight: 600 }}>
               {countdown}
-            </Text>
-          </HStack>
+            </span>
+          </div>
         )}
 
         {/* Meta */}
-        <VStack align="stretch" gap={1} mt="auto">
-          <HStack gap={1}>
-            <Calendar size={13} color="#9ca3af" />
-            <Text fontSize="xs" color="gray.500">
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)", marginTop: "auto" }}>
+          <div className="flex items-center gap-1">
+            <Calendar size={13} color="var(--text-muted)" />
+            <span style={{ fontSize: "var(--text-xs)" }} className="text-secondary">
               {fmt(contest.startTime)} → {fmt(contest.endTime)}
-            </Text>
-          </HStack>
-          <HStack justify="space-between">
-            <HStack gap={1}>
-              <Users size={13} color="#9ca3af" />
-              <Text fontSize="xs" color="gray.500">
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <Users size={13} color="var(--text-muted)" />
+              <span style={{ fontSize: "var(--text-xs)" }} className="text-secondary">
                 {contest.totalParticipants ?? 0} registered
                 {contest.maxParticipant ? ` / ${contest.maxParticipant}` : ""}
-              </Text>
-            </HStack>
-            <HStack gap={1}>
-              <Trophy size={13} color="#9ca3af" />
-              <Text fontSize="xs" color="gray.500">
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Trophy size={13} color="var(--text-muted)" />
+              <span style={{ fontSize: "var(--text-xs)" }} className="text-secondary">
                 {contest.totalProblems ?? 0} problems
-              </Text>
-            </HStack>
-          </HStack>
-        </VStack>
-      </Box>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Footer */}
-      <HStack
-        px={5}
-        py={3}
-        bg="gray.50"
-        borderTopWidth="1px"
-        borderColor="gray.100"
-        justify="space-between"
+      <div
+        style={{
+          padding: "var(--space-3) var(--space-5)",
+          background: "var(--bg-overlay)",
+          borderTop: "1px solid var(--border-subtle)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
       >
-        <Text fontSize="xs" color="gray.400">
+        <span style={{ fontSize: "var(--text-xs)" }} className="text-muted">
           by {contest.creatorUsername ?? "—"}
-        </Text>
-        <HStack gap={1} color="purple.600" fontSize="xs" fontWeight="600">
-          <Text>View</Text>
+        </span>
+        <div className="flex items-center gap-1" style={{ color: "var(--cyan)", fontSize: "var(--text-xs)", fontWeight: 600 }}>
+          <span>View</span>
           <ChevronRight size={13} />
-        </HStack>
-      </HStack>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -246,143 +272,132 @@ const ContestPage = () => {
     return matchSearch && matchStatus;
   });
 
-  const STATUS_TABS = ["ALL", "UPCOMING", "RUNNING", "ENDED"];
-
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      {/* Pulse animation */}
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "var(--space-8) 0" }}>
       <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
 
-      <Container maxW="container.xl">
-        <VStack align="stretch" gap={6}>
+      <div className="page-container">
+        <div className="flex flex-col gap-6">
+
           {/* Hero Header */}
-          <Box
-            style={{ background: "linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #6366f1 100%)" }}
-            borderRadius="2xl"
-            p={10}
-            color="white"
-            position="relative"
-            overflow="hidden"
+          <div
+            style={{
+              background: "linear-gradient(135deg, var(--navy) 0%, var(--navy-bright) 100%)",
+              borderRadius: "var(--radius-xl)",
+              padding: "var(--space-10)",
+              color: "#fff",
+              position: "relative",
+              overflow: "hidden",
+              minHeight: 160,
+            }}
           >
-            <Box
-              position="absolute"
-              inset={0}
-              opacity={0.1}
-              backgroundImage="radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)"
-              backgroundSize="60px 60px"
+            {/* Dot grid */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                opacity: 0.1,
+                backgroundImage: "radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)",
+                backgroundSize: "60px 60px",
+              }}
             />
-            <VStack align="flex-start" gap={2} position="relative">
-              <HStack gap={3}>
-                <Trophy size={36} />
-                <Heading size="3xl" fontWeight="900">
-                  Contests
-                </Heading>
-              </HStack>
-              <Text fontSize="lg" opacity={0.85}>
-                Compete in ICPC-style programming contests and climb the leaderboard
-              </Text>
-              <Badge
-                bg="whiteAlpha.200"
-                color="white"
-                px={3}
-                py={1}
-                borderRadius="full"
-                fontSize="sm"
-                mt={1}
+            {/* Radial glow behind MacBook */}
+            <div
+              style={{
+                position: "absolute",
+                right: "15%",
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: 220,
+                height: 220,
+                borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)",
+                pointerEvents: "none",
+              }}
+            />
+
+            {/* Layout: text left, MacBook right */}
+            <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              {/* Left: text */}
+              <div className="flex flex-col gap-2" style={{ flex: 1, maxWidth: "60%" }}>
+                <div className="flex items-center gap-3">
+                  <Trophy size={36} />
+                  <h1 style={{ fontSize: "var(--text-3xl)", fontWeight: 900, margin: 0 }}>Contests</h1>
+                </div>
+                <p style={{ fontSize: "var(--text-lg)", opacity: 0.85, margin: 0 }}>
+                  Compete in ICPC-style programming contests and climb the leaderboard
+                </p>
+                <span
+                  style={{
+                    display: "inline-block",
+                    background: "rgba(255,255,255,0.2)",
+                    color: "#fff",
+                    padding: "4px 12px",
+                    borderRadius: "var(--radius-pill)",
+                    fontSize: "var(--text-sm)",
+                    marginTop: "var(--space-1)",
+                    alignSelf: "flex-start",
+                  }}
+                >
+                  {totalElements} contests available
+                </span>
+              </div>
+
+              {/* Right: 3D MacBook */}
+              <div
+                style={{
+                  width: 220,
+                  height: 160,
+                  position: "relative",
+                  flexShrink: 0,
+                  opacity: 0.92,
+                }}
               >
-                {totalElements} contests available
-              </Badge>
-            </VStack>
-          </Box>
+                <MacbookAnimation />
+              </div>
+            </div>
+          </div>
 
           {/* Search + Status Filter */}
-          <HStack gap={3} align="stretch">
-            <Box
-              flex={1}
-              bg="white"
-              px={4}
-              py={3}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px solid"
-              borderColor="gray.200"
-            >
-              <Box position="relative">
-                <Box
-                  position="absolute"
-                  left={2}
-                  top="50%"
-                  transform="translateY(-50%)"
-                >
-                  <Search size={18} color="#9CA3AF" />
-                </Box>
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search contests..."
-                  pl={8}
-                  border="none"
-                  _focus={{ boxShadow: "none" }}
-                  fontSize="sm"
-                />
-              </Box>
-            </Box>
+          <div className="flex items-center gap-3">
+            <SuggestiveSearch
+              value={search}
+              onChange={(val) => setSearch(val)}
+              suggestions={[
+                "Search contests...",
+                "Find 'Spring Round'",
+                "Explore upcoming contests",
+                "Look up ICPC-style rounds",
+              ]}
+              style={{ width: "100%", maxWidth: 320 }}
+            />
 
-            {/* Status tabs */}
-            <HStack
-              bg="white"
-              px={3}
-              py={2}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px solid"
-              borderColor="gray.200"
-              gap={1}
-            >
-              {STATUS_TABS.map((tab) => (
-                <Box
-                  key={tab}
-                  as="button"
-                  px={3}
-                  py={1}
-                  borderRadius="md"
-                  fontSize="sm"
-                  fontWeight="600"
-                  bg={statusFilter === tab ? "purple.600" : "transparent"}
-                  color={statusFilter === tab ? "white" : "gray.500"}
-                  transition="all 0.15s"
-                  _hover={
-                    statusFilter !== tab
-                      ? { bg: "purple.50", color: "purple.600" }
-                      : {}
-                  }
-                  onClick={() => setStatusFilter(tab)}
-                  style={{ outline: "none" }}
-                >
-                  {tab.charAt(0) + tab.slice(1).toLowerCase()}
-                </Box>
-              ))}
-            </HStack>
-          </HStack>
+            <FilterPills
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { value: "ALL",      label: "All" },
+                { value: "RUNNING",  label: "Running",  accent: "var(--green-ac)" },
+                { value: "UPCOMING", label: "Upcoming", accent: "var(--blue-ce)" },
+                { value: "ENDED",    label: "Ended",    accent: "var(--text-muted)" },
+              ]}
+            />
+          </div>
 
           {/* Content */}
           {loading ? (
-            <VStack gap={4} py={20}>
-              <Spinner size="xl" color="purple.500" thickness="4px" />
-              <Text color="gray.500">Loading contests...</Text>
-            </VStack>
+            <div className="flex flex-col items-center justify-center gap-4" style={{ padding: "var(--space-16) 0" }}>
+              <div className="spinner" />
+              <span className="text-secondary">Loading contests...</span>
+            </div>
           ) : filtered.length === 0 ? (
-            <VStack gap={3} py={16}>
-              <Trophy size={48} color="#D1D5DB" />
-              <Text color="gray.400" fontSize="lg" fontWeight="600">
-                No contests found
-              </Text>
-              <Text color="gray.400" fontSize="sm">
-                Try adjusting your search or filter
-              </Text>
-            </VStack>
+            <div className="flex flex-col items-center justify-center gap-3" style={{ padding: "var(--space-16) 0" }}>
+              <Trophy size={48} color="var(--border-default)" />
+              <p className="text-muted font-semibold text-lg" style={{ margin: 0 }}>No contests found</p>
+              <p className="text-muted text-sm" style={{ margin: 0 }}>Try adjusting your search or filter</p>
+            </div>
           ) : (
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={5}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "var(--space-5)" }}>
               {filtered.map((contest) => (
                 <ContestCard
                   key={contest.id}
@@ -390,40 +405,37 @@ const ContestPage = () => {
                   onEnter={(slug) => navigate(`/contests/${slug}`)}
                 />
               ))}
-            </SimpleGrid>
+            </div>
           )}
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <HStack justify="center" gap={2}>
-              <Button
-                size="sm"
-                variant="ghost"
-                colorScheme="purple"
+            <div className="flex items-center justify-center gap-2">
+              <button
+                className="btn btn-ghost btn-sm"
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
               >
                 <ChevronLeft size={16} />
                 Previous
-              </Button>
-              <Text fontSize="sm" color="gray.500" px={2}>
+              </button>
+              <span className="text-secondary text-sm" style={{ padding: "0 var(--space-2)" }}>
                 Page {page + 1} of {totalPages}
-              </Text>
-              <Button
-                size="sm"
-                variant="ghost"
-                colorScheme="purple"
+              </span>
+              <button
+                className="btn btn-ghost btn-sm"
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={page >= totalPages - 1}
               >
                 Next
                 <ChevronRight size={16} />
-              </Button>
-            </HStack>
+              </button>
+            </div>
           )}
-        </VStack>
-      </Container>
-    </Box>
+
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -78,7 +78,7 @@ const HIGHLIGHT_CSS = `
     border-left: 3px solid #f5c518 !important;
   }
   .monaco-editor .margin {
-    background: #0f0f0f !important;
+    background: #0d1420 !important;
   }
 `;
 
@@ -219,7 +219,7 @@ function SnippetPanel({ language }) {
         }}>{copied ? "✓ Copied!" : "Copy"}</button>
       </div>
       <pre style={{
-        margin: 0, padding: "8px 14px 10px", fontSize: 11, color: "#c8c8c8",
+        margin: 0, padding: "8px 14px 10px", fontSize: 11, color: "var(--text-primary)",
         fontFamily: "'JetBrains Mono', monospace", whiteSpace: "pre-wrap",
         lineHeight: 1.7, maxHeight: 130, overflowY: "auto",
       }}>{snippet}</pre>
@@ -305,7 +305,7 @@ export default function VisualizerModal({
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,0.78)",
+        background: "rgba(0,0,0,0.82)",
         backdropFilter: "blur(3px)",
         zIndex: 1000,
         display: "flex",

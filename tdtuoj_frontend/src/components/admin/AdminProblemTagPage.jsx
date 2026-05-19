@@ -1,32 +1,11 @@
 import { useState, useEffect } from "react";
 import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  Badge,
-  HStack,
-  VStack,
-  Spinner,
-  Input,
-  Button,
-  IconButton,
-  Tag,
-  Switch,
-} from "@chakra-ui/react";
-import { Table } from "@chakra-ui/react";
-import {
-  Tag as TagIcon,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Plus,
-  Edit,
-  Trash2,
+  Tag as TagIcon, Plus, Edit, Trash2,
 } from "lucide-react";
+import SuggestiveSearch from "../common/SuggestiveSearch";
+import Pagination from "../common/Pagination";
 import ApiService from "../../services/ApiService";
+import SortBar from "../common/SortBar";
 import { useConfirmDialog } from "../common/ConfirmDialog";
 import { useToast } from "../common/ToastMessage";
 import TagFormDialog from "./TagFormDialog";
@@ -40,175 +19,85 @@ const AdminProblemTagPage = () => {
   const [togglingIds, setTogglingIds] = useState(new Set());
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTag, setEditingTag] = useState(null);
-  const [pagination, setPagination] = useState({
-    limit: 10,
-    offset: 0,
-    totalElements: 0,
-    totalPages: 0,
-    currentPage: 0,
-  });
+  const [pagination, setPagination] = useState({ limit: 10, offset: 0, totalElements: 0, totalPages: 0, currentPage: 0 });
   const [sortField, setSortField] = useState("id");
   const [direction, setDirection] = useState("asc");
 
   const fetchTags = async () => {
     try {
       setLoading(true);
-      const response = await ApiService.getAllTags({
-        limit: pagination.limit,
-        offset: pagination.offset,
-        sortField,
-        direction,
-        name: searchQuery,
-      });
-
+      const response = await ApiService.getAllTags({ limit: pagination.limit, offset: pagination.offset, sortField, direction, name: searchQuery });
       if (response.statusCode === 200) {
         setTags(response.data.content);
-        setPagination((prev) => ({
-          ...prev,
-          totalElements: response.data.page.totalElements,
-          totalPages: response.data.page.totalPages,
-          currentPage: response.data.page.number,
-        }));
+        setPagination((prev) => ({ ...prev, totalElements: response.data.page.totalElements, totalPages: response.data.page.totalPages, currentPage: response.data.page.number }));
       }
-    } catch (error) {
-      showMessage(error.response?.data?.message || error.message, "error");
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { showMessage(error.response?.data?.message || error.message, "error"); } finally { setLoading(false); }
   };
 
+  useEffect(() => { fetchTags(); }, [pagination.limit, pagination.offset, sortField, direction]);
   useEffect(() => {
-    fetchTags();
-  }, [pagination.limit, pagination.offset, sortField, direction]);
-
-  useEffect(() => {
-    const delaySearch = setTimeout(() => {
-      setPagination((prev) => ({ ...prev, offset: 0 }));
-      fetchTags();
-    }, 500);
+    const delaySearch = setTimeout(() => { setPagination((prev) => ({ ...prev, offset: 0 })); fetchTags(); }, 500);
     return () => clearTimeout(delaySearch);
   }, [searchQuery]);
 
-  const handleAddTag = () => {
-    setEditingTag(null);
-    setIsFormOpen(true);
-  };
-
-  const handleEditTag = (tag) => {
-    setEditingTag(tag);
-    setIsFormOpen(true);
-  };
-
-  const handleFormSuccess = (message) => {
-    showMessage(message, "success");
-    setIsFormOpen(false);
-    setEditingTag(null);
-    fetchTags();
-  };
+  const handleAddTag = () => { setEditingTag(null); setIsFormOpen(true); };
+  const handleEditTag = (tag) => { setEditingTag(tag); setIsFormOpen(true); };
+  const handleFormSuccess = (message) => { showMessage(message, "success"); setIsFormOpen(false); setEditingTag(null); fetchTags(); };
 
   const handleToggleActive = async (id) => {
     setTogglingIds((prev) => new Set(prev).add(id));
     try {
       const response = await ApiService.toggleTagActive(id);
       if (response.statusCode === 200) {
-        setTags((prev) =>
-          prev.map((tag) =>
-            tag.id === id ? { ...tag, isActive: response.data.isActive } : tag,
-          ),
-        );
+        setTags((prev) => prev.map((tag) => tag.id === id ? { ...tag, isActive: response.data.isActive } : tag));
         showMessage("Tag status updated successfully", "success");
       }
-    } catch (error) {
-      showMessage(error.response?.data?.message || error.message, "error");
-    } finally {
-      setTogglingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
+    } catch (error) { showMessage(error.response?.data?.message || error.message, "error"); } finally {
+      setTogglingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
     }
   };
 
   const handleDeleteTag = (id) => {
-    showConfirm(
-      "Delete Tag",
-      "Are you sure you want to delete this tag? This action cannot be undone.",
-      async () => {
-        try {
-          const response = await ApiService.deleteTag(id);
-          if (response.statusCode === 200) {
-            showMessage("Tag deleted successfully", "success");
-            fetchTags();
-          }
-        } catch (error) {
-          showMessage(error.response?.data?.message || error.message, "error");
-        }
-      },
-    );
+    showConfirm("Delete Tag", "Are you sure you want to delete this tag? This action cannot be undone.", async () => {
+      try {
+        const response = await ApiService.deleteTag(id);
+        if (response.statusCode === 200) { showMessage("Tag deleted successfully", "success"); fetchTags(); }
+      } catch (error) { showMessage(error.response?.data?.message || error.message, "error"); }
+    });
   };
 
-  const handlePageChange = (newOffset) =>
-    setPagination((prev) => ({ ...prev, offset: newOffset }));
-  const handleLimitChange = (newLimit) =>
-    setPagination((prev) => ({
-      ...prev,
-      limit: parseInt(newLimit),
-      offset: 0,
-    }));
-  const goToFirstPage = () => handlePageChange(0);
-  const goToLastPage = () =>
-    handlePageChange((pagination.totalPages - 1) * pagination.limit);
-  const goToPreviousPage = () =>
-    handlePageChange(Math.max(0, pagination.offset - pagination.limit));
-  const goToNextPage = () =>
-    handlePageChange(
-      Math.min(
-        (pagination.totalPages - 1) * pagination.limit,
-        pagination.offset + pagination.limit,
-      ),
-    );
-  const canGoPrevious = pagination.currentPage > 0;
-  const canGoNext = pagination.currentPage < pagination.totalPages - 1;
+  const handlePageChange = (newOffset) => setPagination((prev) => ({ ...prev, offset: newOffset }));
+  const handleLimitChange = (newLimit) => setPagination((prev) => ({ ...prev, limit: parseInt(newLimit), offset: 0 }));
 
   if (loading && tags.length === 0) {
     return (
-      <Box minH="100vh" bg="gray.50" py={8}>
-        <Container maxW="container.xl">
-          <VStack gap={4} py={20}>
-            <Spinner size="xl" color="purple.500" thickness="4px" />
-            <Text color="gray.600">Loading tags...</Text>
-          </VStack>
-        </Container>
-      </Box>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+        <div className="page-container">
+          <div className="flex flex-col items-center gap-4" style={{ padding: "80px 0" }}>
+            <div className="spinner" />
+            <span className="text-muted">Loading tags...</span>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Container maxW="container.xl">
-        <VStack align="stretch" gap={6}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+      <div className="page-container">
+        <div className="flex flex-col gap-6">
           {/* Header */}
-          <HStack justify="space-between" align="center">
-            <HStack gap={3}>
-              <Heading size="2xl" color="gray.800">
-                Manage Tags
-              </Heading>
-              <Badge
-                colorPalette="purple"
-                fontSize="md"
-                px={3}
-                py={1}
-                borderRadius="full"
-              >
-                {pagination.totalElements}{" "}
-                {pagination.totalElements === 1 ? "tag" : "tags"}
-              </Badge>
-            </HStack>
-            <Button colorPalette="purple" size="lg" onClick={handleAddTag}>
-              <Plus size={20} />
-              Add Tag
-            </Button>
-          </HStack>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Manage Tags</h2>
+              <span style={{ display: "inline-block", padding: "3px 12px", borderRadius: 9999, fontSize: 13, fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
+                {pagination.totalElements} {pagination.totalElements === 1 ? "tag" : "tags"}
+              </span>
+            </div>
+            <button className="btn btn-primary" onClick={handleAddTag}>
+              <Plus size={20} /> Add Tag
+            </button>
+          </div>
 
           <ConfirmDialog />
 
@@ -217,331 +106,167 @@ const AdminProblemTagPage = () => {
             tag={editingTag}
             onSuccess={handleFormSuccess}
             onError={(msg) => showMessage(msg, "error")}
-            onClose={() => {
-              setIsFormOpen(false);
-              setEditingTag(null);
-            }}
+            onClose={() => { setIsFormOpen(false); setEditingTag(null); }}
           />
 
-          {/* Search and Filters */}
-          <HStack gap={4}>
-            <Box flex={1} bg="white" p={4} borderRadius="lg" boxShadow="sm">
-              <Box position="relative" w="full">
-                <Box
-                  position="absolute"
-                  left={3}
-                  top="50%"
-                  transform="translateY(-50%)"
-                  zIndex={2}
-                >
-                  <Search size={20} color="#9CA3AF" />
-                </Box>
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by tag name..."
-                  size="lg"
-                  pl={10}
-                  borderColor="gray.300"
-                  _hover={{ borderColor: "purple.400" }}
-                  _focus={{
-                    borderColor: "purple.500",
-                    boxShadow: "0 0 0 1px #805AD5",
-                  }}
-                />
-              </Box>
-            </Box>
-
-            <Box bg="white" p={4} borderRadius="lg" boxShadow="sm">
-              <HStack gap={2}>
-                <Text fontSize="sm" fontWeight="medium" color="gray.700">
-                  Sort:
-                </Text>
-                <select
-                  value={sortField}
-                  onChange={(e) => setSortField(e.target.value)}
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid #E2E8F0",
-                    fontSize: "14px",
-                    width: "120px",
-                  }}
-                >
-                  <option value="id">ID</option>
-                  <option value="name">Name</option>
-                </select>
-                <select
-                  value={direction}
-                  onChange={(e) => setDirection(e.target.value)}
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid #E2E8F0",
-                    fontSize: "14px",
-                    width: "100px",
-                  }}
-                >
-                  <option value="asc">Asc</option>
-                  <option value="desc">Desc</option>
-                </select>
-              </HStack>
-            </Box>
-          </HStack>
+          {/* Search + Sort */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <SuggestiveSearch
+              value={searchQuery}
+              onChange={(val) => setSearchQuery(val)}
+              suggestions={["Search by tag name...", "Filter tags"]}
+              style={{ width: 320 }}
+            />
+            <SortBar
+              field={sortField}
+              direction={direction}
+              onFieldChange={setSortField}
+              onDirectionChange={setDirection}
+              fields={[
+                { value: "id",   label: "ID" },
+                { value: "name", label: "Name" },
+              ]}
+            />
+          </div>
 
           {/* Table */}
-          <Box
-            bg="white"
-            borderRadius="xl"
-            boxShadow="md"
-            overflow="hidden"
-            position="relative"
-          >
+          <div className="card" style={{ overflow: "hidden", position: "relative" }}>
             {loading && (
-              <Box
-                position="absolute"
-                top={0}
-                left={0}
-                right={0}
-                bottom={0}
-                bg="whiteAlpha.800"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                zIndex={10}
-              >
-                <Spinner size="lg" color="purple.500" thickness="3px" />
-              </Box>
+              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+                <div className="spinner" />
+              </div>
             )}
 
-            <Table.Root variant="line" size="lg">
-              <Table.Header bg="purple.50">
-                <Table.Row>
-                  <Table.ColumnHeader textAlign="center" w="10%">
-                    <Text fontWeight="bold" color="purple.700">
-                      ID
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="50%">
-                    <Text fontWeight="bold" color="purple.700">
-                      Tag Name
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="center" w="20%">
-                    <Text fontWeight="bold" color="purple.700">
-                      Status
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="center" w="20%">
-                    <Text fontWeight="bold" color="purple.700">
-                      Actions
-                    </Text>
-                  </Table.ColumnHeader>
-                </Table.Row>
-              </Table.Header>
-
-              <Table.Body>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "center", width: "10%" }}>ID</th>
+                  <th style={{ width: "50%" }}>Tag Name</th>
+                  <th style={{ textAlign: "center", width: "20%" }}>Status</th>
+                  <th style={{ textAlign: "center", width: "20%" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                 {tags.length > 0 ? (
                   tags.map((tag, index) => (
-                    <Table.Row
-                      key={tag.id}
-                      _hover={{ bg: "purple.50" }}
-                      transition="all 0.2s"
-                      bg={index % 2 === 0 ? "white" : "gray.50"}
-                    >
-                      <Table.Cell textAlign="center">
-                        <Badge
-                          colorPalette="purple"
-                          fontSize="md"
-                          px={3}
-                          py={1}
-                          borderRadius="md"
-                          fontWeight="bold"
-                        >
+                    <tr key={tag.id} style={{ background: index % 2 === 0 ? "var(--bg-base)" : "var(--bg-raised)" }}>
+                      <td style={{ textAlign: "center" }}>
+                        <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 13, fontWeight: 700, background: "var(--primary-subtle)", color: "var(--primary)" }}>
                           #{tag.id}
-                        </Badge>
-                      </Table.Cell>
-
-                      <Table.Cell>
-                        <HStack gap={2}>
-                          <TagIcon size={16} color="#805AD5" />
-                          <Text
-                            fontSize="lg"
-                            fontWeight="semibold"
-                            color="gray.800"
-                          >
-                            {tag.name}
-                          </Text>
-                        </HStack>
-                      </Table.Cell>
-
-                      <Table.Cell textAlign="center">
-                        <HStack justify="center" gap={2}>
-                          <Switch.Root
-                            checked={tag.isActive}
-                            onCheckedChange={() => handleToggleActive(tag.id)}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-2">
+                          <TagIcon size={16} color="var(--primary)" />
+                          <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)" }}>{tag.name}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                          <button
+                            onClick={() => !togglingIds.has(tag.id) && handleToggleActive(tag.id)}
                             disabled={togglingIds.has(tag.id)}
-                            colorPalette="green"
+                            title={tag.isActive ? "Deactivate" : "Activate"}
+                            style={{
+                              position: "relative",
+                              width: 44, height: 24,
+                              borderRadius: 12,
+                              border: "none",
+                              padding: 0,
+                              cursor: togglingIds.has(tag.id) ? "not-allowed" : "pointer",
+                              background: tag.isActive ? "var(--green-ac)" : "var(--bg-overlay)",
+                              boxShadow: tag.isActive
+                                ? "0 0 0 3px var(--green-subtle), var(--glow-green)"
+                                : "inset 0 0 0 1px var(--border-default)",
+                              transition: "background var(--transition-base), box-shadow var(--transition-base)",
+                              opacity: togglingIds.has(tag.id) ? 0.65 : 1,
+                              outline: "none",
+                              flexShrink: 0,
+                            }}
                           >
-                            <Switch.HiddenInput />
-                            <Switch.Control>
-                              <Switch.Thumb />
-                            </Switch.Control>
-                          </Switch.Root>
-                          {togglingIds.has(tag.id) ? (
-                            <Spinner size="xs" color="purple.500" />
-                          ) : (
-                            <Tag.Root
-                              colorPalette={tag.isActive ? "green" : "red"}
-                              variant="subtle"
-                            >
-                              <Tag.Label>
-                                {tag.isActive ? "Active" : "Inactive"}
-                              </Tag.Label>
-                            </Tag.Root>
-                          )}
-                        </HStack>
-                      </Table.Cell>
-
-                      <Table.Cell textAlign="center">
-                        <HStack justify="center" gap={2}>
-                          <IconButton
-                            size="sm"
-                            colorPalette="green"
-                            variant="ghost"
-                            onClick={() => handleEditTag(tag)}
-                            title="Edit Tag"
-                          >
-                            <Edit size={18} />
-                          </IconButton>
-                          <IconButton
-                            size="sm"
-                            colorPalette="red"
-                            variant="ghost"
-                            onClick={() => handleDeleteTag(tag.id)}
-                            title="Delete Tag"
-                          >
-                            <Trash2 size={18} />
-                          </IconButton>
-                        </HStack>
-                      </Table.Cell>
-                    </Table.Row>
+                            {togglingIds.has(tag.id) ? (
+                              <span style={{
+                                position: "absolute", inset: 0,
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                              }}>
+                                <span style={{
+                                  width: 12, height: 12,
+                                  border: "2px solid rgba(255,255,255,0.3)",
+                                  borderTopColor: "#fff",
+                                  borderRadius: "50%",
+                                  animation: "spin 0.6s linear infinite",
+                                  display: "inline-block",
+                                }} />
+                              </span>
+                            ) : (
+                              <span style={{
+                                position: "absolute",
+                                top: 3,
+                                left: tag.isActive ? 23 : 3,
+                                width: 18, height: 18,
+                                borderRadius: "50%",
+                                background: "#fff",
+                                boxShadow: "0 1px 4px rgba(0,0,0,0.35)",
+                                transition: `left var(--transition-spring)`,
+                              }} />
+                            )}
+                          </button>
+                          <span style={{
+                            fontSize: 10, fontWeight: 700,
+                            letterSpacing: "0.08em",
+                            textTransform: "uppercase",
+                            color: tag.isActive ? "var(--green-ac)" : "var(--text-muted)",
+                            transition: "color var(--transition-base)",
+                          }}>
+                            {tag.isActive ? "ON" : "OFF"}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex items-center justify-center gap-2">
+                          <button className="btn btn-ghost btn-sm" title="Edit Tag" style={{ padding: "5px 7px" }} onClick={() => handleEditTag(tag)}>
+                            <Edit size={16} color="var(--primary)" />
+                          </button>
+                          <button className="btn btn-ghost btn-sm" title="Delete Tag" style={{ padding: "5px 7px" }} onClick={() => handleDeleteTag(tag.id)}>
+                            <Trash2 size={16} color="var(--red-wa)" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
                   ))
                 ) : (
-                  <Table.Row>
-                    <Table.Cell colSpan={4} textAlign="center" py={10}>
-                      <VStack gap={3}>
-                        <TagIcon size={48} color="#CBD5E0" />
-                        <Text
-                          fontSize="lg"
-                          color="gray.500"
-                          fontWeight="medium"
-                        >
-                          {searchQuery
-                            ? "No tags match your search"
-                            : "No tags found"}
-                        </Text>
-                        <Text fontSize="sm" color="gray.400">
-                          {searchQuery
-                            ? "Try adjusting your search terms"
-                            : "Click 'Add Tag' to create your first tag!"}
-                        </Text>
-                      </VStack>
-                    </Table.Cell>
-                  </Table.Row>
+                  <tr>
+                    <td colSpan={4} style={{ textAlign: "center", padding: "40px 0" }}>
+                      <div className="flex flex-col items-center gap-3">
+                        <TagIcon size={48} color="var(--text-muted)" />
+                        <p style={{ fontSize: 16, color: "var(--text-muted)", margin: 0, fontWeight: 500 }}>
+                          {searchQuery ? "No tags match your search" : "No tags found"}
+                        </p>
+                        <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
+                          {searchQuery ? "Try adjusting your search terms" : "Click 'Add Tag' to create your first tag!"}
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
                 )}
-              </Table.Body>
-            </Table.Root>
+              </tbody>
+            </table>
 
-            {/* Pagination */}
             {pagination.totalPages > 0 && (
-              <Box borderTopWidth="1px" p={4} bg="gray.50">
-                <HStack justify="space-between" align="center">
-                  <HStack gap={2}>
-                    <Text fontSize="sm" color="gray.600">
-                      Items per page:
-                    </Text>
-                    <select
-                      value={pagination.limit}
-                      onChange={(e) => handleLimitChange(e.target.value)}
-                      style={{
-                        padding: "4px 8px",
-                        borderRadius: "6px",
-                        border: "1px solid #E2E8F0",
-                        fontSize: "14px",
-                        width: "80px",
-                      }}
-                    >
-                      <option value="5">5</option>
-                      <option value="10">10</option>
-                      <option value="20">20</option>
-                      <option value="50">50</option>
-                    </select>
-                  </HStack>
-
-                  <Text fontSize="sm" color="gray.600">
-                    Showing {pagination.offset + 1}-
-                    {Math.min(
-                      pagination.offset + pagination.limit,
-                      pagination.totalElements,
-                    )}{" "}
-                    of {pagination.totalElements}
-                  </Text>
-
-                  <HStack gap={1}>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToFirstPage}
-                      disabled={!canGoPrevious}
-                      _disabled={{ opacity: 0.4, cursor: "not-allowed" }}
-                    >
-                      <ChevronsLeft size={18} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToPreviousPage}
-                      disabled={!canGoPrevious}
-                      _disabled={{ opacity: 0.4, cursor: "not-allowed" }}
-                    >
-                      <ChevronLeft size={18} />
-                    </Button>
-                    <Text
-                      fontSize="sm"
-                      px={3}
-                      color="gray.700"
-                      fontWeight="medium"
-                    >
-                      Page {pagination.currentPage + 1} of{" "}
-                      {pagination.totalPages}
-                    </Text>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToNextPage}
-                      disabled={!canGoNext}
-                      _disabled={{ opacity: 0.4, cursor: "not-allowed" }}
-                    >
-                      <ChevronRight size={18} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={goToLastPage}
-                      disabled={!canGoNext}
-                      _disabled={{ opacity: 0.4, cursor: "not-allowed" }}
-                    >
-                      <ChevronsRight size={18} />
-                    </Button>
-                  </HStack>
-                </HStack>
-              </Box>
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={(p) => handlePageChange(p * pagination.limit)}
+                totalElements={pagination.totalElements}
+                limit={pagination.limit}
+                onLimitChange={handleLimitChange}
+                offset={pagination.offset}
+              />
             )}
-          </Box>
-        </VStack>
-      </Container>
-    </Box>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

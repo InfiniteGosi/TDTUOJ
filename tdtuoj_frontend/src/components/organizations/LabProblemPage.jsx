@@ -1,16 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Box,
-  Spinner,
-  Text,
-  Button,
-  HStack,
-  VStack,
-  Wrap,
-  WrapItem,
-} from "@chakra-ui/react";
-import {
   CheckCircle,
   XCircle,
   Clock,
@@ -18,6 +8,9 @@ import {
   ChevronRight,
   Menu,
   X,
+  Gem,
+  Timer,
+  HardDrive,
 } from "lucide-react";
 import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
@@ -38,53 +31,48 @@ hljs.registerLanguage("c", c);
 
 const getHljsLanguage = (lang) => {
   switch (lang) {
-    case "CPP":
-      return "cpp";
-    case "JAVA":
-      return "java";
-    case "PYTHON":
-      return "python";
-    case "C":
-      return "c";
-    default:
-      return "cpp";
+    case "CPP": return "cpp";
+    case "JAVA": return "java";
+    case "PYTHON": return "python";
+    case "C": return "c";
+    default: return "cpp";
   }
 };
 
 // ─── Theme tokens ────────────────────────────────────────────────────────────
 const T = {
-  bg: "#0f0f0f",
-  surface: "#1a1a1a",
-  surfaceHover: "#222222",
-  border: "#2a2a2a",
-  borderBright: "#3a3a3a",
-  text: "#e8e8e8",
-  textMuted: "#888",
-  textDim: "#555",
-  accent: "#ffa116",
-  accentDim: "rgba(255,161,22,0.12)",
-  green: "#2cbb5d",
-  greenDim: "rgba(44,187,93,0.12)",
-  red: "#ef4743",
-  redDim: "rgba(239,71,67,0.12)",
-  blue: "#3b82f6",
-  blueDim: "rgba(59,130,246,0.1)",
-  purple: "#a78bfa",
-  purpleDim: "rgba(167,139,250,0.12)",
+  bg:           "var(--bg-void)",
+  surface:      "var(--bg-base)",
+  surfaceHover: "var(--bg-hover)",
+  border:       "var(--border-default)",
+  borderBright: "var(--border-strong)",
+  text:         "var(--text-primary)",
+  textMuted:    "var(--text-secondary)",
+  textDim:      "var(--text-muted)",
+  accent:       "var(--primary)",
+  accentDim:    "var(--primary-subtle)",
+  accentBorder: "var(--border-accent)",
+  green:        "var(--green-ac)",
+  greenDim:     "var(--green-subtle)",
+  greenBorder:  "var(--green-subtle)",
+  red:          "var(--red-wa)",
+  redDim:       "var(--red-subtle)",
+  redBorder:    "var(--red-subtle)",
+  blue:         "var(--blue-ce)",
+  blueDim:      "var(--blue-subtle)",
+  blueBorder:   "var(--blue-subtle)",
+  purple:       "var(--primary)",
+  purpleDim:    "var(--primary-subtle)",
+  purpleBorder: "var(--primary-subtle)",
 };
 
 const mapEditorLanguageToSubmissionLanguage = (language) => {
   switch (language) {
-    case "cpp":
-      return "CPP";
-    case "java":
-      return "JAVA";
-    case "python":
-      return "PYTHON";
-    case "c":
-      return "C";
-    default:
-      return "CPP";
+    case "cpp": return "CPP";
+    case "java": return "JAVA";
+    case "python": return "PYTHON";
+    case "c": return "C";
+    default: return "CPP";
   }
 };
 
@@ -104,20 +92,12 @@ const DIFF_STYLE = {
 };
 
 // ─── Resizable Pane ──────────────────────────────────────────────────────────
-const ResizablePane = ({
-  children,
-  direction = "horizontal",
-  initialSizes = [50, 50],
-}) => {
+const ResizablePane = ({ children, direction = "horizontal", initialSizes = [50, 50] }) => {
   const [sizes, setSizes] = useState(initialSizes);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef(null);
 
-  const handleMouseDown = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
+  const handleMouseDown = (e) => { e.preventDefault(); setIsDragging(true); };
   const handleMouseMove = (e) => {
     if (!isDragging || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
@@ -129,7 +109,6 @@ const ResizablePane = ({
       if (pct > 20 && pct < 80) setSizes([pct, 100 - pct]);
     }
   };
-
   const handleMouseUp = () => setIsDragging(false);
 
   useEffect(() => {
@@ -144,49 +123,19 @@ const ResizablePane = ({
   }, [isDragging]);
 
   const isH = direction === "horizontal";
-
   return (
-    <Box
-      ref={containerRef}
-      display="flex"
-      flexDirection={isH ? "row" : "column"}
-      height="100%"
-      width="100%"
-      userSelect={isDragging ? "none" : "auto"}
-    >
-      <Box
-        width={isH ? `${sizes[0]}%` : "100%"}
-        height={!isH ? `${sizes[0]}%` : "100%"}
-        overflow="hidden"
-        display="flex"
-        flexDirection="column"
-      >
+    <div ref={containerRef} style={{ display: "flex", flexDirection: isH ? "row" : "column", height: "100%", width: "100%", userSelect: isDragging ? "none" : "auto" }}>
+      <div style={{ width: isH ? `${sizes[0]}%` : "100%", height: !isH ? `${sizes[0]}%` : "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
         {children[0]}
-      </Box>
-
-      <Box
-        width={isH ? "5px" : "100%"}
-        height={!isH ? "5px" : "100%"}
-        bg={isDragging ? T.accent : T.border}
-        cursor={isH ? "col-resize" : "row-resize"}
+      </div>
+      <div
+        style={{ width: isH ? "5px" : "100%", height: !isH ? "5px" : "100%", background: isDragging ? T.accent : T.border, cursor: isH ? "col-resize" : "row-resize", flexShrink: 0, transition: "background 0.15s", position: "relative", zIndex: 10 }}
         onMouseDown={handleMouseDown}
-        flexShrink={0}
-        transition="background 0.15s"
-        _hover={{ bg: T.accent }}
-        position="relative"
-        zIndex={10}
       />
-
-      <Box
-        width={isH ? `${sizes[1]}%` : "100%"}
-        height={!isH ? `${sizes[1]}%` : "100%"}
-        overflow="hidden"
-        display="flex"
-        flexDirection="column"
-      >
+      <div style={{ width: isH ? `${sizes[1]}%` : "100%", height: !isH ? `${sizes[1]}%` : "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
         {children[1]}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 
@@ -195,244 +144,110 @@ const ResizablePane = ({
 const DifficultyBadge = ({ difficulty }) => {
   const s = DIFF_STYLE[difficulty] || DIFF_STYLE.EASY;
   return (
-    <Box
-      as="span"
-      display="inline-block"
-      px={2}
-      py="2px"
-      borderRadius="4px"
-      fontSize="xs"
-      fontWeight="700"
-      letterSpacing="0.04em"
-      color={s.color}
-      bg={s.bg}
-      border={`1px solid ${s.color}44`}
-    >
+    <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: s.color, background: s.bg, border: `1px solid ${s.color}44` }}>
       {s.label}
-    </Box>
+    </span>
   );
 };
 
 const StatChip = ({ icon, value, color }) => (
-  <Box
-    display="inline-flex"
-    alignItems="center"
-    gap={1}
-    px={2}
-    py="3px"
-    borderRadius="4px"
-    bg={T.surface}
-    border={`1px solid ${T.border}`}
-    fontSize="xs"
-    color={color || T.textMuted}
-    fontWeight="500"
-    fontFamily="'JetBrains Mono', monospace"
-  >
-    <Text>{icon}</Text>
-    <Text>{value}</Text>
-  </Box>
+  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 4, background: T.surface, border: `1px solid ${T.border}`, fontSize: 11, color: color || T.textMuted, fontWeight: 500, fontFamily: "'JetBrains Mono', monospace" }}>
+    <span>{icon}</span>
+    <span>{value}</span>
+  </span>
 );
 
 const TagChip = ({ name }) => (
-  <Box
-    as="span"
-    display="inline-block"
-    px={2}
-    py="3px"
-    borderRadius="4px"
-    fontSize="xs"
-    fontWeight="500"
-    color={T.purple}
-    bg={T.purpleDim}
-    border={`1px solid ${T.purple}33`}
-    letterSpacing="0.02em"
-    whiteSpace="nowrap"
-  >
+  <span style={{ display: "inline-block", padding: "3px 8px", borderRadius: 4, fontSize: 11, fontWeight: 500, color: T.purple, background: T.purpleDim, border: `1px solid ${T.purpleBorder}`, letterSpacing: "0.02em", whiteSpace: "nowrap" }}>
     {name}
-  </Box>
+  </span>
 );
 
 // ─── Countdown hook ───────────────────────────────────────────────────────────
-
 const useCountdown = (targetDateStr) => {
   const getRemaining = () => {
     if (!targetDateStr) return null;
     const diff = new Date(targetDateStr).getTime() - Date.now();
     if (diff <= 0) return null;
-    return {
-      total: diff,
-      hours: Math.floor(diff / 3600000),
-      minutes: Math.floor((diff % 3600000) / 60000),
-      seconds: Math.floor((diff % 60000) / 1000),
-    };
+    return { total: diff, hours: Math.floor(diff / 3600000), minutes: Math.floor((diff % 3600000) / 60000), seconds: Math.floor((diff % 60000) / 1000) };
   };
-
   const [remaining, setRemaining] = useState(getRemaining);
-
   useEffect(() => {
     setRemaining(getRemaining());
     const id = setInterval(() => setRemaining(getRemaining()), 1000);
     return () => clearInterval(id);
   }, [targetDateStr]);
-
   return remaining;
 };
 
 // ─── Lab Deadline Timer ───────────────────────────────────────────────────────
-
 const LabTimer = ({ deadline }) => {
   const remaining = useCountdown(deadline);
   if (!deadline) return null;
   if (!remaining) {
     return (
-      <HStack
-        gap={1}
-        px={3}
-        py={1}
-        borderRadius="6px"
-        bg={T.redDim}
-        border={`1px solid ${T.red}44`}
-      >
+      <div style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 12px", borderRadius: 6, background: T.redDim, border: `1px solid ${T.redBorder}` }}>
         <Clock size={13} />
-        <Text fontSize="xs" fontWeight="700" color={T.red}>
-          Deadline Passed
-        </Text>
-      </HStack>
+        <span style={{ fontSize: 11, fontWeight: 700, color: T.red }}>Deadline Passed</span>
+      </div>
     );
   }
-
   const isUrgent = remaining.total < 5 * 60 * 1000;
   const color = isUrgent ? T.red : T.green;
   const bg = isUrgent ? T.redDim : T.greenDim;
   const pad = (n) => String(n).padStart(2, "0");
-
   return (
-    <HStack
-      gap={1.5}
-      px={3}
-      py={1}
-      borderRadius="6px"
-      bg={bg}
-      border={`1px solid ${color}44`}
-    >
+    <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 6, background: bg, border: `1px solid ${color}44` }}>
       <Clock size={13} color={color} />
-      <Text
-        fontSize="xs"
-        fontWeight="700"
-        fontFamily="'JetBrains Mono', monospace"
-        color={color}
-      >
-        {pad(remaining.hours)}:{pad(remaining.minutes)}:
-        {pad(remaining.seconds)}
-      </Text>
-    </HStack>
+      <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color }}>
+        {pad(remaining.hours)}:{pad(remaining.minutes)}:{pad(remaining.seconds)}
+      </span>
+    </div>
   );
 };
 
 // ─── Problem Sidebar ──────────────────────────────────────────────────────────
-
-const ProblemSidebar = ({
-  problems,
-  currentSlug,
-  basePath,
-  onNavigate,
-  onClose,
-}) => (
-  <Box
-    width="240px"
-    height="100%"
-    bg={T.surface}
-    borderRight={`1px solid ${T.border}`}
-    display="flex"
-    flexDirection="column"
-    flexShrink={0}
-  >
-    <HStack
-      px={3}
-      py={2}
-      borderBottom={`1px solid ${T.border}`}
-      justify="space-between"
-    >
-      <Text fontSize="sm" fontWeight="700" color={T.text}>
-        Problems
-      </Text>
-      <Box
-        as="button"
-        bg="transparent"
-        border="none"
-        cursor="pointer"
-        color={T.textMuted}
-        _hover={{ color: T.text }}
-        onClick={onClose}
-        style={{ outline: "none" }}
-      >
+const ProblemSidebar = ({ problems, currentSlug, basePath, onNavigate, onClose }) => (
+  <div style={{ width: 240, height: "100%", background: T.surface, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", flexShrink: 0 }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderBottom: `1px solid ${T.border}` }}>
+      <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Problems</span>
+      <button style={{ background: "transparent", border: "none", cursor: "pointer", color: T.textMuted }} onClick={onClose}>
         <X size={16} />
-      </Box>
-    </HStack>
-    <Box flex={1} overflowY="auto">
+      </button>
+    </div>
+    <div style={{ flex: 1, overflowY: "auto" }}>
       {problems.map((p, idx) => {
         const letter = String.fromCharCode(65 + (p.problemOrder ?? idx + 1) - 1);
         const isActive = p.problemSlug === currentSlug;
         return (
-          <Box
+          <button
             key={p.problemId}
-            as="button"
-            display="flex"
-            alignItems="center"
-            gap={2}
-            w="100%"
-            px={3}
-            py={2.5}
-            bg={isActive ? T.accentDim : "transparent"}
-            borderLeft={isActive ? `3px solid ${T.accent}` : "3px solid transparent"}
-            cursor="pointer"
-            border="none"
-            transition="all 0.12s"
-            _hover={{ bg: isActive ? T.accentDim : T.surfaceHover }}
+            style={{
+              display: "flex", alignItems: "center", gap: 8, width: "100%",
+              padding: "8px 12px", background: isActive ? T.accentDim : "transparent",
+              borderLeft: isActive ? `3px solid ${T.accent}` : "3px solid transparent",
+              cursor: "pointer", border: "none", transition: "all 0.12s", textAlign: "left",
+            }}
             onClick={() => onNavigate(`${basePath}/${p.problemSlug}`)}
-            style={{ outline: "none", textAlign: "left" }}
           >
-            <Box
-              w="26px"
-              h="26px"
-              borderRadius="6px"
-              bg={isActive ? T.accent : T.bg}
-              color={isActive ? "#000" : T.textMuted}
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              fontWeight="800"
-              fontSize="xs"
-              flexShrink={0}
-            >
+            <div style={{ width: 26, height: 26, borderRadius: 6, background: isActive ? T.accent : T.bg, color: isActive ? "#000" : T.textMuted, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 11, flexShrink: 0 }}>
               {letter}
-            </Box>
-            <Box flex={1} minW={0}>
-              <Text
-                fontSize="xs"
-                fontWeight="600"
-                color={isActive ? T.text : T.textMuted}
-                isTruncated
-              >
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: isActive ? T.text : T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {p.problemTitle}
-              </Text>
+              </p>
               {p.problemDifficulty && (
-                <Text
-                  fontSize="10px"
-                  color={
-                    (DIFF_STYLE[p.problemDifficulty] || DIFF_STYLE.EASY).color
-                  }
-                  fontWeight="600"
-                >
+                <p style={{ margin: 0, fontSize: 10, color: (DIFF_STYLE[p.problemDifficulty] || DIFF_STYLE.EASY).color, fontWeight: 600 }}>
                   {(DIFF_STYLE[p.problemDifficulty] || DIFF_STYLE.EASY).label}
-                </Text>
+                </p>
               )}
-            </Box>
-          </Box>
+            </div>
+          </button>
         );
       })}
-    </Box>
-  </Box>
+    </div>
+  </div>
 );
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
@@ -442,23 +257,18 @@ const LabProblemPage = () => {
   const { showMessage } = useToast();
   const codeEditorRef = useRef(null);
 
-  // Lab data
   const [lab, setLab] = useState(null);
   const [deadlinePassed, setDeadlinePassed] = useState(false);
-
-  // Problem data
   const [problem, setProblem] = useState(null);
   const [statement, setStatement] = useState("");
   const [testCases, setTestCases] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Submission state
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState(null);
   const [pollingId, setPollingId] = useState(null);
   const [queuePosition, setQueuePosition] = useState(null);
 
-  // Tabs & submissions
   const [activeTab, setActiveTab] = useState("description");
   const [viewingSubmission, setViewingSubmission] = useState(null);
   const [verdictFilter, setVerdictFilter] = useState(null);
@@ -466,10 +276,8 @@ const LabProblemPage = () => {
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [submissionsLoaded, setSubmissionsLoaded] = useState(false);
 
-  // Sidebar toggle
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // ── Fetch lab ──
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -484,22 +292,17 @@ const LabProblemPage = () => {
           }
         }
       } catch (err) {
-        if (!cancelled)
-          showMessage(err.response?.data?.message || err.message, "error");
+        if (!cancelled) showMessage(err.response?.data?.message || err.message, "error");
       }
     };
     load();
     return () => { cancelled = true; };
   }, [orgSlug, labSlug]);
 
-  // ── Watch for deadline ──
   useEffect(() => {
     if (!lab?.deadline || deadlinePassed) return;
     const diff = new Date(lab.deadline).getTime() - Date.now();
-    if (diff <= 0) {
-      setDeadlinePassed(true);
-      return;
-    }
+    if (diff <= 0) { setDeadlinePassed(true); return; }
     const timerId = setTimeout(() => {
       setDeadlinePassed(true);
       showMessage("Lab deadline has passed! Submissions are now disabled.", "warning");
@@ -507,26 +310,21 @@ const LabProblemPage = () => {
     return () => clearTimeout(timerId);
   }, [lab?.deadline, deadlinePassed]);
 
-  // ── Fetch problem ──
   const fetchProblem = async () => {
     setLoading(true);
     try {
       const response = await ApiService.getProblemBySlug(problemSlug);
       if (response.statusCode === 200) {
         setProblem(response.data);
-        const statementRes = await ApiService.fetchFileContent(
-          response.data.statementFileUrl,
-        );
+        const statementRes = await ApiService.fetchFileContent(response.data.statementFileUrl);
         setStatement(statementRes);
-        const sampleTestCases = response.data.testCases.filter(
-          (tc) => tc.isSample === true,
-        );
+        const sampleTestCases = response.data.testCases.filter((tc) => tc.isSample === true);
         const fetched = await Promise.all(
           sampleTestCases.map(async (tc) => ({
             id: tc.id,
             input: await ApiService.fetchFileContent(tc.inputFileUrl),
             output: await ApiService.fetchFileContent(tc.expectedOutputFileUrl),
-          })),
+          }))
         );
         setTestCases(fetched);
       }
@@ -538,7 +336,6 @@ const LabProblemPage = () => {
   };
 
   useEffect(() => {
-    // Reset state when switching problems
     setResults(null);
     setSubmitting(false);
     setActiveTab("description");
@@ -549,22 +346,13 @@ const LabProblemPage = () => {
     fetchProblem();
   }, [problemSlug]);
 
-  useEffect(() => {
-    return () => {
-      if (pollingId) clearInterval(pollingId);
-    };
-  }, [pollingId]);
+  useEffect(() => { return () => { if (pollingId) clearInterval(pollingId); }; }, [pollingId]);
 
-  // ── Submissions ──
   const fetchSubmissions = async () => {
     if (!problem?.id) return;
     setLoadingSubmissions(true);
     try {
-      const resp = await ApiService.getMySubmissions({
-        limit: 20,
-        offset: 0,
-        problemId: problem.id,
-      });
+      const resp = await ApiService.getMySubmissions({ limit: 20, offset: 0, problemId: problem.id });
       if (resp.statusCode === 200 && resp.data) {
         setSubmissions(resp.data.content || []);
         setSubmissionsLoaded(true);
@@ -576,15 +364,11 @@ const LabProblemPage = () => {
     }
   };
 
-  // ── Submit ──
   const handleSubmit = async () => {
     if (submitting || deadlinePassed) return;
     if (!codeEditorRef.current) return;
     const { code, language } = codeEditorRef.current.getCodeAndLanguage();
-    if (!code?.trim()) {
-      showMessage("Please write some code before submitting", "warning");
-      return;
-    }
+    if (!code?.trim()) { showMessage("Please write some code before submitting", "warning"); return; }
 
     setSubmitting(true);
     setResults(null);
@@ -607,7 +391,6 @@ const LabProblemPage = () => {
         try {
           const statusResp = await ApiService.getSubmissionStatus(sub.id);
           const updated = statusResp.data;
-
           if (updated.submissionStatus === "PENDING") {
             setQueuePosition(updated.queuePosition ?? null);
           } else if (updated.submissionStatus === "RUNNING") {
@@ -617,19 +400,12 @@ const LabProblemPage = () => {
             setPollingId(null);
             setSubmitting(false);
             setQueuePosition(null);
-
             const allPassed = updated.submissionVerdict === "AC";
-
             if (allPassed && !problem?.solved) {
-              setProblem((prev) => ({
-                ...prev,
-                solved: true,
-                attempted: false,
-              }));
+              setProblem((prev) => ({ ...prev, solved: true, attempted: false }));
             } else if (!allPassed) {
               setProblem((prev) => ({ ...prev, attempted: true }));
             }
-
             setResults({
               allPassed,
               passedCount: updated.testCasesPassed ?? 0,
@@ -639,14 +415,10 @@ const LabProblemPage = () => {
               executionTime: updated.executionTime,
               memoryUsed: updated.memoryUsed,
             });
-
             showMessage(
-              allPassed
-                ? "All test cases passed! 🎉"
-                : `${updated.testCasesPassed}/${updated.totalTestCases} test cases passed — ${updated.submissionVerdict}`,
-              allPassed ? "success" : "warning",
+              allPassed ? "All test cases passed! 🎉" : `${updated.testCasesPassed}/${updated.totalTestCases} test cases passed — ${updated.submissionVerdict}`,
+              allPassed ? "success" : "warning"
             );
-
             if (submissionsLoaded) await fetchSubmissions();
           }
         } catch (err) {
@@ -668,7 +440,6 @@ const LabProblemPage = () => {
     }
   };
 
-  // ── Navigation helpers ──
   const exercises = lab?.exercises ?? [];
   const problems = exercises.map((ex) => ({
     problemId: ex.problemId,
@@ -677,38 +448,23 @@ const LabProblemPage = () => {
     problemDifficulty: ex.problemDifficulty,
     problemOrder: ex.exerciseOrder,
   }));
-  const currentIdx = problems.findIndex(
-    (p) => p.problemSlug === problemSlug,
-  );
+  const currentIdx = problems.findIndex((p) => p.problemSlug === problemSlug);
   const prevProblem = currentIdx > 0 ? problems[currentIdx - 1] : null;
-  const nextProblem =
-    currentIdx < problems.length - 1 ? problems[currentIdx + 1] : null;
-
+  const nextProblem = currentIdx < problems.length - 1 ? problems[currentIdx + 1] : null;
   const basePath = `/organizations/${orgSlug}/labs/${labSlug}/problems`;
   const goTo = (p) => navigate(`${basePath}/${p.problemSlug}`);
-
-  // Current exercise — carries solutionCode when published
   const currentExercise = exercises.find((ex) => ex.problemSlug === problemSlug);
-
   const activeTags = (problem?.tags || []).filter((t) => t.isActive !== false);
 
-  // ── Loading ──
   if (loading || !lab) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-        bg={T.bg}
-      >
-        <VStack gap={3}>
-          <Spinner size="xl" color={T.accent} />
-          <Text color={T.textMuted} fontSize="sm">
-            Loading...
-          </Text>
-        </VStack>
-      </Box>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: T.bg }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: 40, height: 40, border: `3px solid ${T.accentBorder}`, borderTop: `3px solid ${T.accent}`, borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 12px" }} />
+          <span style={{ color: T.textMuted, fontSize: 13 }}>Loading...</span>
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        </div>
+      </div>
     );
   }
 
@@ -716,1061 +472,370 @@ const LabProblemPage = () => {
     { id: "description", label: "Description" },
     { id: "testcases", label: `Test Cases (${testCases.length})` },
     { id: "submissions", label: "Submissions" },
-    ...(currentExercise?.solutionCode
-      ? [{ id: "solution", label: "Solution" }]
-      : []),
-    ...(results || submitting
-      ? [
-          {
-            id: "results",
-            label: submitting
-              ? "Judging..."
-              : `Results ${results.passedCount}/${results.totalCount}`,
-          },
-        ]
-      : []),
+    ...(currentExercise?.solutionCode ? [{ id: "solution", label: "Solution" }] : []),
+    ...(results || submitting ? [{ id: "results", label: submitting ? "Judging..." : `Results ${results.passedCount}/${results.totalCount}` }] : []),
   ];
 
-  // ── Markdown styling (same as ProblemDetailsPage) ──
   const markdownCss = {
-    "& h1,& h2,& h3,& h4": {
-      fontWeight: "700",
-      color: T.text,
-      marginBottom: "0.6rem",
-      marginTop: "1.4rem",
-    },
+    "& h1,& h2,& h3,& h4": { fontWeight: "700", color: T.text, marginBottom: "0.6rem", marginTop: "1.4rem" },
     "& h1": { fontSize: "1.2rem" },
     "& h2": { fontSize: "1.05rem" },
     "& h3": { fontSize: "0.95rem", color: T.textMuted },
-    "& p": { marginBottom: "0.9rem", color: "#c8c8c8" },
-    "& code": {
-      backgroundColor: T.bg,
-      padding: "0.15rem 0.45rem",
-      borderRadius: "4px",
-      fontSize: "0.85em",
-      fontFamily: "'JetBrains Mono', monospace",
-      color: T.accent,
-      border: `1px solid ${T.border}`,
-    },
-    "& pre": {
-      backgroundColor: T.bg,
-      padding: "1rem 1.2rem",
-      borderRadius: "8px",
-      overflowX: "auto",
-      marginBottom: "1rem",
-      border: `1px solid ${T.border}`,
-    },
-    "& pre code": {
-      backgroundColor: "transparent",
-      padding: "0",
-      color: "#e2e8f0",
-      border: "none",
-      fontSize: "0.85rem",
-    },
+    "& p": { marginBottom: "0.9rem", color: "var(--text-secondary)" },
+    "& code": { backgroundColor: T.bg, padding: "0.15rem 0.45rem", borderRadius: "4px", fontSize: "0.85em", fontFamily: "'JetBrains Mono', monospace", color: T.accent, border: `1px solid ${T.border}` },
+    "& pre": { backgroundColor: T.bg, padding: "1rem 1.2rem", borderRadius: "8px", overflowX: "auto", marginBottom: "1rem", border: `1px solid ${T.border}` },
+    "& pre code": { backgroundColor: "transparent", padding: "0", color: "#e2e8f0", border: "none", fontSize: "0.85rem" },
     "& ul,& ol": { paddingLeft: "1.4rem", marginBottom: "0.9rem" },
-    "& li": { marginBottom: "0.35rem", color: "#c8c8c8" },
+    "& li": { marginBottom: "0.35rem", color: "var(--text-secondary)" },
     "& strong": { fontWeight: "700", color: T.text },
-    "& blockquote": {
-      borderLeft: `3px solid ${T.accent}`,
-      paddingLeft: "1rem",
-      marginLeft: "0",
-      color: T.textMuted,
-      fontStyle: "italic",
-    },
+    "& blockquote": { borderLeft: `3px solid ${T.accent}`, paddingLeft: "1rem", marginLeft: "0", color: T.textMuted, fontStyle: "italic" },
   };
 
   return (
-    <Box
-      height="100vh"
-      width="100vw"
-      overflow="hidden"
-      bg={T.bg}
-      color={T.text}
-      fontFamily="'Inter', system-ui, sans-serif"
-      display="flex"
-      flexDirection="column"
-    >
+    <div style={{ height: "100vh", width: "100vw", overflow: "hidden", background: T.bg, color: T.text, fontFamily: "var(--font-body)", display: "flex", flexDirection: "column" }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+
       {/* ── Top Nav Bar ── */}
-      <Box
-        height="44px"
-        bg={T.surface}
-        borderBottom={`1px solid ${T.border}`}
-        display="flex"
-        alignItems="center"
-        px={3}
-        gap={2}
-        flexShrink={0}
-      >
-        {/* Sidebar toggle */}
-        <Box
-          as="button"
+      <div style={{ height: 44, background: T.surface, borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", padding: "0 12px", gap: 8, flexShrink: 0 }}>
+        <button
           onClick={() => setSidebarOpen((prev) => !prev)}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          w="32px"
-          h="32px"
-          borderRadius="6px"
-          bg={sidebarOpen ? T.accentDim : "transparent"}
-          border={`1px solid ${sidebarOpen ? T.accent : T.border}`}
-          color={sidebarOpen ? T.accent : T.textMuted}
-          cursor="pointer"
-          transition="all 0.15s"
-          _hover={{ bg: T.accentDim, borderColor: T.accent, color: T.accent }}
-          style={{ outline: "none" }}
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 6, background: sidebarOpen ? T.accentDim : "transparent", border: `1px solid ${sidebarOpen ? T.accent : T.border}`, color: sidebarOpen ? T.accent : T.textMuted, cursor: "pointer", transition: "all 0.15s" }}
         >
           <Menu size={16} />
-        </Box>
+        </button>
 
-        {/* Brand */}
-        <Text
-          fontSize="lg"
-          fontWeight="800"
-          color={T.accent}
-          letterSpacing="-0.03em"
-          fontFamily="'JetBrains Mono', monospace"
-        >
-          {"<OJ/>"}
-        </Text>
+        <span style={{ fontSize: 16, fontWeight: 800, color: T.accent, letterSpacing: "-0.03em", fontFamily: "'JetBrains Mono', monospace" }}>{"<OJ/>"}</span>
 
-        {/* Lab name */}
-        <Box
-          w="1px"
-          h="18px"
-          bg={T.border}
-          mx={1}
-        />
-        <Text
-          fontSize="xs"
-          fontWeight="600"
-          color={T.textMuted}
-          maxW="200px"
-          isTruncated
-        >
-          {lab.title}
-        </Text>
+        <div style={{ width: 1, height: 18, background: T.border, margin: "0 4px" }} />
+        <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lab.title}</span>
 
-        {/* Arrow navigation */}
-        <HStack gap={1} ml={2}>
-          <Box
-            as="button"
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: 8 }}>
+          <button
             onClick={() => prevProblem && goTo(prevProblem)}
             disabled={!prevProblem}
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            w="28px"
-            h="28px"
-            borderRadius="6px"
-            bg="transparent"
-            border={`1px solid ${T.border}`}
-            color={prevProblem ? T.textMuted : T.textDim}
-            cursor={prevProblem ? "pointer" : "not-allowed"}
-            opacity={prevProblem ? 1 : 0.4}
-            transition="all 0.12s"
-            _hover={prevProblem ? { bg: T.surfaceHover, color: T.text } : {}}
-            style={{ outline: "none" }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: prevProblem ? T.textMuted : T.textDim, cursor: prevProblem ? "pointer" : "not-allowed", opacity: prevProblem ? 1 : 0.4, transition: "all 0.12s" }}
           >
             <ChevronLeft size={16} />
-          </Box>
-          <Text
-            fontSize="xs"
-            fontWeight="600"
-            color={T.textMuted}
-            minW="30px"
-            textAlign="center"
-          >
-            {currentIdx >= 0
-              ? `${currentIdx + 1}/${problems.length}`
-              : "—"}
-          </Text>
-          <Box
-            as="button"
+          </button>
+          <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, minWidth: 30, textAlign: "center" }}>
+            {currentIdx >= 0 ? `${currentIdx + 1}/${problems.length}` : "—"}
+          </span>
+          <button
             onClick={() => nextProblem && goTo(nextProblem)}
             disabled={!nextProblem}
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            w="28px"
-            h="28px"
-            borderRadius="6px"
-            bg="transparent"
-            border={`1px solid ${T.border}`}
-            color={nextProblem ? T.textMuted : T.textDim}
-            cursor={nextProblem ? "pointer" : "not-allowed"}
-            opacity={nextProblem ? 1 : 0.4}
-            transition="all 0.12s"
-            _hover={nextProblem ? { bg: T.surfaceHover, color: T.text } : {}}
-            style={{ outline: "none" }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: nextProblem ? T.textMuted : T.textDim, cursor: nextProblem ? "pointer" : "not-allowed", opacity: nextProblem ? 1 : 0.4, transition: "all 0.12s" }}
           >
             <ChevronRight size={16} />
-          </Box>
-        </HStack>
+          </button>
+        </div>
 
-        <Box flex={1} />
+        <div style={{ flex: 1 }} />
 
-        {/* Lab timer */}
         <LabTimer deadline={lab.deadline} />
 
-        {/* Back to contest */}
-        <Box
-          as="button"
+        <button
           onClick={() => navigate(`/organizations/${orgSlug}/labs/${labSlug}`)}
-          display="flex"
-          alignItems="center"
-          gap={1}
-          px={3}
-          py={1}
-          borderRadius="6px"
-          bg="transparent"
-          border={`1px solid ${T.border}`}
-          color={T.textMuted}
-          fontSize="xs"
-          fontWeight="600"
-          cursor="pointer"
-          transition="all 0.15s"
-          _hover={{ bg: T.surfaceHover, color: T.text }}
-          style={{ outline: "none" }}
+          style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 12px", borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}
         >
           ← Lab
-        </Box>
-      </Box>
+        </button>
+      </div>
 
       {/* ── Main body ── */}
-      <Box flex={1} overflow="hidden" display="flex">
-        {/* Sidebar */}
+      <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
         {sidebarOpen && (
           <ProblemSidebar
             problems={problems}
             currentSlug={problemSlug}
             basePath={basePath}
-            onNavigate={(path) => {
-              navigate(path);
-              setSidebarOpen(false);
-            }}
+            onNavigate={(path) => { navigate(path); setSidebarOpen(false); }}
             onClose={() => setSidebarOpen(false)}
           />
         )}
 
-        {/* Resizable pane area */}
-        <Box flex={1} overflow="hidden">
+        <div style={{ flex: 1, overflow: "hidden" }}>
           <ResizablePane direction="horizontal" initialSizes={[42, 58]}>
             {/* ══ LEFT: Problem Panel ══ */}
-            <Box
-              height="100%"
-              display="flex"
-              flexDirection="column"
-              bg={T.surface}
-              borderRight={`1px solid ${T.border}`}
-            >
+            <div style={{ height: "100%", display: "flex", flexDirection: "column", background: T.surface, borderRight: `1px solid ${T.border}` }}>
               {/* Problem header */}
-              <Box
-                px={5}
-                pt={5}
-                pb={4}
-                borderBottom={`1px solid ${T.border}`}
-                flexShrink={0}
-              >
-                <Text
-                  fontSize="xl"
-                  fontWeight="700"
-                  color={T.text}
-                  mb={3}
-                  lineHeight="1.3"
-                  letterSpacing="-0.02em"
-                >
-                  {problem?.title}
-                </Text>
+              <div style={{ padding: "20px 20px 16px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+                <p style={{ fontSize: 19, fontWeight: 700, color: T.text, marginBottom: 12, lineHeight: 1.3, letterSpacing: "-0.02em" }}>{problem?.title}</p>
 
-                <Wrap gap={2} align="center">
-                  {problem?.problemDifficulty && (
-                    <WrapItem>
-                      <DifficultyBadge difficulty={problem.problemDifficulty} />
-                    </WrapItem>
-                  )}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                  {problem?.problemDifficulty && <DifficultyBadge difficulty={problem.problemDifficulty} />}
                   {problem?.solved && (
-                    <WrapItem>
-                      <Box
-                        display="inline-flex"
-                        alignItems="center"
-                        gap={1}
-                        px={2}
-                        py="2px"
-                        borderRadius="4px"
-                        fontSize="xs"
-                        fontWeight="700"
-                        color={T.green}
-                        bg={T.greenDim}
-                        border={`1px solid ${T.green}44`}
-                      >
-                        <CheckCircle size={11} />
-                        <Text>Solved</Text>
-                      </Box>
-                    </WrapItem>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700, color: T.green, background: T.greenDim, border: `1px solid ${T.greenBorder}` }}>
+                      <CheckCircle size={11} /> Solved
+                    </span>
                   )}
                   {problem?.attempted && !problem?.solved && (
-                    <WrapItem>
-                      <Box
-                        display="inline-flex"
-                        alignItems="center"
-                        gap={1}
-                        px={2}
-                        py="2px"
-                        borderRadius="4px"
-                        fontSize="xs"
-                        fontWeight="700"
-                        color="#f97316"
-                        bg="rgba(249,115,22,0.12)"
-                        border="1px solid rgba(249,115,22,0.3)"
-                      >
-                        <Clock size={11} />
-                        <Text>Attempted</Text>
-                      </Box>
-                    </WrapItem>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700, color: "#f97316", background: "rgba(249,115,22,0.12)", border: "1px solid rgba(249,115,22,0.3)" }}>
+                      <Clock size={11} /> Attempted
+                    </span>
                   )}
-                  <WrapItem>
-                    <StatChip
-                      icon="💎"
-                      value={`${problem?.point} pts`}
-                      color={T.accent}
-                    />
-                  </WrapItem>
-                  <WrapItem>
-                    <StatChip
-                      icon="⏱"
-                      value={`${problem?.timeLimit}s`}
-                      color={T.blue}
-                    />
-                  </WrapItem>
-                  <WrapItem>
-                    <StatChip
-                      icon="💾"
-                      value={`${problem?.memoryLimit}MB`}
-                      color={T.textMuted}
-                    />
-                  </WrapItem>
+                  <StatChip icon={<Gem size={11} />} value={`${problem?.point} pts`} color={T.accent} />
+                  <StatChip icon={<Timer size={11} />} value={`${problem?.timeLimit}s`} color={T.blue} />
+                  <StatChip icon={<HardDrive size={11} />} value={`${problem?.memoryLimit}MB`} color={T.textMuted} />
                   {activeTags.length > 0 && (
                     <>
-                      <WrapItem>
-                        <Box
-                          w="1px"
-                          h="16px"
-                          bg={T.border}
-                          mx={1}
-                          display={{ base: "none", sm: "block" }}
-                        />
-                      </WrapItem>
-                      {activeTags.map((tag) => (
-                        <WrapItem key={tag.id}>
-                          <TagChip name={tag.name} />
-                        </WrapItem>
-                      ))}
+                      <div style={{ width: 1, height: 16, background: T.border, margin: "0 4px" }} />
+                      {activeTags.map((tag) => <TagChip key={tag.id} name={tag.name} />)}
                     </>
                   )}
-                </Wrap>
-              </Box>
+                </div>
+              </div>
 
               {/* Tab bar */}
-              <Box
-                display="flex"
-                borderBottom={`1px solid ${T.border}`}
-                px={2}
-                flexShrink={0}
-              >
+              <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, padding: "0 8px", flexShrink: 0 }}>
                 {tabs.map((tab) => (
-                  <Box
+                  <button
                     key={tab.id}
-                    as="button"
-                    px={4}
-                    py={3}
-                    fontSize="sm"
-                    fontWeight="500"
-                    cursor="pointer"
-                    color={activeTab === tab.id ? T.text : T.textMuted}
-                    bg="transparent"
-                    border="none"
-                    borderBottomStyle="solid"
-                    borderBottomWidth="2px"
-                    borderBottomColor={
-                      activeTab === tab.id ? T.accent : "transparent"
-                    }
-                    transition="all 0.15s"
-                    _hover={{ color: T.text }}
+                    style={{
+                      padding: "10px 16px", fontSize: 13, fontWeight: 500, cursor: "pointer",
+                      color: activeTab === tab.id ? T.text : T.textMuted, background: "transparent", border: "none",
+                      borderBottom: `2px solid ${activeTab === tab.id ? T.accent : "transparent"}`, transition: "all 0.15s",
+                    }}
                     onClick={async () => {
                       setActiveTab(tab.id);
-                      if (tab.id === "submissions" && !submissionsLoaded) {
-                        await fetchSubmissions();
-                      }
+                      if (tab.id === "submissions" && !submissionsLoaded) await fetchSubmissions();
                     }}
-                    style={{ outline: "none" }}
                   >
                     {tab.label}
                     {tab.id === "results" && results && (
-                      <Box
-                        as="span"
-                        ml={1.5}
-                        display="inline-block"
-                        w={2}
-                        h={2}
-                        borderRadius="full"
-                        bg={results.allPassed ? T.green : T.red}
-                        verticalAlign="middle"
-                      />
+                      <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: results.allPassed ? T.green : T.red, verticalAlign: "middle", marginLeft: 6 }} />
                     )}
-                  </Box>
+                  </button>
                 ))}
-              </Box>
+              </div>
 
               {/* Tab content */}
-              <Box flex={1} overflowY="auto" px={5} py={5}>
-                {/* ── Description ── */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
+                {/* Description */}
                 {activeTab === "description" && (
-                  <Box
-                    fontSize="sm"
-                    lineHeight="1.8"
-                    color={T.text}
-                    css={markdownCss}
-                  >
+                  <div style={{ fontSize: 13, lineHeight: 1.8, color: T.text }}>
                     <ReactMarkdown>{statement}</ReactMarkdown>
-                  </Box>
+                  </div>
                 )}
 
-                {/* ── Test Cases ── */}
+                {/* Test Cases */}
                 {activeTab === "testcases" && (
-                  <VStack align="stretch" gap={3}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {testCases.map((tc, index) => (
-                      <Box
-                        key={tc.id}
-                        borderRadius="8px"
-                        border={`1px solid ${T.border}`}
-                        overflow="hidden"
-                      >
-                        <Box
-                          px={3}
-                          py={2}
-                          bg={T.bg}
-                          borderBottom={`1px solid ${T.border}`}
-                        >
-                          <Text
-                            fontSize="xs"
-                            fontWeight="600"
-                            color={T.textMuted}
-                            letterSpacing="0.05em"
-                          >
-                            CASE {index + 1}
-                          </Text>
-                        </Box>
-                        <Box
-                          p={3}
-                          display="grid"
-                          gridTemplateColumns="1fr 1fr"
-                          gap={3}
-                        >
-                          {[
-                            { label: "INPUT", val: tc.input, color: "#c8c8c8" },
-                            {
-                              label: "EXPECTED",
-                              val: tc.output,
-                              color: T.green,
-                            },
-                          ].map(({ label, val, color }) => (
-                            <Box key={label}>
-                              <Text
-                                fontSize="xs"
-                                color={T.textDim}
-                                fontWeight="600"
-                                mb={1}
-                                letterSpacing="0.04em"
-                              >
-                                {label}
-                              </Text>
-                              <Box
-                                bg={T.bg}
-                                p={2}
-                                borderRadius="6px"
-                                fontFamily="'JetBrains Mono', monospace"
-                                fontSize="xs"
-                                color={color}
-                                whiteSpace="pre-wrap"
-                                border={`1px solid ${T.border}`}
-                                minH="40px"
-                              >
+                      <div key={tc.id} style={{ borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                        <div style={{ padding: "6px 12px", background: T.bg, borderBottom: `1px solid ${T.border}` }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.05em" }}>CASE {index + 1}</span>
+                        </div>
+                        <div style={{ padding: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                          {[{ label: "INPUT", val: tc.input, color: "var(--text-secondary)" }, { label: "EXPECTED", val: tc.output, color: T.green }].map(({ label, val, color }) => (
+                            <div key={label}>
+                              <p style={{ margin: "0 0 4px", fontSize: 11, color: T.textDim, fontWeight: 600, letterSpacing: "0.04em" }}>{label}</p>
+                              <div style={{ background: T.bg, padding: 8, borderRadius: 6, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color, whiteSpace: "pre-wrap", border: `1px solid ${T.border}`, minHeight: 40 }}>
                                 {val}
-                              </Box>
-                            </Box>
+                              </div>
+                            </div>
                           ))}
-                        </Box>
-                      </Box>
+                        </div>
+                      </div>
                     ))}
-                  </VStack>
+                  </div>
                 )}
 
-                {/* ── Submissions ── */}
+                {/* Submissions */}
                 {activeTab === "submissions" && (
-                  <Box height="100%" display="flex" flexDirection="column">
+                  <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
                     {viewingSubmission ? (
-                      <Box display="flex" flexDirection="column" height="100%">
-                        <Box
-                          as="button"
+                      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+                        <button
                           onClick={() => setViewingSubmission(null)}
-                          display="flex"
-                          alignItems="center"
-                          gap={2}
-                          mb={4}
-                          color={T.textMuted}
-                          bg="transparent"
-                          border="none"
-                          cursor="pointer"
-                          fontSize="sm"
-                          _hover={{ color: T.text }}
-                          style={{ outline: "none" }}
-                          flexShrink={0}
+                          style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, color: T.textMuted, background: "transparent", border: "none", cursor: "pointer", fontSize: 13, flexShrink: 0 }}
                         >
-                          <Text>←</Text>
-                          <Text>All Submissions</Text>
-                        </Box>
-
-                        <HStack gap={3} mb={3} flexShrink={0}>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="600"
-                            color={T.textMuted}
-                          >
-                            Code
-                          </Text>
-                          <Box w="1px" h="14px" bg={T.border} />
-                          <Text
-                            fontSize="sm"
-                            fontWeight="600"
-                            color={T.textMuted}
-                            fontFamily="'JetBrains Mono', monospace"
-                          >
-                            {viewingSubmission.submissionLanguage}
-                          </Text>
-                          <Box flex={1} />
-                          <Text
-                            fontSize="xs"
-                            fontWeight="600"
-                            color={
-                              viewingSubmission.submissionVerdict === "AC"
-                                ? T.green
-                                : T.red
-                            }
-                          >
-                            {VERDICT_LABEL[
-                              viewingSubmission.submissionVerdict
-                            ] ?? viewingSubmission.submissionVerdict}
-                          </Text>
-                          {viewingSubmission.executionTime != null && (
-                            <Text fontSize="xs" color={T.textMuted}>
-                              {viewingSubmission.executionTime} s
-                            </Text>
-                          )}
-                          {viewingSubmission.memoryUsed != null && (
-                            <Text fontSize="xs" color={T.textMuted}>
-                              {viewingSubmission.memoryUsed} KB
-                            </Text>
-                          )}
-                        </HStack>
-
-                        <Box
-                          overflowY="auto"
-                          borderRadius="8px"
-                          border={`1px solid ${T.border}`}
-                          bg="#1E1E1E"
-                        >
-                          <Box
-                            display="flex"
-                            fontFamily="'JetBrains Mono', 'Fira Code', monospace"
-                            fontSize="xs"
-                            lineHeight="1.8"
-                          >
-                            <Box
-                              px={3}
-                              py={4}
-                              borderRight={`1px solid ${T.border}`}
-                              color={T.textDim}
-                              userSelect="none"
-                              textAlign="right"
-                              flexShrink={0}
-                              bg="#1a1a1a"
-                              minW="50px"
-                            >
-                              {(viewingSubmission.sourceCode || "")
-                                .split("\n")
-                                .map((_, i) => (
-                                  <Box key={i} lineHeight="1.8" fontSize="xs">
-                                    {i + 1}
-                                  </Box>
-                                ))}
-                            </Box>
-
-                            <Box
-                              as="pre"
-                              m={0}
-                              p={4}
-                              flex={1}
-                              overflow="auto"
-                              css={{
-                                "& code.hljs": {
-                                  background: "transparent",
-                                  padding: 0,
-                                  fontSize: "0.75rem",
-                                  fontFamily:
-                                    "'JetBrains Mono', 'Fira Code', monospace",
-                                  lineHeight: "1.8",
-                                },
-                              }}
+                          <span>←</span><span>All Submissions</span>
+                        </button>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, flexShrink: 0 }}>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: T.textMuted }}>Code</span>
+                          <div style={{ width: 1, height: 14, background: T.border }} />
+                          <span style={{ fontSize: 13, fontWeight: 600, color: T.textMuted, fontFamily: "'JetBrains Mono', monospace" }}>{viewingSubmission.submissionLanguage}</span>
+                          <div style={{ flex: 1 }} />
+                          <span style={{ fontSize: 11, fontWeight: 600, color: viewingSubmission.submissionVerdict === "AC" ? T.green : T.red }}>
+                            {VERDICT_LABEL[viewingSubmission.submissionVerdict] ?? viewingSubmission.submissionVerdict}
+                          </span>
+                          {viewingSubmission.executionTime != null && <span style={{ fontSize: 11, color: T.textMuted }}>{viewingSubmission.executionTime} s</span>}
+                          {viewingSubmission.memoryUsed != null && <span style={{ fontSize: 11, color: T.textMuted }}>{viewingSubmission.memoryUsed} KB</span>}
+                        </div>
+                        <div style={{ overflowY: "auto", borderRadius: 8, border: `1px solid ${T.border}`, background: "#1E1E1E" }}>
+                          <div style={{ display: "flex", fontFamily: "'JetBrains Mono', 'Fira Code', monospace", fontSize: 11, lineHeight: 1.8 }}>
+                            <div style={{ padding: "16px 12px", borderRight: `1px solid ${T.border}`, color: T.textDim, userSelect: "none", textAlign: "right", flexShrink: 0, background: "#1a1a1a", minWidth: 50 }}>
+                              {(viewingSubmission.sourceCode || "").split("\n").map((_, i) => (
+                                <div key={i} style={{ lineHeight: 1.8, fontSize: 11 }}>{i + 1}</div>
+                              ))}
+                            </div>
+                            <pre
+                              style={{ margin: 0, padding: 16, flex: 1, overflow: "auto" }}
                               dangerouslySetInnerHTML={{
-                                __html: `<code class="hljs language-${getHljsLanguage(viewingSubmission.submissionLanguage)}">${
-                                  hljs.highlight(
-                                    viewingSubmission.sourceCode ||
-                                      "// No source code available",
-                                    {
-                                      language: getHljsLanguage(
-                                        viewingSubmission.submissionLanguage,
-                                      ),
-                                    },
-                                  ).value
-                                }</code>`,
+                                __html: `<code class="hljs language-${getHljsLanguage(viewingSubmission.submissionLanguage)}" style="background:transparent;padding:0;font-size:0.75rem;font-family:'JetBrains Mono','Fira Code',monospace;line-height:1.8">${hljs.highlight(viewingSubmission.sourceCode || "// No source code available", { language: getHljsLanguage(viewingSubmission.submissionLanguage) }).value}</code>`,
                               }}
                             />
-                          </Box>
-                        </Box>
-                      </Box>
+                          </div>
+                        </div>
+                      </div>
                     ) : (
-                      <VStack align="stretch" gap={3}>
-                        {/* Filter chips */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                         {submissions.length > 0 && (
-                          <HStack gap={2} flexWrap="wrap">
-                            <Box
-                              as="button"
-                              onClick={() => setVerdictFilter(null)}
-                              px={3}
-                              py="4px"
-                              borderRadius="20px"
-                              fontSize="xs"
-                              fontWeight="600"
-                              cursor="pointer"
-                              bg="transparent"
-                              border="none"
-                              color={
-                                verdictFilter === null ? T.text : T.textMuted
-                              }
-                              borderBottom={`2px solid ${verdictFilter === null ? T.accent : "transparent"}`}
-                              style={{ outline: "none" }}
-                            >
-                              All
-                            </Box>
-
-                            {[
-                              ...new Set(
-                                submissions.map((s) => s.submissionVerdict),
-                              ),
-                            ]
-                              .filter(Boolean)
-                              .map((v) => (
-                                <Box
-                                  key={v}
-                                  as="button"
-                                  onClick={() =>
-                                    setVerdictFilter((prev) =>
-                                      prev === v ? null : v,
-                                    )
-                                  }
-                                  px={3}
-                                  py="4px"
-                                  borderRadius="20px"
-                                  fontSize="xs"
-                                  fontWeight="600"
-                                  cursor="pointer"
-                                  border="none"
-                                  style={{ outline: "none" }}
-                                  color={v === "AC" ? T.green : T.red}
-                                  bg={
-                                    verdictFilter === v
-                                      ? v === "AC"
-                                        ? T.greenDim
-                                        : T.redDim
-                                      : "transparent"
-                                  }
-                                  borderBottom={`2px solid ${
-                                    verdictFilter === v
-                                      ? v === "AC"
-                                        ? T.green
-                                        : T.red
-                                      : "transparent"
-                                  }`}
-                                  transition="all 0.15s"
-                                >
-                                  {VERDICT_LABEL[v] ?? v}
-                                </Box>
-                              ))}
-                          </HStack>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            <button onClick={() => setVerdictFilter(null)} style={{ padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: "pointer", background: "transparent", border: "none", color: verdictFilter === null ? T.text : T.textMuted, borderBottom: `2px solid ${verdictFilter === null ? T.accent : "transparent"}` }}>All</button>
+                            {[...new Set(submissions.map((s) => s.submissionVerdict))].filter(Boolean).map((v) => (
+                              <button
+                                key={v}
+                                onClick={() => setVerdictFilter((prev) => prev === v ? null : v)}
+                                style={{ padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: "pointer", border: "none", color: v === "AC" ? T.green : T.red, background: verdictFilter === v ? (v === "AC" ? T.greenDim : T.redDim) : "transparent", borderBottom: `2px solid ${verdictFilter === v ? (v === "AC" ? T.green : T.red) : "transparent"}`, transition: "all 0.15s" }}
+                              >
+                                {VERDICT_LABEL[v] ?? v}
+                              </button>
+                            ))}
+                          </div>
                         )}
 
                         {loadingSubmissions && (
-                          <HStack justify="center" py={4}>
-                            <Spinner size="sm" color={T.accent} />
-                            <Text fontSize="sm" color={T.textMuted}>
-                              Loading submissions...
-                            </Text>
-                          </HStack>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "16px 0" }}>
+                            <div style={{ width: 16, height: 16, border: `2px solid ${T.accentBorder}`, borderTop: `2px solid ${T.accent}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                            <span style={{ fontSize: 13, color: T.textMuted }}>Loading submissions...</span>
+                          </div>
                         )}
 
                         {!loadingSubmissions && submissions.length === 0 && (
-                          <Text fontSize="sm" color={T.textMuted}>
-                            You have no submissions for this problem yet.
-                          </Text>
+                          <p style={{ fontSize: 13, color: T.textMuted }}>You have no submissions for this problem yet.</p>
                         )}
 
-                        {/* Table header */}
                         {!loadingSubmissions && submissions.length > 0 && (
-                          <Box
-                            display="grid"
-                            gridTemplateColumns="1fr 100px 100px 60px"
-                            px={3}
-                            py={2}
-                            borderBottom={`1px solid ${T.border}`}
-                          >
-                            {[
-                              "Submission",
-                              "Language",
-                              "Time / Mem",
-                              "Code",
-                            ].map((h) => (
-                              <Text
-                                key={h}
-                                fontSize="xs"
-                                fontWeight="700"
-                                color={T.textMuted}
-                                letterSpacing="0.05em"
-                              >
-                                {h}
-                              </Text>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 100px 60px", padding: "6px 12px", borderBottom: `1px solid ${T.border}` }}>
+                            {["Submission", "Language", "Time / Mem", "Code"].map((h) => (
+                              <span key={h} style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: "0.05em" }}>{h}</span>
                             ))}
-                          </Box>
+                          </div>
                         )}
 
-                        {/* Rows — filtered */}
-                        {!loadingSubmissions &&
-                          submissions
-                            .filter((s) =>
-                              verdictFilter
-                                ? s.submissionVerdict === verdictFilter
-                                : true,
-                            )
-                            .map((sub) => (
-                              <Box
-                                key={sub.id}
-                                display="grid"
-                                gridTemplateColumns="1fr 100px 100px 60px"
-                                alignItems="center"
-                                px={3}
-                                py={3}
-                                borderRadius="8px"
-                                border={`1px solid ${T.border}`}
-                                bg={T.bg}
-                                _hover={{ borderColor: T.borderBright }}
-                                transition="border-color 0.15s"
-                              >
-                                <Box>
-                                  <Text
-                                    fontSize="sm"
-                                    fontWeight="600"
-                                    color={
-                                      sub.submissionVerdict === "AC"
-                                        ? T.green
-                                        : T.red
-                                    }
-                                  >
-                                    {VERDICT_LABEL[sub.submissionVerdict] ??
-                                      sub.submissionVerdict}
-                                  </Text>
-                                  <HStack gap={2} mt="2px">
-                                    {sub.submissionDate && (
-                                      <Text fontSize="xs" color={T.textMuted}>
-                                        {new Date(
-                                          sub.submissionDate,
-                                        ).toLocaleDateString()}
-                                      </Text>
-                                    )}
-                                    {sub.testCasesPassed != null &&
-                                      sub.totalTestCases != null && (
-                                        <Text fontSize="xs" color={T.textMuted}>
-                                          · {sub.testCasesPassed}/
-                                          {sub.totalTestCases} tests
-                                        </Text>
-                                      )}
-                                  </HStack>
-                                </Box>
-
-                                <Text
-                                  fontSize="xs"
-                                  color={T.textMuted}
-                                  fontFamily="'JetBrains Mono', monospace"
-                                >
-                                  {sub.submissionLanguage}
-                                </Text>
-
-                                <Box>
-                                  {sub.executionTime != null && (
-                                    <Text fontSize="xs" color={T.textMuted}>
-                                      {sub.executionTime} s
-                                    </Text>
-                                  )}
-                                  {sub.memoryUsed != null && (
-                                    <Text fontSize="xs" color={T.textMuted}>
-                                      {sub.memoryUsed} KB
-                                    </Text>
-                                  )}
-                                </Box>
-
-                                <Box
-                                  as="button"
-                                  onClick={() => setViewingSubmission(sub)}
-                                  fontSize="xs"
-                                  fontWeight="600"
-                                  color={T.accent}
-                                  bg="transparent"
-                                  border="none"
-                                  cursor="pointer"
-                                  textAlign="left"
-                                  _hover={{ textDecoration: "underline" }}
-                                  style={{ outline: "none" }}
-                                >
-                                  View
-                                </Box>
-                              </Box>
-                            ))}
-
-                        {/* Empty state after filtering */}
-                        {!loadingSubmissions &&
-                          submissions.length > 0 &&
-                          submissions.filter((s) =>
-                            verdictFilter
-                              ? s.submissionVerdict === verdictFilter
-                              : true,
-                          ).length === 0 && (
-                            <Text fontSize="sm" color={T.textMuted}>
-                              No{" "}
-                              {VERDICT_LABEL[verdictFilter]?.label ??
-                                verdictFilter}{" "}
-                              submissions.
-                            </Text>
-                          )}
-                      </VStack>
+                        {!loadingSubmissions && submissions
+                          .filter((s) => verdictFilter ? s.submissionVerdict === verdictFilter : true)
+                          .map((sub) => (
+                            <div
+                              key={sub.id}
+                              style={{ display: "grid", gridTemplateColumns: "1fr 100px 100px 60px", alignItems: "center", padding: "10px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, transition: "border-color 0.15s" }}
+                            >
+                              <div>
+                                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: sub.submissionVerdict === "AC" ? T.green : T.red }}>
+                                  {VERDICT_LABEL[sub.submissionVerdict] ?? sub.submissionVerdict}
+                                </p>
+                                <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
+                                  {sub.submissionDate && <span style={{ fontSize: 11, color: T.textMuted }}>{new Date(sub.submissionDate).toLocaleDateString()}</span>}
+                                  {sub.testCasesPassed != null && sub.totalTestCases != null && <span style={{ fontSize: 11, color: T.textMuted }}>· {sub.testCasesPassed}/{sub.totalTestCases} tests</span>}
+                                </div>
+                              </div>
+                              <span style={{ fontSize: 11, color: T.textMuted, fontFamily: "'JetBrains Mono', monospace" }}>{sub.submissionLanguage}</span>
+                              <div>
+                                {sub.executionTime != null && <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>{sub.executionTime} s</p>}
+                                {sub.memoryUsed != null && <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>{sub.memoryUsed} KB</p>}
+                              </div>
+                              <button onClick={() => setViewingSubmission(sub)} style={{ fontSize: 11, fontWeight: 600, color: T.accent, background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}>View</button>
+                            </div>
+                          ))}
+                      </div>
                     )}
-                  </Box>
+                  </div>
                 )}
 
-                {/* ── Solution ── */}
+                {/* Solution */}
                 {activeTab === "solution" && currentExercise?.solutionCode && (
-                  <VStack align="stretch" gap={3}>
-                    <Box
-                      p={3}
-                      borderRadius="8px"
-                      bg={`${T.green}15`}
-                      border={`1px solid ${T.green}44`}
-                    >
-                      <Text fontSize="sm" color={T.green} fontWeight="500">
-                        ✅ Solution published by the instructor
-                      </Text>
-                    </Box>
-                    <Box
-                      borderRadius="8px"
-                      overflow="hidden"
-                      border={`1px solid ${T.border}`}
-                      h="450px"
-                    >
-                      <Editor
-                        height="100%"
-                        theme="vs-dark"
-                        language="cpp"
-                        value={currentExercise.solutionCode}
-                        options={{
-                          readOnly: true,
-                          minimap: { enabled: false },
-                          fontSize: 14,
-                          lineNumbers: "on",
-                          scrollBeyondLastLine: false,
-                          domReadOnly: true,
-                        }}
-                      />
-                    </Box>
-                  </VStack>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={{ padding: 12, borderRadius: 8, background: `${T.green}15`, border: `1px solid ${T.greenBorder}` }}>
+                      <span style={{ fontSize: 13, color: T.green, fontWeight: 500 }}>✅ Solution published by the instructor</span>
+                    </div>
+                    <div style={{ borderRadius: 8, overflow: "hidden", border: `1px solid ${T.border}`, height: 450 }}>
+                      <Editor height="100%" theme="vs-dark" language="cpp" value={currentExercise.solutionCode} options={{ readOnly: true, minimap: { enabled: false }, fontSize: 14, lineNumbers: "on", scrollBeyondLastLine: false, domReadOnly: true }} />
+                    </div>
+                  </div>
                 )}
 
-                {/* ── Results ── */}
+                {/* Results */}
                 {activeTab === "results" && (
-                  <VStack align="stretch" gap={3}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {submitting && queuePosition != null && (
-                      <Box
-                        p={4}
-                        borderRadius="8px"
-                        bg={T.blueDim}
-                        border={`1px solid ${T.blue}44`}
-                        display="flex"
-                        alignItems="center"
-                        gap={3}
-                      >
-                        <Spinner size="sm" color={T.blue} />
-                        <Box>
-                          <Text fontWeight="700" fontSize="sm" color={T.blue}>
-                            Waiting in queue
-                          </Text>
-                          <Text fontSize="xs" color={T.textMuted}>
-                            Position: {queuePosition}
-                          </Text>
-                        </Box>
-                      </Box>
+                      <div style={{ padding: 16, borderRadius: 8, background: T.blueDim, border: `1px solid ${T.blueBorder}`, display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 20, height: 20, border: `2px solid ${T.blueBorder}`, borderTop: `2px solid ${T.blue}`, borderRadius: "50%", animation: "spin 1s linear infinite", flexShrink: 0 }} />
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: T.blue }}>Waiting in queue</p>
+                          <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>Position: {queuePosition}</p>
+                        </div>
+                      </div>
                     )}
 
                     {submitting && queuePosition == null && (
-                      <Box
-                        p={4}
-                        borderRadius="8px"
-                        bg={T.accentDim}
-                        border={`1px solid ${T.accent}44`}
-                        display="flex"
-                        alignItems="center"
-                        gap={3}
-                      >
-                        <Spinner size="sm" color={T.accent} />
-                        <Box>
-                          <Text
-                            fontWeight="700"
-                            fontSize="sm"
-                            color={T.accent}
-                          >
-                            Judging...
-                          </Text>
-                          <Text fontSize="xs" color={T.textMuted}>
-                            Running against test cases
-                          </Text>
-                        </Box>
-                      </Box>
+                      <div style={{ padding: 16, borderRadius: 8, background: T.accentDim, border: `1px solid ${T.accentBorder}`, display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 20, height: 20, border: `2px solid ${T.accentBorder}`, borderTop: `2px solid ${T.accent}`, borderRadius: "50%", animation: "spin 1s linear infinite", flexShrink: 0 }} />
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: T.accent }}>Judging...</p>
+                          <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>Running against test cases</p>
+                        </div>
+                      </div>
                     )}
 
                     {results && (
                       <>
-                        <Box
-                          p={4}
-                          borderRadius="8px"
-                          bg={results.allPassed ? T.greenDim : T.redDim}
-                          border={`1px solid ${results.allPassed ? T.green + "44" : T.red + "44"}`}
-                          display="flex"
-                          alignItems="center"
-                          gap={3}
-                        >
-                          {results.allPassed ? (
-                            <CheckCircle size={22} color={T.green} />
-                          ) : (
-                            <XCircle size={22} color={T.red} />
-                          )}
-                          <Box>
-                            <Text
-                              fontWeight="700"
-                              fontSize="sm"
-                              color={results.allPassed ? T.green : T.red}
-                            >
-                              {VERDICT_LABEL[results.verdict] ??
-                                results.verdict}
-                            </Text>
-                            <Text fontSize="xs" color={T.textMuted}>
-                              {results.passedCount} / {results.totalCount} test
-                              cases passed
-                            </Text>
-                            {(results.executionTime != null ||
-                              results.memoryUsed != null) && (
-                              <Text fontSize="xs" color={T.textMuted}>
-                                {results.executionTime != null &&
-                                  `${results.executionTime} ms`}
-                                {results.executionTime != null &&
-                                  results.memoryUsed != null &&
-                                  " · "}
-                                {results.memoryUsed != null &&
-                                  `${results.memoryUsed} KB`}
-                              </Text>
+                        <div style={{ padding: 16, borderRadius: 8, background: results.allPassed ? T.greenDim : T.redDim, border: `1px solid ${results.allPassed ? T.greenBorder : T.redBorder}`, display: "flex", alignItems: "center", gap: 12 }}>
+                          {results.allPassed ? <CheckCircle size={22} color={T.green} /> : <XCircle size={22} color={T.red} />}
+                          <div>
+                            <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: results.allPassed ? T.green : T.red }}>{VERDICT_LABEL[results.verdict] ?? results.verdict}</p>
+                            <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>{results.passedCount} / {results.totalCount} test cases passed</p>
+                            {(results.executionTime != null || results.memoryUsed != null) && (
+                              <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>
+                                {results.executionTime != null && `${results.executionTime} ms`}
+                                {results.executionTime != null && results.memoryUsed != null && " · "}
+                                {results.memoryUsed != null && `${results.memoryUsed} KB`}
+                              </p>
                             )}
-                          </Box>
-                        </Box>
-
+                          </div>
+                        </div>
                         {results.errorMessage && (
-                          <Box>
-                            <Text
-                              fontSize="xs"
-                              color={T.red}
-                              fontWeight="600"
-                              mb={1}
-                            >
-                              {results.verdict === "CE"
-                                ? "COMPILATION ERROR"
-                                : "ERROR"}
-                            </Text>
-                            <Box
-                              bg={T.redDim}
-                              p={3}
-                              borderRadius="6px"
-                              fontFamily="'JetBrains Mono', monospace"
-                              fontSize="xs"
-                              color={T.red}
-                              whiteSpace="pre-wrap"
-                              border={`1px solid ${T.red}33`}
-                            >
+                          <div>
+                            <p style={{ margin: "0 0 4px", fontSize: 11, color: T.red, fontWeight: 600 }}>{results.verdict === "CE" ? "COMPILATION ERROR" : "ERROR"}</p>
+                            <div style={{ background: T.redDim, padding: 12, borderRadius: 6, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: T.red, whiteSpace: "pre-wrap", border: `1px solid ${T.redBorder}` }}>
                               {results.errorMessage}
-                            </Box>
-                          </Box>
+                            </div>
+                          </div>
                         )}
                       </>
                     )}
-                  </VStack>
+                  </div>
                 )}
-              </Box>
-            </Box>
+              </div>
+            </div>
 
             {/* ══ RIGHT: Code Editor Panel ══ */}
-            <Box height="100%" display="flex" flexDirection="column" bg={T.bg}>
-              <Box flex={1} overflow="hidden" position="relative">
+            <div style={{ height: "100%", display: "flex", flexDirection: "column", background: T.bg }}>
+              <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
                 <CodeEditor
                   ref={codeEditorRef}
                   rightHeaderContent={
-                    <Button
-                      size="sm"
-                      bg={deadlinePassed ? T.textDim : T.accent}
-                      color={deadlinePassed ? T.textMuted : "#000"}
-                      fontWeight="700"
-                      fontSize="sm"
-                      px={5}
-                      borderRadius="6px"
+                    <button
+                      style={{
+                        padding: "4px 20px", borderRadius: 6, fontWeight: 700, fontSize: 13,
+                        background: deadlinePassed ? T.textDim : T.accent,
+                        color: deadlinePassed ? T.textMuted : "#000",
+                        border: "none", cursor: deadlinePassed ? "not-allowed" : "pointer", transition: "all 0.15s",
+                      }}
                       onClick={handleSubmit}
-                      isLoading={submitting}
-                      isDisabled={submitting || deadlinePassed}
-                      loadingText="Running..."
-                      cursor={deadlinePassed ? "not-allowed" : "pointer"}
-                      _hover={
-                        deadlinePassed
-                          ? {}
-                          : {
-                              bg: "#ffb833",
-                              transform: "translateY(-1px)",
-                            }
-                      }
-                      _active={deadlinePassed ? {} : { bg: "#e08e00" }}
-                      transition="all 0.15s"
+                      disabled={submitting || deadlinePassed}
                     >
-                      {deadlinePassed ? "Deadline Passed" : "Run & Submit"}
-                    </Button>
+                      {submitting ? "Running..." : deadlinePassed ? "Deadline Passed" : "Run & Submit"}
+                    </button>
                   }
                 />
-              </Box>
-            </Box>
+              </div>
+            </div>
           </ResizablePane>
-        </Box>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
 
 export default LabProblemPage;
-

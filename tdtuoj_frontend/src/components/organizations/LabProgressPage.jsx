@@ -1,28 +1,8 @@
 import { useState, useEffect } from "react";
-import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  VStack,
-  HStack,
-  Button,
-  Spinner,
-  Table,
-} from "@chakra-ui/react";
-import {
-  ArrowLeft,
-  Download,
-  CheckCircle,
-  AlertTriangle,
-  Circle,
-  BarChart3,
-} from "lucide-react";
+import { ArrowLeft, Download, CheckCircle, AlertTriangle, Circle, BarChart3 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
-
-/* ── Status cell ───────────────────────────────────────────────────────────── */
 
 const StatusCell = ({ status }) => {
   const MAP = {
@@ -33,18 +13,11 @@ const StatusCell = ({ status }) => {
   const s = MAP[status] || MAP.NOT_STARTED;
   const Icon = s.icon;
   return (
-    <Box
-      display="flex" alignItems="center" justifyContent="center"
-      w="32px" h="32px" borderRadius="md" bg={s.bg} mx="auto"
-    >
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 6, background: s.bg, margin: "0 auto" }}>
       <Icon size={16} color={s.color} />
-    </Box>
+    </div>
   );
 };
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/*  LabProgressPage — student × exercise progress grid                       */
-/* ═══════════════════════════════════════════════════════════════════════════ */
 
 const LabProgressPage = () => {
   const { orgSlug, labSlug } = useParams();
@@ -80,8 +53,6 @@ const LabProgressPage = () => {
     })();
   }, [orgSlug, labSlug]);
 
-  /* ── Export ──────────────────────────────────────────────────────────────── */
-
   const handleExport = async (format) => {
     setExporting(format);
     try {
@@ -100,169 +71,125 @@ const LabProgressPage = () => {
     }
   };
 
-  /* ── Render ──────────────────────────────────────────────────────────────── */
-
   if (loading) {
     return (
-      <Box minH="100vh" bg="gray.50" display="flex" alignItems="center" justifyContent="center">
-        <Spinner size="xl" color="purple.500" thickness="3px" />
-      </Box>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="spinner" />
+      </div>
     );
   }
 
   if (!lab) {
     return (
-      <Box minH="100vh" bg="gray.50" py={20} textAlign="center">
-        <Text color="gray.500">Lab not found</Text>
-      </Box>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "80px 0", textAlign: "center" }}>
+        <span className="text-muted">Lab not found</span>
+      </div>
     );
   }
 
-  // Completion stats per exercise
   const exCompletionPct = exercises.map((_, exIdx) => {
     if (progress.length === 0) return 0;
-    const solved = progress.filter(
-      (s) => s.exerciseStatuses?.[exIdx]?.status === "SOLVED"
-    ).length;
+    const solved = progress.filter((s) => s.exerciseStatuses?.[exIdx]?.status === "SOLVED").length;
     return Math.round((solved / progress.length) * 100);
   });
 
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Container maxW="container.xl">
-        <VStack align="stretch" gap={6}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+      <div className="page-container">
+        <div className="flex flex-col gap-6">
           {/* Back */}
-          <HStack
-            gap={2}
-            cursor="pointer"
-            onClick={() => navigate(`/organizations/${orgSlug}/labs/${labSlug}`)}
-            _hover={{ color: "purple.600" }}
-            color="gray.500"
-            transition="color 0.15s"
-          >
-            <ArrowLeft size={18} />
-            <Text fontSize="sm" fontWeight="500">Back to {lab.title}</Text>
-          </HStack>
+          <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }} onClick={() => navigate(`/organizations/${orgSlug}/labs/${labSlug}`)}>
+            <ArrowLeft size={18} /> Back to {lab.title}
+          </button>
 
-          {/* Header + export */}
-          <HStack justify="space-between" align="center">
-            <HStack gap={2}>
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <BarChart3 size={22} color="#7c3aed" />
-              <Heading size="lg" color="gray.800">
-                Progress — {lab.title}
-              </Heading>
-              <Box px={2} py={0.5} borderRadius="md" bg="purple.50" fontSize="xs" fontWeight="600" color="purple.700">
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>Progress — {lab.title}</h2>
+              <span style={{ padding: "2px 8px", borderRadius: 6, background: "#f5f3ff", fontSize: 11, fontWeight: 600, color: "#7c3aed" }}>
                 {progress.length} student{progress.length !== 1 ? "s" : ""}
-              </Box>
-            </HStack>
-            <HStack gap={2}>
-              <Button
-                size="sm" variant="outline" gap={1}
-                onClick={() => handleExport("csv")}
-                disabled={!!exporting}
-              >
-                {exporting === "csv" ? <Spinner size="xs" /> : <Download size={14} />}
-                CSV
-              </Button>
-              <Button
-                size="sm" variant="outline" gap={1}
-                onClick={() => handleExport("xlsx")}
-                disabled={!!exporting}
-              >
-                {exporting === "xlsx" ? <Spinner size="xs" /> : <Download size={14} />}
-                XLSX
-              </Button>
-            </HStack>
-          </HStack>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="btn btn-ghost btn-sm" style={{ border: "1px solid var(--border-default)" }} onClick={() => handleExport("csv")} disabled={!!exporting}>
+                {exporting === "csv" ? <div className="spinner" style={{ width: 14, height: 14 }} /> : <Download size={14} />} CSV
+              </button>
+              <button className="btn btn-ghost btn-sm" style={{ border: "1px solid var(--border-default)" }} onClick={() => handleExport("xlsx")} disabled={!!exporting}>
+                {exporting === "xlsx" ? <div className="spinner" style={{ width: 14, height: 14 }} /> : <Download size={14} />} XLSX
+              </button>
+            </div>
+          </div>
 
           {/* Progress grid */}
-          <Box bg="white" borderRadius="xl" boxShadow="md" overflow="auto">
-            <Table.Root variant="line" size="sm">
-              <Table.Header bg="purple.50">
-                <Table.Row>
-                  <Table.ColumnHeader position="sticky" left={0} bg="purple.50" zIndex={1} minW="150px">
-                    <Text fontWeight="bold" color="purple.700" fontSize="xs">Student</Text>
-                  </Table.ColumnHeader>
+          <div className="card" style={{ overflowX: "auto" }}>
+            <table className="table" style={{ minWidth: "max-content" }}>
+              <thead>
+                <tr style={{ background: "#faf5ff" }}>
+                  <th style={{ position: "sticky", left: 0, background: "#faf5ff", minWidth: 150, zIndex: 1 }}>Student</th>
                   {exercises.map((ex, idx) => (
-                    <Table.ColumnHeader key={ex.id} textAlign="center" minW="60px">
-                      <VStack gap={0}>
-                        <Text fontWeight="bold" color="purple.700" fontSize="xs">
-                          {String.fromCharCode(65 + idx)}
-                        </Text>
-                      </VStack>
-                    </Table.ColumnHeader>
+                    <th key={ex.id} style={{ textAlign: "center", minWidth: 60 }}>
+                      <span style={{ fontWeight: 700, color: "#7c3aed", fontSize: 12 }}>{String.fromCharCode(65 + idx)}</span>
+                    </th>
                   ))}
-                  <Table.ColumnHeader textAlign="center" minW="70px">
-                    <Text fontWeight="bold" color="purple.700" fontSize="xs">Solved</Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="center" minW="80px">
-                    <Text fontWeight="bold" color="purple.700" fontSize="xs">Score</Text>
-                  </Table.ColumnHeader>
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>
+                  <th style={{ textAlign: "center", minWidth: 70 }}>Solved</th>
+                  <th style={{ textAlign: "center", minWidth: 80 }}>Score</th>
+                </tr>
+              </thead>
+              <tbody>
                 {progress.map((student) => (
-                  <Table.Row key={student.userId} _hover={{ bg: "gray.50" }}>
-                    <Table.Cell position="sticky" left={0} bg="white" zIndex={1}>
-                      <VStack align="start" gap={0}>
-                        <Text fontSize="sm" fontWeight="600" color="gray.800">
-                          {student.name || student.username}
-                        </Text>
-                        {student.name && (
-                          <Text fontSize="xs" color="gray.400">@{student.username}</Text>
-                        )}
-                      </VStack>
-                    </Table.Cell>
+                  <tr key={student.userId}>
+                    <td style={{ position: "sticky", left: 0, background: "white", zIndex: 1 }}>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{student.name || student.username}</p>
+                        {student.name && <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted)" }}>@{student.username}</p>}
+                      </div>
+                    </td>
                     {(student.exerciseStatuses || []).map((es, idx) => (
-                      <Table.Cell key={idx} textAlign="center">
+                      <td key={idx} style={{ textAlign: "center" }}>
                         <StatusCell status={es.status} />
-                      </Table.Cell>
+                      </td>
                     ))}
-                    <Table.Cell textAlign="center">
-                      <Text fontSize="sm" fontWeight="600" color="gray.700">
+                    <td style={{ textAlign: "center" }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>
                         {student.solvedCount}/{exercises.length}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell textAlign="center">
-                      <Text fontSize="sm" fontWeight="600" color="purple.600">
+                      </span>
+                    </td>
+                    <td style={{ textAlign: "center" }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#7c3aed" }}>
                         {student.earnedPoints}/{student.totalPoints}
-                      </Text>
-                    </Table.Cell>
-                  </Table.Row>
+                      </span>
+                    </td>
+                  </tr>
                 ))}
 
-                {/* Summary row */}
                 {progress.length > 0 && (
-                  <Table.Row bg="gray.50">
-                    <Table.Cell position="sticky" left={0} bg="gray.50" zIndex={1}>
-                      <Text fontSize="xs" fontWeight="700" color="gray.600">COMPLETION %</Text>
-                    </Table.Cell>
+                  <tr style={{ background: "var(--bg-raised)" }}>
+                    <td style={{ position: "sticky", left: 0, background: "var(--bg-raised)", zIndex: 1 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)" }}>COMPLETION %</span>
+                    </td>
                     {exCompletionPct.map((pct, idx) => (
-                      <Table.Cell key={idx} textAlign="center">
-                        <Text
-                          fontSize="xs" fontWeight="700"
-                          color={pct === 100 ? "green.600" : pct > 50 ? "orange.500" : "red.500"}
-                        >
+                      <td key={idx} style={{ textAlign: "center" }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: pct === 100 ? "#16a34a" : pct > 50 ? "#ea580c" : "#dc2626" }}>
                           {pct}%
-                        </Text>
-                      </Table.Cell>
+                        </span>
+                      </td>
                     ))}
-                    <Table.Cell />
-                    <Table.Cell />
-                  </Table.Row>
+                    <td /><td />
+                  </tr>
                 )}
-              </Table.Body>
-            </Table.Root>
+              </tbody>
+            </table>
 
             {progress.length === 0 && (
-              <Box py={12} textAlign="center">
-                <Text color="gray.400">No students have submitted yet.</Text>
-              </Box>
+              <div style={{ padding: "48px 0", textAlign: "center" }}>
+                <span className="text-muted">No students have submitted yet.</span>
+              </div>
             )}
-          </Box>
-        </VStack>
-      </Container>
-    </Box>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -1,18 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  Button,
-  VStack,
-  HStack,
-  Field,
-  Input,
-  Textarea,
-  Spinner,
-} from "@chakra-ui/react";
 import { ArrowLeft, Lock } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
@@ -29,13 +16,11 @@ const EditProfilePage = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
 
-  // Form state (removed password fields)
   const [formData, setFormData] = useState({
     name: "",
     about: "",
   });
 
-  // Profile image state
   const [profileImage, setProfileImage] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
 
@@ -74,10 +59,7 @@ const EditProfilePage = () => {
     try {
       setProfileImage(imageFile);
       setPreviewImage(previewUrl);
-      showMessage(
-        "Avatar selected! Click 'Save Changes' to update.",
-        "success",
-      );
+      showMessage("Avatar selected! Click 'Save Changes' to update.", "success");
     } catch (error) {
       showMessage("Failed to select avatar", "error");
     }
@@ -91,12 +73,10 @@ const EditProfilePage = () => {
         try {
           setSaving(true);
 
-          // Create FormData object (NO PASSWORD FIELDS)
           const formDataToSend = new FormData();
           formDataToSend.append("name", formData.name);
           formDataToSend.append("about", formData.about);
 
-          // Add profile image if changed
           if (profileImage) {
             formDataToSend.append("imageFile", profileImage);
           }
@@ -144,256 +124,294 @@ const EditProfilePage = () => {
     );
   };
 
-  const getInitials = (username) => {
-    return username ? username.substring(0, 2).toUpperCase() : "U";
-  };
+  const getInitials = (username) =>
+    username ? username.substring(0, 2).toUpperCase() : "U";
 
   if (loading) {
     return (
-      <Box minH="100vh" bg="gray.50" py={8}>
-        <Container maxW="container.md">
-          <VStack gap={4} py={20}>
-            <Spinner size="xl" color="purple.500" thickness="4px" />
-            <Text color="gray.600">Loading profile...</Text>
-          </VStack>
-        </Container>
-      </Box>
+      <div className="page-container" style={{ minHeight: "100vh" }}>
+        <div
+          className="flex flex-col items-center"
+          style={{ gap: "var(--space-4)", padding: "80px 0" }}
+        >
+          <span className="spinner" />
+          <span className="text-secondary text-sm">Loading profile...</span>
+        </div>
+      </div>
     );
   }
 
   if (!user) {
     return (
-      <Box minH="100vh" bg="gray.50" py={8}>
-        <Container maxW="container.md">
-          <VStack gap={4} py={20}>
-            <Text fontSize="2xl" color="gray.600">
-              Failed to load profile
-            </Text>
-            <Button colorScheme="purple" onClick={() => navigate("/")}>
-              Go Home
-            </Button>
-          </VStack>
-        </Container>
-      </Box>
+      <div className="page-container" style={{ minHeight: "100vh" }}>
+        <div
+          className="flex flex-col items-center"
+          style={{ gap: "var(--space-4)", padding: "80px 0" }}
+        >
+          <p className="text-2xl text-secondary">Failed to load profile</p>
+          <button className="btn btn-primary" onClick={() => navigate("/")}>
+            Go Home
+          </button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Container maxW="container.md">
-        <VStack align="stretch" gap={6}>
+    <div className="page-container" style={{ minHeight: "100vh", paddingTop: "var(--space-8)", paddingBottom: "var(--space-8)" }}>
+      <div style={{ maxWidth: "680px", margin: "0 auto" }}>
+        <div className="flex flex-col" style={{ gap: "var(--space-6)" }}>
+
           {/* Header */}
-          <HStack gap={4} align="center">
-            <Button
-              variant="ghost"
+          <div className="flex items-center" style={{ gap: "var(--space-4)" }}>
+            <button
+              className="btn btn-ghost btn-sm"
               onClick={() => navigate(`/users/${user.username}`)}
-              leftIcon={<ArrowLeft size={20} />}
+              style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}
             >
+              <ArrowLeft size={18} />
               Back
-            </Button>
-            <Heading size="xl" color="gray.800">
+            </button>
+            <h1 className="text-2xl font-bold text-primary" style={{ margin: 0 }}>
               Edit Profile
-            </Heading>
-          </HStack>
+            </h1>
+          </div>
 
           {/* Profile Picture Section */}
-          <Box bg="white" borderRadius="lg" boxShadow="sm" p={6}>
-            <Heading size="md" mb={4} color="gray.800">
+          <div className="card" style={{ padding: "var(--space-6)" }}>
+            <h2
+              className="text-lg font-semibold text-primary"
+              style={{ margin: "0 0 var(--space-4)" }}
+            >
               Profile Picture
-            </Heading>
-            <HStack gap={6} align="center">
-              {/* Avatar with hover effect */}
-              <Box
-                position="relative"
+            </h2>
+            <div className="flex items-center" style={{ gap: "var(--space-6)" }}>
+              {/* Avatar with hover overlay */}
+              <div
+                style={{ position: "relative", cursor: "pointer", flexShrink: 0 }}
                 onMouseEnter={() => setIsHoveringAvatar(true)}
                 onMouseLeave={() => setIsHoveringAvatar(false)}
-                cursor="pointer"
                 onClick={() => setIsUploadModalOpen(true)}
               >
-                <Box position="relative">
-                  {previewImage ? (
-                    <img
-                      src={previewImage}
-                      alt={user.username}
+                {previewImage ? (
+                  <img
+                    src={previewImage}
+                    alt={user.username}
+                    style={{
+                      width: "112px",
+                      height: "112px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "3px solid var(--cyan)",
+                      display: "block",
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: "112px",
+                      height: "112px",
+                      borderRadius: "50%",
+                      background: "var(--bg-raised)",
+                      border: "3px solid var(--cyan)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "2rem",
+                      fontWeight: 700,
+                      color: "var(--cyan)",
+                      fontFamily: "var(--font-display)",
+                    }}
+                  >
+                    {getInitials(user.username)}
+                  </div>
+                )}
+
+                {/* Hover overlay */}
+                {isHoveringAvatar && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: "rgba(0,0,0,0.58)",
+                      borderRadius: "50%",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "4px",
+                    }}
+                  >
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="white"
+                    >
+                      <path d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z" />
+                      <path d="M21 5h-3.17l-1.24-1.35A1.99 1.99 0 0015.12 3H8.88c-.56 0-1.1.24-1.48.65L6.17 5H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V7a2 2 0 00-2-2zm-9 13a5.5 5.5 0 110-11 5.5 5.5 0 010 11z" />
+                    </svg>
+                    <span
                       style={{
-                        width: "120px",
-                        height: "120px",
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                        border: "4px solid #805AD5",
+                        color: "white",
+                        fontSize: "var(--text-xs)",
+                        fontWeight: 600,
+                        fontFamily: "var(--font-body)",
                       }}
-                    />
-                  ) : (
-                    <Box
-                      w="120px"
-                      h="120px"
-                      borderRadius="full"
-                      bg="purple.400"
-                      color="white"
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      fontSize="3xl"
-                      fontWeight="bold"
-                      border="4px solid"
-                      borderColor="purple.500"
                     >
-                      {getInitials(user.username)}
-                    </Box>
-                  )}
+                      Edit
+                    </span>
+                  </div>
+                )}
+              </div>
 
-                  {/* Overlay on hover */}
-                  {isHoveringAvatar && (
-                    <Box
-                      position="absolute"
-                      top={0}
-                      left={0}
-                      right={0}
-                      bottom={0}
-                      bg="blackAlpha.600"
-                      borderRadius="full"
-                      display="flex"
-                      flexDirection="column"
-                      alignItems="center"
-                      justifyContent="center"
-                      transition="all 0.2s"
-                    >
-                      <svg
-                        width="40"
-                        height="40"
-                        viewBox="0 0 24 24"
-                        fill="white"
-                        style={{ marginBottom: "8px" }}
-                      >
-                        <path d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z" />
-                        <path d="M21 5h-3.17l-1.24-1.35A1.99 1.99 0 0015.12 3H8.88c-.56 0-1.1.24-1.48.65L6.17 5H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V7a2 2 0 00-2-2zm-9 13a5.5 5.5 0 110-11 5.5 5.5 0 010 11z" />
-                      </svg>
-                      <Text color="white" fontSize="sm" fontWeight="medium">
-                        Edit
-                      </Text>
-                    </Box>
-                  )}
-                </Box>
-              </Box>
-
-              <VStack align="start" gap={1}>
-                <Text fontSize="sm" color="gray.600">
+              <div className="flex flex-col" style={{ gap: "var(--space-1)" }}>
+                <p className="text-sm text-secondary" style={{ margin: 0 }}>
                   Click on the avatar to upload a new profile picture
-                </Text>
-                <Text fontSize="xs" color="gray.500">
-                  JPG, PNG or GIF. Max size 5MB.
-                </Text>
-              </VStack>
-            </HStack>
-          </Box>
+                </p>
+                <p className="text-xs text-muted" style={{ margin: 0 }}>
+                  JPG, PNG or GIF. Max size 5 MB.
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* Basic Information */}
-          <Box bg="white" borderRadius="lg" boxShadow="sm" p={6}>
-            <Heading size="md" mb={4} color="gray.800">
+          <div className="card" style={{ padding: "var(--space-6)" }}>
+            <h2
+              className="text-lg font-semibold text-primary"
+              style={{ margin: "0 0 var(--space-4)" }}
+            >
               Basic Information
-            </Heading>
-            <VStack gap={4} align="stretch">
-              {/* Username (Read-only) */}
-              <Field.Root>
-                <Field.Label>Username</Field.Label>
-                <Input
+            </h2>
+            <div className="flex flex-col" style={{ gap: "var(--space-4)" }}>
+              {/* Username (read-only) */}
+              <div className="form-group">
+                <label className="form-label">Username</label>
+                <input
+                  className="input"
                   value={user.username}
                   readOnly
-                  bg="gray.100"
-                  cursor="not-allowed"
+                  style={{
+                    cursor: "not-allowed",
+                    opacity: 0.6,
+                  }}
                 />
-                <Field.HelperText>Username cannot be changed</Field.HelperText>
-              </Field.Root>
+                <p className="text-xs text-muted" style={{ margin: "var(--space-1) 0 0" }}>
+                  Username cannot be changed
+                </p>
+              </div>
 
               {/* Display Name */}
-              <Field.Root>
-                <Field.Label>Display Name</Field.Label>
-                <Input
+              <div className="form-group">
+                <label className="form-label">Display Name</label>
+                <input
+                  className="input"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="Enter your display name"
                 />
-              </Field.Root>
+              </div>
 
               {/* About */}
-              <Field.Root>
-                <Field.Label>About</Field.Label>
-                <Textarea
+              <div className="form-group">
+                <label className="form-label">About</label>
+                <textarea
+                  className="input"
                   name="about"
                   value={formData.about}
                   onChange={handleInputChange}
                   placeholder="Tell us about yourself..."
-                  minH="120px"
-                  resize="vertical"
+                  rows={4}
+                  style={{ resize: "vertical", minHeight: "100px" }}
                 />
-                <Field.HelperText>
+                <p className="text-xs text-muted" style={{ margin: "var(--space-1) 0 0" }}>
                   {formData.about.length} / 500 characters
-                </Field.HelperText>
-              </Field.Root>
-            </VStack>
-          </Box>
+                </p>
+              </div>
+            </div>
+          </div>
 
-          {/* Security Section - Link to Change Password */}
-          <Box
-            bg="white"
-            borderRadius="lg"
-            boxShadow="sm"
-            p={6}
-            cursor="pointer"
-            _hover={{ bg: "gray.50" }}
-            transition="all 0.2s"
+          {/* Security Section */}
+          <div
+            className="card"
+            style={{
+              padding: "var(--space-5)",
+              cursor: "pointer",
+              transition: "var(--transition-fast)",
+            }}
             onClick={() => navigate("/change-password")}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-hover)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "")}
           >
-            <HStack justify="space-between">
-              <HStack gap={3}>
-                <Box p={2} bg="purple.100" borderRadius="md" color="purple.600">
-                  <Lock size={24} />
-                </Box>
-                <VStack align="start" gap={0}>
-                  <Heading size="md" color="gray.800">
-                    Password & Security
-                  </Heading>
-                  <Text fontSize="sm" color="gray.600">
+            <div
+              className="flex items-center"
+              style={{ justifyContent: "space-between" }}
+            >
+              <div className="flex items-center" style={{ gap: "var(--space-3)" }}>
+                <div
+                  style={{
+                    padding: "var(--space-2)",
+                    background: "var(--cyan-subtle)",
+                    borderRadius: "var(--radius-md)",
+                    color: "var(--cyan)",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <Lock size={22} />
+                </div>
+                <div className="flex flex-col" style={{ gap: "2px" }}>
+                  <span className="text-base font-semibold text-primary">
+                    Password &amp; Security
+                  </span>
+                  <span className="text-sm text-secondary">
                     Change your password or update security settings
-                  </Text>
-                </VStack>
-              </HStack>
-              <Button variant="ghost" colorScheme="purple">
-                Change →
-              </Button>
-            </HStack>
-          </Box>
+                  </span>
+                </div>
+              </div>
+              <span className="text-sm text-cyan font-medium">Change →</span>
+            </div>
+          </div>
 
           {/* Action Buttons */}
-          <HStack gap={4} justify="space-between">
-            <Button
-              colorScheme="red"
-              variant="outline"
+          <div
+            className="flex items-center"
+            style={{ justifyContent: "space-between", gap: "var(--space-4)" }}
+          >
+            <button
+              className="btn btn-danger"
               onClick={handleDeactivateAccount}
             >
               Deactivate Account
-            </Button>
+            </button>
 
-            <HStack gap={4}>
-              <Button
-                variant="outline"
+            <div className="flex items-center" style={{ gap: "var(--space-3)" }}>
+              <button
+                className="btn btn-ghost"
                 onClick={() => navigate(`/users/${user.username}`)}
               >
                 Cancel
-              </Button>
-              <Button
-                colorScheme="purple"
+              </button>
+              <button
+                className="btn btn-primary"
                 onClick={handleSaveProfile}
-                loading={saving}
-                loadingText="Saving..."
+                disabled={saving}
               >
-                Save Changes
-              </Button>
-            </HStack>
-          </HStack>
-        </VStack>
-      </Container>
+                {saving ? (
+                  <span className="flex items-center" style={{ gap: "var(--space-2)" }}>
+                    <span className="spinner" style={{ width: "14px", height: "14px" }} />
+                    Saving...
+                  </span>
+                ) : (
+                  "Save Changes"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Avatar Upload Modal */}
       <AvatarUploadModal
@@ -405,7 +423,7 @@ const EditProfilePage = () => {
 
       {/* Confirm Dialog */}
       <ConfirmDialog />
-    </Box>
+    </div>
   );
 };
 

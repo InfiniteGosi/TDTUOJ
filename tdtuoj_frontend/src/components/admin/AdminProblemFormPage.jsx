@@ -1,37 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Box,
-  Button,
-  Input,
-  Textarea,
-  VStack,
-  HStack,
-  Text,
-  Heading,
-  Card,
-  NativeSelect,
-  Badge,
-  Wrap,
-  WrapItem,
-} from "@chakra-ui/react";
-import {
-  Plus,
-  Trash2,
-  FileText,
-  Upload,
-  Edit2,
-  Eye,
-  ArrowLeft,
-  User,
-  Tag as TagIcon,
-  X,
-  AlertTriangle,
-  Sparkles,
+  Plus, Trash2, FileText, Upload, Edit2, Eye, ArrowLeft, User, Tag as TagIcon, X, AlertTriangle, Sparkles,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
+import SuggestiveSearch from "../common/SuggestiveSearch";
 import Editor from "@monaco-editor/react";
 
 const STATEMENT_PLACEHOLDER = `## Two sum
@@ -45,16 +20,6 @@ Input
 Output
 \`\`\`
 3
-\`\`\`
-
-#### Sample test case 2
-Input
-\`\`\`
-1, 100
-\`\`\`
-Output
-\`\`\`
-101
 \`\`\``;
 
 const DIFFICULTY_OPTIONS = [
@@ -64,71 +29,43 @@ const DIFFICULTY_OPTIONS = [
   { value: "HARD", label: "Hard" },
 ];
 
-const DIFFICULTY_COLORS = {
-  EASY: "#38a169",
-  MEDIUM: "#d69e2e",
-  HARD: "#e53e3e",
-};
-
-const POINT_RANGES = {
-  EASY: { min: 1, max: 10 },
-  MEDIUM: { min: 11, max: 20 },
-  HARD: { min: 21, max: 30 },
-};
-
-const getPointRange = (difficulty) => {
-  return POINT_RANGES[difficulty] || { min: 1, max: 300 };
-};
+const DIFFICULTY_COLORS = { EASY: "var(--diff-easy)", MEDIUM: "var(--diff-medium)", HARD: "var(--diff-hard)" };
+const POINT_RANGES = { EASY: { min: 1, max: 10 }, MEDIUM: { min: 11, max: 20 }, HARD: { min: 21, max: 30 } };
+const getPointRange = (difficulty) => POINT_RANGES[difficulty] || { min: 1, max: 300 };
 
 // ─── AI Loading Messages ─────────────────────────────────────────────────────
 
 const PDF_MESSAGES = [
-  { emoji: "📄", text: "Reading your PDF..." },
-  { emoji: "🔍", text: "Scanning problem statement..." },
-  { emoji: "🧠", text: "Analyzing constraints..." },
-  { emoji: "⚙️", text: "Extracting test cases..." },
-  { emoji: "🏷️", text: "Suggesting relevant tags..." },
-  { emoji: "📊", text: "Assessing difficulty level..." },
-  { emoji: "✨", text: "Polishing results..." },
-  { emoji: "🚀", text: "Almost there..." },
+  { text: "Reading your PDF..." },
+  { text: "Scanning problem statement..." },
+  { text: "Analyzing constraints..." },
+  { text: "Extracting test cases..." },
+  { text: "Suggesting relevant tags..." },
+  { text: "Assessing difficulty level..." },
+  { text: "Polishing results..." },
+  { text: "Almost there..." },
 ];
 
 const GEN_MESSAGES = [
-  { emoji: "🤔", text: "Thinking about the problem..." },
-  { emoji: "📐", text: "Designing edge cases..." },
-  { emoji: "🔢", text: "Computing expected outputs..." },
-  { emoji: "🧪", text: "Creating test scenarios..." },
-  { emoji: "🎯", text: "Checking boundary conditions..." },
-  { emoji: "📊", text: "Validating inputs..." },
-  { emoji: "✅", text: "Verifying correctness..." },
-  { emoji: "✨", text: "Finalizing test cases..." },
+  { text: "Thinking about the problem..." },
+  { text: "Designing edge cases..." },
+  { text: "Computing expected outputs..." },
+  { text: "Creating test scenarios..." },
+  { text: "Checking boundary conditions..." },
+  { text: "Validating inputs..." },
+  { text: "Verifying correctness..." },
+  { text: "Finalizing test cases..." },
 ];
 
-// Inject keyframe CSS once
 if (typeof document !== "undefined" && !document.getElementById("ai-loading-styles")) {
   const style = document.createElement("style");
   style.id = "ai-loading-styles";
   style.textContent = `
-    @keyframes ai-spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    @keyframes ai-pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(0.95); }
-    }
-    @keyframes ai-fade-in {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes ai-dot {
-      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-      40% { transform: scale(1); opacity: 1; }
-    }
-    @keyframes ai-shimmer {
-      0% { background-position: -200% center; }
-      100% { background-position: 200% center; }
-    }
+    @keyframes ai-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes ai-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.95); } }
+    @keyframes ai-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes ai-dot { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+    @keyframes ai-shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
   `;
   document.head.appendChild(style);
 }
@@ -141,10 +78,7 @@ const AILoadingOverlay = ({ mode }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       setVisible(false);
-      setTimeout(() => {
-        setMsgIndex((i) => (i + 1) % messages.length);
-        setVisible(true);
-      }, 300);
+      setTimeout(() => { setMsgIndex((i) => (i + 1) % messages.length); setVisible(true); }, 300);
     }, 2200);
     return () => clearInterval(interval);
   }, [messages.length]);
@@ -153,134 +87,26 @@ const AILoadingOverlay = ({ mode }) => {
   const title = mode === "pdf" ? "AI Reading PDF" : "AI Generating Test Cases";
 
   return (
-    <Box
-      position="fixed"
-      inset={0}
-      zIndex={9999}
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      bg="rgba(0,0,0,0.55)"
-      style={{ backdropFilter: "blur(6px)" }}
-    >
-      <Box
-        bg="white"
-        borderRadius="2xl"
-        p={10}
-        maxW="420px"
-        w="90%"
-        boxShadow="0 25px 60px rgba(0,0,0,0.3)"
-        textAlign="center"
-        position="relative"
-        overflow="hidden"
-      >
-        {/* Gradient shimmer top bar */}
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          h="4px"
-          style={{
-            background: "linear-gradient(90deg, #667eea, #a855f7, #ec4899, #667eea)",
-            backgroundSize: "200% auto",
-            animation: "ai-shimmer 2s linear infinite",
-          }}
-        />
-
-        {/* Spinner ring */}
-        <Box display="flex" justifyContent="center" mb={6}>
-          <Box
-            position="relative"
-            w="72px"
-            h="72px"
-          >
-            {/* Outer ring */}
-            <Box
-              position="absolute"
-              inset={0}
-              borderRadius="full"
-              border="3px solid"
-              borderColor="purple.100"
-            />
-            {/* Spinning arc */}
-            <Box
-              position="absolute"
-              inset={0}
-              borderRadius="full"
-              border="3px solid transparent"
-              style={{
-                borderTopColor: "#667eea",
-                borderRightColor: "#a855f7",
-                animation: "ai-spin 1s linear infinite",
-              }}
-            />
-            {/* Center emoji */}
-            <Box
-              position="absolute"
-              inset={0}
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              fontSize="26px"
-              style={{ animation: "ai-pulse 2s ease-in-out infinite" }}
-            >
-              ✨
-            </Box>
-          </Box>
-        </Box>
-
-        {/* Title */}
-        <Text
-          fontSize="lg"
-          fontWeight="700"
-          color="gray.800"
-          mb={2}
-          style={{
-            background: "linear-gradient(90deg, #667eea, #a855f7)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
-        >
-          {title}
-        </Text>
-
-        {/* Rotating message */}
-        <Box minH="52px" display="flex" alignItems="center" justifyContent="center">
-          <Text
-            fontSize="md"
-            color="gray.600"
-            style={{
-              animation: visible ? "ai-fade-in 0.3s ease-out" : "none",
-              opacity: visible ? 1 : 0,
-              transition: "opacity 0.3s",
-            }}
-          >
-            {msg.emoji} {msg.text}
-          </Text>
-        </Box>
-
-        {/* Bouncing dots */}
-        <Box display="flex" justifyContent="center" gap={2} mt={4}>
-          {[0, 1, 2].map((i) => (
-            <Box
-              key={i}
-              w="8px"
-              h="8px"
-              borderRadius="full"
-              bg="purple.400"
-              style={{
-                animation: `ai-dot 1.4s ease-in-out ${i * 0.16}s infinite`,
-              }}
-            />
-          ))}
-        </Box>
-
-        <Text fontSize="xs" color="gray.400" mt={5}>
-          This may take up to 30 seconds — Gemini is working hard!
-        </Text>
-      </Box>
-    </Box>
+    <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}>
+      <div style={{ background: "var(--bg-base)", borderRadius: 16, padding: 40, maxWidth: 420, width: "90%", boxShadow: "0 25px 60px rgba(0,0,0,0.3)", textAlign: "center", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: "linear-gradient(90deg, var(--primary) 0%, var(--primary-bright) 50%, var(--primary) 100%)", backgroundSize: "200% auto", animation: "ai-shimmer 2s linear infinite" }} />
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+          <div style={{ position: "relative", width: 72, height: 72 }}>
+            <div style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "3px solid var(--primary-subtle)" }} />
+            <div style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "3px solid transparent", borderTopColor: "var(--primary)", borderRightColor: "var(--primary-bright)", animation: "ai-spin 1s linear infinite" }} />
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, animation: "ai-pulse 2s ease-in-out infinite" }}>✨</div>
+          </div>
+        </div>
+        <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, background: "linear-gradient(90deg, var(--primary), var(--primary-bright))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{title}</p>
+        <div style={{ minHeight: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <p style={{ fontSize: 15, color: "var(--text-secondary)", animation: visible ? "ai-fade-in 0.3s ease-out" : "none", opacity: visible ? 1 : 0, transition: "opacity 0.3s" }}>{msg.text}</p>
+        </div>
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
+          {[0, 1, 2].map((i) => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary-bright)", animation: `ai-dot 1.4s ease-in-out ${i * 0.16}s infinite` }} />)}
+        </div>
+        <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 20 }}>This may take up to 30 seconds — Gemini is working hard!</p>
+      </div>
+    </div>
   );
 };
 
@@ -299,71 +125,38 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
   const [generateCount, setGenerateCount] = useState(5);
   const pdfInputRef = useRef(null);
 
-  const [problemData, setProblemData] = useState({
-    title: "",
-    point: "",
-    timeLimit: "",
-    memoryLimit: "",
-    statement: "",
-    problemDifficulty: "",
-    solutionCode: "",
-  });
-
-  const [testCases, setTestCases] = useState([
-    { input: "", expectedOutput: "", isSample: false },
-  ]);
-
-  // Tag state
-  const [availableTags, setAvailableTags] = useState([]); // all active tags from server
-  const [selectedTags, setSelectedTags] = useState([]); // {id, name, isActive} objects currently on the problem
+  const [problemData, setProblemData] = useState({ title: "", point: "", timeLimit: "", memoryLimit: "", statement: "", problemDifficulty: "", solutionCode: "" });
+  const [testCases, setTestCases] = useState([{ input: "", expectedOutput: "", isSample: false }]);
+  const [availableTags, setAvailableTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
   const [tagSearchQuery, setTagSearchQuery] = useState("");
   const [showTagDropdown, setShowTagDropdown] = useState(false);
 
-  // Fetch active tags for picker
   const fetchActiveTags = async () => {
     try {
       const response = await ApiService.getAllTags({ limit: 200, offset: 0 });
       if (response.statusCode === 200) {
-        const active = (response.data.content || []).filter(
-          (t) => t.isActive === true,
-        );
-        setAvailableTags(active);
+        setAvailableTags((response.data.content || []).filter((t) => t.isActive === true));
       }
-    } catch (err) {
-      console.error("Failed to fetch tags:", err);
-    }
+    } catch (err) { console.error("Failed to fetch tags:", err); }
   };
 
-  // Fetch current logged-in user
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         const profile = await ApiService.getOwnProfile();
         if (profile?.data?.id) setCurrentUserId(profile.data.id);
-      } catch (err) {
-        showMessage("Failed to fetch user profile", "error");
-      }
+      } catch (err) { showMessage("Failed to fetch user profile", "error"); }
     };
     fetchCurrentUser();
     fetchActiveTags();
   }, []);
 
-  // Fetch problem data when editing
   useEffect(() => {
     const fetchProblemData = async () => {
       if (!id) return;
       setLoadingData(true);
-
-      // Reset all state before loading new problem
-      setProblemData({
-        title: "",
-        point: "",
-        timeLimit: "",
-        memoryLimit: "",
-        statement: "",
-        problemDifficulty: "",
-        solutionCode: "",
-      });
+      setProblemData({ title: "", point: "", timeLimit: "", memoryLimit: "", statement: "", problemDifficulty: "", solutionCode: "" });
       setTestCases([{ input: "", expectedOutput: "" }]);
       setSelectedTags([]);
       setAuthorInfo({ id: null, username: null });
@@ -371,347 +164,106 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
         const response = await ApiService.getProblemById(id);
         if (response.statusCode === 200 && response.data) {
           const problem = response.data;
-
-          setAuthorInfo({
-            id: problem.authorId || null,
-            username: problem.authorUserName || null,
-          });
-
-          // Load existing tags (may include inactive ones that were assigned before being disabled)
-          if (problem.tags && problem.tags.length > 0) {
-            setSelectedTags(problem.tags);
-          }
-
+          setAuthorInfo({ id: problem.authorId || null, username: problem.authorUserName || null });
+          if (problem.tags && problem.tags.length > 0) setSelectedTags(problem.tags);
           let statementContent = "";
           if (problem.statementFileUrl) {
             try {
-              const statementResponse = await fetch(
-                `${problem.statementFileUrl}?t=${Date.now()}`,
-              );
+              const statementResponse = await fetch(`${problem.statementFileUrl}?t=${Date.now()}`);
               statementContent = await statementResponse.text();
-            } catch (err) {
-              showMessage("Failed to load problem statement", "warning");
-            }
+            } catch (err) { showMessage("Failed to load problem statement", "warning"); }
           }
-
-          setProblemData({
-            title: problem.title || "",
-            point: problem.point || "",
-            timeLimit: problem.timeLimit || "",
-            memoryLimit: problem.memoryLimit || "",
-            statement: statementContent,
-            problemDifficulty: problem.problemDifficulty || "",
-            solutionCode: problem.solutionCode || "",
-          });
-
+          setProblemData({ title: problem.title || "", point: problem.point || "", timeLimit: problem.timeLimit || "", memoryLimit: problem.memoryLimit || "", statement: statementContent, problemDifficulty: problem.problemDifficulty || "", solutionCode: problem.solutionCode || "" });
           if (problem.testCases && problem.testCases.length > 0) {
             const loaded = await Promise.all(
               problem.testCases.map(async (tc, index) => {
-                let input = "";
-                let expectedOutput = "";
+                let input = "", expectedOutput = "";
                 try {
-                  if (tc.inputFileUrl) {
-                    const resp = await fetch(
-                      `${tc.inputFileUrl}?t=${Date.now()}`,
-                    );
-                    const text = await resp.text();
-                    input =
-                      text.startsWith("<?xml") || text.startsWith("<Error")
-                        ? ""
-                        : text;
-                  }
-                  if (tc.expectedOutputFileUrl) {
-                    const resp = await fetch(
-                      `${tc.expectedOutputFileUrl}?t=${Date.now()}`,
-                    );
-                    const text = await resp.text();
-                    expectedOutput =
-                      text.startsWith("<?xml") || text.startsWith("<Error")
-                        ? ""
-                        : text;
-                  }
-                } catch (err) {
-                  console.error(
-                    `Error fetching test case ${index} files:`,
-                    err,
-                  );
-                }
-                return {
-                  id: tc.id,
-                  input,
-                  expectedOutput,
-                  isSample: tc.isSample ?? false,
-                  dirty: false,
-                };
-              }),
+                  if (tc.inputFileUrl) { const resp = await fetch(`${tc.inputFileUrl}?t=${Date.now()}`); const text = await resp.text(); input = text.startsWith("<?xml") || text.startsWith("<Error") ? "" : text; }
+                  if (tc.expectedOutputFileUrl) { const resp = await fetch(`${tc.expectedOutputFileUrl}?t=${Date.now()}`); const text = await resp.text(); expectedOutput = text.startsWith("<?xml") || text.startsWith("<Error") ? "" : text; }
+                } catch (err) { console.error(`Error fetching test case ${index} files:`, err); }
+                return { id: tc.id, input, expectedOutput, isSample: tc.isSample ?? false, dirty: false };
+              })
             );
             setTestCases(loaded);
-          } else {
-            setTestCases([{ input: "", expectedOutput: "" }]);
-          }
-        } else {
-          showMessage("Failed to load problem", "error");
-        }
-      } catch (err) {
-        showMessage(
-          err.response?.data?.message ||
-            err.message ||
-            "Failed to load problem",
-          "error",
-        );
-      } finally {
-        setLoadingData(false);
-      }
+          } else { setTestCases([{ input: "", expectedOutput: "" }]); }
+        } else { showMessage("Failed to load problem", "error"); }
+      } catch (err) { showMessage(err.response?.data?.message || err.message || "Failed to load problem", "error"); } finally { setLoadingData(false); }
     };
-
     fetchProblemData();
   }, [id, dataVersion]);
 
-  // ─── Tag helpers ────────────────────────────────────────────────────────────
-
   const inactiveTags = selectedTags.filter((t) => t.isActive === false);
   const hasInactiveTags = inactiveTags.length > 0;
+  const addTag = (tag) => { if (!selectedTags.find((t) => t.id === tag.id)) setSelectedTags((prev) => [...prev, tag]); setTagSearchQuery(""); setShowTagDropdown(false); };
+  const removeTag = (tagId) => setSelectedTags((prev) => prev.filter((t) => t.id !== tagId));
+  const removeAllInactiveTags = () => setSelectedTags((prev) => prev.filter((t) => t.isActive !== false));
+  const filteredDropdownTags = availableTags.filter((t) => !selectedTags.find((s) => s.id === t.id) && t.name.toLowerCase().includes(tagSearchQuery.toLowerCase()));
 
-  const addTag = (tag) => {
-    if (!selectedTags.find((t) => t.id === tag.id)) {
-      setSelectedTags((prev) => [...prev, tag]);
-    }
-    setTagSearchQuery("");
-    setShowTagDropdown(false);
-  };
-
-  const removeTag = (tagId) => {
-    setSelectedTags((prev) => prev.filter((t) => t.id !== tagId));
-  };
-
-  const removeAllInactiveTags = () => {
-    setSelectedTags((prev) => prev.filter((t) => t.isActive !== false));
-  };
-
-  // Tags available in the dropdown = active tags not yet selected
-  const filteredDropdownTags = availableTags.filter(
-    (t) =>
-      !selectedTags.find((s) => s.id === t.id) &&
-      t.name.toLowerCase().includes(tagSearchQuery.toLowerCase()),
-  );
-
-  // ─── Form helpers ────────────────────────────────────────────────────────────
-
-  const handleProblemChange = (field, value) =>
-    setProblemData((prev) => ({
-      ...prev,
-      [field]: value,
-      ...(field === "problemDifficulty" ? { point: "" } : {}),
-    }));
-
-  const addTestCase = () =>
-    setTestCases((prev) => [
-      ...prev,
-      { input: "", expectedOutput: "", isSample: false, dirty: true },
-    ]);
-
-  const removeTestCase = (index) => {
-    if (testCases.length > 1)
-      setTestCases((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleTestCaseChange = (index, field, value) =>
-    setTestCases((prev) =>
-      prev.map((tc, i) =>
-        i === index ? { ...tc, [field]: value, dirty: true } : tc,
-      ),
-    );
-
-  const stringToFile = (content, filename, mimeType) =>
-    new File([new Blob([content], { type: mimeType })], filename, {
-      type: mimeType,
-    });
-
-  // ─── AI PDF Import ────────────────────────────────────────────────────────
+  const handleProblemChange = (field, value) => setProblemData((prev) => ({ ...prev, [field]: value, ...(field === "problemDifficulty" ? { point: "" } : {}) }));
+  const addTestCase = () => setTestCases((prev) => [...prev, { input: "", expectedOutput: "", isSample: false, dirty: true }]);
+  const removeTestCase = (index) => { if (testCases.length > 1) setTestCases((prev) => prev.filter((_, i) => i !== index)); };
+  const handleTestCaseChange = (index, field, value) => setTestCases((prev) => prev.map((tc, i) => i === index ? { ...tc, [field]: value, dirty: true } : tc));
+  const stringToFile = (content, filename, mimeType) => new File([new Blob([content], { type: mimeType })], filename, { type: mimeType });
 
   const handlePdfImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 4 * 1024 * 1024) {
-      showMessage("PDF must be under 4MB", "error");
-      e.target.value = "";
-      return;
-    }
+    if (file.size > 4 * 1024 * 1024) { showMessage("PDF must be under 4MB", "error"); e.target.value = ""; return; }
     setAiExtracting(true);
     try {
       const response = await ApiService.extractProblemFromPdf(file);
       if (response.statusCode === 200 && response.data) {
         const d = response.data;
-        setProblemData((prev) => ({
-          title: d.title || "",
-          point: d.point || "",
-          timeLimit: d.timeLimit || "",
-          memoryLimit: d.memoryLimit || "",
-          statement: d.statement || "",
-          problemDifficulty: d.difficulty || "",
-          solutionCode: prev.solutionCode, // keep existing solution
-        }));
-        if (d.testCases && d.testCases.length > 0) {
-          setTestCases(
-            d.testCases.map((tc) => ({
-              input: tc.input || "",
-              expectedOutput: tc.expectedOutput || "",
-              isSample: tc.isSample ?? false,
-              dirty: true,
-            }))
-          );
-        }
-        // Auto-add AI-suggested tags that exist in available tags
+        setProblemData((prev) => ({ title: d.title || "", point: d.point || "", timeLimit: d.timeLimit || "", memoryLimit: d.memoryLimit || "", statement: d.statement || "", problemDifficulty: d.difficulty || "", solutionCode: prev.solutionCode }));
+        if (d.testCases && d.testCases.length > 0) setTestCases(d.testCases.map((tc) => ({ input: tc.input || "", expectedOutput: tc.expectedOutput || "", isSample: tc.isSample ?? false, dirty: true })));
         if (d.suggestedTags && d.suggestedTags.length > 0) {
-          const matched = availableTags.filter((t) =>
-            d.suggestedTags.includes(t.name)
-          );
-          if (matched.length > 0) {
-            setSelectedTags((prev) => {
-              const existingIds = new Set(prev.map((t) => t.id));
-              const newTags = matched.filter((t) => !existingIds.has(t.id));
-              return [...prev, ...newTags];
-            });
-          }
+          const matched = availableTags.filter((t) => d.suggestedTags.includes(t.name));
+          if (matched.length > 0) setSelectedTags((prev) => { const existingIds = new Set(prev.map((t) => t.id)); return [...prev, ...matched.filter((t) => !existingIds.has(t.id))]; });
         }
-        const msg = d.testCasesGenerated
-          ? `Extracted! ${d.testCases?.length || 0} test cases generated by AI — please review before saving.`
-          : `Problem extracted from PDF — please review all fields before saving.`;
-        showMessage(msg, "success");
-      } else {
-        showMessage(response.message || "Failed to extract from PDF", "error");
-      }
-    } catch (err) {
-      showMessage(
-        err.response?.data?.message || err.message || "Failed to extract from PDF",
-        "error"
-      );
-    } finally {
-      setAiExtracting(false);
-      e.target.value = ""; // reset so same file can be re-selected
-    }
+        showMessage(d.testCasesGenerated ? `Extracted! ${d.testCases?.length || 0} test cases generated by AI.` : `Problem extracted from PDF — please review all fields before saving.`, "success");
+      } else { showMessage(response.message || "Failed to extract from PDF", "error"); }
+    } catch (err) { showMessage(err.response?.data?.message || err.message || "Failed to extract from PDF", "error"); } finally { setAiExtracting(false); e.target.value = ""; }
   };
 
-  // ─── AI Test Case Generation ──────────────────────────────────────────────
-
   const handleGenerateTestCases = async () => {
-    if (!problemData.statement.trim()) {
-      showMessage("Write problem statement first", "error");
-      return;
-    }
+    if (!problemData.statement.trim()) { showMessage("Write problem statement first", "error"); return; }
     setAiGenerating(true);
     try {
-      const response = await ApiService.generateTestCases(
-        problemData.statement,
-        generateCount
-      );
+      const response = await ApiService.generateTestCases(problemData.statement, generateCount);
       if (response.statusCode === 200 && response.data?.testCases) {
-        const generated = response.data.testCases.map((tc) => ({
-          input: tc.input || "",
-          expectedOutput: tc.expectedOutput || "",
-          isSample: tc.isSample ?? false,
-          dirty: true,
-        }));
-        setTestCases((prev) => {
-          // Replace if only one empty placeholder exists
-          const hasOnlyEmpty =
-            prev.length === 1 &&
-            !prev[0].input.trim() &&
-            !prev[0].expectedOutput.trim();
-          return hasOnlyEmpty ? generated : [...prev, ...generated];
-        });
-        showMessage(
-          `${generated.length} test cases generated by AI — please review!`,
-          "success"
-        );
-      } else {
-        showMessage(response.message || "Failed to generate test cases", "error");
-      }
-    } catch (err) {
-      showMessage(
-        err.response?.data?.message || err.message || "Failed to generate test cases",
-        "error"
-      );
-    } finally {
-      setAiGenerating(false);
-    }
+        const generated = response.data.testCases.map((tc) => ({ input: tc.input || "", expectedOutput: tc.expectedOutput || "", isSample: tc.isSample ?? false, dirty: true }));
+        setTestCases((prev) => { const hasOnlyEmpty = prev.length === 1 && !prev[0].input.trim() && !prev[0].expectedOutput.trim(); return hasOnlyEmpty ? generated : [...prev, ...generated]; });
+        showMessage(`${generated.length} test cases generated by AI — please review!`, "success");
+      } else { showMessage(response.message || "Failed to generate test cases", "error"); }
+    } catch (err) { showMessage(err.response?.data?.message || err.message || "Failed to generate test cases", "error"); } finally { setAiGenerating(false); }
   };
 
   const validateForm = () => {
-    if (!problemData.title.trim()) {
-      showMessage("Problem title is required", "error");
-      return false;
-    }
-    if (!problemData.point || problemData.point <= 0) {
-      showMessage("Point must be greater than 0", "error");
-      return false;
-    }
+    if (!problemData.title.trim()) { showMessage("Problem title is required", "error"); return false; }
+    if (!problemData.point || problemData.point <= 0) { showMessage("Point must be greater than 0", "error"); return false; }
     if (problemData.problemDifficulty) {
       const range = getPointRange(problemData.problemDifficulty);
-      if (problemData.point < range.min || problemData.point > range.max) {
-        showMessage(
-          `Points for ${problemData.problemDifficulty.toLowerCase()} problems must be between ${range.min} and ${range.max}`,
-          "error",
-        );
-        return false;
-      }
+      if (problemData.point < range.min || problemData.point > range.max) { showMessage(`Points for ${problemData.problemDifficulty.toLowerCase()} problems must be between ${range.min} and ${range.max}`, "error"); return false; }
     }
-    if (!problemData.timeLimit || problemData.timeLimit <= 0) {
-      showMessage("Time limit must be greater than 0", "error");
-      return false;
-    }
-    if (problemData.timeLimit > 10) {
-      showMessage("Time limit cannot exceed 10 seconds", "error");
-      return false;
-    }
-    if (problemData.memoryLimit < 16) {
-      showMessage("Memory limit must be at least 16MB", "error");
-      return false;
-    }
-    if (problemData.memoryLimit > 1024) {
-      showMessage("Memory limit cannot exceed 1024MB", "error");
-      return false;
-    }
-    if (!problemData.statement.trim()) {
-      showMessage("Problem statement is required", "error");
-      return false;
-    }
-    if (!problemData.problemDifficulty) {
-      showMessage("Problem difficulty is required", "error");
-      return false;
-    }
-    if (hasInactiveTags) {
-      showMessage(
-        "Please remove disabled tags before saving. Disabled tags cannot be assigned to problems.",
-        "error",
-      );
-      return false;
-    }
+    if (!problemData.timeLimit || problemData.timeLimit <= 0) { showMessage("Time limit must be greater than 0", "error"); return false; }
+    if (problemData.timeLimit > 10) { showMessage("Time limit cannot exceed 10 seconds", "error"); return false; }
+    if (problemData.memoryLimit < 16) { showMessage("Memory limit must be at least 16MB", "error"); return false; }
+    if (problemData.memoryLimit > 1024) { showMessage("Memory limit cannot exceed 1024MB", "error"); return false; }
+    if (!problemData.statement.trim()) { showMessage("Problem statement is required", "error"); return false; }
+    if (!problemData.problemDifficulty) { showMessage("Problem difficulty is required", "error"); return false; }
+    if (hasInactiveTags) { showMessage("Please remove disabled tags before saving.", "error"); return false; }
     for (let i = 0; i < testCases.length; i++) {
-      if (!testCases[i].input.trim()) {
-        showMessage(`Input is required for test case ${i + 1}`, "error");
-        return false;
-      }
-      if (!testCases[i].expectedOutput.trim()) {
-        showMessage(
-          `Expected output is required for test case ${i + 1}`,
-          "error",
-        );
-        return false;
-      }
+      if (!testCases[i].input.trim()) { showMessage(`Input is required for test case ${i + 1}`, "error"); return false; }
+      if (!testCases[i].expectedOutput.trim()) { showMessage(`Expected output is required for test case ${i + 1}`, "error"); return false; }
     }
     return true;
   };
 
   const handleSubmit = async () => {
-    if (!currentUserId) {
-      showMessage("User profile not loaded. Please try again.", "error");
-      return;
-    }
+    if (!currentUserId) { showMessage("User profile not loaded. Please try again.", "error"); return; }
     if (!validateForm()) return;
-
     setLoading(true);
-
     try {
       const formData = new FormData();
       formData.append("title", problemData.title);
@@ -720,938 +272,413 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
       formData.append("memoryLimit", problemData.memoryLimit);
       formData.append("authorId", currentUserId);
       formData.append("problemDifficulty", problemData.problemDifficulty);
-      formData.append(
-        "statementFile",
-        stringToFile(problemData.statement, "statement.md", "text/markdown"),
-      );
-
-      // Solution code (for My Problems flow)
-      if (problemData.solutionCode) {
-        formData.append("solutionCode", problemData.solutionCode);
-        formData.append("solutionLanguage", "CPP");
-      }
-
-      // Private by default for "my" mode, public for admin
-      if (mode === "my" && !id) {
-        formData.append("isPublic", false);
-      }
-
-      // Pass active tag IDs via tagNames field (names used server-side for lookup)
-      const activeSelectedTags = selectedTags.filter(
-        (t) => t.isActive !== false,
-      );
-      activeSelectedTags.forEach((tag) => {
-        formData.append("tagNames", tag.name);
-      });
-
+      formData.append("statementFile", stringToFile(problemData.statement, "statement.md", "text/markdown"));
+      if (problemData.solutionCode) { formData.append("solutionCode", problemData.solutionCode); formData.append("solutionLanguage", "CPP"); }
+      if (mode === "my" && !id) formData.append("isPublic", false);
+      const activeSelectedTags = selectedTags.filter((t) => t.isActive !== false);
+      activeSelectedTags.forEach((tag) => formData.append("tagNames", tag.name));
       testCases.forEach((tc, index) => {
         if (tc.id) formData.append(`testCases[${index}].id`, tc.id);
         formData.append(`testCases[${index}].isSample`, tc.isSample ?? false);
-        // Only send files for new test cases (no id) or dirty (edited) ones
         if (!tc.id || tc.dirty) {
-          formData.append(
-            `testCases[${index}].inputFile`,
-            stringToFile(tc.input, `input_${index}.txt`, "text/plain"),
-          );
-          formData.append(
-            `testCases[${index}].expectedOutputFile`,
-            stringToFile(tc.expectedOutput, `output_${index}.txt`, "text/plain"),
-          );
+          formData.append(`testCases[${index}].inputFile`, stringToFile(tc.input, `input_${index}.txt`, "text/plain"));
+          formData.append(`testCases[${index}].expectedOutputFile`, stringToFile(tc.expectedOutput, `output_${index}.txt`, "text/plain"));
         }
       });
-
       let response;
-      if (id) {
-        formData.append("id", id);
-        response = await ApiService.updateProblem(formData);
-      } else {
-        response = await ApiService.createProblem(formData);
-      }
-
+      if (id) { formData.append("id", id); response = await ApiService.updateProblem(formData); }
+      else { response = await ApiService.createProblem(formData); }
       if (response.statusCode === 201 || response.statusCode === 200) {
-        showMessage(
-          response.message ||
-            `Problem ${id ? "updated" : "created"} successfully!`,
-          "success",
-        );
-        if (id) {
-          setTimeout(() => setDataVersion((v) => v + 1), 1000);
-        } else {
-          const dest = backPath || (mode === "my" ? "/admin/my-problems" : "/admin/problems");
-          setTimeout(() => navigate(dest), 1500);
-        }
-      } else {
-        showMessage(
-          response.message || `Failed to ${id ? "update" : "create"} problem`,
-          "error",
-        );
-      }
-    } catch (err) {
-      showMessage(
-        err.response?.data?.message ||
-          err.response?.data?.error ||
-          err.message ||
-          `Failed to ${id ? "update" : "create"} problem`,
-        "error",
-      );
-    } finally {
-      setLoading(false);
-    }
+        showMessage(response.message || `Problem ${id ? "updated" : "created"} successfully!`, "success");
+        if (id) { setTimeout(() => setDataVersion((v) => v + 1), 1000); }
+        else { const dest = backPath || (mode === "my" ? "/admin/my-problems" : "/admin/problems"); setTimeout(() => navigate(dest), 1500); }
+      } else { showMessage(response.message || `Failed to ${id ? "update" : "create"} problem`, "error"); }
+    } catch (err) { showMessage(err.response?.data?.message || err.response?.data?.error || err.message || `Failed to ${id ? "update" : "create"} problem`, "error"); } finally { setLoading(false); }
   };
 
   if (loadingData) {
     return (
-      <Box
-        minH="100vh"
-        bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Card.Root bg="white" borderRadius="xl" p={8}>
-          <VStack gap={4}>
-            <Text fontSize="xl" color="gray.700">
-              Loading problem data...
-            </Text>
-            <Box
-              w="40px"
-              h="40px"
-              border="4px solid"
-              borderColor="purple.200"
-              borderTopColor="purple.600"
-              borderRadius="full"
-              animation="spin 1s linear infinite"
-            />
-          </VStack>
-        </Card.Root>
-      </Box>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="card" style={{ padding: 32 }}>
+          <div className="flex flex-col items-center gap-4">
+            <p style={{ fontSize: 18, color: "var(--text-primary)" }}>Loading problem data...</p>
+            <div className="spinner" />
+          </div>
+        </div>
+      </div>
     );
   }
 
+  const sectionStyle = { borderBottom: "1px solid var(--border-default)", paddingBottom: 24 };
+  const labelStyle = { fontSize: 13, fontWeight: 500, color: "var(--text-primary)", marginBottom: 8, display: "block" };
+
   return (
-    <Box
-      minH="100vh"
-      bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-      py={8}
-      px={4}
+    <div
+      style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 16px" }}
       onClick={() => showTagDropdown && setShowTagDropdown(false)}
     >
-      {/* AI Loading Overlay */}
-      {(aiExtracting || aiGenerating) && (
-        <AILoadingOverlay mode={aiExtracting ? "pdf" : "gen"} />
-      )}
-      <Box maxW="1200px" mx="auto">
-        <Card.Root bg="white" borderRadius="xl" p={8} boxShadow="2xl">
-          <HStack mb={6} gap={3} justify="space-between">
-            <HStack gap={3}>
-              <FileText size={32} color="#667eea" />
-              <Heading size="2xl" color="gray.800">
-                {id ? "Edit Problem" : "Create New Problem"}
-              </Heading>
-            </HStack>
-            <HStack gap={2}>
-              {/* Hidden file input for PDF */}
-              <input
-                type="file"
-                accept=".pdf"
-                ref={pdfInputRef}
-                style={{ display: "none" }}
-                onChange={handlePdfImport}
-              />
-              <Button
-                size="sm"
-                colorScheme="purple"
-                variant="outline"
-                leftIcon={<Sparkles size={16} />}
+      {(aiExtracting || aiGenerating) && <AILoadingOverlay mode={aiExtracting ? "pdf" : "gen"} />}
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div className="card" style={{ padding: 32 }}>
+          {/* Header */}
+          <div className="flex items-center justify-between" style={{ marginBottom: 24 }}>
+            <div className="flex items-center gap-3">
+              <FileText size={32} color="var(--primary)" />
+              <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>{id ? "Edit Problem" : "Create New Problem"}</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="file" accept=".pdf" ref={pdfInputRef} style={{ display: "none" }} onChange={handlePdfImport} />
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ border: "1px solid var(--border-accent)", color: "var(--primary)" }}
                 onClick={() => pdfInputRef.current?.click()}
-                isLoading={aiExtracting}
-                loadingText="AI Reading PDF..."
-                title="Import problem data from a PDF file"
+                disabled={aiExtracting}
               >
-                Import from PDF
-              </Button>
-              <Button
-                leftIcon={<ArrowLeft size={20} />}
-                variant="ghost"
-                onClick={() => navigate(backPath || (mode === "my" ? "/admin/my-problems" : "/admin/problems"))}
-              >
-                Back to Problems
-              </Button>
-            </HStack>
-          </HStack>
+                <Sparkles size={16} /> Import from PDF
+              </button>
+              <button className="btn btn-ghost" onClick={() => navigate(backPath || (mode === "my" ? "/admin/my-problems" : "/admin/problems"))}>
+                <ArrowLeft size={20} /> Back to Problems
+              </button>
+            </div>
+          </div>
 
-          <VStack gap={6} align="stretch">
+          <div className="flex flex-col gap-6">
             {/* Problem Details */}
-            <Box borderBottomWidth="1px" pb={6}>
-              <HStack justify="space-between" align="center" mb={4}>
-                <Heading size="xl" color="gray.700">
-                  Problem Details
-                </Heading>
+            <div style={sectionStyle}>
+              <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Problem Details</h3>
                 {id && authorInfo.id && (
-                  <HStack
-                    gap={2}
-                    bg="purple.50"
-                    border="1px solid"
-                    borderColor="purple.200"
-                    borderRadius="lg"
-                    px={4}
-                    py={2}
-                  >
-                    <User size={16} color="#667eea" />
-                    <Text fontSize="sm" color="gray.600">
-                      Author:
-                    </Text>
-                    <Badge
-                      colorScheme="purple"
-                      variant="subtle"
-                      fontSize="sm"
-                      px={2}
-                      py={0.5}
-                      borderRadius="md"
-                    >
-                      {authorInfo.username}
-                    </Badge>
-                    <Text fontSize="xs" color="gray.400">
-                      (ID: {authorInfo.id})
-                    </Text>
-                  </HStack>
+                  <div className="flex items-center gap-2" style={{ background: "var(--bg-raised)", border: "1px solid var(--border-accent)", borderRadius: 10, padding: "8px 16px" }}>
+                    <User size={16} color="var(--primary)" />
+                    <span style={{ fontSize: 13, color: "var(--text-primary)" }}>Author:</span>
+                    <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 13, background: "var(--primary-subtle)", color: "var(--primary)", fontWeight: 500 }}>{authorInfo.username}</span>
+                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>(ID: {authorInfo.id})</span>
+                  </div>
                 )}
-              </HStack>
+              </div>
 
-              <VStack gap={4} align="stretch">
+              <div className="flex flex-col gap-4">
                 {/* Title */}
-                <Box>
-                  <Text
-                    fontSize="sm"
-                    fontWeight="medium"
-                    color="gray.700"
-                    mb={2}
-                  >
-                    Title *
-                  </Text>
-                  <Input
-                    value={problemData.title}
-                    onChange={(e) =>
-                      handleProblemChange("title", e.target.value)
-                    }
-                    placeholder="Enter problem title"
-                    size="lg"
-                  />
-                </Box>
+                <div>
+                  <label style={labelStyle}>Title *</label>
+                  <input className="input w-full" value={problemData.title} onChange={(e) => handleProblemChange("title", e.target.value)} placeholder="Enter problem title" style={{ fontSize: 15 }} />
+                </div>
 
-                {/* Numeric fields + difficulty */}
-                <HStack gap={4}>
-                  <Box flex={1}>
-                    <Text
-                      fontSize="sm"
-                      fontWeight="medium"
-                      color="gray.700"
-                      mb={2}
-                    >
+                {/* Numeric fields */}
+                <div className="flex gap-4">
+                  <div style={{ flex: 1 }}>
+                    <label style={labelStyle}>
                       Points *{" "}
                       {problemData.problemDifficulty && (
-                        <Box as="span" fontSize="xs" color="gray.400">
-                          ({getPointRange(problemData.problemDifficulty).min}–
-                          {getPointRange(problemData.problemDifficulty).max} for{" "}
-                          {problemData.problemDifficulty.toLowerCase()})
-                        </Box>
+                        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                          ({getPointRange(problemData.problemDifficulty).min}–{getPointRange(problemData.problemDifficulty).max} for {problemData.problemDifficulty.toLowerCase()})
+                        </span>
                       )}
-                    </Text>
-                    <Input
-                      type="number"
+                    </label>
+                    <input
+                      type="number" className="input w-full"
                       value={problemData.point}
-                      onChange={(e) =>
-                        handleProblemChange("point", e.target.value)
-                      }
+                      onChange={(e) => handleProblemChange("point", e.target.value)}
                       onBlur={() => {
-                        if (
-                          problemData.point &&
-                          problemData.problemDifficulty
-                        ) {
-                          const range = getPointRange(
-                            problemData.problemDifficulty,
-                          );
-                          if (
-                            problemData.point < range.min ||
-                            problemData.point > range.max
-                          ) {
-                            showMessage(
-                              `Points for ${problemData.problemDifficulty.toLowerCase()} problems must be between ${range.min} and ${range.max}`,
-                              "error",
-                            );
-                          }
+                        if (problemData.point && problemData.problemDifficulty) {
+                          const range = getPointRange(problemData.problemDifficulty);
+                          if (problemData.point < range.min || problemData.point > range.max) showMessage(`Points for ${problemData.problemDifficulty.toLowerCase()} problems must be between ${range.min} and ${range.max}`, "error");
                         }
                       }}
-                      placeholder={
-                        problemData.problemDifficulty
-                          ? `${getPointRange(problemData.problemDifficulty).min}–${getPointRange(problemData.problemDifficulty).max}`
-                          : "Select difficulty first"
-                      }
+                      placeholder={problemData.problemDifficulty ? `${getPointRange(problemData.problemDifficulty).min}–${getPointRange(problemData.problemDifficulty).max}` : "Select difficulty first"}
                       min={getPointRange(problemData.problemDifficulty).min}
                       max={getPointRange(problemData.problemDifficulty).max}
-                      isDisabled={!problemData.problemDifficulty}
-                      size="lg"
+                      disabled={!problemData.problemDifficulty}
                     />
-                  </Box>
-                  <Box flex={1}>
-                    <Text
-                      fontSize="sm"
-                      fontWeight="medium"
-                      color="gray.700"
-                      mb={2}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={labelStyle}>Time Limit (s) * <span style={{ fontSize: 11, color: "var(--text-muted)" }}>(max 10s)</span></label>
+                    <input type="number" className="input w-full" value={problemData.timeLimit} onChange={(e) => handleProblemChange("timeLimit", e.target.value)} placeholder="2" min={1} max={10} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={labelStyle}>Memory Limit (MB) * <span style={{ fontSize: 11, color: "var(--text-muted)" }}>(max 1024MB)</span></label>
+                    <input type="number" className="input w-full" value={problemData.memoryLimit} onChange={(e) => handleProblemChange("memoryLimit", e.target.value)} placeholder="256" min={16} max={1024} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={labelStyle}>Difficulty *</label>
+                    <select
+                      className="select w-full"
+                      value={problemData.problemDifficulty}
+                      onChange={(e) => handleProblemChange("problemDifficulty", e.target.value)}
+                      style={{ color: problemData.problemDifficulty ? DIFFICULTY_COLORS[problemData.problemDifficulty] : undefined, fontWeight: problemData.problemDifficulty ? 600 : undefined }}
                     >
-                      Time Limit (s) *{" "}
-                      <Box as="span" fontSize="xs" color="gray.400">
-                        (max 10s)
-                      </Box>
-                    </Text>
-                    <Input
-                      type="number"
-                      value={problemData.timeLimit}
-                      onChange={(e) =>
-                        handleProblemChange("timeLimit", e.target.value)
-                      }
-                      placeholder="2"
-                      min={1}
-                      max={10}
-                      size="lg"
-                    />
-                  </Box>
-                  <Box flex={1}>
-                    <Text
-                      fontSize="sm"
-                      fontWeight="medium"
-                      color="gray.700"
-                      mb={2}
-                    >
-                      Memory Limit (MB) *{" "}
-                      <Box as="span" fontSize="xs" color="gray.400">
-                        (max 1024MB)
-                      </Box>
-                    </Text>
-                    <Input
-                      type="number"
-                      value={problemData.memoryLimit}
-                      onChange={(e) =>
-                        handleProblemChange("memoryLimit", e.target.value)
-                      }
-                      placeholder="256"
-                      min={16}
-                      max={1024}
-                      size="lg"
-                    />
-                  </Box>
-                  <Box flex={1}>
-                    <Text
-                      fontSize="sm"
-                      fontWeight="medium"
-                      color="gray.700"
-                      mb={2}
-                    >
-                      Difficulty *
-                    </Text>
-                    <NativeSelect.Root size="lg">
-                      <NativeSelect.Field
-                        value={problemData.problemDifficulty}
-                        onChange={(e) =>
-                          handleProblemChange(
-                            "problemDifficulty",
-                            e.target.value,
-                          )
-                        }
-                        color={
-                          problemData.problemDifficulty
-                            ? DIFFICULTY_COLORS[problemData.problemDifficulty]
-                            : "gray.500"
-                        }
-                        fontWeight={
-                          problemData.problemDifficulty ? "semibold" : "normal"
-                        }
-                      >
-                        {DIFFICULTY_OPTIONS.map((opt) => (
-                          <option
-                            key={opt.value}
-                            value={opt.value}
-                            style={{
-                              color: opt.value
-                                ? DIFFICULTY_COLORS[opt.value]
-                                : "inherit",
-                              fontWeight: opt.value ? "600" : "normal",
-                            }}
-                          >
-                            {opt.label}
-                          </option>
-                        ))}
-                      </NativeSelect.Field>
-                      <NativeSelect.Indicator />
-                    </NativeSelect.Root>
-                  </Box>
-                </HStack>
+                      {DIFFICULTY_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value} style={{ color: opt.value ? DIFFICULTY_COLORS[opt.value] : "inherit", fontWeight: opt.value ? 600 : "normal" }}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
-                {/* ── Tags section ─────────────────────────────────────────────── */}
-                <Box>
-                  <HStack justify="space-between" mb={2}>
-                    <HStack gap={1}>
-                      <TagIcon size={16} color="#805AD5" />
-                      <Text fontSize="sm" fontWeight="medium" color="gray.700">
-                        Tags
-                      </Text>
-                    </HStack>
+                {/* Tags */}
+                <div>
+                  <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
+                    <div className="flex items-center gap-1">
+                      <TagIcon size={16} color="var(--primary)" />
+                      <span style={labelStyle}>Tags</span>
+                    </div>
                     {hasInactiveTags && (
-                      <Button
-                        size="xs"
-                        colorScheme="orange"
-                        variant="ghost"
-                        leftIcon={<Trash2 size={12} />}
-                        onClick={removeAllInactiveTags}
-                      >
-                        Remove all disabled tags
-                      </Button>
+                      <button className="btn btn-ghost btn-sm" style={{ color: "#f97316" }} onClick={removeAllInactiveTags}>
+                        <Trash2 size={12} /> Remove all disabled tags
+                      </button>
                     )}
-                  </HStack>
+                  </div>
 
-                  {/* Inactive tag warning banner */}
                   {hasInactiveTags && (
-                    <Box
-                      mb={3}
-                      p={3}
-                      bg="orange.50"
-                      border="1px solid"
-                      borderColor="orange.200"
-                      borderRadius="md"
-                    >
-                      <HStack gap={2} align="flex-start">
-                        <Box color="orange.500" mt={0.5} flexShrink={0}>
-                          <AlertTriangle size={16} />
-                        </Box>
-                        <VStack align="flex-start" gap={0}>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="semibold"
-                            color="orange.700"
-                          >
-                            {inactiveTags.length} disabled tag
-                            {inactiveTags.length > 1 ? "s" : ""} detected
-                          </Text>
-                          <Text fontSize="xs" color="orange.600">
-                            The following tag
-                            {inactiveTags.length > 1 ? "s have" : " has"} been
-                            disabled:{" "}
-                            <strong>
-                              {inactiveTags.map((t) => t.name).join(", ")}
-                            </strong>
-                            . Disabled tags won't appear in filters and cannot
-                            be saved. Please remove or replace them.
-                          </Text>
-                        </VStack>
-                      </HStack>
-                    </Box>
+                    <div style={{ marginBottom: 12, padding: 12, background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 8 }}>
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle size={16} color="#f97316" style={{ flexShrink: 0 }} />
+                        <div>
+                          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#c2410c" }}>
+                            {inactiveTags.length} disabled tag{inactiveTags.length > 1 ? "s" : ""} detected
+                          </p>
+                          <p style={{ margin: 0, fontSize: 11, color: "#ea580c" }}>
+                            The following tag{inactiveTags.length > 1 ? "s have" : " has"} been disabled: <strong>{inactiveTags.map((t) => t.name).join(", ")}</strong>. Please remove or replace them.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   )}
 
-                  <Box
-                    p={3}
-                    border="1px solid"
-                    borderColor={hasInactiveTags ? "orange.300" : "gray.300"}
-                    borderRadius="md"
-                    bg="gray.50"
-                    minH="52px"
-                    position="relative"
-                  >
-                    <Wrap gap={2}>
+                  <div style={{ padding: 12, border: `1px solid ${hasInactiveTags ? "#fed7aa" : "var(--border-default)"}`, borderRadius: 8, background: "var(--bg-raised)", minHeight: 52, position: "relative" }}>
+                    <div className="flex flex-wrap gap-2">
                       {selectedTags.map((tag) => (
-                        <WrapItem key={tag.id}>
-                          <Badge
-                            colorScheme={
-                              tag.isActive === false ? "orange" : "purple"
-                            }
-                            variant={
-                              tag.isActive === false ? "outline" : "subtle"
-                            }
-                            px={2}
-                            py={1}
-                            borderRadius="full"
-                            display="flex"
-                            alignItems="center"
-                            gap={1}
-                            fontSize="sm"
-                            opacity={tag.isActive === false ? 0.8 : 1}
-                            title={
-                              tag.isActive === false
-                                ? "This tag is disabled — remove it before saving"
-                                : tag.name
-                            }
-                          >
-                            {tag.isActive === false && (
-                              <Box as="span" mr={1}>
-                                <AlertTriangle size={11} />
-                              </Box>
-                            )}
-                            <span
-                              style={{
-                                textDecoration:
-                                  tag.isActive === false
-                                    ? "line-through"
-                                    : "none",
-                              }}
-                            >
-                              {tag.name}
-                            </span>
-                            <Box
-                              as="span"
-                              cursor="pointer"
-                              ml={1}
-                              onClick={() => removeTag(tag.id)}
-                              _hover={{ opacity: 0.7 }}
-                            >
-                              <X size={12} />
-                            </Box>
-                          </Badge>
-                        </WrapItem>
+                        <span
+                          key={tag.id}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 9999, fontSize: 13,
+                            background: tag.isActive === false ? "transparent" : "var(--primary-subtle)",
+                            color: tag.isActive === false ? "#f97316" : "var(--primary)",
+                            border: `1px solid ${tag.isActive === false ? "#fed7aa" : "transparent"}`,
+                            opacity: tag.isActive === false ? 0.8 : 1,
+                          }}
+                          title={tag.isActive === false ? "This tag is disabled — remove it before saving" : tag.name}
+                        >
+                          {tag.isActive === false && <AlertTriangle size={11} />}
+                          <span style={{ textDecoration: tag.isActive === false ? "line-through" : "none" }}>{tag.name}</span>
+                          <button style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }} onClick={() => removeTag(tag.id)}>
+                            <X size={12} />
+                          </button>
+                        </span>
                       ))}
 
-                      {/* Add tag button + dropdown */}
-                      <WrapItem position="relative">
-                        <Button
-                          size="xs"
-                          variant="dashed"
-                          colorScheme="purple"
-                          leftIcon={<Plus size={12} />}
-                          border="1px dashed"
-                          borderColor="purple.300"
-                          color="purple.600"
-                          bg="white"
-                          _hover={{ bg: "purple.50" }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowTagDropdown((v) => !v);
-                          }}
+                      <div style={{ position: "relative" }}>
+                        <button
+                          style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 9999, border: "1px dashed var(--primary-subtle)", background: "#fff", color: "var(--primary)", fontSize: 12, cursor: "pointer" }}
+                          onClick={(e) => { e.stopPropagation(); setShowTagDropdown((v) => !v); }}
                         >
-                          Add tag
-                        </Button>
+                          <Plus size={12} /> Add tag
+                        </button>
 
                         {showTagDropdown && (
-                          <Box
-                            position="absolute"
-                            top="110%"
-                            left={0}
-                            zIndex={30}
-                            bg="white"
-                            border="1px solid"
-                            borderColor="gray.200"
-                            borderRadius="lg"
-                            boxShadow="lg"
-                            w="220px"
-                            maxH="260px"
-                            overflowY="auto"
+                          <div
+                            style={{ position: "absolute", top: "110%", left: 0, zIndex: 30, background: "var(--bg-base)", border: "1px solid var(--border-default)", borderRadius: 10, boxShadow: "var(--shadow-md)", width: 220, maxHeight: 260, overflowY: "auto" }}
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Box p={2} borderBottomWidth="1px">
-                              <Input
-                                size="sm"
-                                placeholder="Search active tags..."
+                            <div style={{ borderBottom: "1px solid var(--border-default)", position: "sticky", top: 0, background: "var(--bg-base)" }}>
+                              <SuggestiveSearch
                                 value={tagSearchQuery}
-                                onChange={(e) =>
-                                  setTagSearchQuery(e.target.value)
-                                }
-                                autoFocus
+                                onChange={(val) => setTagSearchQuery(val)}
+                                suggestions={["Search active tags...", "Filter tags"]}
+                                style={{ width: "100%" }}
                               />
-                            </Box>
+                            </div>
                             {filteredDropdownTags.length === 0 ? (
-                              <Box p={3}>
-                                <Text
-                                  fontSize="sm"
-                                  color="gray.400"
-                                  textAlign="center"
-                                >
-                                  {availableTags.length === 0
-                                    ? "No active tags available"
-                                    : "All active tags already added"}
-                                </Text>
-                              </Box>
+                              <div style={{ padding: 12, textAlign: "center" }}>
+                                <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{availableTags.length === 0 ? "No active tags available" : "All active tags already added"}</span>
+                              </div>
                             ) : (
                               filteredDropdownTags.map((tag) => (
-                                <Box
-                                  key={tag.id}
-                                  px={3}
-                                  py={2}
-                                  cursor="pointer"
-                                  _hover={{ bg: "purple.50" }}
-                                  onClick={() => addTag(tag)}
-                                >
-                                  <Text fontSize="sm" color="gray.700">
-                                    {tag.name}
-                                  </Text>
-                                </Box>
+                                <div key={tag.id} style={{ padding: "8px 12px", cursor: "pointer" }} onClick={() => addTag(tag)}>
+                                  <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{tag.name}</span>
+                                </div>
                               ))
                             )}
-                          </Box>
+                          </div>
                         )}
-                      </WrapItem>
-                    </Wrap>
-                  </Box>
-                  <Text fontSize="xs" color="gray.500" mt={1}>
-                    Only active tags can be assigned. Inactive tags are shown
-                    with a warning and must be removed before saving.
-                  </Text>
-                </Box>
+                      </div>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4 }}>Only active tags can be assigned. Inactive tags must be removed before saving.</p>
+                </div>
 
                 {/* Statement */}
-                <Box>
-                  <HStack justify="space-between" mb={2}>
-                    <Text fontSize="sm" fontWeight="medium" color="gray.700">
-                      Problem Statement (Markdown) *
-                    </Text>
-                    <HStack gap={2}>
-                      <Button
-                        size="sm"
-                        variant={!previewMode ? "solid" : "ghost"}
-                        colorScheme={!previewMode ? "purple" : "gray"}
+                <div>
+                  <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
+                    <label style={{ ...labelStyle, marginBottom: 0 }}>Problem Statement (Markdown) *</label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="btn btn-sm"
+                        style={{ background: !previewMode ? "var(--primary)" : "transparent", color: !previewMode ? "var(--bg-void)" : "var(--text-secondary)", border: `1px solid ${!previewMode ? "var(--primary)" : "var(--border-default)"}` }}
                         onClick={() => setPreviewMode(false)}
-                        leftIcon={<Edit2 size={16} />}
                       >
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={previewMode ? "solid" : "ghost"}
-                        colorScheme={previewMode ? "purple" : "gray"}
+                        <Edit2 size={14} /> Edit
+                      </button>
+                      <button
+                        className="btn btn-sm"
+                        style={{ background: previewMode ? "var(--primary)" : "transparent", color: previewMode ? "var(--bg-void)" : "var(--text-secondary)", border: `1px solid ${previewMode ? "var(--primary)" : "var(--border-default)"}` }}
                         onClick={() => setPreviewMode(true)}
-                        leftIcon={<Eye size={16} />}
                       >
-                        Preview
-                      </Button>
-                    </HStack>
-                  </HStack>
+                        <Eye size={14} /> Preview
+                      </button>
+                    </div>
+                  </div>
 
                   {!previewMode ? (
                     <>
-                      <Box
-                        border="1px solid"
-                        borderColor="gray.300"
-                        borderRadius="md"
-                        overflow="hidden"
-                        h="350px"
-                      >
+                      <div style={{ border: "1px solid var(--border-default)", borderRadius: 8, overflow: "hidden", height: 350 }}>
                         <Editor
-                          height="100%"
-                          theme="vs-dark"
-                          language="markdown"
+                          height="100%" theme="vs-dark" language="markdown"
                           value={problemData.statement}
                           onChange={(val) => handleProblemChange("statement", val || "")}
-                          options={{
-                            minimap: { enabled: false },
-                            fontSize: 14,
-                            lineNumbers: "on",
-                            wordWrap: "on",
-                            scrollBeyondLastLine: false,
-                            automaticLayout: true,
-                          }}
+                          options={{ minimap: { enabled: false }, fontSize: 14, lineNumbers: "on", wordWrap: "on", scrollBeyondLastLine: false, automaticLayout: true }}
                         />
-                      </Box>
-                      <Text fontSize="xs" color="gray.600" mt={2}>
-                        This will be converted to a .md file. Use Markdown
-                        syntax for formatting.
-                      </Text>
+                      </div>
+                      <p style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 8 }}>This will be converted to a .md file. Use Markdown syntax for formatting.</p>
                     </>
                   ) : (
-                    <Box
-                      minH="300px"
-                      p={4}
-                      bg="white"
-                      borderWidth="1px"
-                      borderColor="gray.300"
-                      borderRadius="md"
-                      overflowY="auto"
-                      maxH="500px"
-                    >
+                    <div style={{ minHeight: 300, padding: 16, background: "var(--bg-base)", border: "1px solid var(--border-default)", borderRadius: 8, overflowY: "auto", maxHeight: 500 }}>
                       {problemData.statement ? (
-                        <Box
-                          className="markdown-preview"
-                          sx={{
-                            "& h2": {
-                              fontSize: "1.5rem",
-                              fontWeight: "bold",
-                              mt: 4,
-                              mb: 2,
-                            },
-                            "& h3": {
-                              fontSize: "1.25rem",
-                              fontWeight: "bold",
-                              mt: 3,
-                              mb: 2,
-                            },
-                            "& h4": {
-                              fontSize: "1.1rem",
-                              fontWeight: "bold",
-                              mt: 2,
-                              mb: 1,
-                            },
-                            "& p": { mb: 2 },
-                            "& code": {
-                              bg: "gray.100",
-                              px: 1,
-                              py: 0.5,
-                              borderRadius: "sm",
-                              fontFamily: "monospace",
-                              fontSize: "sm",
-                            },
-                            "& pre": {
-                              bg: "gray.800",
-                              color: "white",
-                              p: 3,
-                              borderRadius: "md",
-                              overflowX: "auto",
-                              my: 2,
-                            },
-                            "& pre code": {
-                              bg: "transparent",
-                              color: "white",
-                              p: 0,
-                            },
-                          }}
-                        >
+                        <div className="markdown-preview">
                           <ReactMarkdown>{problemData.statement}</ReactMarkdown>
-                        </Box>
+                        </div>
                       ) : (
-                        <Text color="gray.400" fontStyle="italic">
-                          No content to preview. Start typing in the editor...
-                        </Text>
+                        <p style={{ color: "var(--text-muted)", fontStyle: "italic" }}>No content to preview. Start typing in the editor...</p>
                       )}
-                    </Box>
+                    </div>
                   )}
-                </Box>
-              </VStack>
-            </Box>
+                </div>
+              </div>
+            </div>
 
             {/* Solution Code (My Problems mode only) */}
             {mode === "my" && (
-              <Box borderBottomWidth="1px" pb={6}>
-                <Heading size="xl" color="gray.700" mb={4}>
-                  Solution Code (C++)
-                </Heading>
-                <Text fontSize="sm" color="gray.500" mb={3}>
-                  Optional. This code will be shown to students when you publish solutions in a lab.
-                </Text>
-                <Box
-                  border="1px solid"
-                  borderColor="gray.300"
-                  borderRadius="md"
-                  overflow="hidden"
-                  h="350px"
-                >
+              <div style={sectionStyle}>
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)", margin: "0 0 8px" }}>Solution Code (C++)</h3>
+                <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Optional. This code will be shown to students when you publish solutions in a lab.</p>
+                <div style={{ border: "1px solid var(--border-default)", borderRadius: 8, overflow: "hidden", height: 350 }}>
                   <Editor
-                    height="100%"
-                    theme="vs-dark"
-                    language="cpp"
+                    height="100%" theme="vs-dark" language="cpp"
                     value={problemData.solutionCode}
                     onChange={(val) => handleProblemChange("solutionCode", val || "")}
-                    options={{
-                      minimap: { enabled: false },
-                      fontSize: 14,
-                      lineNumbers: "on",
-                      scrollBeyondLastLine: false,
-                      automaticLayout: true,
-                    }}
+                    options={{ minimap: { enabled: false }, fontSize: 14, lineNumbers: "on", scrollBeyondLastLine: false, automaticLayout: true }}
                   />
-                </Box>
-              </Box>
+                </div>
+              </div>
             )}
 
             {/* Test Cases */}
-            <Box>
-              <HStack justify="space-between" align="center" mb={4}>
-                <Heading size="xl" color="gray.700">
-                  Test Cases
-                </Heading>
-                <HStack gap={2}>
-                  <Input
-                    type="number"
-                    size="sm"
-                    w="70px"
-                    min={1}
-                    max={50}
+            <div>
+              <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Test Cases</h3>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number" className="input"
+                    style={{ width: 70, textAlign: "center" }}
+                    min={1} max={50}
                     value={generateCount}
-                    onChange={(e) =>
-                      setGenerateCount(
-                        Math.min(50, Math.max(1, parseInt(e.target.value) || 1))
-                      )
-                    }
+                    onChange={(e) => setGenerateCount(Math.min(50, Math.max(1, parseInt(e.target.value) || 1)))}
                     title="Number of test cases to generate (max 50)"
                   />
-                  <Button
-                    size="sm"
-                    colorScheme="purple"
-                    variant="outline"
-                    leftIcon={<Sparkles size={14} />}
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ border: "1px solid var(--border-accent)", color: "var(--primary)" }}
                     onClick={handleGenerateTestCases}
-                    isLoading={aiGenerating}
-                    loadingText="Generating..."
-                    isDisabled={!problemData.statement.trim()}
-                    title={
-                      !problemData.statement.trim()
-                        ? "Write problem statement first"
-                        : `Generate ${generateCount} test case(s) using AI`
-                    }
+                    disabled={aiGenerating || !problemData.statement.trim()}
+                    title={!problemData.statement.trim() ? "Write problem statement first" : `Generate ${generateCount} test case(s) using AI`}
                   >
-                    AI Generate
-                  </Button>
-                </HStack>
-              </HStack>
-              <VStack gap={4} align="stretch">
+                    <Sparkles size={14} /> AI Generate
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4">
                 {testCases.map((testCase, index) => (
-                  <Card.Root key={index} bg="gray.50" p={4} borderRadius="lg">
-                    <HStack justify="space-between" mb={3}>
-                      <HStack gap={3}>
-                        <Heading size="md" color="gray.700">
-                          Test Case {index + 1}
-                        </Heading>
-                        {/* Sample toggle */}
-                        <HStack
-                          gap={2}
-                          px={3}
-                          py={1}
-                          borderRadius="full"
-                          bg={testCase.isSample ? "green.50" : "gray.100"}
-                          border="1px solid"
-                          borderColor={
-                            testCase.isSample ? "green.300" : "gray.300"
-                          }
-                          cursor="pointer"
-                          onClick={() =>
-                            handleTestCaseChange(
-                              index,
-                              "isSample",
-                              !testCase.isSample,
-                            )
-                          }
-                          userSelect="none"
+                  <div key={index} style={{ background: "var(--bg-raised)", padding: 16, borderRadius: 10 }}>
+                    <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+                      <div className="flex items-center gap-3">
+                        <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>Test Case {index + 1}</h4>
+                        <button
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 12px", borderRadius: 9999, cursor: "pointer",
+                            background: testCase.isSample ? "#f0fdf4" : "var(--bg-raised)",
+                            border: `1px solid ${testCase.isSample ? "#86efac" : "var(--border-default)"}`,
+                          }}
+                          onClick={() => handleTestCaseChange(index, "isSample", !testCase.isSample)}
                           title="Sample test cases are visible to users solving the problem"
                         >
-                          <Box
-                            w="10px"
-                            h="10px"
-                            borderRadius="full"
-                            bg={testCase.isSample ? "green.400" : "gray.400"}
-                            flexShrink={0}
-                          />
-                          <Text
-                            fontSize="xs"
-                            fontWeight="medium"
-                            color={testCase.isSample ? "green.700" : "gray.500"}
-                          >
+                          <span style={{ width: 10, height: 10, borderRadius: "50%", background: testCase.isSample ? "#4ade80" : "var(--text-muted)", flexShrink: 0 }} />
+                          <span style={{ fontSize: 11, fontWeight: 500, color: testCase.isSample ? "#15803d" : "var(--text-secondary)" }}>
                             {testCase.isSample ? "Sample (visible)" : "Hidden"}
-                          </Text>
-                        </HStack>
-                      </HStack>
+                          </span>
+                        </button>
+                      </div>
                       {testCases.length > 1 && (
-                        <Button
-                          onClick={() => removeTestCase(index)}
-                          colorScheme="red"
-                          variant="ghost"
-                          size="sm"
-                          px={2}
-                        >
-                          <Trash2 size={20} />
-                        </Button>
+                        <button className="btn btn-ghost btn-sm" style={{ color: "#ef4444" }} onClick={() => removeTestCase(index)}>
+                          <Trash2 size={18} />
+                        </button>
                       )}
-                    </HStack>
-                    <HStack gap={4} align="flex-start">
-                      <Box flex={1}>
-                        <Text
-                          fontSize="sm"
-                          fontWeight="medium"
-                          color="gray.700"
-                          mb={2}
-                        >
-                          Input *
-                        </Text>
-                        <Textarea
+                    </div>
+                    <div className="flex gap-4">
+                      <div style={{ flex: 1 }}>
+                        <label style={labelStyle}>Input *</label>
+                        <textarea
+                          className="input w-full"
                           value={testCase.input}
-                          onChange={(e) =>
-                            handleTestCaseChange(index, "input", e.target.value)
-                          }
+                          onChange={(e) => handleTestCaseChange(index, "input", e.target.value)}
                           placeholder="Enter test input..."
-                          minH="120px"
-                          fontFamily="monospace"
-                          fontSize="sm"
+                          style={{ minHeight: 120, fontFamily: "monospace", fontSize: 13, resize: "vertical" }}
                         />
-                        <Text fontSize="xs" color="gray.600" mt={1}>
-                          Will be saved as {index}.txt
-                        </Text>
-                      </Box>
-                      <Box flex={1}>
-                        <Text
-                          fontSize="sm"
-                          fontWeight="medium"
-                          color="gray.700"
-                          mb={2}
-                        >
-                          Expected Output *
-                        </Text>
-                        <Textarea
+                        <p style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4 }}>Will be saved as {index}.txt</p>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={labelStyle}>Expected Output *</label>
+                        <textarea
+                          className="input w-full"
                           value={testCase.expectedOutput}
-                          onChange={(e) =>
-                            handleTestCaseChange(
-                              index,
-                              "expectedOutput",
-                              e.target.value,
-                            )
-                          }
+                          onChange={(e) => handleTestCaseChange(index, "expectedOutput", e.target.value)}
                           placeholder="Enter expected output..."
-                          minH="120px"
-                          fontFamily="monospace"
-                          fontSize="sm"
+                          style={{ minHeight: 120, fontFamily: "monospace", fontSize: 13, resize: "vertical" }}
                         />
-                        <Text fontSize="xs" color="gray.600" mt={1}>
-                          Will be saved as {index}.txt
-                        </Text>
-                      </Box>
-                    </HStack>
-                  </Card.Root>
+                        <p style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4 }}>Will be saved as {index}.txt</p>
+                      </div>
+                    </div>
+                  </div>
                 ))}
 
-                <Button
-                  onClick={addTestCase}
-                  colorScheme="purple"
-                  size="md"
-                  variant="outline"
-                  gap={2}
-                  w="full"
-                >
-                  <Plus size={20} />
-                  Add Test Case
-                </Button>
-              </VStack>
-            </Box>
+                <button className="btn btn-ghost w-full" style={{ border: "1px dashed var(--border-accent)", color: "var(--primary)" }} onClick={addTestCase}>
+                  <Plus size={20} /> Add Test Case
+                </button>
+              </div>
+            </div>
 
             {/* Submit */}
-            <HStack justify="flex-end" pt={6} borderTopWidth="1px">
+            <div className="flex items-center justify-end gap-3" style={{ paddingTop: 24, borderTop: "1px solid var(--border-subtle)" }}>
               {hasInactiveTags && (
-                <Text fontSize="sm" color="orange.500">
-                  <AlertTriangle
-                    size={14}
-                    style={{ display: "inline", marginRight: 4 }}
-                  />
-                  Remove disabled tags before saving
-                </Text>
+                <span style={{ fontSize: 13, color: "#f97316", display: "flex", alignItems: "center", gap: 4 }}>
+                  <AlertTriangle size={14} /> Remove disabled tags before saving
+                </span>
               )}
-              <Button
+              <button
+                className="btn btn-primary"
+                style={{ fontSize: 15, padding: "10px 24px" }}
                 onClick={handleSubmit}
-                colorScheme="purple"
-                size="lg"
-                isLoading={loading}
-                loadingText={id ? "Updating..." : "Creating..."}
-                isDisabled={hasInactiveTags}
-                gap={2}
+                disabled={loading || hasInactiveTags}
               >
                 <Upload size={20} />
-                {id ? "Update Problem" : "Create Problem"}
-              </Button>
-            </HStack>
-          </VStack>
-        </Card.Root>
-      </Box>
-    </Box>
+                {loading ? (id ? "Updating..." : "Creating...") : (id ? "Update Problem" : "Create Problem")}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -1,56 +1,24 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  HStack,
-  VStack,
-  Input,
-  Button,
-  Spinner,
-  Textarea,
-  Badge,
-} from "@chakra-ui/react";
-import {
-  Trophy,
-  ArrowLeft,
-  Save,
-  Plus,
-  Trash2,
-  Search,
-  ChevronDown,
-  AlertTriangle,
-  Clock,
-  CalendarClock,
-  User,
+  Trophy, ArrowLeft, Save, Plus, Trash2, Search, ChevronDown, AlertTriangle, Clock, CalendarClock, User,
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
 import DateTimePicker from "../common/DateTimePicker";
+import SuggestiveSearch from "../common/SuggestiveSearch";
 
 // ─── Reusable field ────────────────────────────────────────────────────────────
 
 const Field = ({ label, required, children, hint }) => (
-  <VStack align="stretch" gap={1}>
-    <HStack gap={1}>
-      <Text fontSize="sm" fontWeight="600" color="gray.700">
-        {label}
-      </Text>
-      {required && (
-        <Text fontSize="sm" color="red.400">
-          *
-        </Text>
-      )}
-    </HStack>
+  <div className="flex flex-col gap-1">
+    <div className="flex items-center gap-1">
+      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{label}</span>
+      {required && <span style={{ fontSize: 13, color: "var(--red-wa)" }}>*</span>}
+    </div>
     {children}
-    {hint && (
-      <Text fontSize="xs" color="gray.400">
-        {hint}
-      </Text>
-    )}
-  </VStack>
+    {hint && <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{hint}</span>}
+  </div>
 );
 
 // ─── Problem picker dropdown ───────────────────────────────────────────────────
@@ -62,364 +30,166 @@ const ProblemPicker = ({ selectedProblems, onChange }) => {
 
   useEffect(() => {
     ApiService.getAllProblems({ limit: 200, offset: 0 })
-      .then((r) => {
-        if (r.statusCode === 200) setAllProblems(r.data.content ?? []);
-      })
+      .then((r) => { if (r.statusCode === 200) setAllProblems(r.data.content ?? []); })
       .catch(console.error);
   }, []);
 
   const selectedIds = selectedProblems.map((p) => p.problemId);
-  const available = allProblems.filter(
-    (p) =>
-      !selectedIds.includes(p.id) &&
-      p.title.toLowerCase().includes(search.toLowerCase()),
-  );
+  const available = allProblems.filter((p) => !selectedIds.includes(p.id) && p.title.toLowerCase().includes(search.toLowerCase()));
 
   const add = (problem) => {
-    onChange([
-      ...selectedProblems,
-      {
-        problemId: problem.id,
-        problemTitle: problem.title,
-        problemOrder: selectedProblems.length + 1,
-        points: problem.point ?? 100,
-      },
-    ]);
-    setSearch("");
-    setOpen(false);
+    onChange([...selectedProblems, { problemId: problem.id, problemTitle: problem.title, problemOrder: selectedProblems.length + 1, points: problem.point ?? 100 }]);
+    setSearch(""); setOpen(false);
   };
 
-  const remove = (problemId) =>
-    onChange(
-      selectedProblems
-        .filter((p) => p.problemId !== problemId)
-        .map((p, i) => ({ ...p, problemOrder: i + 1 })),
-    );
+  const remove = (problemId) => onChange(selectedProblems.filter((p) => p.problemId !== problemId).map((p, i) => ({ ...p, problemOrder: i + 1 })));
 
-  const updatePoints = (problemId, points) =>
-    onChange(
-      selectedProblems.map((p) =>
-        p.problemId === problemId
-          ? { ...p, points: parseInt(points) || 0 }
-          : p,
-      ),
-    );
+  const updatePoints = (problemId, points) => onChange(selectedProblems.map((p) => p.problemId === problemId ? { ...p, points: parseInt(points) || 0 } : p));
 
   return (
-    <VStack align="stretch" gap={3}>
-      {/* Selected problems list */}
+    <div className="flex flex-col gap-3">
       {selectedProblems.length > 0 && (
-        <Box
-          border="1px solid"
-          borderColor="gray.200"
-          borderRadius="lg"
-          overflow="hidden"
-        >
+        <div style={{ border: "1px solid var(--border-default)", borderRadius: 10, overflow: "hidden" }}>
           {selectedProblems.map((p, idx) => (
-            <HStack
+            <div
               key={p.problemId}
-              px={4}
-              py={3}
-              justify="space-between"
-              borderBottomWidth={idx < selectedProblems.length - 1 ? "1px" : 0}
-              borderColor="gray.100"
-              bg={idx % 2 === 0 ? "white" : "gray.50"}
+              className="flex items-center justify-between"
+              style={{ padding: "10px 16px", borderBottom: idx < selectedProblems.length - 1 ? "1px solid var(--border-subtle)" : 0, background: idx % 2 === 0 ? "var(--bg-base)" : "var(--bg-raised)" }}
             >
-              <HStack gap={3}>
-                <Box
-                  w={6}
-                  h={6}
-                  borderRadius="full"
-                  bg="purple.100"
-                  color="purple.700"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  fontSize="xs"
-                  fontWeight="700"
-                >
+              <div className="flex items-center gap-3">
+                <div style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--primary-subtle)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>
                   {String.fromCharCode(64 + p.problemOrder)}
-                </Box>
-                <Text fontSize="sm" fontWeight="600" color="gray.800">
-                  {p.problemTitle}
-                </Text>
-              </HStack>
-              <HStack gap={3}>
-                <HStack gap={1}>
-                  <Text fontSize="xs" color="gray.500">
-                    pts:
-                  </Text>
-                  <Input
-                    type="number"
-                    size="xs"
-                    w="70px"
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{p.problemTitle}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>pts:</span>
+                  <input
+                    type="number" className="input"
+                    style={{ width: 70, textAlign: "center", padding: "2px 6px", fontSize: 12 }}
                     value={p.points}
                     onChange={(e) => updatePoints(p.problemId, e.target.value)}
                     min={0}
-                    textAlign="center"
                   />
-                </HStack>
-                <Box
-                  as="button"
-                  type="button"
-                  p={1}
-                  borderRadius="md"
-                  color="red.400"
-                  _hover={{ bg: "red.50" }}
-                  onClick={() => remove(p.problemId)}
-                >
+                </div>
+                <button type="button" style={{ background: "none", border: "none", cursor: "pointer", padding: 4, borderRadius: 6, color: "var(--red-wa)" }} onClick={() => remove(p.problemId)}>
                   <Trash2 size={14} />
-                </Box>
-              </HStack>
-            </HStack>
+                </button>
+              </div>
+            </div>
           ))}
-        </Box>
+        </div>
       )}
 
-      {/* Add problem dropdown */}
-      <Box position="relative" display="inline-block">
-        <Box
-          as="button"
+      <div style={{ position: "relative", display: "inline-block" }}>
+        <button
           type="button"
-          display="inline-flex"
-          alignItems="center"
-          gap={2}
-          px={4}
-          py={2}
-          borderRadius="lg"
-          border="1.5px dashed"
-          borderColor={open ? "purple.400" : "gray.300"}
-          bg="white"
-          color={open ? "purple.600" : "gray.500"}
-          fontSize="sm"
-          fontWeight="500"
-          cursor="pointer"
-          _hover={{ borderColor: "purple.400", color: "purple.600" }}
           onClick={() => setOpen((v) => !v)}
-          style={{ outline: "none" }}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 10,
+            border: `1.5px dashed ${open ? "var(--primary-bright)" : "var(--border-default)"}`,
+            background: "var(--bg-base)", color: open ? "var(--primary)" : "var(--text-secondary)", fontSize: 13, fontWeight: 500, cursor: "pointer",
+          }}
         >
-          <Plus size={14} />
-          Add Problem
-          <ChevronDown
-            size={14}
-            style={{
-              transform: open ? "rotate(180deg)" : "none",
-              transition: "transform 0.15s",
-            }}
-          />
-        </Box>
+          <Plus size={14} /> Add Problem
+          <ChevronDown size={14} style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
+        </button>
 
         {open && (
-          <Box
-            position="absolute"
-            top="calc(100% + 6px)"
-            left={0}
-            zIndex={50}
-            bg="white"
-            border="1px solid"
-            borderColor="gray.200"
-            borderRadius="lg"
-            boxShadow="xl"
-            w="320px"
-            maxH="280px"
-            overflowY="auto"
-          >
-            <Box
-              p={2}
-              borderBottomWidth="1px"
-              borderColor="gray.100"
-              position="sticky"
-              top={0}
-              bg="white"
-            >
-              <HStack gap={2}>
-                <Search size={14} color="#9CA3AF" />
-                <Input
-                  size="sm"
-                  placeholder="Search problems..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  autoFocus
-                  border="none"
-                  _focus={{ boxShadow: "none" }}
-                />
-              </HStack>
-            </Box>
+          <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 50, background: "var(--bg-base)", border: "1px solid var(--border-default)", borderRadius: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.1)", width: 320, maxHeight: 280, overflowY: "auto" }}>
+            <div style={{ borderBottom: "1px solid var(--border-default)", position: "sticky", top: 0, background: "var(--bg-base)" }}>
+              <SuggestiveSearch
+                value={search}
+                onChange={(val) => setSearch(val)}
+                suggestions={["Search problems...", "Find by title"]}
+                style={{ width: "100%" }}
+              />
+            </div>
             {available.length === 0 ? (
-              <Box px={4} py={3}>
-                <Text fontSize="xs" color="gray.400">
-                  No problems available
-                </Text>
-              </Box>
+              <div style={{ padding: "10px 16px" }}><span style={{ fontSize: 11, color: "var(--text-muted)" }}>No problems available</span></div>
             ) : (
               available.slice(0, 30).map((problem) => (
-                <Box
-                  key={problem.id}
-                  px={4}
-                  py={2}
-                  cursor="pointer"
-                  _hover={{ bg: "purple.50" }}
-                  onClick={() => add(problem)}
-                >
-                  <Text fontSize="sm" color="gray.700" fontWeight="500">
-                    {problem.title}
-                  </Text>
-                  <Text fontSize="xs" color="gray.400">
-                    {problem.point ?? 0} pts · {problem.problemDifficulty ?? "—"}
-                  </Text>
-                </Box>
+                <div key={problem.id} style={{ padding: "8px 16px", cursor: "pointer" }} onClick={() => add(problem)}>
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>{problem.title}</p>
+                  <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted)" }}>{problem.point ?? 0} pts · {problem.problemDifficulty ?? "—"}</p>
+                </div>
               ))
             )}
-          </Box>
+          </div>
         )}
-      </Box>
-    </VStack>
+      </div>
+    </div>
   );
 };
 
 // ─── Main form ─────────────────────────────────────────────────────────────────
 
-const EMPTY_FORM = {
-  name: "",
-  description: "",
-  startTime: "",
-  endTime: "",
-  registrationStart: "",
-  maxParticipant: "20",
-  isPublic: true,
-  isRated: true,
-  contestStyle: "ICPC",
-  problems: [],
-};
+const EMPTY_FORM = { name: "", description: "", startTime: "", endTime: "", registrationStart: "", maxParticipant: "20", isPublic: true, isRated: true, contestStyle: "ICPC", problems: [] };
 
-// Format a LocalDateTime string from Java into the DateTimePicker format (YYYY-MM-DDTHH:mm:ss)
-const toPickerDate = (isoStr) => {
-  if (!isoStr) return "";
-  // Ensure seconds are present
-  const base = isoStr.slice(0, 19);
-  return base.length === 16 ? base + ":00" : base;
-};
-
-// Format DateTimePicker value into ISO string for the API
-const toIsoString = (val) => {
-  if (!val) return null;
-  return val.length === 16 ? val + ":00" : val;
-};
-
-// ─── Schedule helpers ──────────────────────────────────────────────────────────
-
-const fmtShort = (iso) => {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (isNaN(d)) return null;
-  return d.toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
-};
+const toPickerDate = (isoStr) => { if (!isoStr) return ""; const base = isoStr.slice(0, 19); return base.length === 16 ? base + ":00" : base; };
+const toIsoString = (val) => { if (!val) return null; return val.length === 16 ? val + ":00" : val; };
+const fmtShort = (iso) => { if (!iso) return null; const d = new Date(iso); if (isNaN(d)) return null; return d.toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); };
 
 const getScheduleWarnings = (form) => {
   const w = [];
   const s = form.startTime ? new Date(form.startTime).getTime() : null;
-  const e = form.endTime   ? new Date(form.endTime).getTime()   : null;
+  const e = form.endTime ? new Date(form.endTime).getTime() : null;
   const ro = form.registrationStart ? new Date(form.registrationStart).getTime() : null;
-
-  if (s && e && e <= s)
-    w.push({ type: "error", msg: "End time must be after start time" });
-  if (s && e && e > s) {
-    const mins = (e - s) / 60000;
-    if (mins < 5) w.push({ type: "warn", msg: "Contest duration is under 5 minutes" });
-  }
-  if (ro && s && ro >= s)
-    w.push({ type: "warn", msg: "Registration opens after contest starts" });
-  if (s && s < Date.now())
-    w.push({ type: "warn", msg: "Start time is in the past" });
-
+  if (s && e && e <= s) w.push({ type: "error", msg: "End time must be after start time" });
+  if (s && e && e > s) { const mins = (e - s) / 60000; if (mins < 5) w.push({ type: "warn", msg: "Contest duration is under 5 minutes" }); }
+  if (ro && s && ro >= s) w.push({ type: "warn", msg: "Registration opens after contest starts" });
+  if (s && s < Date.now()) w.push({ type: "warn", msg: "Start time is in the past" });
   return w;
 };
 
-// ─── Visual timeline (vertical) ────────────────────────────────────────────────
-
 const EVENTS = [
-  { key: "registrationStart", label: "Registration Opens", color: "#3b82f6", bg: "#eff6ff" },
-  { key: "startTime",         label: "Registration Closes / Contest Starts", color: "#16a34a", bg: "#f0fdf4" },
-  { key: "endTime",           label: "Contest Ends",       color: "#ef4444", bg: "#fef2f2" },
+  { key: "registrationStart", label: "Registration Opens", color: "var(--blue-ce)", bg: "var(--blue-subtle)" },
+  { key: "startTime", label: "Registration Closes / Contest Starts", color: "var(--green-ac)", bg: "var(--green-subtle)" },
+  { key: "endTime", label: "Contest Ends", color: "var(--red-wa)", bg: "var(--red-subtle)" },
 ];
 
 const ScheduleTimeline = ({ form }) => {
   const events = useMemo(() => {
-    const list = EVENTS
-      .filter((ev) => form[ev.key])
-      .map((ev) => ({ ...ev, time: new Date(form[ev.key]).getTime() }));
+    const list = EVENTS.filter((ev) => form[ev.key]).map((ev) => ({ ...ev, time: new Date(form[ev.key]).getTime() }));
     list.sort((a, b) => a.time - b.time);
     return list;
   }, [form.startTime, form.endTime, form.registrationStart]);
 
-  const warnings = useMemo(() => getScheduleWarnings(form), [
-    form.startTime, form.endTime, form.registrationStart,
-  ]);
-
+  const warnings = useMemo(() => getScheduleWarnings(form), [form.startTime, form.endTime, form.registrationStart]);
   const hasStart = Boolean(form.startTime);
-  const hasEnd   = Boolean(form.endTime);
+  const hasEnd = Boolean(form.endTime);
 
   if (events.length === 0) {
     return (
-      <Box bg="gray.50" borderRadius="lg" border="1px dashed" borderColor="gray.200" p={4} textAlign="center">
-        <CalendarClock size={24} color="#d1d5db" style={{ margin: "0 auto 8px" }} />
-        <Text fontSize="xs" color="gray.400" fontWeight="500">
-          Set times to see the schedule
-        </Text>
-      </Box>
+      <div style={{ background: "var(--bg-raised)", borderRadius: 10, border: "1px dashed var(--border-default)", padding: 16, textAlign: "center" }}>
+        <CalendarClock size={24} color="var(--border-default)" style={{ margin: "0 auto 8px" }} />
+        <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>Set times to see the schedule</span>
+      </div>
     );
   }
 
   return (
-    <VStack align="stretch" gap={3}>
-      {/* Vertical timeline */}
-      <Box bg="gray.50" borderRadius="lg" p={4} border="1px solid" borderColor="gray.100">
-        <Text fontSize="10px" fontWeight="700" color="gray.400" letterSpacing="0.05em" mb={3}>
-          SCHEDULE ORDER
-        </Text>
-        <VStack align="stretch" gap={0}>
+    <div className="flex flex-col gap-3">
+      <div style={{ background: "var(--bg-raised)", borderRadius: 10, padding: 16, border: "1px solid var(--border-subtle)" }}>
+        <p style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.05em", margin: "0 0 12px" }}>SCHEDULE ORDER</p>
+        <div className="flex flex-col">
           {events.map((ev, i) => (
-            <HStack key={ev.key} gap={3} position="relative">
-              {/* Vertical line + dot */}
-              <VStack gap={0} align="center" w="16px" flexShrink={0}>
-                {i > 0 && (
-                  <Box w="2px" h="8px" bg="gray.200" />
-                )}
-                <Box
-                  w="10px"
-                  h="10px"
-                  borderRadius="full"
-                  bg={ev.color}
-                  border="2px solid white"
-                  boxShadow="0 0 0 1px " 
-                  flexShrink={0}
-                />
-                {i < events.length - 1 && (
-                  <Box w="2px" flex={1} minH="8px" bg="gray.200" />
-                )}
-              </VStack>
-              {/* Label + time */}
-              <Box
-                flex={1}
-                bg={ev.bg}
-                borderRadius="md"
-                px={3}
-                py={1.5}
-                mb={1}
-              >
-                <Text fontSize="10px" fontWeight="700" color={ev.color}>
-                  {ev.label}
-                </Text>
-                <Text fontSize="10px" color="gray.500">
-                  {fmtShort(new Date(ev.time).toISOString())}
-                </Text>
-              </Box>
-            </HStack>
+            <div key={ev.key} className="flex items-center gap-3" style={{ position: "relative" }}>
+              <div className="flex flex-col items-center" style={{ width: 16, flexShrink: 0 }}>
+                {i > 0 && <div style={{ width: 2, height: 8, background: "var(--border-default)" }} />}
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: ev.color, border: "2px solid var(--bg-void)", flexShrink: 0 }} />
+                {i < events.length - 1 && <div style={{ width: 2, flex: 1, minHeight: 8, background: "var(--border-default)" }} />}
+              </div>
+              <div style={{ flex: 1, background: ev.bg, borderRadius: 6, padding: "6px 12px", marginBottom: 4 }}>
+                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: ev.color }}>{ev.label}</p>
+                <p style={{ margin: 0, fontSize: 10, color: "var(--text-secondary)" }}>{fmtShort(new Date(ev.time).toISOString())}</p>
+              </div>
+            </div>
           ))}
-        </VStack>
-      </Box>
+        </div>
+      </div>
 
-      {/* Duration badge */}
       {hasStart && hasEnd && (() => {
         const s = new Date(form.startTime).getTime();
         const e = new Date(form.endTime).getTime();
@@ -428,43 +198,47 @@ const ScheduleTimeline = ({ form }) => {
         const h = Math.floor(diff / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
         return (
-          <HStack gap={1} justify="center">
-            <Clock size={12} color="#9ca3af" />
-            <Text fontSize="xs" color="gray.500" fontWeight="600">
-              Duration: {h > 0 ? `${h}h ` : ""}{m}m
-            </Text>
-          </HStack>
+          <div className="flex items-center justify-center gap-1">
+            <Clock size={12} color="var(--text-muted)" />
+            <span style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 600 }}>Duration: {h > 0 ? `${h}h ` : ""}{m}m</span>
+          </div>
         );
       })()}
 
-      {/* Warnings */}
       {warnings.length > 0 && (
-        <VStack align="stretch" gap={1}>
+        <div className="flex flex-col gap-1">
           {warnings.map((w, i) => (
-            <HStack
+            <div
               key={i}
-              gap={2}
-              px={3}
-              py={2}
-              bg={w.type === "error" ? "red.50" : "orange.50"}
-              borderRadius="md"
-              border="1px solid"
-              borderColor={w.type === "error" ? "red.200" : "orange.200"}
+              className="flex items-center gap-2"
+              style={{ padding: "6px 12px", background: w.type === "error" ? "var(--red-subtle)" : "var(--amber-subtle)", borderRadius: 8, border: `1px solid ${w.type === "error" ? "var(--red-subtle)" : "var(--amber-subtle)"}` }}
             >
-              <AlertTriangle size={14} color={w.type === "error" ? "#ef4444" : "#f59e0b"} />
-              <Text fontSize="xs" fontWeight="600" color={w.type === "error" ? "red.600" : "orange.600"}>
-                {w.msg}
-              </Text>
-            </HStack>
+              <AlertTriangle size={14} color={w.type === "error" ? "var(--red-wa)" : "var(--amber-tle)"} />
+              <span style={{ fontSize: 11, fontWeight: 600, color: w.type === "error" ? "var(--red-wa)" : "var(--amber-tle)" }}>{w.msg}</span>
+            </div>
           ))}
-        </VStack>
+        </div>
       )}
-    </VStack>
+    </div>
   );
 };
 
+// Toggle button helper
+const Toggle = ({ value, onChange, label }) => (
+  <div className="flex items-center gap-3">
+    <button
+      type="button"
+      onClick={() => onChange(!value)}
+      style={{ width: 40, height: 24, borderRadius: 12, background: value ? "var(--primary)" : "var(--border-default)", position: "relative", border: "none", cursor: "pointer", transition: "background 0.2s" }}
+    >
+      <span style={{ position: "absolute", top: 2, left: value ? 18 : 2, width: 20, height: 20, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)", transition: "left 0.2s" }} />
+    </button>
+    <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{label}</span>
+  </div>
+);
+
 const AdminContestFormPage = () => {
-  const { id } = useParams(); // defined on /admin/contests/edit/:id
+  const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const { showMessage } = useToast();
@@ -481,32 +255,11 @@ const AdminContestFormPage = () => {
       .then((resp) => {
         if (resp.statusCode === 200) {
           const c = resp.data;
-          setForm({
-            name: c.name ?? "",
-            description: c.description ?? "",
-            startTime: toPickerDate(c.startTime),
-            endTime: toPickerDate(c.endTime),
-            registrationStart: toPickerDate(c.registrationStart),
-            maxParticipant: c.maxParticipant ?? "",
-            isPublic: c.isPublic ?? true,
-            isRated: c.isRated ?? false,
-            contestStyle: c.contestStyle ?? "ICPC",
-            problems: (c.problems ?? []).map((p) => ({
-              problemId: p.problemId,
-              problemTitle: p.problemTitle,
-              problemOrder: p.problemOrder,
-              points: p.points ?? 100,
-            })),
-          });
-          setCreatorInfo({
-            id: c.creatorId || null,
-            username: c.creatorUsername || null,
-          });
+          setForm({ name: c.name ?? "", description: c.description ?? "", startTime: toPickerDate(c.startTime), endTime: toPickerDate(c.endTime), registrationStart: toPickerDate(c.registrationStart), maxParticipant: c.maxParticipant ?? "", isPublic: c.isPublic ?? true, isRated: c.isRated ?? false, contestStyle: c.contestStyle ?? "ICPC", problems: (c.problems ?? []).map((p) => ({ problemId: p.problemId, problemTitle: p.problemTitle, problemOrder: p.problemOrder, points: p.points ?? 100 })) });
+          setCreatorInfo({ id: c.creatorId || null, username: c.creatorUsername || null });
         }
       })
-      .catch((err) =>
-        showMessage(err.response?.data?.message || err.message, "error"),
-      )
+      .catch((err) => showMessage(err.response?.data?.message || err.message, "error"))
       .finally(() => setLoading(false));
   }, [id, isEdit]);
 
@@ -515,360 +268,161 @@ const AdminContestFormPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) return showMessage("Contest name is required", "error");
-    if (!form.startTime)   return showMessage("Start time is required", "error");
-    if (!form.endTime)     return showMessage("End time is required", "error");
-
-    // Validate time ordering
+    if (!form.startTime) return showMessage("Start time is required", "error");
+    if (!form.endTime) return showMessage("End time is required", "error");
     const sMs = new Date(form.startTime).getTime();
     const eMs = new Date(form.endTime).getTime();
     if (eMs <= sMs) return showMessage("End time must be after start time", "error");
-
     const payload = {
-      name: form.name.trim(),
-      description: form.description.trim() || null,
-      startTime: toIsoString(form.startTime),
-      endTime: toIsoString(form.endTime),
-      registrationStart: toIsoString(form.registrationStart),
-      registrationEnd: toIsoString(form.startTime),  // auto-close registration at contest start
+      name: form.name.trim(), description: form.description.trim() || null,
+      startTime: toIsoString(form.startTime), endTime: toIsoString(form.endTime),
+      registrationStart: toIsoString(form.registrationStart), registrationEnd: toIsoString(form.startTime),
       maxParticipant: form.maxParticipant ? parseInt(form.maxParticipant) : null,
-      isPublic: form.isPublic,
-      isRated: form.isRated,
-      contestStyle: "ICPC",
-      problems: form.problems.map((p) => ({
-        problemId: p.problemId,
-        problemOrder: p.problemOrder,
-        points: p.points,
-      })),
+      isPublic: form.isPublic, isRated: form.isRated, contestStyle: "ICPC",
+      problems: form.problems.map((p) => ({ problemId: p.problemId, problemOrder: p.problemOrder, points: p.points })),
     };
-
     try {
       setSaving(true);
-      const resp = isEdit
-        ? await ApiService.updateContest(id, payload)
-        : await ApiService.createContest(payload);
-
+      const resp = isEdit ? await ApiService.updateContest(id, payload) : await ApiService.createContest(payload);
       if (resp.statusCode === 200 || resp.statusCode === 201) {
-        showMessage(
-          isEdit ? "Contest updated successfully" : "Contest created successfully",
-          "success",
-        );
+        showMessage(isEdit ? "Contest updated successfully" : "Contest created successfully", "success");
         navigate("/admin/contests");
       }
-    } catch (err) {
-      showMessage(err.response?.data?.message || err.message, "error");
-    } finally {
-      setSaving(false);
-    }
+    } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); } finally { setSaving(false); }
   };
 
   if (loading) {
     return (
-      <Box minH="100vh" bg="gray.50" display="flex" alignItems="center" justifyContent="center">
-        <VStack gap={3}>
-          <Spinner size="xl" color="purple.500" thickness="4px" />
-          <Text color="gray.500">Loading contest...</Text>
-        </VStack>
-      </Box>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="flex flex-col items-center gap-3">
+          <div className="spinner" />
+          <span className="text-muted">Loading contest...</span>
+        </div>
+      </div>
     );
   }
 
-  return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Container maxW="container.md">
-        <VStack align="stretch" gap={6}>
-          {/* Header */}
-          <HStack justify="space-between">
-            <HStack gap={3}>
-              <Box
-                as="button"
-                p={2}
-                borderRadius="lg"
-                color="gray.500"
-                _hover={{ bg: "gray.100", color: "gray.800" }}
-                onClick={() => navigate("/admin/contests")}
-              >
-                <ArrowLeft size={20} />
-              </Box>
-              <HStack gap={2}>
-                <Trophy size={24} color="#7c3aed" />
-                <Heading size="xl" color="gray.800">
-                  {isEdit ? "Edit Contest" : "Create Contest"}
-                </Heading>
-              </HStack>
-            </HStack>
-            <Badge colorScheme="purple" px={3} py={1} borderRadius="full" fontSize="sm">
-              ICPC Style
-            </Badge>
-          </HStack>
+  const sectionLabel = { fontSize: 11, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.1em", marginBottom: 16, display: "block" };
 
-          {/* Creator info badge (edit mode only) */}
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+      <div className="page-container" style={{ maxWidth: 800 }}>
+        <div className="flex flex-col gap-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button className="btn btn-ghost btn-sm" onClick={() => navigate("/admin/contests")} style={{ padding: 8 }}>
+                <ArrowLeft size={20} />
+              </button>
+              <div className="flex items-center gap-2">
+                <Trophy size={24} color="var(--primary)" />
+                <h2 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>
+                  {isEdit ? "Edit Contest" : "Create Contest"}
+                </h2>
+              </div>
+            </div>
+            <span style={{ display: "inline-block", padding: "4px 12px", borderRadius: 9999, fontSize: 13, fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
+              ICPC Style
+            </span>
+          </div>
+
+          {/* Creator info (edit mode) */}
           {isEdit && creatorInfo.id && (
-            <HStack
-              gap={2}
-              bg="purple.50"
-              border="1px solid"
-              borderColor="purple.200"
-              borderRadius="lg"
-              px={4}
-              py={2}
-              alignSelf="flex-start"
-            >
-              <User size={16} color="#7c3aed" />
-              <Text fontSize="sm" color="gray.600">
-                Creator:
-              </Text>
-              <Badge
-                colorScheme="purple"
-                variant="subtle"
-                fontSize="sm"
-                px={2}
-                py={0.5}
-                borderRadius="md"
-              >
-                {creatorInfo.username}
-              </Badge>
-              <Text fontSize="xs" color="gray.400">
-                (ID: {creatorInfo.id})
-              </Text>
-            </HStack>
+            <div className="flex items-center gap-2" style={{ background: "var(--primary-subtle)", border: "1px solid var(--border-accent)", borderRadius: 10, padding: "8px 16px", alignSelf: "flex-start" }}>
+              <User size={16} color="var(--primary)" />
+              <span style={{ fontSize: 13, color: "var(--text-primary)" }}>Creator:</span>
+              <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 13, background: "var(--primary-subtle)", color: "var(--primary)", fontWeight: 500 }}>{creatorInfo.username}</span>
+              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>(ID: {creatorInfo.id})</span>
+            </div>
           )}
 
           {/* Form */}
-          <Box
-            as="form"
-            onSubmit={handleSubmit}
-            bg="white"
-            borderRadius="xl"
-            boxShadow="md"
-            p={8}
-          >
-            <VStack align="stretch" gap={6}>
-              {/* Basic Info Section */}
-              <Box>
-                <Text
-                  fontSize="xs"
-                  fontWeight="700"
-                  color="gray.400"
-                  letterSpacing="0.1em"
-                  mb={4}
-                >
-                  BASIC INFO
-                </Text>
-                <VStack align="stretch" gap={4}>
-                  <Field label="Contest Name" required>
-                    <Input
-                      placeholder="e.g. TDTU Spring Cup 2025"
-                      value={form.name}
-                      onChange={(e) => set("name", e.target.value)}
-                      focusBorderColor="purple.400"
-                    />
-                  </Field>
-
-                  <Field label="Description">
-                    <Textarea
-                      placeholder="Describe the contest, rules, prizes..."
-                      value={form.description}
-                      onChange={(e) => set("description", e.target.value)}
-                      rows={4}
-                      focusBorderColor="purple.400"
-                      resize="vertical"
-                    />
-                  </Field>
-                </VStack>
-              </Box>
-
-              <Box borderTopWidth="1px" borderColor="gray.100" />
-
-               {/* Schedule Section */}
-              <Box>
-                <Text
-                  fontSize="xs"
-                  fontWeight="700"
-                  color="gray.400"
-                  letterSpacing="0.1em"
-                  mb={4}
-                >
-                  SCHEDULE
-                </Text>
-                <HStack align="flex-start" gap={6}>
-                  {/* Left: time pickers */}
-                  <VStack align="stretch" gap={4} flex={1}>
-                    <Field
-                      label="Registration Opens"
-                      hint="Leave blank to allow registration any time. Registration closes automatically when the contest starts."
-                    >
-                      <DateTimePicker
-                        value={form.registrationStart}
-                        onChange={(v) => set("registrationStart", v)}
-                        placeholder="Pick opening date & time"
+          <form onSubmit={handleSubmit}>
+            <div className="card" style={{ padding: 32 }}>
+              <div className="flex flex-col gap-6">
+                {/* Basic Info */}
+                <div>
+                  <span style={sectionLabel}>BASIC INFO</span>
+                  <div className="flex flex-col gap-4">
+                    <Field label="Contest Name" required>
+                      <input className="input w-full" placeholder="e.g. TDTU Spring Cup 2025" value={form.name} onChange={(e) => set("name", e.target.value)} />
+                    </Field>
+                    <Field label="Description">
+                      <textarea
+                        className="input w-full"
+                        placeholder="Describe the contest, rules, prizes..."
+                        value={form.description}
+                        onChange={(e) => set("description", e.target.value)}
+                        rows={4}
+                        style={{ resize: "vertical" }}
                       />
                     </Field>
+                  </div>
+                </div>
 
-                    <HStack gap={4} align="flex-start">
-                      <Field label="Start Time" required>
-                        <DateTimePicker
-                          value={form.startTime}
-                          onChange={(v) => set("startTime", v)}
-                          placeholder="Pick start date & time"
-                        />
+                <div style={{ borderTop: "1px solid var(--border-subtle)" }} />
+
+                {/* Schedule */}
+                <div>
+                  <span style={sectionLabel}>SCHEDULE</span>
+                  <div className="flex gap-6" style={{ alignItems: "flex-start" }}>
+                    <div className="flex flex-col gap-4" style={{ flex: 1 }}>
+                      <Field label="Registration Opens" hint="Leave blank to allow registration any time. Closes automatically when contest starts.">
+                        <DateTimePicker value={form.registrationStart} onChange={(v) => set("registrationStart", v)} placeholder="Pick opening date & time" />
                       </Field>
-                      <Field label="End Time" required>
-                        <DateTimePicker
-                          value={form.endTime}
-                          onChange={(v) => set("endTime", v)}
-                          placeholder="Pick end date & time"
-                        />
-                      </Field>
-                    </HStack>
-                  </VStack>
+                      <div className="flex gap-4">
+                        <Field label="Start Time" required>
+                          <DateTimePicker value={form.startTime} onChange={(v) => set("startTime", v)} placeholder="Pick start date & time" />
+                        </Field>
+                        <Field label="End Time" required>
+                          <DateTimePicker value={form.endTime} onChange={(v) => set("endTime", v)} placeholder="Pick end date & time" />
+                        </Field>
+                      </div>
+                    </div>
+                    <div style={{ width: 280, minWidth: 240, flexShrink: 0, paddingTop: 24 }}>
+                      <ScheduleTimeline form={form} />
+                    </div>
+                  </div>
+                </div>
 
-                  {/* Right: visual timeline */}
-                  <Box w="280px" minW="240px" flexShrink={0} pt={6}>
-                    <ScheduleTimeline form={form} />
-                  </Box>
-                </HStack>
-              </Box>
+                <div style={{ borderTop: "1px solid var(--border-subtle)" }} />
 
-              <Box borderTopWidth="1px" borderColor="gray.100" />
+                {/* Settings */}
+                <div>
+                  <span style={sectionLabel}>SETTINGS</span>
+                  <div className="flex flex-col gap-4">
+                    <Field label="Max Participants" hint="Leave blank for unlimited">
+                      <input type="number" className="input" placeholder="e.g. 500" value={form.maxParticipant} onChange={(e) => set("maxParticipant", e.target.value)} min={1} style={{ width: 200 }} />
+                    </Field>
+                    <div className="flex gap-6">
+                      <Toggle value={form.isPublic} onChange={(v) => set("isPublic", v)} label="Public contest" />
+                      <Toggle value={form.isRated} onChange={(v) => set("isRated", v)} label="Rated contest" />
+                    </div>
+                  </div>
+                </div>
 
-              {/* Settings Section */}
-              <Box>
-                <Text
-                  fontSize="xs"
-                  fontWeight="700"
-                  color="gray.400"
-                  letterSpacing="0.1em"
-                  mb={4}
-                >
-                  SETTINGS
-                </Text>
-                <VStack align="stretch" gap={4}>
-                  <Field
-                    label="Max Participants"
-                    hint="Leave blank for unlimited"
-                  >
-                    <Input
-                      type="number"
-                      placeholder="e.g. 500"
-                      value={form.maxParticipant}
-                      onChange={(e) => set("maxParticipant", e.target.value)}
-                      min={1}
-                      focusBorderColor="purple.400"
-                      w="200px"
-                    />
-                  </Field>
+                <div style={{ borderTop: "1px solid var(--border-subtle)" }} />
 
-                  <HStack gap={6}>
-                    {/* Public toggle */}
-                    <HStack gap={3}>
-                      <Box
-                        as="button"
-                        type="button"
-                        w={10}
-                        h={6}
-                        borderRadius="full"
-                        bg={form.isPublic ? "purple.500" : "gray.300"}
-                        position="relative"
-                        transition="background 0.2s"
-                        onClick={() => set("isPublic", !form.isPublic)}
-                        style={{ outline: "none" }}
-                      >
-                        <Box
-                          position="absolute"
-                          top="2px"
-                          left={form.isPublic ? "18px" : "2px"}
-                          w="20px"
-                          h="20px"
-                          borderRadius="full"
-                          bg="white"
-                          boxShadow="sm"
-                          transition="left 0.2s"
-                        />
-                      </Box>
-                      <Text fontSize="sm" color="gray.700">
-                        Public contest
-                      </Text>
-                    </HStack>
+                {/* Problems */}
+                <div>
+                  <span style={sectionLabel}>PROBLEMS ({form.problems.length})</span>
+                  <ProblemPicker selectedProblems={form.problems} onChange={(p) => set("problems", p)} />
+                </div>
 
-                    {/* Rated toggle */}
-                    <HStack gap={3}>
-                      <Box
-                        as="button"
-                        type="button"
-                        w={10}
-                        h={6}
-                        borderRadius="full"
-                        bg={form.isRated ? "purple.500" : "gray.300"}
-                        position="relative"
-                        transition="background 0.2s"
-                        onClick={() => set("isRated", !form.isRated)}
-                        style={{ outline: "none" }}
-                      >
-                        <Box
-                          position="absolute"
-                          top="2px"
-                          left={form.isRated ? "18px" : "2px"}
-                          w="20px"
-                          h="20px"
-                          borderRadius="full"
-                          bg="white"
-                          boxShadow="sm"
-                          transition="left 0.2s"
-                        />
-                      </Box>
-                      <Text fontSize="sm" color="gray.700">
-                        Rated contest
-                      </Text>
-                    </HStack>
-                  </HStack>
-                </VStack>
-              </Box>
-
-              <Box borderTopWidth="1px" borderColor="gray.100" />
-
-              {/* Problems Section */}
-              <Box>
-                <HStack justify="space-between" mb={4}>
-                  <Text
-                    fontSize="xs"
-                    fontWeight="700"
-                    color="gray.400"
-                    letterSpacing="0.1em"
-                  >
-                    PROBLEMS ({form.problems.length})
-                  </Text>
-                </HStack>
-                <ProblemPicker
-                  selectedProblems={form.problems}
-                  onChange={(p) => set("problems", p)}
-                />
-              </Box>
-
-              {/* Actions */}
-              <HStack justify="flex-end" gap={3} pt={2}>
-                <Button
-                  variant="ghost"
-                  colorScheme="gray"
-                  onClick={() => navigate("/admin/contests")}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  colorScheme="purple"
-                  loading={saving}
-                  loadingText="Saving..."
-                  gap={2}
-                >
-                  <Save size={16} />
-                  {isEdit ? "Save Changes" : "Create Contest"}
-                </Button>
-              </HStack>
-            </VStack>
-          </Box>
-        </VStack>
-      </Container>
-    </Box>
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-3" style={{ paddingTop: 8 }}>
+                  <button type="button" className="btn btn-ghost" onClick={() => navigate("/admin/contests")}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" disabled={saving}>
+                    {saving ? <div className="spinner" style={{ width: 16, height: 16 }} /> : <Save size={16} />}
+                    {saving ? "Saving..." : isEdit ? "Save Changes" : "Create Contest"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 };
 

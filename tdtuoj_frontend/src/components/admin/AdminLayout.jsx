@@ -3,12 +3,10 @@ import AdminSidebar from "./AdminSideBar";
 
 const AdminLayout = () => {
   return (
-    <div className="admin-layout">
+    <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-base)" }}>
       <AdminSidebar />
-      <div className="admin-main">
-        <div className="admin-content">
-          <Outlet />
-        </div>
+      <div style={{ flex: 1, minWidth: 0, overflowX: "hidden" }}>
+        <Outlet />
       </div>
     </div>
   );

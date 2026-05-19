@@ -1,21 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  Badge,
-  HStack,
-  VStack,
-  Spinner,
-  Input,
-  Button,
-  SimpleGrid,
-} from "@chakra-ui/react";
-import {
   Building2,
-  Search,
   Users,
   Globe,
   Lock,
@@ -24,123 +10,98 @@ import {
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
+import SuggestiveSearch from "../common/SuggestiveSearch";
+import FilterPills from "../common/FilterPills";
 
 // ─── Organization Card ────────────────────────────────────────────────────────
 
 const OrgCard = ({ org, onEnter }) => {
+  const accentColor =
+    org.myRole === "OWNER" ? "#f59e0b" : org.myRole ? "#22c55e" : "var(--primary)";
+  const roleBg =
+    org.myRole === "OWNER"
+      ? "#fffbeb"
+      : org.myRole === "ADMIN"
+      ? "#eff6ff"
+      : "#f0fdf4";
+  const roleColor =
+    org.myRole === "OWNER"
+      ? "#d97706"
+      : org.myRole === "ADMIN"
+      ? "#3b82f6"
+      : "#16a34a";
+
   return (
-    <Box
-      bg="white"
-      borderRadius="xl"
-      border="1px solid"
-      borderColor="gray.200"
-      boxShadow="sm"
-      overflow="hidden"
-      transition="all 0.2s"
-      _hover={{
-        boxShadow: "md",
-        borderColor: "purple.200",
-        transform: "translateY(-2px)",
-      }}
-      cursor="pointer"
+    <div
+      className="card"
+      style={{ cursor: "pointer", overflow: "hidden", display: "flex", flexDirection: "column", transition: "all 0.2s" }}
       onClick={() => onEnter(org.slug)}
-      display="flex"
-      flexDirection="column"
     >
       {/* Accent bar */}
-      <Box
-        h="4px"
-        bg={
-          org.myRole === "OWNER"
-            ? "#f59e0b"
-            : org.myRole
-              ? "#22c55e"
-              : "#7c3aed"
-        }
-      />
+      <div style={{ height: 4, background: accentColor }} />
 
-      <Box p={5} flex={1} display="flex" flexDirection="column" gap={3}>
+      <div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
         {/* Header row */}
-        <HStack justify="space-between" align="flex-start">
-          <HStack gap={1}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
             {org.isPublic ? (
               <Globe size={13} color="#9ca3af" />
             ) : (
               <Lock size={13} color="#9ca3af" />
             )}
-            <Text fontSize="xs" color="gray.400">
-              {org.isPublic ? "Public" : "Private"}
-            </Text>
-          </HStack>
+            <span className="text-xs text-muted">{org.isPublic ? "Public" : "Private"}</span>
+          </div>
           {org.myRole && (
-            <Box
-              display="inline-flex"
-              alignItems="center"
-              px={2}
-              py="2px"
-              borderRadius="full"
-              fontSize="xs"
-              fontWeight="600"
-              bg={
-                org.myRole === "OWNER"
-                  ? "#fffbeb"
-                  : org.myRole === "ADMIN"
-                    ? "#eff6ff"
-                    : "#f0fdf4"
-              }
-              color={
-                org.myRole === "OWNER"
-                  ? "#d97706"
-                  : org.myRole === "ADMIN"
-                    ? "#3b82f6"
-                    : "#16a34a"
-              }
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "2px 8px",
+                borderRadius: 9999,
+                fontSize: 11,
+                fontWeight: 600,
+                background: roleBg,
+                color: roleColor,
+              }}
             >
               {org.myRole.charAt(0) + org.myRole.slice(1).toLowerCase()}
-            </Box>
+            </span>
           )}
-        </HStack>
+        </div>
 
         {/* Name */}
-        <Box>
-          <Text fontSize="lg" fontWeight="800" color="gray.900" lineClamp={2}>
+        <div>
+          <p style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)", marginBottom: 4, lineHeight: 1.3 }}>
             {org.name}
-          </Text>
+          </p>
           {org.about && (
-            <Text fontSize="sm" color="gray.500" mt={1} lineClamp={2}>
+            <p className="text-sm text-muted" style={{ marginTop: 4 }}>
               {org.about}
-            </Text>
+            </p>
           )}
-        </Box>
+        </div>
 
         {/* Meta */}
-        <HStack gap={1} mt="auto">
+        <div className="flex items-center gap-2" style={{ marginTop: "auto" }}>
           <Users size={13} color="#9ca3af" />
-          <Text fontSize="xs" color="gray.500">
-            {org.totalMembers ?? 0}{" "}
-            {(org.totalMembers ?? 0) === 1 ? "member" : "members"}
-          </Text>
-        </HStack>
-      </Box>
+          <span className="text-xs text-muted">
+            {org.totalMembers ?? 0} {(org.totalMembers ?? 0) === 1 ? "member" : "members"}
+          </span>
+        </div>
+      </div>
 
       {/* Footer */}
-      <HStack
-        px={5}
-        py={3}
-        bg="gray.50"
-        borderTopWidth="1px"
-        borderColor="gray.100"
-        justify="space-between"
+      <div
+        className="flex items-center justify-between"
+        style={{ padding: "10px 20px", background: "var(--bg-raised)", borderTop: "1px solid var(--border-subtle)" }}
       >
-        <Text fontSize="xs" color="gray.400">
-          by {org.creatorUsername ?? "—"}
-        </Text>
-        <HStack gap={1} color="purple.600" fontSize="xs" fontWeight="600">
-          <Text>Detail</Text>
+        <span className="text-xs text-muted">by {org.creatorUsername ?? "—"}</span>
+        <div className="flex items-center gap-1" style={{ color: "var(--primary)", fontSize: 12, fontWeight: 600 }}>
+          <span>Detail</span>
           <ChevronRight size={13} />
-        </HStack>
-      </HStack>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -156,7 +117,7 @@ const OrganizationPage = () => {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const [tab, setTab] = useState("ALL"); // ALL | MY
+  const [tab, setTab] = useState("ALL");
   const SIZE = 12;
 
   const isAuthenticated = ApiService.isAuthenticated();
@@ -168,11 +129,7 @@ const OrganizationPage = () => {
       if (tab === "MY" && isAuthenticated) {
         resp = await ApiService.getMyOrganizations({ page, size: SIZE });
       } else {
-        resp = await ApiService.getOrganizations({
-          page,
-          size: SIZE,
-          search,
-        });
+        resp = await ApiService.getOrganizations({ page, size: SIZE, search });
       }
       if (resp.statusCode === 200) {
         const data = resp.data;
@@ -193,7 +150,6 @@ const OrganizationPage = () => {
     fetchOrgs();
   }, [page, tab]);
 
-  // Debounced search
   useEffect(() => {
     if (tab === "ALL") {
       const timer = setTimeout(() => {
@@ -207,150 +163,97 @@ const OrganizationPage = () => {
   const TABS = isAuthenticated ? ["ALL", "MY"] : ["ALL"];
 
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Container maxW="container.xl">
-        <VStack align="stretch" gap={6}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+      <div className="page-container">
+        <div className="flex flex-col gap-6">
           {/* Hero Header */}
-          <Box
+          <div
             style={{
-              background:
-                "linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #6366f1 100%)",
+              background: "linear-gradient(135deg, var(--navy) 0%, var(--navy-bright) 100%)",
+              borderRadius: 16,
+              padding: "40px",
+              color: "white",
+              position: "relative",
+              overflow: "hidden",
             }}
-            borderRadius="2xl"
-            p={10}
-            color="white"
-            position="relative"
-            overflow="hidden"
           >
-            <Box
-              position="absolute"
-              inset={0}
-              opacity={0.1}
-              backgroundImage="radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)"
-              backgroundSize="60px 60px"
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                opacity: 0.1,
+                backgroundImage:
+                  "radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)",
+                backgroundSize: "60px 60px",
+              }}
             />
-            <VStack align="flex-start" gap={2} position="relative">
-              <HStack gap={3}>
+            <div className="flex flex-col gap-3" style={{ position: "relative" }}>
+              <div className="flex items-center gap-3">
                 <Building2 size={36} />
-                <Heading size="3xl" fontWeight="900">
-                  Organizations
-                </Heading>
-              </HStack>
-              <Text fontSize="lg" opacity={0.85}>
+                <h2 style={{ fontSize: 32, fontWeight: 900, margin: 0 }}>Organizations</h2>
+              </div>
+              <p style={{ fontSize: 16, opacity: 0.85, margin: 0 }}>
                 Browse and join study groups, teams, and communities
-              </Text>
-              <HStack gap={2} mt={1}>
-                <Badge
-                  bg="whiteAlpha.200"
-                  color="white"
-                  px={3}
-                  py={1}
-                  borderRadius="full"
-                  fontSize="sm"
+              </p>
+              <div>
+                <span
+                  style={{
+                    display: "inline-block",
+                    background: "rgba(255,255,255,0.2)",
+                    color: "white",
+                    padding: "4px 12px",
+                    borderRadius: 9999,
+                    fontSize: 13,
+                  }}
                 >
                   {totalElements} organizations
-                </Badge>
-              </HStack>
-            </VStack>
-          </Box>
+                </span>
+              </div>
+            </div>
+          </div>
 
           {/* Action Bar */}
-          <HStack gap={3} align="stretch" flexWrap="wrap">
+          <div className="flex items-center gap-3 flex-wrap">
             {/* Search */}
-            <Box
-              flex={1}
-              bg="white"
-              px={4}
-              py={3}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px solid"
-              borderColor="gray.200"
-              minW="200px"
-            >
-              <Box position="relative">
-                <Box
-                  position="absolute"
-                  left={2}
-                  top="50%"
-                  transform="translateY(-50%)"
-                >
-                  <Search size={18} color="#9CA3AF" />
-                </Box>
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search organizations..."
-                  pl={8}
-                  border="none"
-                  _focus={{ boxShadow: "none" }}
-                  fontSize="sm"
-                />
-              </Box>
-            </Box>
+            <SuggestiveSearch
+              value={search}
+              onChange={(val) => setSearch(val)}
+              suggestions={[
+                "Search organizations...",
+                "Find your class group",
+                "Look up a department",
+              ]}
+              style={{ width: "100%", maxWidth: 320 }}
+            />
 
-            {/* Tabs */}
-            <HStack
-              bg="white"
-              px={3}
-              py={2}
-              borderRadius="lg"
-              boxShadow="sm"
-              border="1px solid"
-              borderColor="gray.200"
-              gap={1}
-            >
-              {TABS.map((t) => (
-                <Box
-                  key={t}
-                  as="button"
-                  px={3}
-                  py={1}
-                  borderRadius="md"
-                  fontSize="sm"
-                  fontWeight="600"
-                  bg={tab === t ? "purple.600" : "transparent"}
-                  color={tab === t ? "white" : "gray.500"}
-                  transition="all 0.15s"
-                  _hover={
-                    tab !== t
-                      ? { bg: "purple.50", color: "purple.600" }
-                      : {}
-                  }
-                  onClick={() => {
-                    setTab(t);
-                    setPage(0);
-                  }}
-                  style={{ outline: "none" }}
-                >
-                  {t === "ALL" ? "All" : "My Orgs"}
-                </Box>
-              ))}
-            </HStack>
-          </HStack>
+            <FilterPills
+              value={tab}
+              onChange={(v) => { setTab(v); setPage(0); }}
+              options={[
+                { value: "ALL", label: "All" },
+                { value: "MY",  label: "My Orgs" },
+              ]}
+            />
+          </div>
 
           {/* Content */}
           {loading ? (
-            <VStack gap={4} py={20}>
-              <Spinner size="xl" color="purple.500" thickness="4px" />
-              <Text color="gray.500">Loading organizations...</Text>
-            </VStack>
+            <div className="flex flex-col items-center gap-4" style={{ padding: "80px 0" }}>
+              <div className="spinner" />
+              <span className="text-muted">Loading organizations...</span>
+            </div>
           ) : organizations.length === 0 ? (
-            <VStack gap={3} py={16}>
-              <Building2 size={48} color="#D1D5DB" />
-              <Text color="gray.400" fontSize="lg" fontWeight="600">
-                {tab === "MY"
-                  ? "You haven't joined any organizations yet"
-                  : "No organizations found"}
-              </Text>
-              <Text color="gray.400" fontSize="sm">
-                {tab === "MY"
-                  ? "Browse organizations and join one"
-                  : "Try adjusting your search"}
-              </Text>
-            </VStack>
+            <div className="flex flex-col items-center gap-3" style={{ padding: "64px 0" }}>
+              <Building2 size={48} color="var(--border-default)" />
+              <p style={{ fontSize: 16, fontWeight: 600, color: "var(--text-muted)", margin: 0 }}>
+                {tab === "MY" ? "You haven't joined any organizations yet" : "No organizations found"}
+              </p>
+              <p className="text-sm text-muted" style={{ margin: 0 }}>
+                {tab === "MY" ? "Browse organizations and join one" : "Try adjusting your search"}
+              </p>
+            </div>
           ) : (
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={5}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
               {organizations.map((org) => (
                 <OrgCard
                   key={org.id}
@@ -358,42 +261,34 @@ const OrganizationPage = () => {
                   onEnter={(slug) => navigate(`/organizations/${slug}`)}
                 />
               ))}
-            </SimpleGrid>
+            </div>
           )}
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <HStack justify="center" gap={2}>
-              <Button
-                size="sm"
-                variant="ghost"
-                colorScheme="purple"
+            <div className="flex items-center justify-center gap-2">
+              <button
+                className="btn btn-ghost btn-sm"
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
               >
-                <ChevronLeft size={16} />
-                Previous
-              </Button>
-              <Text fontSize="sm" color="gray.500" px={2}>
+                <ChevronLeft size={16} /> Previous
+              </button>
+              <span className="text-sm text-muted" style={{ padding: "0 8px" }}>
                 Page {page + 1} of {totalPages}
-              </Text>
-              <Button
-                size="sm"
-                variant="ghost"
-                colorScheme="purple"
-                onClick={() =>
-                  setPage((p) => Math.min(totalPages - 1, p + 1))
-                }
+              </span>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={page >= totalPages - 1}
               >
-                Next
-                <ChevronRight size={16} />
-              </Button>
-            </HStack>
+                Next <ChevronRight size={16} />
+              </button>
+            </div>
           )}
-        </VStack>
-      </Container>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
 

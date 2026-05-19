@@ -7,7 +7,6 @@ import {
   useContext,
 } from "react";
 import ReactDOM from "react-dom";
-import { Alert, CloseButton, Progress } from "@chakra-ui/react";
 
 const injectKeyframes = () => {
   if (document.getElementById("toast-keyframes")) return;
@@ -22,14 +21,70 @@ const injectKeyframes = () => {
       from { transform: translateX(0);                 opacity: 1; }
       to   { transform: translateX(calc(100% + 40px)); opacity: 0; }
     }
+    @keyframes toast-progress {
+      from { width: 100%; }
+      to   { width: 0%; }
+    }
   `;
   document.head.appendChild(style);
 };
 
-// ─── Context ────────────────────────────────────────────────────────────────
+// ─── Context ─────────────────────────────────────────────────────────────────
 const ToastContext = createContext(null);
 
-// ─── Inner toast UI (rendered via portal into document.body) ────────────────
+// ─── Icon map ─────────────────────────────────────────────────────────────────
+const ICONS = {
+  success: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+  error: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  ),
+  warning: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  ),
+  info: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+    </svg>
+  ),
+};
+
+const TYPE_STYLES = {
+  success: {
+    borderColor: "var(--green-ac)",
+    iconColor: "var(--green-ac)",
+    progressColor: "var(--green-ac)",
+    label: "Success",
+  },
+  error: {
+    borderColor: "var(--red-wa)",
+    iconColor: "var(--red-wa)",
+    progressColor: "var(--red-wa)",
+    label: "Error",
+  },
+  warning: {
+    borderColor: "var(--amber-tle)",
+    iconColor: "var(--amber-tle)",
+    progressColor: "var(--amber-tle)",
+    label: "Warning",
+  },
+  info: {
+    borderColor: "var(--cyan)",
+    iconColor: "var(--cyan)",
+    progressColor: "var(--cyan)",
+    label: "Info",
+  },
+};
+
+// ─── Inner toast UI (rendered via portal into document.body) ─────────────────
 const ToastMessage = ({ status, message, onDismiss }) => {
   const [progress, setProgress] = useState(100);
   const [isExiting, setIsExiting] = useState(false);
@@ -81,73 +136,130 @@ const ToastMessage = ({ status, message, onDismiss }) => {
 
   if (!isVisible && !isExiting) return null;
 
+  const styles = TYPE_STYLES[status] ?? TYPE_STYLES.info;
+
   return ReactDOM.createPortal(
     <div
       style={{
         position: "fixed",
-        top: "80px",
+        bottom: "24px",
         right: "20px",
         zIndex: 9999,
         minWidth: "320px",
+        maxWidth: "420px",
         overflow: "hidden",
+        animation: isExiting
+          ? "toast-slide-out 350ms cubic-bezier(0.4, 0, 1, 1) forwards"
+          : "toast-slide-in 350ms cubic-bezier(0, 0, 0.2, 1) forwards",
+        willChange: "transform, opacity",
       }}
     >
       <div
         style={{
-          animation: isExiting
-            ? "toast-slide-out 350ms cubic-bezier(0.4, 0, 1, 1) forwards"
-            : "toast-slide-in 350ms cubic-bezier(0, 0, 0.2, 1) forwards",
-          willChange: "transform, opacity",
+          background: "var(--bg-overlay)",
+          border: `1px solid var(--border-default)`,
+          borderLeft: `3px solid ${styles.borderColor}`,
+          borderRadius: "var(--radius-md)",
+          boxShadow: "var(--shadow-lg)",
+          overflow: "hidden",
+          position: "relative",
         }}
       >
-        <Alert.Root
-          status={status}
-          variant="subtle"
-          borderRadius="lg"
-          shadow="lg"
+        {/* Content row */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "12px",
+            padding: "14px 40px 14px 14px",
+          }}
         >
-          <Alert.Indicator />
-          <Alert.Content>
-            <Alert.Title fontWeight="bold">
-              {status === "error" && "Error"}
-              {status === "success" && "Success"}
-              {status === "warning" && "Warning"}
-              {status === "info" && "Info"}
-            </Alert.Title>
-            <Alert.Description>{message}</Alert.Description>
-            <Progress.Root
-              mt={2}
-              height="4px"
-              value={progress}
-              max={100}
-              colorPalette={
-                status === "error"
-                  ? "red"
-                  : status === "success"
-                    ? "green"
-                    : "blue"
-              }
-              borderBottomRadius="lg"
+          {/* Icon */}
+          <span style={{ color: styles.iconColor, flexShrink: 0, marginTop: "1px" }}>
+            {ICONS[status] ?? ICONS.info}
+          </span>
+
+          {/* Text */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: "var(--text-sm)",
+                fontWeight: 600,
+                color: "var(--text-primary)",
+                fontFamily: "var(--font-body)",
+                marginBottom: "2px",
+              }}
             >
-              <Progress.Track>
-                <Progress.Range />
-              </Progress.Track>
-            </Progress.Root>
-          </Alert.Content>
-          <CloseButton
-            onClick={handleDismiss}
-            position="absolute"
-            right="8px"
-            top="8px"
+              {styles.label}
+            </div>
+            <div
+              style={{
+                fontSize: "var(--text-sm)",
+                color: "var(--text-secondary)",
+                fontFamily: "var(--font-body)",
+                lineHeight: "var(--leading-normal)",
+                wordBreak: "break-word",
+              }}
+            >
+              {message}
+            </div>
+          </div>
+        </div>
+
+        {/* Close button */}
+        <button
+          onClick={handleDismiss}
+          style={{
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            width: "22px",
+            height: "22px",
+            borderRadius: "var(--radius-sm)",
+            border: "1px solid var(--border-default)",
+            background: "transparent",
+            color: "var(--text-muted)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "14px",
+            lineHeight: 1,
+            transition: "var(--transition-fast)",
+          }}
+          aria-label="Dismiss"
+        >
+          ✕
+        </button>
+
+        {/* Progress bar */}
+        <div
+          style={{
+            height: "3px",
+            background: "var(--border-subtle)",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              height: "100%",
+              width: `${progress}%`,
+              background: styles.progressColor,
+              transition: "width 100ms linear",
+            }}
           />
-        </Alert.Root>
+        </div>
       </div>
     </div>,
     document.body,
   );
 };
 
-// ─── Provider (place once at app root) ──────────────────────────────────────
+// ─── Provider (place once at app root) ───────────────────────────────────────
 export const ToastProvider = ({ children }) => {
   const [toast, setToast] = useState({
     message: null,
@@ -178,7 +290,7 @@ export const ToastProvider = ({ children }) => {
   );
 };
 
-// ─── Hook (use anywhere inside ToastProvider) ────────────────────────────────
+// ─── Hook (use anywhere inside ToastProvider) ─────────────────────────────────
 export const useToast = () => {
   const context = useContext(ToastContext);
   if (!context) throw new Error("useToast must be used inside <ToastProvider>");

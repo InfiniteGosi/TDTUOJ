@@ -1,51 +1,67 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  Badge,
-  HStack,
-  VStack,
-  Spinner,
-  Input,
-  Button,
-} from "@chakra-ui/react";
-import { Table } from "@chakra-ui/react";
-import {
-  Building2,
-  Plus,
-  Eye,
-  Trash2,
-  Pencil,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Users,
-  Globe,
-  Lock,
-  X,
-  Copy,
-  Check,
-  Calendar,
-  Save,
+  Building2, Plus, Eye, Trash2, Edit, Search,
+  Users, Globe, Lock, X, Copy, Check, Calendar, Save,
 } from "lucide-react";
+import Pagination from "../common/Pagination";
 import ApiService from "../../services/ApiService";
+import SuggestiveSearch from "../common/SuggestiveSearch";
 import { useConfirmDialog } from "../common/ConfirmDialog";
 import { useToast } from "../common/ToastMessage";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 const fmt = (dt) => {
   if (!dt) return "—";
-  return new Date(dt).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return new Date(dt).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+};
+
+// ─── Modal base ───────────────────────────────────────────────────────────────
+
+const ModalOverlay = ({ onClose, children }) => (
+  <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={onClose} />
+    <div className="card" style={{ position: "relative", padding: 24, width: 480, maxWidth: "90vw", zIndex: 1, boxShadow: "0 25px 60px rgba(0,0,0,0.2)" }}>
+      {children}
+    </div>
+  </div>
+);
+
+// ─── OrgForm (shared between Create and Edit) ─────────────────────────────────
+
+const OrgForm = ({ name, setName, about, setAbout, code, setCode, isPublic, setIsPublic }) => {
+  const visBtn = (active, label, Icon, val) => (
+    <button
+      style={{ flex: 1, padding: 8, borderRadius: 8, border: `2px solid ${active ? "var(--primary)" : "var(--border-default)"}`, background: active ? "var(--primary-subtle)" : "var(--bg-base)", color: active ? "var(--primary)" : "var(--text-secondary)", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
+      onClick={() => setIsPublic(val)}
+    >
+      <Icon size={14} /> {label}
+    </button>
+  );
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="form-group">
+        <label className="form-label">Name *</label>
+        <input className="input w-full" value={name} onChange={(e) => setName(e.target.value)} placeholder="Organization name" />
+      </div>
+      <div className="form-group">
+        <label className="form-label">About</label>
+        <input className="input w-full" value={about} onChange={(e) => setAbout(e.target.value)} placeholder="Short description (optional)" />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Join Code</label>
+        <input className="input w-full" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Auto-generated if empty" maxLength={10} style={{ fontFamily: "monospace", letterSpacing: "0.1em" }} />
+        <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--text-muted)" }}>Leave blank to auto-generate a 6-character code</p>
+      </div>
+      <div className="form-group">
+        <label className="form-label">Visibility</label>
+        <div className="flex gap-2">
+          {visBtn(isPublic, "Public", Globe, true)}
+          {visBtn(!isPublic, "Private", Lock, false)}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // ─── Create Modal ─────────────────────────────────────────────────────────────
@@ -66,162 +82,26 @@ const CreateModal = ({ isOpen, onClose, onCreate }) => {
     if (code.trim()) data.code = code.trim();
     await onCreate(data);
     setLoading(false);
-    setName("");
-    setAbout("");
-    setCode("");
-    setIsPublic(true);
+    setName(""); setAbout(""); setCode(""); setIsPublic(true);
   };
 
   return (
-    <Box
-      position="fixed"
-      inset={0}
-      zIndex={1000}
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-    >
-      <Box
-        position="absolute"
-        inset={0}
-        bg="blackAlpha.500"
-        onClick={onClose}
-      />
-
-      <Box
-        position="relative"
-        bg="white"
-        borderRadius="xl"
-        boxShadow="2xl"
-        p={6}
-        w="480px"
-        maxW="90vw"
-      >
-        <HStack justify="space-between" mb={4}>
-          <HStack gap={2}>
-            <Building2 size={20} color="#7c3aed" />
-            <Heading size="md" color="gray.800">
-              Create Organization
-            </Heading>
-          </HStack>
-          <Box
-            as="button"
-            p={1}
-            borderRadius="md"
-            _hover={{ bg: "gray.100" }}
-            onClick={onClose}
-          >
-            <X size={18} color="#9ca3af" />
-          </Box>
-        </HStack>
-
-        <VStack gap={3} align="stretch">
-          <Box>
-            <Text fontSize="sm" fontWeight="600" color="gray.700" mb={1}>
-              Name *
-            </Text>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Organization name"
-            />
-          </Box>
-
-          <Box>
-            <Text fontSize="sm" fontWeight="600" color="gray.700" mb={1}>
-              About
-            </Text>
-            <Input
-              value={about}
-              onChange={(e) => setAbout(e.target.value)}
-              placeholder="Short description (optional)"
-            />
-          </Box>
-
-          <Box>
-            <Text fontSize="sm" fontWeight="600" color="gray.700" mb={1}>
-              Join Code
-            </Text>
-            <Input
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="Auto-generated if empty"
-              maxLength={10}
-              fontFamily="mono"
-              letterSpacing="0.1em"
-            />
-            <Text fontSize="xs" color="gray.400" mt={1}>
-              Leave blank to auto-generate a 6-character code
-            </Text>
-          </Box>
-
-          <Box>
-            <Text fontSize="sm" fontWeight="600" color="gray.700" mb={1}>
-              Visibility
-            </Text>
-            <HStack gap={2}>
-              <Box
-                as="button"
-                flex={1}
-                py={2}
-                borderRadius="lg"
-                border="2px solid"
-                borderColor={isPublic ? "purple.500" : "gray.200"}
-                bg={isPublic ? "purple.50" : "white"}
-                color={isPublic ? "purple.700" : "gray.500"}
-                fontSize="sm"
-                fontWeight="600"
-                onClick={() => setIsPublic(true)}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                gap={1}
-              >
-                <Globe size={14} /> Public
-              </Box>
-              <Box
-                as="button"
-                flex={1}
-                py={2}
-                borderRadius="lg"
-                border="2px solid"
-                borderColor={!isPublic ? "purple.500" : "gray.200"}
-                bg={!isPublic ? "purple.50" : "white"}
-                color={!isPublic ? "purple.700" : "gray.500"}
-                fontSize="sm"
-                fontWeight="600"
-                onClick={() => setIsPublic(false)}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                gap={1}
-              >
-                <Lock size={14} /> Private
-              </Box>
-            </HStack>
-          </Box>
-        </VStack>
-
-        <HStack gap={2} mt={5}>
-          <Button
-            flex={1}
-            variant="outline"
-            colorScheme="gray"
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            flex={1}
-            colorScheme="purple"
-            onClick={handleCreate}
-            disabled={!name.trim() || loading}
-          >
-            {loading ? <Spinner size="sm" /> : "Create"}
-          </Button>
-        </HStack>
-      </Box>
-    </Box>
+    <ModalOverlay onClose={onClose}>
+      <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+        <div className="flex items-center gap-2">
+          <Building2 size={20} color="var(--primary)" />
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Create Organization</h3>
+        </div>
+        <button style={{ background: "none", border: "none", cursor: "pointer" }} onClick={onClose}><X size={18} color="var(--text-muted)" /></button>
+      </div>
+      <OrgForm name={name} setName={setName} about={about} setAbout={setAbout} code={code} setCode={setCode} isPublic={isPublic} setIsPublic={setIsPublic} />
+      <div className="flex gap-2" style={{ marginTop: 20 }}>
+        <button className="btn btn-ghost flex-1" onClick={onClose}>Cancel</button>
+        <button className="btn btn-primary flex-1" onClick={handleCreate} disabled={!name.trim() || loading}>
+          {loading ? <div className="spinner" style={{ width: 16, height: 16 }} /> : "Create"}
+        </button>
+      </div>
+    </ModalOverlay>
   );
 };
 
@@ -235,12 +115,7 @@ const EditModal = ({ isOpen, onClose, org, onSave }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (org) {
-      setName(org.name || "");
-      setAbout(org.about || "");
-      setCode(org.code || "");
-      setIsPublic(org.isPublic ?? true);
-    }
+    if (org) { setName(org.name || ""); setAbout(org.about || ""); setCode(org.code || ""); setIsPublic(org.isPublic ?? true); }
   }, [org]);
 
   if (!isOpen) return null;
@@ -255,149 +130,22 @@ const EditModal = ({ isOpen, onClose, org, onSave }) => {
   };
 
   return (
-    <Box
-      position="fixed"
-      inset={0}
-      zIndex={1000}
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-    >
-      <Box
-        position="absolute"
-        inset={0}
-        bg="blackAlpha.500"
-        onClick={onClose}
-      />
-      <Box
-        position="relative"
-        bg="white"
-        borderRadius="xl"
-        boxShadow="2xl"
-        p={6}
-        w="480px"
-        maxW="90vw"
-      >
-        <HStack justify="space-between" mb={4}>
-          <HStack gap={2}>
-            <Pencil size={20} color="#7c3aed" />
-            <Heading size="md" color="gray.800">
-              Edit Organization
-            </Heading>
-          </HStack>
-          <Box
-            as="button"
-            p={1}
-            borderRadius="md"
-            _hover={{ bg: "gray.100" }}
-            onClick={onClose}
-          >
-            <X size={18} color="#9ca3af" />
-          </Box>
-        </HStack>
-
-        <VStack gap={3} align="stretch">
-          <Box>
-            <Text fontSize="sm" fontWeight="600" color="gray.700" mb={1}>
-              Name *
-            </Text>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Organization name"
-            />
-          </Box>
-          <Box>
-            <Text fontSize="sm" fontWeight="600" color="gray.700" mb={1}>
-              About
-            </Text>
-            <Input
-              value={about}
-              onChange={(e) => setAbout(e.target.value)}
-              placeholder="Short description"
-            />
-          </Box>
-          <Box>
-            <Text fontSize="sm" fontWeight="600" color="gray.700" mb={1}>
-              Join Code
-            </Text>
-            <Input
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="Current code"
-              maxLength={10}
-              fontFamily="mono"
-              letterSpacing="0.1em"
-            />
-          </Box>
-          <Box>
-            <Text fontSize="sm" fontWeight="600" color="gray.700" mb={1}>
-              Visibility
-            </Text>
-            <HStack gap={2}>
-              <Box
-                as="button"
-                flex={1}
-                py={2}
-                borderRadius="lg"
-                border="2px solid"
-                borderColor={isPublic ? "purple.500" : "gray.200"}
-                bg={isPublic ? "purple.50" : "white"}
-                color={isPublic ? "purple.700" : "gray.500"}
-                fontSize="sm"
-                fontWeight="600"
-                onClick={() => setIsPublic(true)}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                gap={1}
-              >
-                <Globe size={14} /> Public
-              </Box>
-              <Box
-                as="button"
-                flex={1}
-                py={2}
-                borderRadius="lg"
-                border="2px solid"
-                borderColor={!isPublic ? "purple.500" : "gray.200"}
-                bg={!isPublic ? "purple.50" : "white"}
-                color={!isPublic ? "purple.700" : "gray.500"}
-                fontSize="sm"
-                fontWeight="600"
-                onClick={() => setIsPublic(false)}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                gap={1}
-              >
-                <Lock size={14} /> Private
-              </Box>
-            </HStack>
-          </Box>
-        </VStack>
-
-        <HStack gap={2} mt={5}>
-          <Button
-            flex={1}
-            variant="outline"
-            colorScheme="gray"
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            flex={1}
-            colorScheme="purple"
-            onClick={handleSave}
-            disabled={!name.trim() || loading}
-            gap={1}
-          >
-            {loading ? <Spinner size="sm" /> : <><Save size={14} /> Save</>}
-          </Button>
-        </HStack>
-      </Box>
-    </Box>
+    <ModalOverlay onClose={onClose}>
+      <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+        <div className="flex items-center gap-2">
+          <Edit size={20} color="var(--primary)" />
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Edit Organization</h3>
+        </div>
+        <button style={{ background: "none", border: "none", cursor: "pointer" }} onClick={onClose}><X size={18} color="var(--text-muted)" /></button>
+      </div>
+      <OrgForm name={name} setName={setName} about={about} setAbout={setAbout} code={code} setCode={setCode} isPublic={isPublic} setIsPublic={setIsPublic} />
+      <div className="flex gap-2" style={{ marginTop: 20 }}>
+        <button className="btn btn-ghost flex-1" onClick={onClose}>Cancel</button>
+        <button className="btn btn-primary flex-1" onClick={handleSave} disabled={!name.trim() || loading}>
+          {loading ? <div className="spinner" style={{ width: 16, height: 16 }} /> : <><Save size={14} /> Save</>}
+        </button>
+      </div>
+    </ModalOverlay>
   );
 };
 
@@ -424,11 +172,7 @@ const AdminOrganizationPage = () => {
   const fetchOrgs = async (p = page) => {
     try {
       setLoading(true);
-      const resp = await ApiService.getOrganizations({
-        page: p,
-        size: SIZE,
-        search,
-      });
+      const resp = await ApiService.getOrganizations({ page: p, size: SIZE, search });
       if (resp.statusCode === 200) {
         const data = resp.data;
         const content = data.content ?? data;
@@ -437,54 +181,28 @@ const AdminOrganizationPage = () => {
         setTotalPages(pageInfo.totalPages ?? 1);
         setTotalElements(pageInfo.totalElements ?? content.length);
       }
-    } catch (err) {
-      showMessage(err.response?.data?.message || err.message, "error");
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); } finally { setLoading(false); }
   };
 
+  useEffect(() => { fetchOrgs(page); }, [page]);
   useEffect(() => {
-    fetchOrgs(page);
-  }, [page]);
-
-  // Debounced search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPage(0);
-      fetchOrgs(0);
-    }, 300);
+    const timer = setTimeout(() => { setPage(0); fetchOrgs(0); }, 300);
     return () => clearTimeout(timer);
   }, [search]);
 
   const handleDelete = (id, name) =>
-    showConfirm(
-      "Delete Organization",
-      `Are you sure you want to delete "${name}"? This cannot be undone.`,
-      async () => {
-        try {
-          const resp = await ApiService.deleteOrganization(id);
-          if (resp.statusCode === 200) {
-            showMessage("Organization deleted successfully", "success");
-            fetchOrgs(page);
-          }
-        } catch (err) {
-          showMessage(err.response?.data?.message || err.message, "error");
-        }
-      },
-    );
+    showConfirm("Delete Organization", `Are you sure you want to delete "${name}"? This cannot be undone.`, async () => {
+      try {
+        const resp = await ApiService.deleteOrganization(id);
+        if (resp.statusCode === 200) { showMessage("Organization deleted successfully", "success"); fetchOrgs(page); }
+      } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); }
+    });
 
   const handleCreate = async (data) => {
     try {
       const resp = await ApiService.createOrganization(data);
-      if (resp.statusCode === 201) {
-        showMessage("Organization created!", "success");
-        setCreateOpen(false);
-        fetchOrgs(page);
-      }
-    } catch (err) {
-      showMessage(err.response?.data?.message || err.message, "error");
-    }
+      if (resp.statusCode === 201) { showMessage("Organization created!", "success"); setCreateOpen(false); fetchOrgs(page); }
+    } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); }
   };
 
   const handleCopyCode = (code, id) => {
@@ -496,419 +214,159 @@ const AdminOrganizationPage = () => {
   const handleEdit = async (data) => {
     try {
       const resp = await ApiService.updateOrganization(editingOrg.id, data);
-      if (resp.statusCode === 200) {
-        showMessage("Organization updated!", "success");
-        setEditingOrg(null);
-        fetchOrgs(page);
-      }
-    } catch (err) {
-      showMessage(err.response?.data?.message || err.message, "error");
-    }
+      if (resp.statusCode === 200) { showMessage("Organization updated!", "success"); setEditingOrg(null); fetchOrgs(page); }
+    } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); }
   };
 
-  const filtered = organizations.filter((o) =>
-    o.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = organizations.filter((o) => o.name.toLowerCase().includes(search.toLowerCase()));
 
   if (loading && organizations.length === 0) {
     return (
-      <Box minH="100vh" bg="gray.50" py={8}>
-        <Container maxW="container.xl">
-          <VStack gap={4} py={20}>
-            <Spinner size="xl" color="purple.500" thickness="4px" />
-            <Text color="gray.600">Loading organizations...</Text>
-          </VStack>
-        </Container>
-      </Box>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+        <div className="page-container">
+          <div className="flex flex-col items-center gap-4" style={{ padding: "80px 0" }}>
+            <div className="spinner" />
+            <span className="text-muted">Loading organizations...</span>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box minH="100vh" bg="gray.50" py={8}>
-      <Container maxW="container.xl">
-        <VStack align="stretch" gap={5}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+      <div className="page-container">
+        <div className="flex flex-col gap-5">
           {/* Header */}
-          <HStack justify="space-between">
-            <HStack gap={3}>
-              <HStack gap={2}>
-                <Building2 size={28} color="#7c3aed" />
-                <Heading size="2xl" color="gray.800">
-                  Manage Organizations
-                </Heading>
-              </HStack>
-              <Badge
-                colorScheme="purple"
-                fontSize="md"
-                px={3}
-                py={1}
-                borderRadius="full"
-              >
-                {totalElements}{" "}
-                {totalElements === 1 ? "organization" : "organizations"}
-              </Badge>
-            </HStack>
-            <Button
-              onClick={() => setCreateOpen(true)}
-              colorScheme="purple"
-              size="md"
-              gap={2}
-            >
-              <Plus size={18} />
-              New Organization
-            </Button>
-          </HStack>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Building2 size={28} color="var(--primary)" />
+                <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Manage Organizations</h2>
+              </div>
+              <span style={{ display: "inline-block", padding: "3px 12px", borderRadius: 9999, fontSize: 13, fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
+                {totalElements} {totalElements === 1 ? "organization" : "organizations"}
+              </span>
+            </div>
+            <button className="btn btn-primary" onClick={() => setCreateOpen(true)}>
+              <Plus size={18} /> New Organization
+            </button>
+          </div>
 
           <ConfirmDialog />
 
           {/* Search */}
-          <Box
-            bg="white"
-            px={4}
-            py={3}
-            borderRadius="lg"
-            boxShadow="sm"
-            border="1px solid"
-            borderColor="gray.200"
-          >
-            <Box position="relative">
-              <Box
-                position="absolute"
-                left={2}
-                top="50%"
-                transform="translateY(-50%)"
-              >
-                <Search size={18} color="#9CA3AF" />
-              </Box>
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Filter by organization name..."
-                pl={8}
-                border="none"
-                _focus={{ boxShadow: "none" }}
-                fontSize="sm"
-              />
-            </Box>
-          </Box>
+          <SuggestiveSearch
+            value={search}
+            onChange={(val) => setSearch(val)}
+            suggestions={["Filter by organization name...", "Search organizations"]}
+            style={{ width: "100%", maxWidth: 320 }}
+          />
 
           {/* Table */}
-          <Box
-            bg="white"
-            borderRadius="xl"
-            boxShadow="md"
-            overflow="hidden"
-            position="relative"
-          >
+          <div className="card" style={{ overflow: "hidden", position: "relative" }}>
             {loading && (
-              <Box
-                position="absolute"
-                inset={0}
-                bg="whiteAlpha.700"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                zIndex={10}
-              >
-                <Spinner size="lg" color="purple.500" thickness="3px" />
-              </Box>
+              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+                <div className="spinner" />
+              </div>
             )}
 
-            <Table.Root variant="line" size="md">
-              <Table.Header bg="purple.50">
-                <Table.Row>
-                  <Table.ColumnHeader w="5%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      #
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="28%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Organization
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="15%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Code
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="10%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Visibility
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="10%" textAlign="center">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Members
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="15%">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Created
-                    </Text>
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader w="10%" textAlign="center">
-                    <Text fontWeight="bold" color="purple.700" fontSize="sm">
-                      Actions
-                    </Text>
-                  </Table.ColumnHeader>
-                </Table.Row>
-              </Table.Header>
-
-              <Table.Body>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th style={{ width: "5%" }}>#</th>
+                  <th style={{ width: "27%" }}>Organization</th>
+                  <th style={{ width: "13%" }}>Code</th>
+                  <th style={{ width: "10%" }}>Visibility</th>
+                  <th style={{ textAlign: "center", width: "9%" }}>Members</th>
+                  <th style={{ width: "13%" }}>Created</th>
+                  <th style={{ textAlign: "center", width: "13%" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                 {filtered.length > 0 ? (
                   filtered.map((org, idx) => (
-                    <Table.Row
-                      key={org.id}
-                      _hover={{ bg: "purple.50" }}
-                      transition="background 0.15s"
-                      bg={idx % 2 === 0 ? "white" : "gray.50"}
-                    >
-                      <Table.Cell>
-                        <Text fontSize="sm" fontWeight="600" color="gray.500">
-                          {org.id}
-                        </Text>
-                      </Table.Cell>
-
-                      <Table.Cell>
-                        <VStack align="start" gap={0}>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="700"
-                            color="gray.800"
-                          >
-                            {org.name}
-                          </Text>
-                          <Text fontSize="xs" color="gray.400">
-                            by {org.creatorUsername ?? "—"}
-                          </Text>
-                        </VStack>
-                      </Table.Cell>
-
-                      <Table.Cell>
+                    <tr key={org.id} style={{ background: idx % 2 === 0 ? "var(--bg-base)" : "var(--bg-raised)" }}>
+                      <td><span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{org.id}</span></td>
+                      <td>
+                        <div>
+                          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>{org.name}</p>
+                          <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted)" }}>by {org.creatorUsername ?? "—"}</p>
+                        </div>
+                      </td>
+                      <td>
                         {org.code ? (
-                          <HStack gap={1}>
-                            <Text
-                              fontSize="sm"
-                              fontWeight="700"
-                              color="purple.600"
-                              fontFamily="mono"
-                              letterSpacing="0.05em"
-                            >
-                              {org.code}
-                            </Text>
-                            <Box
-                              as="button"
-                              p={0.5}
-                              borderRadius="sm"
-                              _hover={{ bg: "purple.50" }}
-                              onClick={() => handleCopyCode(org.code, org.id)}
-                            >
-                              {copiedId === org.id ? (
-                                <Check size={12} color="#16a34a" />
-                              ) : (
-                                <Copy size={12} color="#9ca3af" />
-                              )}
-                            </Box>
-                          </HStack>
+                          <div className="flex items-center gap-1">
+                            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)", fontFamily: "monospace", letterSpacing: "0.05em" }}>{org.code}</span>
+                            <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2, borderRadius: 4 }} onClick={() => handleCopyCode(org.code, org.id)}>
+                              {copiedId === org.id ? <Check size={12} color="var(--green-ac)" /> : <Copy size={12} color="var(--text-muted)" />}
+                            </button>
+                          </div>
                         ) : (
-                          <Text fontSize="xs" color="gray.400">
-                            —
-                          </Text>
+                          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>—</span>
                         )}
-                      </Table.Cell>
-
-                      <Table.Cell>
-                        <HStack gap={1}>
-                          {org.isPublic ? (
-                            <>
-                              <Globe size={12} color="#9ca3af" />
-                              <Text fontSize="xs" color="gray.500">
-                                Public
-                              </Text>
-                            </>
-                          ) : (
-                            <>
-                              <Lock size={12} color="#9ca3af" />
-                              <Text fontSize="xs" color="gray.500">
-                                Private
-                              </Text>
-                            </>
-                          )}
-                        </HStack>
-                      </Table.Cell>
-
-                      <Table.Cell textAlign="center">
-                        <HStack justify="center" gap={1}>
-                          <Users size={12} color="#9ca3af" />
-                          <Text fontSize="sm" color="gray.700">
-                            {org.totalMembers ?? 0}
-                          </Text>
-                        </HStack>
-                      </Table.Cell>
-
-                      <Table.Cell>
-                        <HStack gap={1}>
-                          <Calendar size={12} color="#9ca3af" />
-                          <Text fontSize="xs" color="gray.600">
-                            {fmt(org.createdAt)}
-                          </Text>
-                        </HStack>
-                      </Table.Cell>
-
-                      <Table.Cell>
-                        <HStack justify="center" gap={1}>
-                          <Box
-                            as="button"
-                            p={1}
-                            borderRadius="md"
-                            color="blue.500"
-                            _hover={{ bg: "blue.50" }}
-                            title="View"
-                            onClick={() =>
-                              navigate(`/organizations/${org.slug}`)
-                            }
-                          >
-                            <Eye size={16} />
-                          </Box>
-                          <Box
-                            as="button"
-                            p={1}
-                            borderRadius="md"
-                            color="purple.500"
-                            _hover={{ bg: "purple.50" }}
-                            title="Edit"
-                            onClick={() => setEditingOrg(org)}
-                          >
-                            <Pencil size={16} />
-                          </Box>
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-1">
+                          {org.isPublic ? <><Globe size={12} color="var(--text-muted)" /><span style={{ fontSize: 11, color: "var(--text-muted)" }}>Public</span></> : <><Lock size={12} color="var(--text-muted)" /><span style={{ fontSize: 11, color: "var(--text-muted)" }}>Private</span></>}
+                        </div>
+                      </td>
+                      <td style={{ textAlign: "center" }}>
+                        <div className="flex items-center justify-center gap-1">
+                          <Users size={12} color="var(--text-muted)" />
+                          <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{org.totalMembers ?? 0}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-1">
+                          <Calendar size={12} color="var(--text-muted)" />
+                          <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{fmt(org.createdAt)}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex items-center justify-center gap-1">
+                          <button className="btn btn-ghost btn-sm" title="View" style={{ padding: "5px 7px" }} onClick={() => navigate(`/organizations/${org.slug}`)}>
+                            <Eye size={16} color="var(--blue-ce)" />
+                          </button>
+                          <button className="btn btn-ghost btn-sm" title="Edit" style={{ padding: "5px 7px" }} onClick={() => setEditingOrg(org)}>
+                            <Edit size={16} color="var(--primary)" />
+                          </button>
                           {isAdmin && (
-                            <Box
-                              as="button"
-                              p={1}
-                              borderRadius="md"
-                              color="red.400"
-                              _hover={{ bg: "red.50" }}
-                              title="Delete"
-                              onClick={() => handleDelete(org.id, org.name)}
-                            >
-                              <Trash2 size={16} />
-                            </Box>
+                            <button className="btn btn-ghost btn-sm" title="Delete" style={{ padding: "5px 7px" }} onClick={() => handleDelete(org.id, org.name)}>
+                              <Trash2 size={16} color="var(--red-wa)" />
+                            </button>
                           )}
-                        </HStack>
-                      </Table.Cell>
-                    </Table.Row>
+                        </div>
+                      </td>
+                    </tr>
                   ))
                 ) : (
-                  <Table.Row>
-                    <Table.Cell colSpan={7} textAlign="center" py={10}>
-                      <VStack gap={2}>
-                        <Building2 size={32} color="#D1D5DB" />
-                        <Text color="gray.400" fontSize="sm">
-                          No organizations found
-                        </Text>
-                      </VStack>
-                    </Table.Cell>
-                  </Table.Row>
+                  <tr>
+                    <td colSpan={7} style={{ textAlign: "center", padding: "40px 0" }}>
+                      <div className="flex flex-col items-center gap-2">
+                        <Building2 size={32} color="var(--text-muted)" />
+                        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>No organizations found</span>
+                      </div>
+                    </td>
+                  </tr>
                 )}
-              </Table.Body>
-            </Table.Root>
+              </tbody>
+            </table>
 
-            {/* Pagination */}
             {totalPages > 1 && (
-              <HStack
-                justify="space-between"
-                px={5}
-                py={4}
-                borderTopWidth="1px"
-                borderColor="gray.100"
-              >
-                <Text fontSize="sm" color="gray.500">
-                  Page {page + 1} of {totalPages}
-                </Text>
-                <HStack gap={1}>
-                  <Box
-                    as="button"
-                    p={1}
-                    borderRadius="md"
-                    color={page === 0 ? "gray.300" : "gray.600"}
-                    _hover={
-                      page > 0
-                        ? { bg: "purple.50", color: "purple.600" }
-                        : {}
-                    }
-                    onClick={() => page > 0 && setPage(0)}
-                    disabled={page === 0}
-                  >
-                    <ChevronsLeft size={18} />
-                  </Box>
-                  <Box
-                    as="button"
-                    p={1}
-                    borderRadius="md"
-                    color={page === 0 ? "gray.300" : "gray.600"}
-                    _hover={
-                      page > 0
-                        ? { bg: "purple.50", color: "purple.600" }
-                        : {}
-                    }
-                    onClick={() => page > 0 && setPage((p) => p - 1)}
-                    disabled={page === 0}
-                  >
-                    <ChevronLeft size={18} />
-                  </Box>
-                  <Box
-                    as="button"
-                    p={1}
-                    borderRadius="md"
-                    color={page >= totalPages - 1 ? "gray.300" : "gray.600"}
-                    _hover={
-                      page < totalPages - 1
-                        ? { bg: "purple.50", color: "purple.600" }
-                        : {}
-                    }
-                    onClick={() =>
-                      page < totalPages - 1 && setPage((p) => p + 1)
-                    }
-                    disabled={page >= totalPages - 1}
-                  >
-                    <ChevronRight size={18} />
-                  </Box>
-                  <Box
-                    as="button"
-                    p={1}
-                    borderRadius="md"
-                    color={page >= totalPages - 1 ? "gray.300" : "gray.600"}
-                    _hover={
-                      page < totalPages - 1
-                        ? { bg: "purple.50", color: "purple.600" }
-                        : {}
-                    }
-                    onClick={() =>
-                      page < totalPages - 1 && setPage(totalPages - 1)
-                    }
-                    disabled={page >= totalPages - 1}
-                  >
-                    <ChevronsRight size={18} />
-                  </Box>
-                </HStack>
-              </HStack>
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
             )}
-          </Box>
-        </VStack>
-      </Container>
+          </div>
+        </div>
+      </div>
 
-      <CreateModal
-        isOpen={createOpen}
-        onClose={() => setCreateOpen(false)}
-        onCreate={handleCreate}
-      />
-      <EditModal
-        isOpen={!!editingOrg}
-        onClose={() => setEditingOrg(null)}
-        org={editingOrg}
-        onSave={handleEdit}
-      />
-    </Box>
+      <CreateModal isOpen={createOpen} onClose={() => setCreateOpen(false)} onCreate={handleCreate} />
+      <EditModal isOpen={!!editingOrg} onClose={() => setEditingOrg(null)} org={editingOrg} onSave={handleEdit} />
+    </div>
   );
 };
 

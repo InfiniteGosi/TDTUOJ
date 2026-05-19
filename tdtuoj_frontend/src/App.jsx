@@ -1,6 +1,4 @@
-import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
-import Footer from "./components/common/Footer";
 import NavBar from "./components/common/NavBar";
 import GlobalClockBar from "./components/common/GlobalClockBar";
 import HomePage from "./components/home/HomePage";
@@ -11,7 +9,7 @@ import UserPage from "./components/users/UserPage";
 import ProfilePage from "./components/profile/ProfilePage";
 import ProblemDetailsPage from "./components/problems/ProblemDetailsPage";
 import AdminLayout from "./components/admin/AdminLayout";
-import { AdminRoute, AdminOrCreatorRoute, ParticipantRoute } from "./services/Guard";
+import { AdminRoute, AdminOrCreatorRoute } from "./services/Guard";
 import AdminProblemPage from "./components/admin/AdminProblemPage";
 import AdminProblemFormPage from "./components/admin/AdminProblemFormPage";
 import EditProfilePage from "./components/profile/EditProfilePage";
@@ -50,100 +48,64 @@ function RateLimitEventHandler() {
 
 function App() {
   return (
-    <ChakraProvider value={defaultSystem}>
-      <ToastProvider>
-        <RateLimitEventHandler />
-        <BrowserRouter>
-          <div className="App">
-            <NavBar />
-            <GlobalClockBar />
-            <div className="content">
-              <Routes>
-                <Route
-                  path="/contests/:contestSlug/problems/:problemSlug"
-                  element={<ContestProblemPage />}
-                />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/home" element={<HomePage />} />
-                <Route path="/problems" element={<ProblemPage />} />
-                <Route path="/contests" element={<ContestPage />} />
-                <Route path="/contests/:slug" element={<ContestDetailPage />} />
-                <Route path="/organizations" element={<OrganizationPage />} />
-                <Route path="/organizations/:slug" element={<OrganizationDetailPage />} />
-                <Route path="/organizations/:orgSlug/labs/new" element={<LabFormPage />} />
-                <Route path="/organizations/:orgSlug/labs/:labSlug/edit" element={<LabFormPage />} />
-                <Route path="/organizations/:orgSlug/labs/:labSlug" element={<LabDetailPage />} />
-                <Route path="/organizations/:orgSlug/labs/:labSlug/progress" element={<LabProgressPage />} />
-                <Route path="/organizations/:orgSlug/labs/:labSlug/problems/:problemSlug" element={<LabProblemPage />} />
-                <Route path="/users" element={<UserPage />} />
-                <Route
-                  path="/problems/:slug"
-                  element={<ProblemDetailsPage />}
-                />
-                <Route path="users/:username" element={<ProfilePage />} />
-                <Route
-                  path="/profile"
-                  element={<EditProfilePage to="/home" />}
-                />
-                <Route
-                  path="/change-password"
-                  element={<ChangePasswordPage />}
-                />
-                <Route
-                  path="/admin"
-                  element={<AdminOrCreatorRoute element={<AdminLayout />} />}
-                >
-                  <Route path="problems" element={<AdminProblemPage />} />
-                  <Route
-                    path="problems/new"
-                    element={<AdminProblemFormPage />}
-                  />
-                  <Route
-                    path="problems/edit/:id"
-                    element={<AdminProblemFormPage />}
-                  />
-
-                  <Route
-                    path="problem-tags"
-                    element={<AdminProblemTagPage />}
-                  />
-
-                  <Route path="contests" element={<AdminContestPage />} />
-                  <Route
-                    path="contests/new"
-                    element={<AdminContestFormPage />}
-                  />
-                  <Route
-                    path="contests/edit/:id"
-                    element={<AdminContestFormPage />}
-                  />
-                  <Route
-                    path="contests/monitor/:id"
-                    element={<AdminContestMonitorPage />}
-                  />
-
-                  <Route path="organizations" element={<AdminOrganizationPage />} />
-
-                  <Route path="my-problems" element={<MyProblemsPage />} />
-                  <Route path="my-problems/new" element={<MyProblemFormPage />} />
-                  <Route path="my-problems/:id/edit" element={<MyProblemFormPage />} />
-
-                  <Route path="users" element={<AdminRoute element={<AdminUserPage />} />} />
-                  <Route
-                    path="/admin/users/edit/:userId"
-                    element={<AdminRoute element={<AdminEditUserPage />} />}
-                  />
-                </Route>
-
-                <Route path="*" element={<Navigate to={"/home"} />} />
-              </Routes>
-            </div>
-            <Footer />
+    <ToastProvider>
+      <RateLimitEventHandler />
+      <BrowserRouter>
+        <div className="app-shell">
+          <NavBar />
+          <GlobalClockBar />
+          <div className="content">
+            <Routes>
+              <Route
+                path="/contests/:contestSlug/problems/:problemSlug"
+                element={<ContestProblemPage />}
+              />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/home" element={<HomePage />} />
+              <Route path="/problems" element={<ProblemPage />} />
+              <Route path="/contests" element={<ContestPage />} />
+              <Route path="/contests/:slug" element={<ContestDetailPage />} />
+              <Route path="/organizations" element={<OrganizationPage />} />
+              <Route path="/organizations/:slug" element={<OrganizationDetailPage />} />
+              <Route path="/organizations/:orgSlug/labs/new" element={<LabFormPage />} />
+              <Route path="/organizations/:orgSlug/labs/:labSlug/edit" element={<LabFormPage />} />
+              <Route path="/organizations/:orgSlug/labs/:labSlug" element={<LabDetailPage />} />
+              <Route path="/organizations/:orgSlug/labs/:labSlug/progress" element={<LabProgressPage />} />
+              <Route path="/organizations/:orgSlug/labs/:labSlug/problems/:problemSlug" element={<LabProblemPage />} />
+              <Route path="/users" element={<UserPage />} />
+              <Route path="/problems/:slug" element={<ProblemDetailsPage />} />
+              <Route path="users/:username" element={<ProfilePage />} />
+              <Route path="/profile" element={<EditProfilePage to="/home" />} />
+              <Route path="/change-password" element={<ChangePasswordPage />} />
+              <Route
+                path="/admin"
+                element={<AdminOrCreatorRoute element={<AdminLayout />} />}
+              >
+                <Route path="problems" element={<AdminProblemPage />} />
+                <Route path="problems/new" element={<AdminProblemFormPage />} />
+                <Route path="problems/edit/:id" element={<AdminProblemFormPage />} />
+                <Route path="problem-tags" element={<AdminProblemTagPage />} />
+                <Route path="contests" element={<AdminContestPage />} />
+                <Route path="contests/new" element={<AdminContestFormPage />} />
+                <Route path="contests/edit/:id" element={<AdminContestFormPage />} />
+                <Route path="contests/monitor/:id" element={<AdminContestMonitorPage />} />
+                <Route path="organizations" element={<AdminOrganizationPage />} />
+                <Route path="my-problems" element={<MyProblemsPage />} />
+                <Route path="my-problems/new" element={<MyProblemFormPage />} />
+                <Route path="my-problems/:id/edit" element={<MyProblemFormPage />} />
+                <Route path="users" element={<AdminRoute element={<AdminUserPage />} />} />
+                <Route path="/admin/users/edit/:userId" element={<AdminRoute element={<AdminEditUserPage />} />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/home" />} />
+            </Routes>
           </div>
-        </BrowserRouter>
-      </ToastProvider>
-    </ChakraProvider>
+          <footer className="copyright-strip">
+            TDTUOJ &copy; {new Date().getFullYear()} &mdash; TDTU Online Judge
+          </footer>
+        </div>
+      </BrowserRouter>
+    </ToastProvider>
   );
 }
 

@@ -1,16 +1,8 @@
 import { useState, useEffect, useRef } from "react";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { DndContext, DragOverlay, useDraggable, useDroppable, PointerSensor, useSensors, useSensor } from "@dnd-kit/core";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import {
-  Box,
-  Spinner,
-  Text,
-  Button,
-  HStack,
-  VStack,
-  Wrap,
-  WrapItem,
-} from "@chakra-ui/react";
-import { CheckCircle, XCircle, Clock, Bookmark, BookmarkCheck, MessageSquare, MessageCircle, ThumbsUp, ThumbsDown, Pencil, Trash2, CornerDownRight, Send } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Bookmark, BookmarkCheck, MessageSquare, MessageCircle, ThumbsUp, ThumbsDown, Pencil, Trash2, CornerDownRight, Send, GripVertical, Lightbulb, Activity, Terminal, ChevronLeft, ChevronRight, Zap, HardDrive } from "lucide-react";
 import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
 import ReactMarkdown from "react-markdown";
@@ -44,26 +36,26 @@ const getHljsLanguage = (lang) => {
   }
 };
 
-// ─── Theme tokens ────────────────────────────────────────────────────────────
+// ─── Theme tokens — CSS variables (theme-aware) ──────────────────────────────
 const T = {
-  bg: "#0f0f0f",
-  surface: "#1a1a1a",
-  surfaceHover: "#222222",
-  border: "#2a2a2a",
-  borderBright: "#3a3a3a",
-  text: "#e8e8e8",
-  textMuted: "#888",
-  textDim: "#555",
-  accent: "#ffa116",
-  accentDim: "rgba(255,161,22,0.12)",
-  green: "#2cbb5d",
-  greenDim: "rgba(44,187,93,0.12)",
-  red: "#ef4743",
-  redDim: "rgba(239,71,67,0.12)",
-  blue: "#3b82f6",
-  blueDim: "rgba(59,130,246,0.1)",
-  purple: "#a78bfa",
-  purpleDim: "rgba(167,139,250,0.12)",
+  bg:          "var(--bg-void)",
+  surface:     "var(--bg-base)",
+  surfaceHover:"var(--bg-hover)",
+  border:      "var(--border-default)",
+  borderBright:"var(--border-strong)",
+  text:        "var(--text-primary)",
+  textMuted:   "var(--text-secondary)",
+  textDim:     "var(--text-muted)",
+  accent:      "var(--primary)",
+  accentDim:   "var(--primary-subtle)",
+  green:       "var(--green-ac)",
+  greenDim:    "var(--green-subtle)",
+  red:         "var(--red-wa)",
+  redDim:      "var(--red-subtle)",
+  blue:        "var(--blue-ce)",
+  blueDim:     "var(--blue-subtle)",
+  purple:      "var(--purple-mle)",
+  purpleDim:   "var(--purple-subtle)",
 };
 
 // Map editor language → backend SubmissionLanguage enum
@@ -97,90 +89,41 @@ const DIFF_STYLE = {
   HARD: { color: T.red, bg: T.redDim, label: "Hard" },
 };
 
-// ─── Resizable Pane ──────────────────────────────────────────────────────────
-const ResizablePane = ({
-  children,
-  direction = "horizontal",
-  initialSizes = [50, 50],
-}) => {
-  const [sizes, setSizes] = useState(initialSizes);
-  const [isDragging, setIsDragging] = useState(false);
-  const containerRef = useRef(null);
-
-  const handleMouseDown = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging || !containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    if (direction === "horizontal") {
-      const pct = ((e.clientX - rect.left) / rect.width) * 100;
-      if (pct > 25 && pct < 75) setSizes([pct, 100 - pct]);
-    } else {
-      const pct = ((e.clientY - rect.top) / rect.height) * 100;
-      if (pct > 20 && pct < 80) setSizes([pct, 100 - pct]);
-    }
-  };
-
-  const handleMouseUp = () => setIsDragging(false);
-
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      return () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-      };
-    }
-  }, [isDragging]);
-
+// ─── Resize Handle ───────────────────────────────────────────────────────────
+const ResizeHandle = ({ direction = "horizontal" }) => {
+  const [active, setActive] = useState(false);
   const isH = direction === "horizontal";
-
   return (
-    <Box
-      ref={containerRef}
-      display="flex"
-      flexDirection={isH ? "row" : "column"}
-      height="100%"
-      width="100%"
-      userSelect={isDragging ? "none" : "auto"}
+    <PanelResizeHandle
+      onDragging={setActive}
+      style={{
+        width: isH ? "5px" : "100%",
+        height: !isH ? "5px" : "100%",
+        background: active ? T.accent : T.border,
+        cursor: isH ? "col-resize" : "row-resize",
+        flexShrink: 0,
+        transition: "background 0.15s",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        zIndex: 10,
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = T.accent; }}
+      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = T.border; }}
     >
-      <Box
-        width={isH ? `${sizes[0]}%` : "100%"}
-        height={!isH ? `${sizes[0]}%` : "100%"}
-        overflow="hidden"
-        display="flex"
-        flexDirection="column"
-      >
-        {children[0]}
-      </Box>
-
-      <Box
-        width={isH ? "5px" : "100%"}
-        height={!isH ? "5px" : "100%"}
-        bg={isDragging ? T.accent : T.border}
-        cursor={isH ? "col-resize" : "row-resize"}
-        onMouseDown={handleMouseDown}
-        flexShrink={0}
-        transition="background 0.15s"
-        _hover={{ bg: T.accent }}
-        position="relative"
-        zIndex={10}
+      <div
+        style={{
+          width: isH ? "3px" : "28px",
+          height: isH ? "28px" : "3px",
+          borderRadius: "3px",
+          background: active ? T.accent : T.textDim,
+          opacity: active ? 1 : 0.5,
+          transition: "background 0.15s, opacity 0.15s",
+          pointerEvents: "none",
+        }}
       />
-
-      <Box
-        width={isH ? `${sizes[1]}%` : "100%"}
-        height={!isH ? `${sizes[1]}%` : "100%"}
-        overflow="hidden"
-        display="flex"
-        flexDirection="column"
-      >
-        {children[1]}
-      </Box>
-    </Box>
+    </PanelResizeHandle>
   );
 };
 
@@ -188,63 +131,77 @@ const ResizablePane = ({
 const DifficultyBadge = ({ difficulty }) => {
   const s = DIFF_STYLE[difficulty] || DIFF_STYLE.EASY;
   return (
-    <Box
-      as="span"
-      display="inline-block"
-      px={2}
-      py="2px"
-      borderRadius="4px"
-      fontSize="xs"
-      fontWeight="700"
-      letterSpacing="0.04em"
-      color={s.color}
-      bg={s.bg}
-      border={`1px solid ${s.color}44`}
+    <span
+      style={{
+        display: "inline-block",
+        paddingLeft: 8,
+        paddingRight: 8,
+        paddingTop: "2px",
+        paddingBottom: "2px",
+        borderRadius: "4px",
+        fontSize: 12,
+        fontWeight: "700",
+        letterSpacing: "0.04em",
+        color: s.color,
+        background: s.bg,
+        border: `1px solid ${s.color}44`,
+      }}
     >
       {s.label}
-    </Box>
+    </span>
   );
 };
 
 // ─── Stat Chip ────────────────────────────────────────────────────────────────
 const StatChip = ({ icon, value, color }) => (
-  <Box
-    display="inline-flex"
-    alignItems="center"
-    gap={1}
-    px={2}
-    py="3px"
-    borderRadius="4px"
-    bg={T.surface}
-    border={`1px solid ${T.border}`}
-    fontSize="xs"
-    color={color || T.textMuted}
-    fontWeight="500"
-    fontFamily="'JetBrains Mono', monospace"
+  <div
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 4,
+      paddingLeft: 8,
+      paddingRight: 8,
+      paddingTop: "3px",
+      paddingBottom: "3px",
+      borderRadius: "4px",
+      background: T.surface,
+      border: `1px solid ${T.border}`,
+      fontSize: 12,
+      color: color || T.textMuted,
+      fontWeight: "500",
+      fontFamily: "'JetBrains Mono', monospace",
+    }}
   >
-    <Text>{icon}</Text>
-    <Text>{value}</Text>
-  </Box>
+    <span>{icon}</span>
+    <span>{value}</span>
+  </div>
 );
 
 // ─── Tag Chip ─────────────────────────────────────────────────────────────────
 const TagChip = ({ name }) => (
-  <Box
-    as="span"
-    display="inline-block"
-    px={2}
-    py="3px"
-    borderRadius="4px"
-    fontSize="xs"
-    fontWeight="500"
-    color={T.purple}
-    bg={T.purpleDim}
-    border={`1px solid ${T.purple}33`}
-    letterSpacing="0.02em"
-    whiteSpace="nowrap"
+  <span
+    style={{
+      display: "inline-block",
+      paddingLeft: 8,
+      paddingRight: 8,
+      paddingTop: "3px",
+      paddingBottom: "3px",
+      borderRadius: "var(--radius-pill)",
+      fontSize: "var(--text-xs)",
+      fontWeight: "500",
+      fontFamily: "var(--font-body)",
+      color: "var(--text-secondary)",
+      background: "var(--bg-overlay)",
+      border: "1px solid var(--border-default)",
+      letterSpacing: "0.02em",
+      whiteSpace: "nowrap",
+      transition: "border-color 0.15s, color 0.15s",
+    }}
+    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; }}
+    onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-default)"; e.currentTarget.style.color = "var(--text-secondary)"; }}
   >
     {name}
-  </Box>
+  </span>
 );
 
 // ─── Comment Block ────────────────────────────────────────────────────────────
@@ -269,22 +226,32 @@ const CommentBlock = ({
   const replyCount = comment.replies?.length ?? 0;
 
   return (
-    <Box
-      borderTop={`1px solid ${T.border}`}
-      pt={3} pb={isReply ? 2 : 3}
-      pl={isReply ? 4 : 0}
-      ml={isReply ? 3 : 0}
-      borderLeft={isReply ? `2px solid ${T.borderBright}` : "none"}
+    <div
+      style={{
+        borderTop: `1px solid ${T.border}`,
+        paddingTop: 12,
+        paddingBottom: isReply ? 8 : 12,
+        paddingLeft: isReply ? 16 : 0,
+        marginLeft: isReply ? 12 : 0,
+        borderLeft: isReply ? `2px solid ${T.borderBright}` : "none",
+      }}
     >
       {/* Author row */}
-      <Box display="flex" alignItems="center" gap={2} mb={isDeleted ? 1 : 2}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: isDeleted ? 4 : 8 }}>
         {/* Avatar */}
-        <Box
-          w="26px" h="26px" borderRadius="full" overflow="hidden"
-          bg={isDeleted ? T.borderBright : T.accentDim}
-          display="flex" alignItems="center" justifyContent="center"
-          flexShrink={0}
-          cursor={isDeleted ? "default" : "pointer"}
+        <div
+          style={{
+            width: "26px",
+            height: "26px",
+            borderRadius: "50%",
+            overflow: "hidden",
+            background: isDeleted ? T.borderBright : T.accentDim,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            cursor: isDeleted ? "default" : "pointer",
+          }}
           onClick={() => !isDeleted && window.open(`/users/${comment.username}`, '_blank')}
           title={isDeleted ? undefined : `View ${comment.username}'s profile`}
         >
@@ -293,31 +260,31 @@ const CommentBlock = ({
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
               onError={(e) => { e.target.style.display = "none"; }} />
           ) : !isDeleted ? (
-            <Text fontSize="10px" fontWeight="700" color={T.accent}>
+            <span style={{ fontSize: "10px", fontWeight: "700", color: T.accent }}>
               {comment.username?.[0]?.toUpperCase() ?? "?"}
-            </Text>
+            </span>
           ) : null}
-        </Box>
+        </div>
 
         {/* Username */}
-        <Text fontSize="xs" fontWeight="600"
-          color={isDeleted ? T.textDim : T.textMuted}
-          cursor={isDeleted ? "default" : "pointer"}
-          _hover={isDeleted ? {} : { color: T.accent, textDecoration: "underline" }}
+        <span
+          style={{ fontSize: 12, fontWeight: "600", color: isDeleted ? T.textDim : T.textMuted, cursor: isDeleted ? "default" : "pointer" }}
           onClick={() => !isDeleted && window.open(`/users/${comment.username}`, '_blank')}
+          onMouseEnter={(e) => { if (!isDeleted) { e.currentTarget.style.color = T.accent; e.currentTarget.style.textDecoration = "underline"; } }}
+          onMouseLeave={(e) => { if (!isDeleted) { e.currentTarget.style.color = T.textMuted; e.currentTarget.style.textDecoration = "none"; } }}
         >
           {isDeleted ? "[deleted]" : comment.username}
-        </Text>
-        <Text fontSize="xs" color={T.textDim}>·</Text>
-        <Text fontSize="xs" color={T.textDim}>{formatDate(comment.createdAt)}</Text>
+        </span>
+        <span style={{ fontSize: 12, color: T.textDim }}>·</span>
+        <span style={{ fontSize: 12, color: T.textDim }}>{formatDate(comment.createdAt)}</span>
         {comment.updatedAt && comment.updatedAt !== comment.createdAt && !isDeleted && (
-          <Text fontSize="xs" color={T.textDim} fontStyle="italic">(edited)</Text>
+          <span style={{ fontSize: 12, color: T.textDim, fontStyle: "italic" }}>(edited)</span>
         )}
-      </Box>
+      </div>
 
       {/* Content / edit box */}
       {isEditing ? (
-        <Box mb={2}>
+        <div style={{ marginBottom: 8 }}>
           <textarea value={editInput} onChange={(e) => setEditInput(e.target.value)}
             rows={3} autoFocus
             style={{
@@ -327,66 +294,61 @@ const CommentBlock = ({
               fontFamily: "'Inter', system-ui, sans-serif",
             }}
           />
-          <Box display="flex" gap={2} mt={1}>
-            <Box as="button" onClick={() => onEditSave(comment.id)}
-              px={3} py={1} borderRadius="6px" bg={T.accent} color="#000"
-              fontSize="xs" fontWeight="700" cursor="pointer"
-              style={{ outline: "none", border: "none" }}>Save</Box>
-            <Box as="button" onClick={() => { setEditingComment(null); setEditInput(""); }}
-              px={3} py={1} borderRadius="6px" bg={T.borderBright} color={T.textMuted}
-              fontSize="xs" fontWeight="600" cursor="pointer"
-              style={{ outline: "none", border: "none" }}>Cancel</Box>
-          </Box>
-        </Box>
+          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+            <button onClick={() => onEditSave(comment.id)}
+              style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", background: T.accent, color: "#000", fontSize: 12, fontWeight: "700", cursor: "pointer", outline: "none", border: "none" }}>Save</button>
+            <button onClick={() => { setEditingComment(null); setEditInput(""); }}
+              style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", background: T.borderBright, color: T.textMuted, fontSize: 12, fontWeight: "600", cursor: "pointer", outline: "none", border: "none" }}>Cancel</button>
+          </div>
+        </div>
       ) : (
-        <Text fontSize="sm" color={isDeleted ? T.textDim : T.text}
-          lineHeight="1.7" mb={2} fontStyle={isDeleted ? "italic" : "normal"}
-        >
+        <p style={{ fontSize: 13, color: isDeleted ? T.textDim : T.text, lineHeight: "1.7", marginBottom: 8, fontStyle: isDeleted ? "italic" : "normal" }}>
           {isDeleted ? "[deleted]" : renderCommentContent(comment.content, T)}
-        </Text>
+        </p>
       )}
 
       {/* Action row */}
       {!isEditing && (
-        <Box display="flex" alignItems="center" gap={3} flexWrap="wrap">
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
 
           {/* Upvote */}
-          <Box as="button" display="flex" alignItems="center" gap={1}
-            color={comment.userVote === "UPVOTE" ? T.accent : T.textDim}
-            bg="transparent" border="none" cursor="pointer"
-            fontSize="xs" fontWeight="600" _hover={{ color: T.accent }}
-            onClick={() => onVote(comment.id, "UPVOTE")} style={{ outline: "none" }}>
+          <button
+            style={{ display: "flex", alignItems: "center", gap: 4, color: comment.userVote === "UPVOTE" ? T.accent : T.textDim, background: "transparent", border: "none", cursor: "pointer", fontSize: 12, fontWeight: "600", outline: "none" }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = T.accent; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = comment.userVote === "UPVOTE" ? T.accent : T.textDim; }}
+            onClick={() => onVote(comment.id, "UPVOTE")}>
             <ThumbsUp size={13} />
             <span>{comment.upvoteCount ?? 0}</span>
-          </Box>
+          </button>
 
           {/* Downvote */}
-          <Box as="button" display="flex" alignItems="center" gap={1}
-            color={comment.userVote === "DOWNVOTE" ? T.red : T.textDim}
-            bg="transparent" border="none" cursor="pointer"
-            fontSize="xs" fontWeight="600" _hover={{ color: T.red }}
-            onClick={() => onVote(comment.id, "DOWNVOTE")} style={{ outline: "none" }}>
+          <button
+            style={{ display: "flex", alignItems: "center", gap: 4, color: comment.userVote === "DOWNVOTE" ? T.red : T.textDim, background: "transparent", border: "none", cursor: "pointer", fontSize: 12, fontWeight: "600", outline: "none" }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = T.red; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = comment.userVote === "DOWNVOTE" ? T.red : T.textDim; }}
+            onClick={() => onVote(comment.id, "DOWNVOTE")}>
             <ThumbsDown size={13} />
             <span>{comment.downvoteCount ?? 0}</span>
-          </Box>
+          </button>
 
           {/* Hide/Show Replies — top-level only */}
           {!isReply && replyCount > 0 && (
-            <Box as="button" display="flex" alignItems="center" gap={1}
-              color={T.textDim} bg="transparent" border="none" cursor="pointer"
-              fontSize="xs" fontWeight="600" _hover={{ color: T.text }}
-              onClick={() => setShowReplies((v) => !v)} style={{ outline: "none" }}>
+            <button
+              style={{ display: "flex", alignItems: "center", gap: 4, color: T.textDim, background: "transparent", border: "none", cursor: "pointer", fontSize: 12, fontWeight: "600", outline: "none" }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = T.text; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = T.textDim; }}
+              onClick={() => setShowReplies((v) => !v)}>
               <MessageCircle size={13} />
               <span>{showReplies ? `Hide Replies (${replyCount})` : `Show Replies (${replyCount})`}</span>
-            </Box>
+            </button>
           )}
 
           {/* Reply button — works for both top-level and replies */}
           {!isDeleted && currentUsername && (
-            <Box as="button" display="flex" alignItems="center" gap={1}
-              color={isReplying ? T.accent : T.textDim}
-              bg="transparent" border="none" cursor="pointer"
-              fontSize="xs" fontWeight="600" _hover={{ color: T.text }}
+            <button
+              style={{ display: "flex", alignItems: "center", gap: 4, color: isReplying ? T.accent : T.textDim, background: "transparent", border: "none", cursor: "pointer", fontSize: 12, fontWeight: "600", outline: "none" }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = T.text; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = isReplying ? T.accent : T.textDim; }}
               onClick={() => {
                 if (isReplying) {
                   setReplyingTo(null);
@@ -398,38 +360,37 @@ const CommentBlock = ({
                   // Auto-expand replies so the box is visible
                   if (isReply) setShowReplies(true);
                 }
-              }}
-              style={{ outline: "none" }}>
+              }}>
               <CornerDownRight size={13} />
               <span>Reply</span>
-            </Box>
+            </button>
           )}
 
           {/* Edit / Delete — author only, no isReply guard */}
           {isAuthor && !isDeleted && (
             <>
-              <Box as="button" display="flex" alignItems="center" gap={1}
-                color={T.textDim} bg="transparent" border="none" cursor="pointer"
-                fontSize="xs" _hover={{ color: T.text }}
-                onClick={() => { setEditingComment({ id: comment.id }); setEditInput(comment.content); }}
-                style={{ outline: "none" }}>
+              <button
+                style={{ display: "flex", alignItems: "center", gap: 4, color: T.textDim, background: "transparent", border: "none", cursor: "pointer", fontSize: 12, outline: "none" }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = T.text; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = T.textDim; }}
+                onClick={() => { setEditingComment({ id: comment.id }); setEditInput(comment.content); }}>
                 <Pencil size={12} />
-              </Box>
-              <Box as="button" display="flex" alignItems="center" gap={1}
-                color={T.textDim} bg="transparent" border="none" cursor="pointer"
-                fontSize="xs" _hover={{ color: T.red }}
-                onClick={() => onDelete(comment.id)}
-                style={{ outline: "none" }}>
+              </button>
+              <button
+                style={{ display: "flex", alignItems: "center", gap: 4, color: T.textDim, background: "transparent", border: "none", cursor: "pointer", fontSize: 12, outline: "none" }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = T.red; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = T.textDim; }}
+                onClick={() => onDelete(comment.id)}>
                 <Trash2 size={12} />
-              </Box>
+              </button>
             </>
           )}
-        </Box>
+        </div>
       )}
 
       {/* Inline reply box — shown on top-level comment when replyingTo targets this comment */}
       {!isReply && replyingTo?.id === comment.id && (
-        <Box mt={3} pl={2}>
+        <div style={{ marginTop: 12, paddingLeft: 8 }}>
           <textarea value={replyInput} onChange={(e) => setReplyInput(e.target.value)}
             placeholder={`Reply to ${replyingTo.username}...`}
             rows={2} autoFocus
@@ -440,24 +401,18 @@ const CommentBlock = ({
               fontFamily: "'Inter', system-ui, sans-serif",
             }}
           />
-          <Box display="flex" gap={2} mt={1}>
-            <Box as="button" onClick={() => onReply(comment.id)}
-              px={3} py={1} borderRadius="6px" bg={T.accent} color="#000"
-              fontSize="xs" fontWeight="700"
-              cursor={commentSubmitting ? "not-allowed" : "pointer"}
-              opacity={commentSubmitting ? 0.6 : 1}
-              style={{ outline: "none", border: "none" }}>Post Reply</Box>
-            <Box as="button" onClick={() => { setReplyingTo(null); setReplyInput(""); }}
-              px={3} py={1} borderRadius="6px" bg={T.borderBright} color={T.textMuted}
-              fontSize="xs" fontWeight="600" cursor="pointer"
-              style={{ outline: "none", border: "none" }}>Cancel</Box>
-          </Box>
-        </Box>
+          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+            <button onClick={() => onReply(comment.id)}
+              style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", background: T.accent, color: "#000", fontSize: 12, fontWeight: "700", cursor: commentSubmitting ? "not-allowed" : "pointer", opacity: commentSubmitting ? 0.6 : 1, outline: "none", border: "none" }}>Post Reply</button>
+            <button onClick={() => { setReplyingTo(null); setReplyInput(""); }}
+              style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", background: T.borderBright, color: T.textMuted, fontSize: 12, fontWeight: "600", cursor: "pointer", outline: "none", border: "none" }}>Cancel</button>
+          </div>
+        </div>
       )}
 
       {/* Replies list — collapsible */}
       {!isReply && replyCount > 0 && showReplies && (
-        <Box mt={2}>
+        <div style={{ marginTop: 8 }}>
           {comment.replies.map((reply) => (
             <CommentBlock
               key={reply.id}
@@ -483,9 +438,9 @@ const CommentBlock = ({
               rootId={comment.id}
             />
           ))}
-        </Box>
+        </div>
       )}
-    </Box>
+    </div>
   );
 };
 
@@ -497,17 +452,18 @@ const renderCommentContent = (content, T) => {
     if (/^@\w+$/.test(part)) {
       const username = part.slice(1);
       return (
-        <Box
-          key={i} as="span"
-          color={T.accent} fontWeight="600" cursor="pointer"
-          _hover={{ textDecoration: "underline" }}
+        <span
+          key={i}
+          style={{ color: T.accent, fontWeight: "600", cursor: "pointer" }}
+          onMouseEnter={(e) => { e.currentTarget.style.textDecoration = "underline"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.textDecoration = "none"; }}
           onClick={(e) => { e.stopPropagation(); window.open(`/users/${username}`, '_blank'); }}
         >
           {part}
-        </Box>
+        </span>
       );
     }
-    return <Box key={i} as="span">{part}</Box>;
+    return <span key={i}>{part}</span>;
   });
 };
 
@@ -532,7 +488,6 @@ const ProblemDetailsPage = () => {
   const [results, setResults] = useState(null);
   const [pollingId, setPollingId] = useState(null);
   const [queuePosition, setQueuePosition] = useState(null);
-  const [activeTab, setActiveTab] = useState("description");
   const [viewingSubmission, setViewingSubmission] = useState(null);
   const [verdictFilter, setVerdictFilter] = useState(null);
 
@@ -567,6 +522,58 @@ const ProblemDetailsPage = () => {
   const [replyInput, setReplyInput] = useState("");
   const [editingComment, setEditingComment] = useState(null); // { id, content }
   const [editInput, setEditInput] = useState("");
+
+  // ── Workspace layout ────────────────────────────────────────────────────────
+  const [layout, setLayout] = useState({
+    left: ["description", "submissions", "comments"],
+    "right-top": ["editor"],
+    "right-bottom": ["testcases", "results"],
+  });
+  const [activeInSlot, setActiveInSlot] = useState({
+    left: "description",
+    "right-top": "editor",
+    "right-bottom": "testcases",
+  });
+  // @dnd-kit drag state
+  const [activeTab, setActiveTab] = useState(null); // { id, fromSlot, panelId }
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  const movePanel = (fromSlot, panelId, targetSlot) => {
+    if (fromSlot === targetSlot || layout[fromSlot].length <= 1) return;
+    setLayout((prev) => {
+      const next = { ...prev };
+      next[fromSlot] = next[fromSlot].filter((id) => id !== panelId);
+      if (!next[targetSlot].includes(panelId)) next[targetSlot] = [...next[targetSlot], panelId];
+      return next;
+    });
+    setActiveInSlot((prev) => {
+      const next = { ...prev };
+      if (next[fromSlot] === panelId)
+        next[fromSlot] = layout[fromSlot].find((id) => id !== panelId) ?? layout[fromSlot][0];
+      next[targetSlot] = panelId;
+      return next;
+    });
+  };
+
+  const handleDragStart = ({ active }) => {
+    const [fromSlot, panelId] = active.id.split(":");
+    setActiveTab({ id: active.id, fromSlot, panelId });
+  };
+
+  const handleDragEnd = ({ over }) => {
+    if (over && activeTab) {
+      const targetSlot = over.data.current?.slotId;
+      if (targetSlot) movePanel(activeTab.fromSlot, activeTab.panelId, targetSlot);
+    }
+    setActiveTab(null);
+  };
+
+  const showResultsPanel = () => {
+    const slot = Object.keys(layout).find((s) => layout[s].includes("results")) ?? "right-bottom";
+    setActiveInSlot((prev) => ({ ...prev, [slot]: "results" }));
+  };
 
   const { showMessage } = useToast();
   const codeEditorRef = useRef(null);
@@ -689,7 +696,7 @@ const ProblemDetailsPage = () => {
 
       const sub = resp.data;
       setQueuePosition(sub.queuePosition ?? null);
-      setActiveTab("results");
+      showResultsPanel();
 
       // 2. Poll /status every 2s until COMPLETED
       const intervalId = setInterval(async () => {
@@ -828,20 +835,22 @@ const ProblemDetailsPage = () => {
 
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-        bg={T.bg}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          background: T.bg,
+        }}
       >
-        <VStack gap={3}>
-          <Spinner size="xl" color={T.accent} />
-          <Text color={T.textMuted} fontSize="sm">
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
+          <div className="spinner" style={{ borderTopColor: T.accent }} />
+          <span style={{ color: T.textMuted, fontSize: 13 }}>
             Loading problem...
-          </Text>
-        </VStack>
-      </Box>
+          </span>
+        </div>
+      </div>
     );
   }
 
@@ -969,375 +978,563 @@ const ProblemDetailsPage = () => {
 
   const currentUsername = currentUser?.username ?? null;
 
-  const tabs = [
-    { id: "description", label: "Description" },
-    { id: "testcases", label: `Test Cases (${testCases.length})` },
-    { id: "submissions", label: "Submissions" },
-    { id: "comments", label: `Comments${commentsTotalElements > 0 ? ` (${commentsTotalElements})` : ""}` },
-    ...(results || submitting
-      ? [
-          {
-            id: "results",
-            label: submitting
-              ? "Judging..."
-              : `Results ${results.passedCount}/${results.totalCount}`,
-          },
-        ]
-      : []),
-  ];
+  const PANEL_LABELS = {
+    description: "Description",
+    submissions: "Submissions",
+    comments: `Comments${commentsTotalElements > 0 ? ` (${commentsTotalElements})` : ""}`,
+    results: submitting ? "Judging…" : results ? `Results ${results.passedCount}/${results.totalCount}` : "Results",
+    editor: "Code Editor",
+    testcases: "Test Cases",
+  };
+
+  // Draggable tab — @dnd-kit useDraggable
+  const DraggableTab = ({ panelId, slotId, isActive }) => {
+    const dndId = `${slotId}:${panelId}`;
+    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+      id: dndId,
+      data: { panelId, fromSlot: slotId },
+    });
+    return (
+      <div
+        ref={setNodeRef}
+        {...attributes}
+        {...listeners}
+        onClick={async (e) => {
+          // click fires even when drag-distance < threshold, but not after a real drag
+          if (!isDragging) {
+            setActiveInSlot((prev) => ({ ...prev, [slotId]: panelId }));
+            if (panelId === "submissions" && !submissionsLoaded) await fetchSubmissions();
+            if (panelId === "comments" && !commentsLoaded) await fetchComments();
+          }
+        }}
+        style={{
+          display: "flex", alignItems: "center", gap: 5,
+          padding: "8px 12px",
+          cursor: isDragging ? "grabbing" : "grab",
+          borderBottom: `2px solid ${isActive ? T.accent : "transparent"}`,
+          color: isActive ? T.text : T.textMuted,
+          fontSize: 13, fontWeight: isActive ? 600 : 400,
+          whiteSpace: "nowrap", flexShrink: 0,
+          userSelect: "none",
+          opacity: isDragging ? 0.35 : 1,
+          transition: "opacity 0.1s, color 0.12s",
+          touchAction: "none",
+        }}
+        onMouseEnter={(e) => { if (!isActive && !isDragging) e.currentTarget.style.color = T.text; }}
+        onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = T.textMuted; }}
+      >
+        <GripVertical size={12} style={{ color: T.textDim, flexShrink: 0, opacity: 0.5 }} />
+        {PANEL_LABELS[panelId]}
+        {panelId === "results" && results && (
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: results.allPassed ? T.green : T.red, flexShrink: 0 }} />
+        )}
+      </div>
+    );
+  };
+
+  // Drop zone tab bar — @dnd-kit useDroppable
+  const SlotTabBar = ({ slotId }) => {
+    const panels = layout[slotId] ?? [];
+    const active = activeInSlot[slotId];
+    const isDragOver = activeTab && activeTab.fromSlot !== slotId;
+    const { isOver, setNodeRef } = useDroppable({
+      id: `slot:${slotId}`,
+      data: { slotId },
+    });
+    return (
+      <div
+        ref={setNodeRef}
+        style={{
+          display: "flex", flexShrink: 0, background: T.surface,
+          borderBottom: `1px solid ${isOver && isDragOver ? T.accent : T.border}`,
+          boxShadow: isOver && isDragOver ? `inset 0 -2px 0 ${T.accent}` : "none",
+          overflowX: "auto", overflowY: "visible",
+          transition: "border-color 0.1s, box-shadow 0.1s",
+          minHeight: 37,
+        }}
+      >
+        {panels.map((panelId) => (
+          <DraggableTab
+            key={panelId}
+            panelId={panelId}
+            slotId={slotId}
+            isActive={active === panelId}
+          />
+        ))}
+        {/* Empty drop hint when dragging over a slot with no tabs visible */}
+        {isOver && isDragOver && panels.length === 0 && (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: T.accent, fontSize: 12, opacity: 0.7 }}>
+            Drop here
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Problem header — reused wherever the description panel lives
+  const problemHeaderJSX = (
+    <div style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 20, paddingBottom: 16, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+      <p style={{ fontSize: 20, fontWeight: "700", color: T.text, marginBottom: 12, lineHeight: 1.3, letterSpacing: "-0.02em" }}>
+        {problem?.title}
+      </p>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+        {problem?.problemDifficulty && <DifficultyBadge difficulty={problem.problemDifficulty} />}
+        {problem?.solved && (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 4, paddingLeft: 8, paddingRight: 8, paddingTop: "2px", paddingBottom: "2px", borderRadius: "4px", fontSize: 12, fontWeight: "700", color: T.green, background: T.greenDim, border: `1px solid ${T.green}44` }}>
+            <CheckCircle size={11} /><span>Solved</span>
+          </div>
+        )}
+        {problem?.attempted && !problem?.solved && (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 4, paddingLeft: 8, paddingRight: 8, paddingTop: "2px", paddingBottom: "2px", borderRadius: "4px", fontSize: 12, fontWeight: "700", color: "#f97316", background: "rgba(249,115,22,0.12)", border: "1px solid rgba(249,115,22,0.3)" }}>
+            <Clock size={11} /><span>Attempted</span>
+          </div>
+        )}
+        <StatChip icon={<Zap size={11} />} value={`${problem?.point} pts`} color={T.accent} />
+        <StatChip icon={<Clock size={11} />} value={`${problem?.timeLimit}s`} color={T.blue} />
+        <StatChip icon={<HardDrive size={11} />} value={`${problem?.memoryLimit}MB`} color={T.textMuted} />
+        {activeTags.length > 0 && (
+          <>
+            <div style={{ width: "1px", height: "16px", background: T.border, marginLeft: 4, marginRight: 4 }} />
+            {activeTags.map((tag) => <TagChip key={tag.id} name={tag.name} />)}
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  // Editor header buttons — shared across all slots
+  const editorHeaderButtons = (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <button onClick={handleToggleFavorite} style={{ display: "flex", alignItems: "center", gap: 6, paddingLeft: 12, paddingRight: 12, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", background: isFavorited ? "rgba(251,191,36,0.12)" : "transparent", border: `1px solid ${isFavorited ? "#fbbf24" : T.border}`, color: isFavorited ? "#fbbf24" : T.textMuted, fontSize: 12, fontWeight: "600", cursor: favoriteLoading ? "not-allowed" : "pointer", opacity: favoriteLoading ? 0.6 : 1, outline: "none" }}>
+        {isFavorited ? <BookmarkCheck size={13} /> : <Bookmark size={13} />}
+        <span style={{ marginLeft: 4 }}>{isFavorited ? "Saved" : "Save"}</span>
+      </button>
+      <button onClick={() => setHintPanelOpen((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 6, paddingLeft: 12, paddingRight: 12, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", background: hintPanelOpen ? "var(--primary-subtle)" : "transparent", border: `1px solid ${hintPanelOpen ? "var(--primary)" : "var(--border-default)"}`, color: hintPanelOpen ? "var(--primary)" : "var(--text-secondary)", fontSize: 12, fontWeight: "600", cursor: "pointer", outline: "none" }}>
+        <Lightbulb size={13} /><span style={{ marginLeft: 4 }}>Hints</span>
+      </button>
+      <button onClick={() => setVizOpen(true)} style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", color: "var(--text-secondary)", border: "1px solid var(--border-default)", fontWeight: "600", fontSize: 13, paddingLeft: 14, paddingRight: 14, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", cursor: "pointer", transition: "all 0.15s", outline: "none" }} onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-subtle)"; e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "var(--border-default)"; e.currentTarget.style.color = "var(--text-secondary)"; }}>
+        <Activity size={13} />Visualize
+      </button>
+      <button onClick={handleSubmit} disabled={submitting} style={{ background: T.accent, color: "#000", fontWeight: "700", fontSize: 13, paddingLeft: 20, paddingRight: 20, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", cursor: submitting ? "not-allowed" : "pointer", transition: "all 0.15s", outline: "none", border: "none", opacity: submitting ? 0.7 : 1 }} onMouseEnter={(e) => { if (!submitting) { e.currentTarget.style.background = "#ffb833"; e.currentTarget.style.transform = "translateY(-1px)"; } }} onMouseLeave={(e) => { e.currentTarget.style.background = T.accent; e.currentTarget.style.transform = "none"; }}>
+        Run & Submit
+      </button>
+    </div>
+  );
+
+  // Render content for a single panel
+  const renderPanelContent = (panelId) => {
+    switch (panelId) {
+      case "testcases": return (
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+          {testCases.length === 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, paddingTop: 48 }}>
+              <Terminal size={28} style={{ color: "var(--text-muted)", opacity: 0.4 }} />
+              <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)", fontFamily: "var(--font-body)" }}>No sample test cases</span>
+            </div>
+          ) : testCases.map((tc, i) => (
+            <div key={tc.id} style={{ borderRadius: "var(--radius-md)", border: "1px solid var(--border-default)", overflow: "hidden", background: "var(--bg-base)" }}>
+              <div style={{ padding: "7px 14px", background: "var(--bg-void)", borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, fontFamily: "var(--font-code)", color: "var(--primary)", background: "var(--primary-subtle)", border: "1px solid var(--border-accent)", padding: "1px 7px", borderRadius: "var(--radius-sm)", letterSpacing: "0.06em" }}>
+                  CASE {i + 1}
+                </span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+                {[{ label: "INPUT", val: tc.input, accent: false }, { label: "EXPECTED OUTPUT", val: tc.output, accent: true }].map(({ label, val, accent }, idx) => (
+                  <div key={label} style={{ borderRight: idx === 0 ? "1px solid var(--border-subtle)" : "none" }}>
+                    <div style={{ padding: "6px 14px", borderBottom: "1px solid var(--border-subtle)", background: accent ? "var(--green-subtle)" : "transparent" }}>
+                      <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: accent ? "var(--green-ac)" : "var(--text-muted)", letterSpacing: "0.06em", fontFamily: "var(--font-code)" }}>{label}</span>
+                    </div>
+                    <div style={{ padding: "12px 14px", fontFamily: "var(--font-code)", fontSize: "var(--text-sm)", color: accent ? "var(--green-ac)" : "var(--text-primary)", whiteSpace: "pre-wrap", lineHeight: 1.7, minHeight: 44, maxHeight: 200, overflowY: "auto", background: accent ? "var(--green-subtle)" : "transparent" }}>
+                      {val || <span style={{ color: "var(--text-muted)", fontStyle: "italic", fontFamily: "var(--font-body)" }}>empty</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+      case "description": return (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          {problemHeaderJSX}
+          <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
+            <div className="problem-description">
+              <ReactMarkdown>{statement}</ReactMarkdown>
+            </div>
+          </div>
+        </div>
+      );
+      case "submissions": return (
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {loadingSubmissions ? (
+            <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
+              <div className="spinner" style={{ borderTopColor: "var(--primary)" }} />
+            </div>
+          ) : submissions.length === 0 ? (
+            <div style={{ padding: "48px 20px", textAlign: "center" }}>
+              <p style={{ color: "var(--text-muted)", fontSize: "var(--text-sm)", fontFamily: "var(--font-body)", margin: 0 }}>No submissions yet</p>
+            </div>
+          ) : submissions.map((s) => {
+            const vc = { AC: { c: "var(--green-ac)", bg: "var(--green-subtle)" }, WA: { c: "var(--red-wa)", bg: "var(--red-subtle)" }, TLE: { c: "var(--amber-tle)", bg: "var(--amber-subtle)" }, CE: { c: "var(--blue-ce)", bg: "var(--blue-subtle)" }, MLE: { c: "var(--purple-mle)", bg: "var(--purple-subtle)" } }[s.submissionVerdict] || { c: "var(--text-muted)", bg: "var(--bg-raised)" };
+            return (
+              <div key={s.id} style={{ borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", gap: 12, padding: "11px 20px", borderLeft: `3px solid ${vc.c}`, background: "transparent", transition: "background 0.12s", cursor: "default" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+              >
+                <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-xs)", fontWeight: 700, color: vc.c, background: vc.bg, padding: "2px 7px", borderRadius: "var(--radius-sm)", letterSpacing: "0.04em", flexShrink: 0 }}>
+                  {s.submissionVerdict ?? "—"}
+                </span>
+                <span style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)", fontFamily: "var(--font-code)" }}>{s.submissionLanguage}</span>
+                <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginLeft: "auto", fontFamily: "var(--font-code)" }}>
+                  {s.testCasesPassed != null ? `${s.testCasesPassed}/${s.totalTestCases}` : ""}
+                  {s.executionTime != null ? ` · ${s.executionTime}ms` : ""}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      );
+      case "results": return (
+        <div style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+          {submitting && queuePosition != null && (
+            <div style={{ padding: "18px 20px", borderRadius: "var(--radius-md)", background: "var(--blue-subtle)", border: "1px solid var(--border-default)", borderLeft: "4px solid var(--blue-ce)", display: "flex", alignItems: "center", gap: 14 }}>
+              <div className="spinner" style={{ borderTopColor: "var(--blue-ce)", width: 18, height: 18, flexShrink: 0 }} />
+              <div>
+                <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "var(--text-xl)", color: "var(--blue-ce)", margin: "0 0 3px", letterSpacing: "0.02em" }}>IN QUEUE</p>
+                <p style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)", margin: 0, fontFamily: "var(--font-code)" }}>Position #{queuePosition}</p>
+              </div>
+            </div>
+          )}
+          {submitting && queuePosition == null && (
+            <div style={{ padding: "18px 20px", borderRadius: "var(--radius-md)", background: "var(--primary-subtle)", border: "1px solid var(--border-accent)", borderLeft: "4px solid var(--primary)", display: "flex", alignItems: "center", gap: 14 }}>
+              <div className="spinner" style={{ borderTopColor: "var(--primary)", width: 18, height: 18, flexShrink: 0 }} />
+              <div>
+                <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "var(--text-xl)", color: "var(--primary)", margin: "0 0 3px", letterSpacing: "0.02em" }}>JUDGING</p>
+                <p style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)", margin: 0, fontFamily: "var(--font-code)" }}>Running against test cases…</p>
+              </div>
+            </div>
+          )}
+          {results && (
+            <>
+              <div style={{ padding: "18px 20px", borderRadius: "var(--radius-md)", background: results.allPassed ? "var(--green-subtle)" : "var(--red-subtle)", border: `1px solid ${results.allPassed ? "var(--green-ac)" : "var(--red-wa)"}33`, borderLeft: `4px solid ${results.allPassed ? "var(--green-ac)" : "var(--red-wa)"}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                  {results.allPassed ? <CheckCircle size={20} color="var(--green-ac)" strokeWidth={2.5} /> : <XCircle size={20} color="var(--red-wa)" strokeWidth={2.5} />}
+                  <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "var(--text-2xl)", letterSpacing: "0.01em", color: results.allPassed ? "var(--green-ac)" : "var(--red-wa)" }}>
+                    {VERDICT_LABEL[results.verdict] ?? results.verdict}
+                  </span>
+                </div>
+                <div style={{ marginBottom: results.executionTime != null || results.memoryUsed != null ? 12 : 0 }}>
+                  <div style={{ height: 3, borderRadius: 2, background: results.allPassed ? "var(--green-subtle)" : "var(--red-subtle)", overflow: "hidden", marginBottom: 6 }}>
+                    <div style={{ height: "100%", width: `${(results.passedCount / results.totalCount) * 100}%`, background: results.allPassed ? "var(--green-ac)" : "var(--red-wa)", borderRadius: 2, transition: "width 0.5s ease" }} />
+                  </div>
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)", fontFamily: "var(--font-code)" }}>
+                    {results.passedCount} / {results.totalCount} test cases passed
+                  </span>
+                </div>
+                {(results.executionTime != null || results.memoryUsed != null) && (
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {results.executionTime != null && (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "var(--text-xs)", fontFamily: "var(--font-code)", fontWeight: 600, color: "var(--text-secondary)", background: "var(--bg-overlay)", padding: "2px 8px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}>
+                        <Clock size={10} />{results.executionTime} ms
+                      </span>
+                    )}
+                    {results.memoryUsed != null && (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "var(--text-xs)", fontFamily: "var(--font-code)", fontWeight: 600, color: "var(--text-secondary)", background: "var(--bg-overlay)", padding: "2px 8px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-subtle)" }}>
+                        <HardDrive size={10} />{results.memoryUsed} KB
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              {results.errorMessage && (
+                <div style={{ borderRadius: "var(--radius-md)", border: "1px solid var(--red-wa)33", overflow: "hidden" }}>
+                  <div style={{ padding: "6px 14px", background: "var(--red-subtle)", borderBottom: "1px solid var(--red-wa)33" }}>
+                    <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--red-wa)", fontFamily: "var(--font-code)", letterSpacing: "0.06em" }}>
+                      {results.verdict === "CE" ? "COMPILATION ERROR" : "RUNTIME ERROR"}
+                    </span>
+                  </div>
+                  <pre style={{ margin: 0, padding: "12px 14px", fontFamily: "var(--font-code)", fontSize: "var(--text-xs)", color: "var(--red-wa)", whiteSpace: "pre-wrap", background: "var(--bg-void)", lineHeight: 1.7, maxHeight: 260, overflowY: "auto" }}>
+                    {results.errorMessage}
+                  </pre>
+                </div>
+              )}
+            </>
+          )}
+          {!submitting && !results && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, paddingTop: 48 }}>
+              <Terminal size={28} style={{ color: "var(--text-muted)", opacity: 0.35 }} />
+              <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--text-muted)", fontFamily: "var(--font-body)" }}>Submit your code to see results</p>
+            </div>
+          )}
+        </div>
+      );
+      case "comments": return (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          {/* Compose */}
+          <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-subtle)", flexShrink: 0 }}>
+            {ApiService.isAuthenticated() ? (
+              <div style={{ borderRadius: "var(--radius-md)", border: "1px solid var(--border-default)", background: "var(--bg-void)", overflow: "hidden", transition: "border-color 0.15s" }}
+                onFocusCapture={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; }}
+                onBlurCapture={(e) => { e.currentTarget.style.borderColor = "var(--border-default)"; }}
+              >
+                <textarea value={commentInput} onChange={(e) => setCommentInput(e.target.value)}
+                  placeholder="Share your approach or ask a question…"
+                  rows={3}
+                  style={{ width: "100%", background: "transparent", border: "none", outline: "none", resize: "vertical", color: "var(--text-primary)", fontSize: "var(--text-sm)", lineHeight: 1.7, padding: "11px 14px", fontFamily: "var(--font-body)", boxSizing: "border-box" }}
+                  onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handlePostComment(); }}
+                />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 12px", borderTop: "1px solid var(--border-subtle)" }}>
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", fontFamily: "var(--font-code)" }}>Ctrl+Enter to post</span>
+                  <button onClick={handlePostComment} disabled={commentSubmitting}
+                    style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 14px", borderRadius: "var(--radius-sm)", background: "var(--primary)", color: "var(--text-inverse)", fontSize: "var(--text-xs)", fontWeight: 700, cursor: commentSubmitting ? "not-allowed" : "pointer", border: "none", outline: "none", opacity: commentSubmitting ? 0.6 : 1, fontFamily: "var(--font-body)" }}>
+                    <Send size={11} />Post
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ padding: "13px 16px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)", background: "var(--bg-raised)", textAlign: "center", fontSize: "var(--text-sm)", color: "var(--text-secondary)", fontFamily: "var(--font-body)" }}>
+                <span style={{ color: "var(--primary)", fontWeight: 600, cursor: "pointer" }}>Log in</span> to join the discussion
+              </div>
+            )}
+          </div>
+          {/* List */}
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            {commentsLoading ? (
+              <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
+                <div className="spinner" style={{ borderTopColor: "var(--primary)" }} />
+              </div>
+            ) : comments.length === 0 ? (
+              <div style={{ padding: "48px 20px", textAlign: "center" }}>
+                <MessageSquare size={26} style={{ color: "var(--text-muted)", opacity: 0.3, margin: "0 auto 10px", display: "block" }} />
+                <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--text-muted)", fontFamily: "var(--font-body)" }}>No comments yet — be the first</p>
+              </div>
+            ) : (
+              <>
+                {comments.map((comment) => (
+                  <CommentBlock key={comment.id} comment={comment} T={T} currentUsername={currentUsername} navigate={navigate}
+                    replyingTo={replyingTo} setReplyingTo={setReplyingTo} replyInput={replyInput} setReplyInput={setReplyInput}
+                    editingComment={editingComment} setEditingComment={setEditingComment} editInput={editInput} setEditInput={setEditInput}
+                    commentSubmitting={commentSubmitting} onVote={handleVote} onReply={handlePostReply} onEditSave={handleEditSave}
+                    onDelete={handleDeleteComment} formatDate={formatCommentDate} />
+                ))}
+                {commentsTotalPages > 1 && (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "14px 20px", borderTop: "1px solid var(--border-subtle)", flexWrap: "wrap" }}>
+                    <button onClick={() => commentPage > 0 && fetchComments(commentPage - 1)} disabled={commentPage === 0}
+                      style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: "var(--radius-sm)", fontSize: "var(--text-xs)", fontWeight: 600, background: "transparent", border: "1px solid var(--border-default)", color: commentPage === 0 ? "var(--text-muted)" : "var(--text-secondary)", cursor: commentPage === 0 ? "not-allowed" : "pointer", opacity: commentPage === 0 ? 0.5 : 1, fontFamily: "var(--font-body)" }}
+                      onMouseEnter={(e) => { if (commentPage > 0) { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; } }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-default)"; e.currentTarget.style.color = commentPage === 0 ? "var(--text-muted)" : "var(--text-secondary)"; }}
+                    ><ChevronLeft size={12} />Prev</button>
+                    {Array.from({ length: commentsTotalPages }, (_, i) => i).map((p) => (
+                      <button key={p} onClick={() => p !== commentPage && fetchComments(p)}
+                        style={{ minWidth: 28, height: 26, borderRadius: "var(--radius-sm)", fontSize: "var(--text-xs)", fontWeight: 700, background: p === commentPage ? "var(--primary)" : "transparent", color: p === commentPage ? "var(--text-inverse)" : "var(--text-secondary)", border: `1px solid ${p === commentPage ? "var(--primary)" : "var(--border-default)"}`, cursor: p === commentPage ? "default" : "pointer", fontFamily: "var(--font-code)" }}
+                        onMouseEnter={(e) => { if (p !== commentPage) { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; } }}
+                        onMouseLeave={(e) => { if (p !== commentPage) { e.currentTarget.style.borderColor = "var(--border-default)"; e.currentTarget.style.color = "var(--text-secondary)"; } }}
+                      >{p + 1}</button>
+                    ))}
+                    <button onClick={() => commentPage < commentsTotalPages - 1 && fetchComments(commentPage + 1)} disabled={commentPage >= commentsTotalPages - 1}
+                      style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: "var(--radius-sm)", fontSize: "var(--text-xs)", fontWeight: 600, background: "transparent", border: "1px solid var(--border-default)", color: commentPage >= commentsTotalPages - 1 ? "var(--text-muted)" : "var(--text-secondary)", cursor: commentPage >= commentsTotalPages - 1 ? "not-allowed" : "pointer", opacity: commentPage >= commentsTotalPages - 1 ? 0.5 : 1, fontFamily: "var(--font-body)" }}
+                      onMouseEnter={(e) => { if (commentPage < commentsTotalPages - 1) { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; } }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-default)"; e.currentTarget.style.color = commentPage >= commentsTotalPages - 1 ? "var(--text-muted)" : "var(--text-secondary)"; }}
+                    >Next<ChevronRight size={12} /></button>
+                    <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", fontFamily: "var(--font-code)", marginLeft: 4 }}>
+                      {commentPage + 1} / {commentsTotalPages} · {commentsTotalElements} total
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      );
+      case "editor": return (
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <CodeEditor ref={codeEditorRef} rightHeaderContent={editorHeaderButtons} />
+        </div>
+      );
+      default: return null;
+    }
+  };
 
   return (
-    <Box
-      height="100vh"
-      width="100vw"
-      overflow="hidden"
-      bg={T.bg}
-      color={T.text}
-      fontFamily="'Inter', system-ui, sans-serif"
-      display="flex"
-      flexDirection="column"
+    <div
+      style={{
+        height: "100vh",
+        width: "100vw",
+        overflow: "hidden",
+        background: T.bg,
+        color: T.text,
+        fontFamily: "'Inter', system-ui, sans-serif",
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
-      {/* ── Top Nav Bar ── */}
-      <Box
-        height="44px"
-        bg={T.surface}
-        borderBottom={`1px solid ${T.border}`}
-        display="flex"
-        alignItems="center"
-        px={4}
-        gap={4}
-        flexShrink={0}
+      {/* Top Nav Bar removed — Save/AI moved into editor header */}
+      {false && <div
+        style={{
+          height: "44px",
+          background: T.surface,
+          borderBottom: `1px solid ${T.border}`,
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: 16,
+          paddingRight: 16,
+          gap: 16,
+          flexShrink: 0,
+        }}
       >
-        <Text
-          fontSize="lg"
-          fontWeight="800"
-          color={T.accent}
-          letterSpacing="-0.03em"
-          fontFamily="'JetBrains Mono', monospace"
+        <span
+          style={{
+            fontSize: 18,
+            fontWeight: "800",
+            color: T.accent,
+            letterSpacing: "-0.03em",
+            fontFamily: "'JetBrains Mono', monospace",
+          }}
         >
           {"<OJ/>"}
-        </Text>
-        <Box flex={1} />
+        </span>
+        <div style={{ flex: 1 }} />
 
         {/* Bookmark / Favorite button */}
-        <Box
-          as="button"
+        <button
           onClick={handleToggleFavorite}
-          display="flex"
-          alignItems="center"
-          gap={1.5}
-          px={3}
-          py={1}
-          borderRadius="6px"
-          bg={isFavorited ? "rgba(251,191,36,0.12)" : "transparent"}
-          border={`1px solid ${isFavorited ? "#fbbf24" : T.border}`}
-          color={isFavorited ? "#fbbf24" : T.textMuted}
-          fontSize="xs"
-          fontWeight="600"
-          cursor={favoriteLoading ? "not-allowed" : "pointer"}
-          opacity={favoriteLoading ? 0.6 : 1}
-          transition="all 0.15s"
-          style={{ outline: "none" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            paddingLeft: 12,
+            paddingRight: 12,
+            paddingTop: 4,
+            paddingBottom: 4,
+            borderRadius: "6px",
+            background: isFavorited ? "rgba(251,191,36,0.12)" : "transparent",
+            border: `1px solid ${isFavorited ? "#fbbf24" : T.border}`,
+            color: isFavorited ? "#fbbf24" : T.textMuted,
+            fontSize: 12,
+            fontWeight: "600",
+            cursor: favoriteLoading ? "not-allowed" : "pointer",
+            opacity: favoriteLoading ? 0.6 : 1,
+            transition: "all 0.15s",
+            outline: "none",
+          }}
           title={isFavorited ? "Remove from favorites" : "Add to favorites"}
         >
           {isFavorited
             ? <BookmarkCheck size={14} />
             : <Bookmark size={14} />}
-          <Text ml={1}>{isFavorited ? "Saved" : "Save"}</Text>
-        </Box>
+          <span style={{ marginLeft: 4 }}>{isFavorited ? "Saved" : "Save"}</span>
+        </button>
 
-        <Box
-          as="button"
+        <button
           onClick={() => setHintPanelOpen((prev) => !prev)}
-          display="flex"
-          alignItems="center"
-          gap={1.5}
-          px={3}
-          py={1}
-          borderRadius="6px"
-          bg={hintPanelOpen ? T.purpleDim : "transparent"}
-          border={`1px solid ${hintPanelOpen ? T.purple : T.border}`}
-          color={hintPanelOpen ? T.purple : T.textMuted}
-          fontSize="xs"
-          fontWeight="600"
-          cursor="pointer"
-          transition="all 0.15s"
-          style={{ outline: "none" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            paddingLeft: 12,
+            paddingRight: 12,
+            paddingTop: 4,
+            paddingBottom: 4,
+            borderRadius: "6px",
+            background: hintPanelOpen ? "var(--primary-subtle)" : "transparent",
+            border: `1px solid ${hintPanelOpen ? "var(--primary)" : "var(--border-default)"}`,
+            color: hintPanelOpen ? "var(--primary)" : "var(--text-secondary)",
+            fontSize: 12,
+            fontWeight: "600",
+            cursor: "pointer",
+            transition: "all 0.15s",
+            outline: "none",
+          }}
         >
-          🤖 <Text ml={1}>AI Assistant</Text>
-        </Box>
-      </Box>
+          <Lightbulb size={14} /><span style={{ marginLeft: 4 }}>Hints</span>
+        </button>
+      </div>}
 
       {/* ── Main split ── */}
-      <Box flex={1} overflow="hidden" display="flex">
-        <Box flex={1} overflow="hidden">
-          <ResizablePane direction="horizontal" initialSizes={[42, 58]}>
-            {/* ══ LEFT: Problem Panel ══ */}
-            <Box
-              height="100%"
-              display="flex"
-              flexDirection="column"
-              bg={T.surface}
-              borderRight={`1px solid ${T.border}`}
+      <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
+        <div style={{ flex: 1, overflow: "hidden" }}>
+          <DndContext
+            sensors={dndSensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+          <PanelGroup direction="horizontal" style={{ height: "100%" }}>
+            {/* ══ LEFT SLOT ══ */}
+            <Panel
+              defaultSize={42}
+              minSize={18}
+              style={{
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                background: T.surface,
+                borderRight: `1px solid ${T.border}`,
+                overflow: "hidden",
+              }}
             >
-              {/* Problem header */}
-              <Box
-                px={5}
-                pt={5}
-                pb={4}
-                borderBottom={`1px solid ${T.border}`}
-                flexShrink={0}
-              >
-                <Text
-                  fontSize="xl"
-                  fontWeight="700"
-                  color={T.text}
-                  mb={3}
-                  lineHeight="1.3"
-                  letterSpacing="-0.02em"
-                >
-                  {problem?.title}
-                </Text>
+              <SlotTabBar slotId="left" />
+              {/* Problem header — follows description panel */}
+              <>
+              {activeInSlot.left === "description" && problemHeaderJSX}
 
-                <Wrap gap={2} align="center">
-                  {problem?.problemDifficulty && (
-                    <WrapItem>
-                      <DifficultyBadge difficulty={problem.problemDifficulty} />
-                    </WrapItem>
-                  )}
-                  {problem?.solved && (
-                    <WrapItem>
-                      <Box
-                        display="inline-flex"
-                        alignItems="center"
-                        gap={1}
-                        px={2}
-                        py="2px"
-                        borderRadius="4px"
-                        fontSize="xs"
-                        fontWeight="700"
-                        color={T.green}
-                        bg={T.greenDim}
-                        border={`1px solid ${T.green}44`}
-                      >
-                        <CheckCircle size={11} />
-                        <Text>Solved</Text>
-                      </Box>
-                    </WrapItem>
-                  )}
-                  {problem?.attempted && !problem?.solved && (
-                    <WrapItem>
-                      <Box
-                        display="inline-flex"
-                        alignItems="center"
-                        gap={1}
-                        px={2}
-                        py="2px"
-                        borderRadius="4px"
-                        fontSize="xs"
-                        fontWeight="700"
-                        color="#f97316"
-                        bg="rgba(249,115,22,0.12)"
-                        border="1px solid rgba(249,115,22,0.3)"
-                      >
-                        <Clock size={11} />
-                        <Text>Attempted</Text>
-                      </Box>
-                    </WrapItem>
-                  )}
-                  <WrapItem>
-                    <StatChip
-                      icon="💎"
-                      value={`${problem?.point} pts`}
-                      color={T.accent}
-                    />
-                  </WrapItem>
-                  <WrapItem>
-                    <StatChip
-                      icon="⏱"
-                      value={`${problem?.timeLimit}s`}
-                      color={T.blue}
-                    />
-                  </WrapItem>
-                  <WrapItem>
-                    <StatChip
-                      icon="💾"
-                      value={`${problem?.memoryLimit}MB`}
-                      color={T.textMuted}
-                    />
-                  </WrapItem>
-                  {activeTags.length > 0 && (
-                    <>
-                      <WrapItem>
-                        <Box
-                          w="1px"
-                          h="16px"
-                          bg={T.border}
-                          mx={1}
-                          display={{ base: "none", sm: "block" }}
-                        />
-                      </WrapItem>
-                      {activeTags.map((tag) => (
-                        <WrapItem key={tag.id}>
-                          <TagChip name={tag.name} />
-                        </WrapItem>
-                      ))}
-                    </>
-                  )}
-                </Wrap>
-              </Box>
-
-              {/* Tab bar */}
-              <Box
-                display="flex"
-                borderBottom={`1px solid ${T.border}`}
-                px={2}
-                flexShrink={0}
-              >
-                {tabs.map((tab) => (
-                  <Box
-                    key={tab.id}
-                    as="button"
-                    px={4}
-                    py={3}
-                    fontSize="sm"
-                    fontWeight="500"
-                    cursor="pointer"
-                    color={activeTab === tab.id ? T.text : T.textMuted}
-                    borderBottom={
-                      activeTab === tab.id
-                        ? `2px solid ${T.accent}`
-                        : "2px solid transparent"
-                    }
-                    bg="transparent"
-                    border="none"
-                    borderBottomStyle="solid"
-                    borderBottomWidth="2px"
-                    borderBottomColor={
-                      activeTab === tab.id ? T.accent : "transparent"
-                    }
-                    transition="all 0.15s"
-                    _hover={{ color: T.text }}
-                    onClick={async () => {
-                      setActiveTab(tab.id);
-                      if (tab.id === "submissions" && !submissionsLoaded) {
-                        await fetchSubmissions();
-                      }
-                      if (tab.id === "comments" && !commentsLoaded) {
-                        await fetchComments();
-                      }
-                    }}
-                    style={{ outline: "none" }}
-                  >
-                    {tab.label}
-                    {tab.id === "results" && results && (
-                      <Box
-                        as="span"
-                        ml={1.5}
-                        display="inline-block"
-                        w={2}
-                        h={2}
-                        borderRadius="full"
-                        bg={results.allPassed ? T.green : T.red}
-                        verticalAlign="middle"
-                      />
-                    )}
-                  </Box>
-                ))}
-              </Box>
-
-              {/* Tab content */}
-              <Box flex={1} overflowY="auto" px={5} py={5}>
+              {/* Panel content — driven by activeInSlot.left */}
+              {activeInSlot.left === "testcases" && renderPanelContent("testcases")}
+              {activeInSlot.left === "editor" && renderPanelContent("editor")}
+              <div style={{ flex: 1, overflowY: "auto", paddingLeft: 20, paddingRight: 20, paddingTop: 20, paddingBottom: 20, display: ["testcases", "editor"].includes(activeInSlot.left) ? "none" : "block" }}>
                 {/* ── Description ── */}
-                {activeTab === "description" && (
-                  <Box
-                    fontSize="sm"
-                    lineHeight="1.8"
-                    color={T.text}
-                    css={{
-                      "& h1,& h2,& h3,& h4": {
-                        fontWeight: "700",
-                        color: T.text,
-                        marginBottom: "0.6rem",
-                        marginTop: "1.4rem",
-                      },
-                      "& h1": { fontSize: "1.2rem" },
-                      "& h2": { fontSize: "1.05rem" },
-                      "& h3": { fontSize: "0.95rem", color: T.textMuted },
-                      "& p": { marginBottom: "0.9rem", color: "#c8c8c8" },
-                      "& code": {
-                        backgroundColor: T.bg,
-                        padding: "0.15rem 0.45rem",
-                        borderRadius: "4px",
-                        fontSize: "0.85em",
-                        fontFamily: "'JetBrains Mono', monospace",
-                        color: T.accent,
-                        border: `1px solid ${T.border}`,
-                      },
-                      "& pre": {
-                        backgroundColor: T.bg,
-                        padding: "1rem 1.2rem",
-                        borderRadius: "8px",
-                        overflowX: "auto",
-                        marginBottom: "1rem",
-                        border: `1px solid ${T.border}`,
-                      },
-                      "& pre code": {
-                        backgroundColor: "transparent",
-                        padding: "0",
-                        color: "#e2e8f0",
-                        border: "none",
-                        fontSize: "0.85rem",
-                      },
-                      "& ul,& ol": {
-                        paddingLeft: "1.4rem",
-                        marginBottom: "0.9rem",
-                      },
-                      "& li": { marginBottom: "0.35rem", color: "#c8c8c8" },
-                      "& strong": { fontWeight: "700", color: T.text },
-                      "& blockquote": {
-                        borderLeft: `3px solid ${T.accent}`,
-                        paddingLeft: "1rem",
-                        marginLeft: "0",
-                        color: T.textMuted,
-                        fontStyle: "italic",
-                      },
+                {activeInSlot.left === "description" && (
+                  <div
+                    className="problem-description"
+                    style={{
+                      fontSize: 13,
+                      lineHeight: "1.8",
+                      color: T.text,
                     }}
                   >
                     <ReactMarkdown>{statement}</ReactMarkdown>
-                  </Box>
+                  </div>
                 )}
 
                 {/* ── Test Cases ── */}
-                {activeTab === "testcases" && (
-                  <VStack align="stretch" gap={3}>
+                {activeInSlot.left === "testcases" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {testCases.map((tc, index) => (
-                      <Box
+                      <div
                         key={tc.id}
-                        borderRadius="8px"
-                        border={`1px solid ${T.border}`}
-                        overflow="hidden"
+                        style={{
+                          borderRadius: "8px",
+                          border: `1px solid ${T.border}`,
+                          overflow: "hidden",
+                        }}
                       >
-                        <Box
-                          px={3}
-                          py={2}
-                          bg={T.bg}
-                          borderBottom={`1px solid ${T.border}`}
+                        <div
+                          style={{
+                            paddingLeft: 12,
+                            paddingRight: 12,
+                            paddingTop: 8,
+                            paddingBottom: 8,
+                            background: T.bg,
+                            borderBottom: `1px solid ${T.border}`,
+                          }}
                         >
-                          <Text
-                            fontSize="xs"
-                            fontWeight="600"
-                            color={T.textMuted}
-                            letterSpacing="0.05em"
+                          <span
+                            style={{
+                              fontSize: 12,
+                              fontWeight: "600",
+                              color: T.textMuted,
+                              letterSpacing: "0.05em",
+                            }}
                           >
                             CASE {index + 1}
-                          </Text>
-                        </Box>
-                        <Box
-                          p={3}
-                          display="grid"
-                          gridTemplateColumns="1fr 1fr"
-                          gap={3}
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            padding: 12,
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            gap: 12,
+                          }}
                         >
                           {[
                             { label: "INPUT", val: tc.input, color: "#c8c8c8" },
@@ -1347,161 +1544,141 @@ const ProblemDetailsPage = () => {
                               color: T.green,
                             },
                           ].map(({ label, val, color }) => (
-                            <Box key={label}>
-                              <Text
-                                fontSize="xs"
-                                color={T.textDim}
-                                fontWeight="600"
-                                mb={1}
-                                letterSpacing="0.04em"
+                            <div key={label}>
+                              <span
+                                style={{
+                                  fontSize: 12,
+                                  color: T.textDim,
+                                  fontWeight: "600",
+                                  marginBottom: 4,
+                                  display: "block",
+                                  letterSpacing: "0.04em",
+                                }}
                               >
                                 {label}
-                              </Text>
-                              <Box
-                                bg={T.bg}
-                                p={2}
-                                borderRadius="6px"
-                                fontFamily="'JetBrains Mono', monospace"
-                                fontSize="xs"
-                                color={color}
-                                whiteSpace="pre-wrap"
-                                border={`1px solid ${T.border}`}
-                                minH="40px"
+                              </span>
+                              <div
+                                style={{
+                                  background: T.bg,
+                                  padding: 8,
+                                  borderRadius: "6px",
+                                  fontFamily: "'JetBrains Mono', monospace",
+                                  fontSize: 12,
+                                  color,
+                                  whiteSpace: "pre-wrap",
+                                  border: `1px solid ${T.border}`,
+                                  minHeight: "40px",
+                                  maxHeight: 200,
+                                  overflowY: "auto",
+                                }}
                               >
                                 {val}
-                              </Box>
-                            </Box>
+                              </div>
+                            </div>
                           ))}
-                        </Box>
-                      </Box>
+                        </div>
+                      </div>
                     ))}
-                  </VStack>
+                  </div>
                 )}
 
                 {/* ── Submissions ── */}
-                {activeTab === "submissions" && (
-                  <Box height="100%" display="flex" flexDirection="column">
+                {activeInSlot.left === "submissions" && (
+                  <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
                     {/* ── Submission detail view (like NeetCode's "← All Submissions" panel) ── */}
                     {viewingSubmission ? (
-                      <Box display="flex" flexDirection="column" height="100%">
-                        {/* Back button */}
-                        <Box
-                          as="button"
-                          onClick={() => setViewingSubmission(null)}
-                          display="flex"
-                          alignItems="center"
-                          gap={2}
-                          mb={4}
-                          color={T.textMuted}
-                          bg="transparent"
-                          border="none"
-                          cursor="pointer"
-                          fontSize="sm"
-                          _hover={{ color: T.text }}
-                          style={{ outline: "none" }}
-                          flexShrink={0}
-                        >
-                          <Text>←</Text>
-                          <Text>All Submissions</Text>
-                        </Box>
-
-                        {/* Code header */}
-                        <HStack gap={3} mb={3} flexShrink={0}>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="600"
-                            color={T.textMuted}
+                      <div style={{ display: "flex", flexDirection: "column", overflowY: "auto", flex: 1 }}>
+                        {/* Back button + header */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid var(--border-subtle)", flexShrink: 0 }}>
+                          <button onClick={() => setViewingSubmission(null)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: "var(--radius-sm)", background: "transparent", border: "1px solid var(--border-default)", color: "var(--text-secondary)", cursor: "pointer", fontSize: "var(--text-xs)", fontWeight: 600, outline: "none", transition: "all 0.12s", fontFamily: "var(--font-body)", flexShrink: 0 }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-default)"; e.currentTarget.style.color = "var(--text-secondary)"; }}
                           >
-                            Code
-                          </Text>
-                          <Box w="1px" h="14px" bg={T.border} />
-                          <Text
-                            fontSize="sm"
-                            fontWeight="600"
-                            color={T.textMuted}
-                            fontFamily="'JetBrains Mono', monospace"
-                          >
+                            <ChevronLeft size={12} />All
+                          </button>
+                          <div style={{ width: 1, height: 16, background: "var(--border-default)", flexShrink: 0 }} />
+                          {(() => {
+                            const VC = { AC: "var(--green-ac)", WA: "var(--red-wa)", TLE: "var(--amber-tle)", CE: "var(--blue-ce)", MLE: "var(--purple-mle)", RE: "var(--red-wa)" };
+                            const vc = VC[viewingSubmission.submissionVerdict] || "var(--text-muted)";
+                            return (
+                              <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "var(--text-base)", color: vc, letterSpacing: "0.01em" }}>
+                                {VERDICT_LABEL[viewingSubmission.submissionVerdict] ?? viewingSubmission.submissionVerdict}
+                              </span>
+                            );
+                          })()}
+                          <span style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)", fontFamily: "var(--font-code)", background: "var(--bg-overlay)", border: "1px solid var(--border-subtle)", padding: "2px 8px", borderRadius: "var(--radius-sm)" }}>
                             {viewingSubmission.submissionLanguage}
-                          </Text>
-                          <Box flex={1} />
-                          <Text
-                            fontSize="xs"
-                            fontWeight="600"
-                            color={
-                              viewingSubmission.submissionVerdict === "AC"
-                                ? T.green
-                                : T.red
-                            }
-                          >
-                            {VERDICT_LABEL[
-                              viewingSubmission.submissionVerdict
-                            ] ?? viewingSubmission.submissionVerdict}
-                          </Text>
+                          </span>
+                          <div style={{ flex: 1 }} />
                           {viewingSubmission.executionTime != null && (
-                            <Text fontSize="xs" color={T.textMuted}>
-                              {viewingSubmission.executionTime} s
-                            </Text>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "var(--text-xs)", color: "var(--text-secondary)", fontFamily: "var(--font-code)" }}>
+                              <Clock size={10} />{viewingSubmission.executionTime}s
+                            </span>
                           )}
                           {viewingSubmission.memoryUsed != null && (
-                            <Text fontSize="xs" color={T.textMuted}>
-                              {viewingSubmission.memoryUsed} KB
-                            </Text>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "var(--text-xs)", color: "var(--text-secondary)", fontFamily: "var(--font-code)" }}>
+                              <HardDrive size={10} />{viewingSubmission.memoryUsed}KB
+                            </span>
                           )}
-                        </HStack>
+                        </div>
 
-                        {/* Code block with syntax highlighting */}
-                        <Box
-                          overflowY="auto"
-                          borderRadius="8px"
-                          border={`1px solid ${T.border}`}
-                          bg="#1E1E1E" // atom-one-dark background
+                        {/* Code block with syntax highlighting — always dark regardless of theme */}
+                        <div
+                          style={{
+                            margin: "0 16px 16px",
+                            borderRadius: "var(--radius-md)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            background: "#0D1117",
+                            overflow: "hidden",
+                          }}
                         >
-                          <Box
-                            display="flex"
-                            fontFamily="'JetBrains Mono', 'Fira Code', monospace"
-                            fontSize="xs"
-                            lineHeight="1.8"
+                          <div
+                            style={{
+                              display: "flex",
+                              fontFamily: "var(--font-code)",
+                              fontSize: 12,
+                              lineHeight: "1.8",
+                            }}
                           >
                             {/* Line numbers column */}
-                            <Box
-                              px={3}
-                              py={4}
-                              borderRight={`1px solid ${T.border}`}
-                              color={T.textDim}
-                              userSelect="none"
-                              textAlign="right"
-                              flexShrink={0}
-                              bg="#1a1a1a"
-                              minW="50px"
+                            <div
+                              style={{
+                                paddingLeft: 12,
+                                paddingRight: 14,
+                                paddingTop: 16,
+                                paddingBottom: 16,
+                                borderRight: "1px solid rgba(255,255,255,0.06)",
+                                color: "#4A5568",
+                                userSelect: "none",
+                                textAlign: "right",
+                                flexShrink: 0,
+                                background: "#080C14",
+                                minWidth: "48px",
+                              }}
                             >
                               {(viewingSubmission.sourceCode || "")
                                 .split("\n")
                                 .map((_, i) => (
-                                  <Box key={i} lineHeight="1.8" fontSize="xs">
+                                  <div key={i} style={{ lineHeight: "1.8", fontSize: 12 }}>
                                     {i + 1}
-                                  </Box>
+                                  </div>
                                 ))}
-                            </Box>
+                            </div>
 
                             {/* Highlighted code */}
-                            <Box
-                              as="pre"
-                              m={0}
-                              p={4}
-                              flex={1}
-                              overflow="auto"
-                              css={{
-                                "& code.hljs": {
-                                  background: "transparent",
-                                  padding: 0,
-                                  fontSize: "0.75rem",
-                                  fontFamily:
-                                    "'JetBrains Mono', 'Fira Code', monospace",
-                                  lineHeight: "1.8",
-                                },
+                            <pre
+                              style={{
+                                margin: 0,
+                                padding: 16,
+                                flex: 1,
+                                overflow: "visible",
+                                background: "#0D1117",
+                                color: "#C9D1D9",
+                                border: "none",
+                                borderRadius: 0,
                               }}
                               dangerouslySetInnerHTML={{
-                                __html: `<code class="hljs language-${getHljsLanguage(viewingSubmission.submissionLanguage)}">${
+                                __html: `<code class="hljs language-${getHljsLanguage(viewingSubmission.submissionLanguage)}" style="background:transparent;padding:0;font-size:0.75rem;font-family:var(--font-code);line-height:1.8;color:#C9D1D9">${
                                   hljs.highlight(
                                     viewingSubmission.sourceCode ||
                                       "// No source code available",
@@ -1514,595 +1691,232 @@ const ProblemDetailsPage = () => {
                                 }</code>`,
                               }}
                             />
-                          </Box>
-                        </Box>
-                      </Box>
-                    ) : (
-                      /* ── Submission list view ── */
-                      <VStack align="stretch" gap={3}>
-                        {/* Filter chips */}
-                        {submissions.length > 0 && (
-                          <HStack gap={2} flexWrap="wrap">
-                            {/* "All" chip */}
-                            <Box
-                              as="button"
-                              onClick={() => setVerdictFilter(null)}
-                              px={3}
-                              py="4px"
-                              borderRadius="20px"
-                              fontSize="xs"
-                              fontWeight="600"
-                              cursor="pointer"
-                              bg="transparent"
-                              border="none"
-                              color={
-                                verdictFilter === null ? T.text : T.textMuted
-                              }
-                              borderBottom={`2px solid ${verdictFilter === null ? T.accent : "transparent"}`}
-                              style={{ outline: "none" }}
-                            >
-                              All
-                            </Box>
-
-                            {/* Per-verdict chips */}
-                            {[
-                              ...new Set(
-                                submissions.map((s) => s.submissionVerdict),
-                              ),
-                            ]
-                              .filter(Boolean)
-                              .map((v) => (
-                                <Box
-                                  key={v}
-                                  as="button"
-                                  onClick={() =>
-                                    setVerdictFilter((prev) =>
-                                      prev === v ? null : v,
-                                    )
-                                  }
-                                  px={3}
-                                  py="4px"
-                                  borderRadius="20px"
-                                  fontSize="xs"
-                                  fontWeight="600"
-                                  cursor="pointer"
-                                  border="none"
-                                  style={{ outline: "none" }}
-                                  color={v === "AC" ? T.green : T.red}
-                                  bg={
-                                    verdictFilter === v
-                                      ? v === "AC"
-                                        ? T.greenDim
-                                        : T.redDim
-                                      : "transparent"
-                                  }
-                                  borderBottom={`2px solid ${
-                                    verdictFilter === v
-                                      ? v === "AC"
-                                        ? T.green
-                                        : T.red
-                                      : "transparent"
-                                  }`}
-                                  transition="all 0.15s"
-                                >
-                                  {VERDICT_LABEL[v] ?? v}
-                                </Box>
-                              ))}
-                          </HStack>
-                        )}
-
-                        {loadingSubmissions && (
-                          <HStack justify="center" py={4}>
-                            <Spinner size="sm" color={T.accent} />
-                            <Text fontSize="sm" color={T.textMuted}>
-                              Loading submissions...
-                            </Text>
-                          </HStack>
-                        )}
-
-                        {!loadingSubmissions && submissions.length === 0 && (
-                          <Text fontSize="sm" color={T.textMuted}>
-                            You have no submissions for this problem yet.
-                          </Text>
-                        )}
-
-                        {/* Table header */}
-                        {!loadingSubmissions && submissions.length > 0 && (
-                          <Box
-                            display="grid"
-                            gridTemplateColumns="1fr 100px 100px 60px"
-                            px={3}
-                            py={2}
-                            borderBottom={`1px solid ${T.border}`}
-                          >
-                            {[
-                              "Submission",
-                              "Language",
-                              "Time / Mem",
-                              "Code",
-                            ].map((h) => (
-                              <Text
-                                key={h}
-                                fontSize="xs"
-                                fontWeight="700"
-                                color={T.textMuted}
-                                letterSpacing="0.05em"
+                          </div>
+                        </div>
+                      </div>
+                    ) : (() => {
+                      const VC = {
+                        AC:  { c: "var(--green-ac)",   bg: "var(--green-subtle)"   },
+                        WA:  { c: "var(--red-wa)",     bg: "var(--red-subtle)"     },
+                        TLE: { c: "var(--amber-tle)",  bg: "var(--amber-subtle)"   },
+                        CE:  { c: "var(--blue-ce)",    bg: "var(--blue-subtle)"    },
+                        MLE: { c: "var(--purple-mle)", bg: "var(--purple-subtle)"  },
+                        RE:  { c: "var(--red-wa)",     bg: "var(--red-subtle)"     },
+                      };
+                      const verdicts = [...new Set(submissions.map((s) => s.submissionVerdict))].filter(Boolean);
+                      const countOf = (v) => submissions.filter((s) => s.submissionVerdict === v).length;
+                      const filtered = submissions.filter((s) => verdictFilter ? s.submissionVerdict === verdictFilter : true);
+                      return (
+                        <div style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
+                          {/* ── Filter bar ── */}
+                          {submissions.length > 0 && (
+                            <div style={{ padding: "10px 16px 0", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", flexShrink: 0 }}>
+                              {/* All pill */}
+                              <button onClick={() => setVerdictFilter(null)} style={{
+                                display: "inline-flex", alignItems: "center", gap: 5,
+                                padding: "4px 11px", borderRadius: "var(--radius-pill)",
+                                fontSize: "var(--text-xs)", fontWeight: 700,
+                                fontFamily: "var(--font-code)", letterSpacing: "0.04em",
+                                cursor: "pointer", outline: "none", transition: "all 0.12s",
+                                border: `1px solid ${verdictFilter === null ? "var(--primary)" : "var(--border-default)"}`,
+                                background: verdictFilter === null ? "var(--primary-subtle)" : "transparent",
+                                color: verdictFilter === null ? "var(--primary)" : "var(--text-secondary)",
+                              }}
+                                onMouseEnter={(e) => { if (verdictFilter !== null) { e.currentTarget.style.borderColor = "var(--border-strong)"; e.currentTarget.style.color = "var(--text-primary)"; } }}
+                                onMouseLeave={(e) => { if (verdictFilter !== null) { e.currentTarget.style.borderColor = "var(--border-default)"; e.currentTarget.style.color = "var(--text-secondary)"; } }}
                               >
-                                {h}
-                              </Text>
-                            ))}
-                          </Box>
-                        )}
+                                ALL
+                                <span style={{ fontWeight: 400, opacity: 0.7 }}>{submissions.length}</span>
+                              </button>
 
-                        {/* Rows — filtered */}
-                        {!loadingSubmissions &&
-                          submissions
-                            .filter((s) =>
-                              verdictFilter
-                                ? s.submissionVerdict === verdictFilter
-                                : true,
-                            )
-                            .map((sub) => (
-                              <Box
-                                key={sub.id}
-                                display="grid"
-                                gridTemplateColumns="1fr 100px 100px 60px"
-                                alignItems="center"
-                                px={3}
-                                py={3}
-                                borderRadius="8px"
-                                border={`1px solid ${T.border}`}
-                                bg={T.bg}
-                                _hover={{ borderColor: T.borderBright }}
-                                transition="border-color 0.15s"
-                              >
-                                {/* Verdict + date */}
-                                <Box>
-                                  <Text
-                                    fontSize="sm"
-                                    fontWeight="600"
-                                    color={
-                                      sub.submissionVerdict === "AC"
-                                        ? T.green
-                                        : T.red
-                                    }
+                              {/* Per-verdict pills */}
+                              {verdicts.map((v) => {
+                                const vc = VC[v] || { c: "var(--text-muted)", bg: "var(--bg-raised)" };
+                                const active = verdictFilter === v;
+                                return (
+                                  <button key={v} onClick={() => setVerdictFilter((prev) => prev === v ? null : v)} style={{
+                                    display: "inline-flex", alignItems: "center", gap: 5,
+                                    padding: "4px 11px", borderRadius: "var(--radius-pill)",
+                                    fontSize: "var(--text-xs)", fontWeight: 700,
+                                    fontFamily: "var(--font-code)", letterSpacing: "0.04em",
+                                    cursor: "pointer", outline: "none", transition: "all 0.12s",
+                                    border: `1px solid ${active ? vc.c : "var(--border-default)"}`,
+                                    background: active ? vc.bg : "transparent",
+                                    color: active ? vc.c : "var(--text-secondary)",
+                                  }}
+                                    onMouseEnter={(e) => { if (!active) { e.currentTarget.style.borderColor = vc.c; e.currentTarget.style.color = vc.c; } }}
+                                    onMouseLeave={(e) => { if (!active) { e.currentTarget.style.borderColor = "var(--border-default)"; e.currentTarget.style.color = "var(--text-secondary)"; } }}
                                   >
-                                    {VERDICT_LABEL[sub.submissionVerdict] ??
-                                      sub.submissionVerdict}
-                                  </Text>
-                                  <HStack gap={2} mt="2px">
-                                    {sub.submissionDate && (
-                                      <Text fontSize="xs" color={T.textMuted}>
-                                        {new Date(
-                                          sub.submissionDate,
-                                        ).toLocaleDateString()}
-                                      </Text>
-                                    )}
-                                    {sub.testCasesPassed != null &&
-                                      sub.totalTestCases != null && (
-                                        <Text fontSize="xs" color={T.textMuted}>
-                                          · {sub.testCasesPassed}/
-                                          {sub.totalTestCases} tests
-                                        </Text>
-                                      )}
-                                  </HStack>
-                                </Box>
-
-                                {/* Language */}
-                                <Text
-                                  fontSize="xs"
-                                  color={T.textMuted}
-                                  fontFamily="'JetBrains Mono', monospace"
-                                >
-                                  {sub.submissionLanguage}
-                                </Text>
-
-                                {/* Time + memory */}
-                                <Box>
-                                  {sub.executionTime != null && (
-                                    <Text fontSize="xs" color={T.textMuted}>
-                                      {sub.executionTime} s
-                                    </Text>
-                                  )}
-                                  {sub.memoryUsed != null && (
-                                    <Text fontSize="xs" color={T.textMuted}>
-                                      {sub.memoryUsed} KB
-                                    </Text>
-                                  )}
-                                </Box>
-
-                                {/* View code */}
-                                <Box
-                                  as="button"
-                                  onClick={() => setViewingSubmission(sub)}
-                                  fontSize="xs"
-                                  fontWeight="600"
-                                  color={T.accent}
-                                  bg="transparent"
-                                  border="none"
-                                  cursor="pointer"
-                                  textAlign="left"
-                                  _hover={{ textDecoration: "underline" }}
-                                  style={{ outline: "none" }}
-                                >
-                                  View
-                                </Box>
-                              </Box>
-                            ))}
-
-                        {/* Empty state after filtering */}
-                        {!loadingSubmissions &&
-                          submissions.length > 0 &&
-                          submissions.filter((s) =>
-                            verdictFilter
-                              ? s.submissionVerdict === verdictFilter
-                              : true,
-                          ).length === 0 && (
-                            <Text fontSize="sm" color={T.textMuted}>
-                              No{" "}
-                              {VERDICT_LABEL[verdictFilter]?.label ??
-                                verdictFilter}{" "}
-                              submissions.
-                            </Text>
+                                    {v}
+                                    <span style={{ fontWeight: 400, opacity: 0.7 }}>{countOf(v)}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
                           )}
-                      </VStack>
-                    )}
-                  </Box>
+
+                          {/* ── Column headers ── */}
+                          {!loadingSubmissions && submissions.length > 0 && (
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 110px 48px", padding: "10px 16px 6px", borderBottom: "1px solid var(--border-subtle)", marginTop: 10, flexShrink: 0 }}>
+                              {["VERDICT", "LANG", "TIME / MEM", ""].map((h) => (
+                                <span key={h} style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.07em", fontFamily: "var(--font-code)" }}>{h}</span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* ── Rows ── */}
+                          <div style={{ flex: 1, overflowY: "auto" }}>
+                            {loadingSubmissions && (
+                              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, padding: "24px 0" }}>
+                                <div className="spinner" style={{ borderTopColor: "var(--primary)" }} />
+                                <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", fontFamily: "var(--font-body)" }}>Loading…</span>
+                              </div>
+                            )}
+
+                            {!loadingSubmissions && submissions.length === 0 && (
+                              <div style={{ padding: "40px 16px", textAlign: "center" }}>
+                                <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--text-muted)", fontFamily: "var(--font-body)" }}>No submissions yet</p>
+                              </div>
+                            )}
+
+                            {!loadingSubmissions && filtered.map((sub) => {
+                              const vc = VC[sub.submissionVerdict] || { c: "var(--text-muted)", bg: "var(--bg-raised)" };
+                              return (
+                                <div key={sub.id}
+                                  style={{ display: "grid", gridTemplateColumns: "1fr 80px 110px 48px", alignItems: "center", padding: "11px 16px", borderBottom: "1px solid var(--border-subtle)", borderLeft: `3px solid ${vc.c}`, background: "transparent", transition: "background 0.1s", cursor: "default" }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                                >
+                                  {/* Verdict + date + test count */}
+                                  <div>
+                                    <span style={{ display: "block", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "var(--text-base)", color: vc.c, letterSpacing: "0.01em" }}>
+                                      {VERDICT_LABEL[sub.submissionVerdict] ?? sub.submissionVerdict}
+                                    </span>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                                      {sub.submissionDate && (
+                                        <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", fontFamily: "var(--font-code)" }}>
+                                          {new Date(sub.submissionDate).toLocaleDateString()}
+                                        </span>
+                                      )}
+                                      {sub.testCasesPassed != null && sub.totalTestCases != null && (
+                                        <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", fontFamily: "var(--font-code)" }}>
+                                          · {sub.testCasesPassed}/{sub.totalTestCases}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Language */}
+                                  <span style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)", fontFamily: "var(--font-code)", fontWeight: 500 }}>
+                                    {sub.submissionLanguage}
+                                  </span>
+
+                                  {/* Time + memory */}
+                                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                    {sub.executionTime != null && (
+                                      <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: "var(--text-xs)", color: "var(--text-secondary)", fontFamily: "var(--font-code)" }}>
+                                        <Clock size={9} />{sub.executionTime}s
+                                      </span>
+                                    )}
+                                    {sub.memoryUsed != null && (
+                                      <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: "var(--text-xs)", color: "var(--text-secondary)", fontFamily: "var(--font-code)" }}>
+                                        <HardDrive size={9} />{sub.memoryUsed}KB
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* View code arrow */}
+                                  <button onClick={() => setViewingSubmission(sub)} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "var(--radius-sm)", background: "transparent", border: "1px solid var(--border-default)", color: "var(--text-muted)", cursor: "pointer", outline: "none", transition: "all 0.12s", flexShrink: 0 }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; e.currentTarget.style.background = "var(--primary-subtle)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-default)"; e.currentTarget.style.color = "var(--text-muted)"; e.currentTarget.style.background = "transparent"; }}
+                                  >
+                                    <ChevronRight size={13} />
+                                  </button>
+                                </div>
+                              );
+                            })}
+
+                            {!loadingSubmissions && submissions.length > 0 && filtered.length === 0 && (
+                              <div style={{ padding: "32px 16px", textAlign: "center" }}>
+                                <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--text-muted)", fontFamily: "var(--font-body)" }}>
+                                  No {verdictFilter} submissions
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
                 )}
 
                 {/* ── Results ── */}
-                {activeTab === "results" && (
-                  <VStack align="stretch" gap={3}>
-                    {/* PENDING: sitting in queue */}
-                    {submitting && queuePosition != null && (
-                      <Box
-                        p={4}
-                        borderRadius="8px"
-                        bg={T.blueDim}
-                        border={`1px solid ${T.blue}44`}
-                        display="flex"
-                        alignItems="center"
-                        gap={3}
-                      >
-                        <Spinner size="sm" color={T.blue} />
-                        <Box>
-                          <Text fontWeight="700" fontSize="sm" color={T.blue}>
-                            Waiting in queue
-                          </Text>
-                          <Text fontSize="xs" color={T.textMuted}>
-                            Position: {queuePosition}
-                          </Text>
-                        </Box>
-                      </Box>
-                    )}
-
-                    {/* RUNNING: Judge0 is executing */}
-                    {submitting && queuePosition == null && (
-                      <Box
-                        p={4}
-                        borderRadius="8px"
-                        bg={T.accentDim}
-                        border={`1px solid ${T.accent}44`}
-                        display="flex"
-                        alignItems="center"
-                        gap={3}
-                      >
-                        <Spinner size="sm" color={T.accent} />
-                        <Box>
-                          <Text fontWeight="700" fontSize="sm" color={T.accent}>
-                            Judging...
-                          </Text>
-                          <Text fontSize="xs" color={T.textMuted}>
-                            Running against test cases
-                          </Text>
-                        </Box>
-                      </Box>
-                    )}
-
-                    {/* COMPLETED: show verdict */}
-                    {results && (
-                      <>
-                        <Box
-                          p={4}
-                          borderRadius="8px"
-                          bg={results.allPassed ? T.greenDim : T.redDim}
-                          border={`1px solid ${results.allPassed ? T.green + "44" : T.red + "44"}`}
-                          display="flex"
-                          alignItems="center"
-                          gap={3}
-                        >
-                          {results.allPassed ? (
-                            <CheckCircle size={22} color={T.green} />
-                          ) : (
-                            <XCircle size={22} color={T.red} />
-                          )}
-                          <Box>
-                            <Text
-                              fontWeight="700"
-                              fontSize="sm"
-                              color={results.allPassed ? T.green : T.red}
-                            >
-                              {VERDICT_LABEL[results.verdict] ??
-                                results.verdict}
-                            </Text>
-                            <Text fontSize="xs" color={T.textMuted}>
-                              {results.passedCount} / {results.totalCount} test
-                              cases passed
-                            </Text>
-                            {(results.executionTime != null ||
-                              results.memoryUsed != null) && (
-                              <Text fontSize="xs" color={T.textMuted}>
-                                {results.executionTime != null &&
-                                  `${results.executionTime} ms`}
-                                {results.executionTime != null &&
-                                  results.memoryUsed != null &&
-                                  " · "}
-                                {results.memoryUsed != null &&
-                                  `${results.memoryUsed} KB`}
-                              </Text>
-                            )}
-                          </Box>
-                        </Box>
-
-                        {results.errorMessage && (
-                          <Box>
-                            <Text
-                              fontSize="xs"
-                              color={T.red}
-                              fontWeight="600"
-                              mb={1}
-                            >
-                              {results.verdict === "CE"
-                                ? "COMPILATION ERROR"
-                                : "ERROR"}
-                            </Text>
-                            <Box
-                              bg={T.redDim}
-                              p={3}
-                              borderRadius="6px"
-                              fontFamily="'JetBrains Mono', monospace"
-                              fontSize="xs"
-                              color={T.red}
-                              whiteSpace="pre-wrap"
-                              border={`1px solid ${T.red}33`}
-                            >
-                              {results.errorMessage}
-                            </Box>
-                          </Box>
-                        )}
-                      </>
-                    )}
-                  </VStack>
-                )}
+                {activeInSlot.left === "results" && renderPanelContent("results")}
 
                 {/* ── Comments ── */}
-                {activeTab === "comments" && (
-                  <VStack align="stretch" gap={0}>
+                {activeInSlot.left === "comments" && renderPanelContent("comments")}
+              </div>
+              </>}
+            </Panel>
 
-                    {/* ── Compose box ── */}
-                    {ApiService.isAuthenticated() ? (
-                      <Box
-                        mb={5}
-                        p={3}
-                        borderRadius="8px"
-                        border={`1px solid ${T.border}`}
-                        bg={T.surface}
-                      >
-                        <textarea
-                          value={commentInput}
-                          onChange={(e) => setCommentInput(e.target.value)}
-                          placeholder="Share your thoughts or ask a question..."
-                          rows={3}
-                          style={{
-                            width: "100%",
-                            background: "transparent",
-                            border: "none",
-                            outline: "none",
-                            resize: "vertical",
-                            color: T.text,
-                            fontSize: "13px",
-                            lineHeight: "1.6",
-                            fontFamily: "'Inter', system-ui, sans-serif",
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && e.ctrlKey) handlePostComment();
-                          }}
-                        />
-                        <Box display="flex" justifyContent="flex-end" mt={2}>
-                          <Box
-                            as="button"
-                            display="flex" alignItems="center" gap={1.5}
-                            px={3} py={1.5}
-                            borderRadius="6px"
-                            bg={T.accent}
-                            color="#000"
-                            fontSize="xs" fontWeight="700"
-                            cursor={commentSubmitting ? "not-allowed" : "pointer"}
-                            opacity={commentSubmitting ? 0.6 : 1}
-                            onClick={handlePostComment}
-                            style={{ outline: "none", border: "none" }}
-                          >
-                            <Send size={12} />
-                            <span>Post</span>
-                          </Box>
-                        </Box>
-                      </Box>
-                    ) : (
-                      <Box
-                        mb={5} p={3}
-                        borderRadius="8px"
-                        border={`1px solid ${T.border}`}
-                        bg={T.surface}
-                        textAlign="center"
-                      >
-                        <Text fontSize="sm" color={T.textMuted}>
-                          <Box as="span" color={T.accent} fontWeight="600">Log in</Box> to join the discussion
-                        </Text>
-                      </Box>
-                    )}
+            <ResizeHandle direction="horizontal" />
 
-                    {/* ── Comment list ── */}
-                    {commentsLoading ? (
-                      <Box py={10} display="flex" justifyContent="center">
-                        <Spinner color={T.accent} size="md" />
-                      </Box>
-                    ) : comments.length === 0 ? (
-                      <Box py={10} textAlign="center">
-                        <MessageSquare size={36} color={T.textDim} />
-                        <Text mt={3} color={T.textMuted} fontSize="sm">No comments yet. Be the first!</Text>
-                      </Box>
-                    ) : (
-                      <VStack align="stretch" gap={0}>
-                        {comments.map((comment) => (
-                          <CommentBlock
-                            key={comment.id}
-                            comment={comment}
-                            T={T}
-                            currentUsername={currentUsername}
-                            navigate={navigate}
-                            replyingTo={replyingTo}
-                            setReplyingTo={setReplyingTo}
-                            replyInput={replyInput}
-                            setReplyInput={setReplyInput}
-                            editingComment={editingComment}
-                            setEditingComment={setEditingComment}
-                            editInput={editInput}
-                            setEditInput={setEditInput}
-                            commentSubmitting={commentSubmitting}
-                            onVote={handleVote}
-                            onReply={handlePostReply}
-                            onEditSave={handleEditSave}
-                            onDelete={handleDeleteComment}
-                            formatDate={formatCommentDate}
-                          />
-                        ))}
+            {/* ══ RIGHT COLUMN — vertical split ══ */}
+            <Panel defaultSize={58} minSize={20} style={{ overflow: "hidden" }}>
+              <PanelGroup direction="vertical" style={{ height: "100%" }}>
+                {/* RIGHT-TOP SLOT */}
+                <Panel defaultSize={60} minSize={20} style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+                  <SlotTabBar slotId="right-top" />
+                  {renderPanelContent(activeInSlot["right-top"])}
+                </Panel>
 
-                        {/* Pagination bar */}
-                        {commentsTotalPages > 1 && (
-                          <Box
-                            display="flex" alignItems="center" justifyContent="center"
-                            gap={1} pt={4} pb={2} flexWrap="wrap"
-                          >
-                            {/* Prev */}
-                            <Box as="button"
-                              px={3} py={1} borderRadius="6px" fontSize="xs" fontWeight="600"
-                              bg={commentPage === 0 ? T.borderBright : T.surface2}
-                              color={commentPage === 0 ? T.textDim : T.textMuted}
-                              border={`1px solid ${T.border}`}
-                              cursor={commentPage === 0 ? "not-allowed" : "pointer"}
-                              _hover={commentPage > 0 ? { borderColor: T.accent, color: T.accent } : {}}
-                              onClick={() => commentPage > 0 && fetchComments(commentPage - 1)}
-                              style={{ outline: "none" }}
-                            >
-                              ← Prev
-                            </Box>
+                <ResizeHandle direction="vertical" />
 
-                            {/* Page numbers */}
-                            {Array.from({ length: commentsTotalPages }, (_, i) => i).map((p) => (
-                              <Box as="button" key={p}
-                                px={3} py={1} borderRadius="6px" fontSize="xs" fontWeight="700"
-                                bg={p === commentPage ? T.accent : T.surface2}
-                                color={p === commentPage ? "#000" : T.textMuted}
-                                border={`1px solid ${p === commentPage ? T.accent : T.border}`}
-                                cursor={p === commentPage ? "default" : "pointer"}
-                                _hover={p !== commentPage ? { borderColor: T.accent, color: T.accent } : {}}
-                                onClick={() => p !== commentPage && fetchComments(p)}
-                                style={{ outline: "none" }}
-                              >
-                                {p + 1}
-                              </Box>
-                            ))}
-
-                            {/* Next */}
-                            <Box as="button"
-                              px={3} py={1} borderRadius="6px" fontSize="xs" fontWeight="600"
-                              bg={commentPage >= commentsTotalPages - 1 ? T.borderBright : T.surface2}
-                              color={commentPage >= commentsTotalPages - 1 ? T.textDim : T.textMuted}
-                              border={`1px solid ${T.border}`}
-                              cursor={commentPage >= commentsTotalPages - 1 ? "not-allowed" : "pointer"}
-                              _hover={commentPage < commentsTotalPages - 1 ? { borderColor: T.accent, color: T.accent } : {}}
-                              onClick={() => commentPage < commentsTotalPages - 1 && fetchComments(commentPage + 1)}
-                              style={{ outline: "none" }}
-                            >
-                              Next →
-                            </Box>
-
-                            {/* Info */}
-                            <Text fontSize="xs" color={T.textDim} ml={2}>
-                              Page {commentPage + 1} of {commentsTotalPages}
-                              {commentsTotalElements > 0 && ` · ${commentsTotalElements} total`}
-                            </Text>
-                          </Box>
-                        )}
-                      </VStack>
-                    )}
-                  </VStack>
-                )}
-              </Box>
-            </Box>
-
-            {/* ══ RIGHT: Code Editor Panel ══ */}
-            <Box height="100%" display="flex" flexDirection="column" bg={T.bg}>
-              <Box flex={1} overflow="hidden" position="relative">
-                <CodeEditor
-                  ref={codeEditorRef}
-                  rightHeaderContent={
-                    <HStack gap={2}>
-                      <Button
-                        size="sm"
-                        bg="transparent"
-                        color={T.purple}
-                        border={`1px solid ${T.purple}44`}
-                        fontWeight="700"
-                        fontSize="sm"
-                        px={4}
-                        borderRadius="6px"
-                        onClick={() => setVizOpen(true)}
-                        _hover={{ bg: T.purpleDim, borderColor: T.purple }}
-                        _active={{ bg: T.purpleDim }}
-                        transition="all 0.15s"
-                      >
-                        ◈ Visualize
-                      </Button>
-                      <Button
-                        size="sm"
-                        bg={T.accent}
-                        color="#000"
-                        fontWeight="700"
-                        fontSize="sm"
-                        px={5}
-                        borderRadius="6px"
-                        onClick={handleSubmit}
-                        isLoading={submitting}
-                        isDisabled={submitting}
-                        loadingText="Running..."
-                        _hover={{
-                          bg: "#ffb833",
-                          transform: "translateY(-1px)",
-                        }}
-                        _active={{ bg: "#e08e00" }}
-                        transition="all 0.15s"
-                      >
-                        Run & Submit
-                      </Button>
-                    </HStack>
-                  }
-                />
-              </Box>
-            </Box>
-          </ResizablePane>
-        </Box>
+                {/* RIGHT-BOTTOM SLOT */}
+                <Panel defaultSize={40} minSize={15} style={{ height: "100%", display: "flex", flexDirection: "column", background: T.surface }}>
+                  <SlotTabBar slotId="right-bottom" />
+                  {renderPanelContent(activeInSlot["right-bottom"])}
+                </Panel>
+              </PanelGroup>
+            </Panel>
+          </PanelGroup>
+          <DragOverlay dropAnimation={null}>
+            {activeTab ? (
+              <div style={{
+                display: "flex", alignItems: "center", gap: 5,
+                padding: "6px 12px",
+                background: T.surface,
+                border: `1px solid ${T.accent}`,
+                borderRadius: "6px",
+                color: T.text,
+                fontSize: 13, fontWeight: 600,
+                whiteSpace: "nowrap",
+                boxShadow: `0 8px 24px rgba(0,0,0,0.4)`,
+                cursor: "grabbing",
+                userSelect: "none",
+                opacity: 0.95,
+              }}>
+                <GripVertical size={12} style={{ color: T.accent, opacity: 0.8 }} />
+                {PANEL_LABELS[activeTab.panelId]}
+              </div>
+            ) : null}
+          </DragOverlay>
+          </DndContext>
+        </div>
 
         {hintPanelOpen && (
           <>
-            <Box
-              w="5px"
-              h="100%"
-              bg={isDraggingHint ? T.accent : T.border}
-              cursor="col-resize"
-              flexShrink={0}
-              transition="background 0.15s"
-              _hover={{ bg: T.accent }}
+            <div
+              style={{
+                width: "5px",
+                height: "100%",
+                background: isDraggingHint ? T.accent : T.border,
+                cursor: "col-resize",
+                flexShrink: 0,
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = T.accent; }}
+              onMouseLeave={(e) => { if (!isDraggingHint) e.currentTarget.style.background = T.border; }}
               onMouseDown={(e) => {
                 e.preventDefault();
                 setIsDraggingHint(true);
@@ -2133,8 +1947,8 @@ const ProblemDetailsPage = () => {
             testCases={testCases}
           />
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 
