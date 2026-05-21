@@ -273,20 +273,20 @@ const AdminOrganizationPage = () => {
 
             <table className="table">
               <thead>
-                <tr>
-                  <th style={{ width: "5%" }}>#</th>
-                  <th style={{ width: "27%" }}>Organization</th>
-                  <th style={{ width: "13%" }}>Code</th>
-                  <th style={{ width: "10%" }}>Visibility</th>
-                  <th style={{ textAlign: "center", width: "9%" }}>Members</th>
-                  <th style={{ width: "13%" }}>Created</th>
-                  <th style={{ textAlign: "center", width: "13%" }}>Actions</th>
+                <tr style={{ background: "var(--primary-subtle)" }}>
+                  <th style={{ width: "5%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
+                  <th style={{ width: "27%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Organization</th>
+                  <th style={{ width: "13%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Code</th>
+                  <th style={{ width: "10%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Visibility</th>
+                  <th style={{ textAlign: "center", width: "9%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Members</th>
+                  <th style={{ width: "13%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Created</th>
+                  <th style={{ textAlign: "center", width: "13%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length > 0 ? (
-                  filtered.map((org, idx) => (
-                    <tr key={org.id} style={{ background: idx % 2 === 0 ? "var(--bg-base)" : "var(--bg-raised)" }}>
+                  filtered.map((org) => (
+                    <tr key={org.id}>
                       <td><span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{org.id}</span></td>
                       <td>
                         <div>
@@ -342,11 +342,12 @@ const AdminOrganizationPage = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: "center", padding: "40px 0" }}>
-                      <div className="flex flex-col items-center gap-2">
-                        <Building2 size={32} color="var(--text-muted)" />
-                        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>No organizations found</span>
+                    <td colSpan={7} style={{ padding: "56px 24px", textAlign: "center" }}>
+                      <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--bg-overlay)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+                        <Building2 size={22} color="var(--text-muted)" />
                       </div>
+                      <div style={{ fontSize: "var(--text-base)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 4 }}>No organizations found</div>
+                      <div style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>Click 'New Organization' to create one</div>
                     </td>
                   </tr>
                 )}

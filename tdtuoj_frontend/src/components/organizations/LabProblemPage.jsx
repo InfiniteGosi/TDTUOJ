@@ -1,16 +1,9 @@
 import { useState, useEffect, useRef } from "react";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  CheckCircle,
-  XCircle,
-  Clock,
-  ChevronLeft,
-  ChevronRight,
-  Menu,
-  X,
-  Gem,
-  Timer,
-  HardDrive,
+  CheckCircle, XCircle, Clock, ChevronLeft, ChevronRight,
+  Menu, X, Timer, HardDrive, Terminal, Zap,
 } from "lucide-react";
 import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
@@ -31,15 +24,14 @@ hljs.registerLanguage("c", c);
 
 const getHljsLanguage = (lang) => {
   switch (lang) {
-    case "CPP": return "cpp";
-    case "JAVA": return "java";
+    case "CPP":    return "cpp";
+    case "JAVA":   return "java";
     case "PYTHON": return "python";
-    case "C": return "c";
-    default: return "cpp";
+    case "C":      return "c";
+    default:       return "cpp";
   }
 };
 
-// ─── Theme tokens ────────────────────────────────────────────────────────────
 const T = {
   bg:           "var(--bg-void)",
   surface:      "var(--bg-base)",
@@ -54,194 +46,142 @@ const T = {
   accentBorder: "var(--border-accent)",
   green:        "var(--green-ac)",
   greenDim:     "var(--green-subtle)",
-  greenBorder:  "var(--green-subtle)",
   red:          "var(--red-wa)",
   redDim:       "var(--red-subtle)",
-  redBorder:    "var(--red-subtle)",
   blue:         "var(--blue-ce)",
   blueDim:      "var(--blue-subtle)",
-  blueBorder:   "var(--blue-subtle)",
-  purple:       "var(--primary)",
-  purpleDim:    "var(--primary-subtle)",
-  purpleBorder: "var(--primary-subtle)",
 };
 
-const mapEditorLanguageToSubmissionLanguage = (language) => {
-  switch (language) {
-    case "cpp": return "CPP";
-    case "java": return "JAVA";
+const mapEditorLanguageToSubmissionLanguage = (lang) => {
+  switch (lang) {
+    case "cpp":    return "CPP";
+    case "java":   return "JAVA";
     case "python": return "PYTHON";
-    case "c": return "C";
-    default: return "CPP";
+    case "c":      return "C";
+    default:       return "CPP";
   }
 };
 
 const VERDICT_LABEL = {
-  AC: "Accepted",
-  WA: "Wrong Answer",
-  CE: "Compilation Error",
+  AC:  "Accepted",
+  WA:  "Wrong Answer",
+  CE:  "Compilation Error",
   TLE: "Time Limit Exceeded",
   MLE: "Memory Limit Exceeded",
-  SF: "Runtime Error",
+  SF:  "Runtime Error",
+};
+
+const VERDICT_COLOR = {
+  AC:  { c: "var(--green-ac)",  bg: "var(--green-subtle)"  },
+  WA:  { c: "var(--red-wa)",    bg: "var(--red-subtle)"    },
+  TLE: { c: "var(--amber-tle)", bg: "var(--amber-subtle)"  },
+  CE:  { c: "var(--blue-ce)",   bg: "var(--blue-subtle)"   },
+  MLE: { c: "var(--text-muted)","bg": "var(--bg-overlay)"  },
 };
 
 const DIFF_STYLE = {
-  EASY: { color: T.green, bg: T.greenDim, label: "Easy" },
+  EASY:   { color: T.green,  bg: T.greenDim,  label: "Easy"   },
   MEDIUM: { color: T.accent, bg: T.accentDim, label: "Medium" },
-  HARD: { color: T.red, bg: T.redDim, label: "Hard" },
+  HARD:   { color: T.red,    bg: T.redDim,    label: "Hard"   },
 };
 
-// ─── Resizable Pane ──────────────────────────────────────────────────────────
-const ResizablePane = ({ children, direction = "horizontal", initialSizes = [50, 50] }) => {
-  const [sizes, setSizes] = useState(initialSizes);
-  const [isDragging, setIsDragging] = useState(false);
-  const containerRef = useRef(null);
-
-  const handleMouseDown = (e) => { e.preventDefault(); setIsDragging(true); };
-  const handleMouseMove = (e) => {
-    if (!isDragging || !containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    if (direction === "horizontal") {
-      const pct = ((e.clientX - rect.left) / rect.width) * 100;
-      if (pct > 25 && pct < 75) setSizes([pct, 100 - pct]);
-    } else {
-      const pct = ((e.clientY - rect.top) / rect.height) * 100;
-      if (pct > 20 && pct < 80) setSizes([pct, 100 - pct]);
-    }
-  };
-  const handleMouseUp = () => setIsDragging(false);
-
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      return () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-      };
-    }
-  }, [isDragging]);
-
+// ─── Resize Handle ────────────────────────────────────────────────────────────
+const ResizeHandle = ({ direction = "horizontal" }) => {
+  const [active, setActive] = useState(false);
   const isH = direction === "horizontal";
   return (
-    <div ref={containerRef} style={{ display: "flex", flexDirection: isH ? "row" : "column", height: "100%", width: "100%", userSelect: isDragging ? "none" : "auto" }}>
-      <div style={{ width: isH ? `${sizes[0]}%` : "100%", height: !isH ? `${sizes[0]}%` : "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        {children[0]}
-      </div>
-      <div
-        style={{ width: isH ? "5px" : "100%", height: !isH ? "5px" : "100%", background: isDragging ? T.accent : T.border, cursor: isH ? "col-resize" : "row-resize", flexShrink: 0, transition: "background 0.15s", position: "relative", zIndex: 10 }}
-        onMouseDown={handleMouseDown}
-      />
-      <div style={{ width: isH ? `${sizes[1]}%` : "100%", height: !isH ? `${sizes[1]}%` : "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        {children[1]}
-      </div>
-    </div>
+    <PanelResizeHandle
+      onDragging={setActive}
+      style={{ width: isH ? "5px" : "100%", height: !isH ? "5px" : "100%", background: active ? T.accent : T.border, cursor: isH ? "col-resize" : "row-resize", flexShrink: 0, transition: "background 0.15s", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 10 }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = T.accent; }}
+      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = T.border; }}
+    >
+      <div style={{ width: isH ? "3px" : "28px", height: isH ? "28px" : "3px", borderRadius: "3px", background: active ? T.accent : T.textDim, opacity: active ? 1 : 0.4, transition: "background 0.15s, opacity 0.15s", pointerEvents: "none" }} />
+    </PanelResizeHandle>
   );
 };
 
 // ─── Small components ─────────────────────────────────────────────────────────
-
 const DifficultyBadge = ({ difficulty }) => {
   const s = DIFF_STYLE[difficulty] || DIFF_STYLE.EASY;
-  return (
-    <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: s.color, background: s.bg, border: `1px solid ${s.color}44` }}>
-      {s.label}
-    </span>
-  );
+  return <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: "4px", fontSize: "var(--text-xs)", fontWeight: 700, letterSpacing: "0.04em", color: s.color, background: s.bg, border: `1px solid ${s.color}44` }}>{s.label}</span>;
 };
 
 const StatChip = ({ icon, value, color }) => (
-  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 4, background: T.surface, border: `1px solid ${T.border}`, fontSize: 11, color: color || T.textMuted, fontWeight: 500, fontFamily: "'JetBrains Mono', monospace" }}>
-    <span>{icon}</span>
-    <span>{value}</span>
+  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: "4px", background: T.surface, border: `1px solid ${T.border}`, fontSize: "var(--text-xs)", color: color || T.textMuted, fontWeight: 500, fontFamily: "var(--font-code)" }}>
+    {icon} {value}
   </span>
 );
 
 const TagChip = ({ name }) => (
-  <span style={{ display: "inline-block", padding: "3px 8px", borderRadius: 4, fontSize: 11, fontWeight: 500, color: T.purple, background: T.purpleDim, border: `1px solid ${T.purpleBorder}`, letterSpacing: "0.02em", whiteSpace: "nowrap" }}>
+  <span style={{ display: "inline-block", padding: "3px 8px", borderRadius: "var(--radius-pill)", fontSize: "var(--text-xs)", fontWeight: 500, fontFamily: "var(--font-body)", color: "var(--text-secondary)", background: "var(--bg-overlay)", border: "1px solid var(--border-default)", letterSpacing: "0.02em", whiteSpace: "nowrap", transition: "border-color 0.15s, color 0.15s", cursor: "default" }}
+    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; }}
+    onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-default)"; e.currentTarget.style.color = "var(--text-secondary)"; }}>
     {name}
   </span>
 );
 
 // ─── Countdown hook ───────────────────────────────────────────────────────────
 const useCountdown = (targetDateStr) => {
-  const getRemaining = () => {
+  const get = () => {
     if (!targetDateStr) return null;
     const diff = new Date(targetDateStr).getTime() - Date.now();
     if (diff <= 0) return null;
     return { total: diff, hours: Math.floor(diff / 3600000), minutes: Math.floor((diff % 3600000) / 60000), seconds: Math.floor((diff % 60000) / 1000) };
   };
-  const [remaining, setRemaining] = useState(getRemaining);
-  useEffect(() => {
-    setRemaining(getRemaining());
-    const id = setInterval(() => setRemaining(getRemaining()), 1000);
-    return () => clearInterval(id);
-  }, [targetDateStr]);
-  return remaining;
+  const [r, setR] = useState(get);
+  useEffect(() => { setR(get()); const id = setInterval(() => setR(get()), 1000); return () => clearInterval(id); }, [targetDateStr]);
+  return r;
 };
 
 // ─── Lab Deadline Timer ───────────────────────────────────────────────────────
 const LabTimer = ({ deadline }) => {
-  const remaining = useCountdown(deadline);
-  if (!deadline) return null;
-  if (!remaining) {
-    return (
-      <div style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 12px", borderRadius: 6, background: T.redDim, border: `1px solid ${T.redBorder}` }}>
-        <Clock size={13} />
-        <span style={{ fontSize: 11, fontWeight: 700, color: T.red }}>Deadline Passed</span>
-      </div>
-    );
-  }
-  const isUrgent = remaining.total < 5 * 60 * 1000;
-  const color = isUrgent ? T.red : T.green;
-  const bg = isUrgent ? T.redDim : T.greenDim;
+  const r = useCountdown(deadline);
   const pad = (n) => String(n).padStart(2, "0");
+  if (!deadline) return null;
+  if (!r) return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: "var(--radius-pill)", background: T.redDim, border: `1px solid ${T.red}33`, fontSize: "var(--text-xs)", fontWeight: 700, color: T.red }}>
+      <Clock size={12} />Deadline Passed
+    </span>
+  );
+  const isUrgent = r.total < 5 * 60 * 1000;
+  const color = isUrgent ? T.red : T.green;
+  const bg    = isUrgent ? T.redDim : T.greenDim;
   return (
-    <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 6, background: bg, border: `1px solid ${color}44` }}>
-      <Clock size={13} color={color} />
-      <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color }}>
-        {pad(remaining.hours)}:{pad(remaining.minutes)}:{pad(remaining.seconds)}
-      </span>
-    </div>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: "var(--radius-pill)", background: bg, border: `1px solid ${color}33`, fontSize: "var(--text-xs)", fontWeight: 700, fontFamily: "var(--font-code)", color }}>
+      <Clock size={12} />{pad(r.hours)}:{pad(r.minutes)}:{pad(r.seconds)}
+    </span>
   );
 };
 
 // ─── Problem Sidebar ──────────────────────────────────────────────────────────
 const ProblemSidebar = ({ problems, currentSlug, basePath, onNavigate, onClose }) => (
-  <div style={{ width: 240, height: "100%", background: T.surface, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", flexShrink: 0 }}>
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderBottom: `1px solid ${T.border}` }}>
-      <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Problems</span>
-      <button style={{ background: "transparent", border: "none", cursor: "pointer", color: T.textMuted }} onClick={onClose}>
-        <X size={16} />
+  <div style={{ width: 232, height: "100%", background: T.surface, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", flexShrink: 0 }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderBottom: `1px solid ${T.border}` }}>
+      <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: T.textDim, letterSpacing: "0.06em", textTransform: "uppercase" }}>Problems</span>
+      <button style={{ background: "transparent", border: "none", cursor: "pointer", color: T.textMuted, outline: "none", display: "flex", padding: 2, borderRadius: "var(--radius-sm)", transition: "color 0.12s" }} onClick={onClose}
+        onMouseEnter={(e) => { e.currentTarget.style.color = T.text; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = T.textMuted; }}>
+        <X size={14} />
       </button>
     </div>
     <div style={{ flex: 1, overflowY: "auto" }}>
       {problems.map((p, idx) => {
-        const letter = String.fromCharCode(65 + (p.problemOrder ?? idx + 1) - 1);
+        const letter   = String.fromCharCode(65 + (p.problemOrder ?? idx + 1) - 1);
         const isActive = p.problemSlug === currentSlug;
+        const diff     = DIFF_STYLE[p.problemDifficulty];
         return (
-          <button
-            key={p.problemId}
-            style={{
-              display: "flex", alignItems: "center", gap: 8, width: "100%",
-              padding: "8px 12px", background: isActive ? T.accentDim : "transparent",
-              borderLeft: isActive ? `3px solid ${T.accent}` : "3px solid transparent",
-              cursor: "pointer", border: "none", transition: "all 0.12s", textAlign: "left",
-            }}
-            onClick={() => onNavigate(`${basePath}/${p.problemSlug}`)}
-          >
-            <div style={{ width: 26, height: 26, borderRadius: 6, background: isActive ? T.accent : T.bg, color: isActive ? "#000" : T.textMuted, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 11, flexShrink: 0 }}>
+          <button key={p.problemId}
+            style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", background: isActive ? T.accentDim : "transparent", borderLeft: isActive ? `3px solid ${T.accent}` : "3px solid transparent", border: "none", borderRight: "none", borderTop: "none", borderBottom: "none", cursor: "pointer", outline: "none", textAlign: "left", transition: "background 0.1s" }}
+            onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = T.surfaceHover; }}
+            onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+            onClick={() => onNavigate(`${basePath}/${p.problemSlug}`)}>
+            <span style={{ width: 26, height: 26, borderRadius: "var(--radius-sm)", background: isActive ? T.accent : T.bg, color: isActive ? "#000" : T.textMuted, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "var(--text-xs)", fontFamily: "var(--font-code)", flexShrink: 0 }}>
               {letter}
-            </div>
+            </span>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: isActive ? T.text : T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {p.problemTitle}
-              </p>
-              {p.problemDifficulty && (
-                <p style={{ margin: 0, fontSize: 10, color: (DIFF_STYLE[p.problemDifficulty] || DIFF_STYLE.EASY).color, fontWeight: 600 }}>
-                  {(DIFF_STYLE[p.problemDifficulty] || DIFF_STYLE.EASY).label}
-                </p>
-              )}
+              <p style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: isActive ? T.text : T.textMuted, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.problemTitle}</p>
+              {diff && <p style={{ fontSize: 10, color: diff.color, fontWeight: 600, margin: 0 }}>{diff.label}</p>}
             </div>
           </button>
         );
@@ -250,6 +190,20 @@ const ProblemSidebar = ({ problems, currentSlug, basePath, onNavigate, onClose }
   </div>
 );
 
+// ─── Markdown styles ──────────────────────────────────────────────────────────
+const MD_STYLE = `
+  .lpmd h1,.lpmd h2,.lpmd h3,.lpmd h4{font-weight:700;color:var(--text-primary);margin-bottom:.6rem;margin-top:1.4rem}
+  .lpmd h1{font-size:1.2rem}.lpmd h2{font-size:1.05rem}.lpmd h3{font-size:.95rem;color:var(--text-secondary)}
+  .lpmd p{margin-bottom:.9rem;color:var(--text-secondary)}
+  .lpmd code{background:var(--bg-void);padding:.15rem .45rem;border-radius:4px;font-size:.85em;font-family:var(--font-code);color:var(--primary);border:1px solid var(--border-default)}
+  .lpmd pre{background:var(--bg-void);padding:1rem 1.2rem;border-radius:8px;overflow-x:auto;margin-bottom:1rem;border:1px solid var(--border-default)}
+  .lpmd pre code{background:transparent;padding:0;color:#e2e8f0;border:none;font-size:.85rem}
+  .lpmd ul,.lpmd ol{padding-left:1.4rem;margin-bottom:.9rem}
+  .lpmd li{margin-bottom:.35rem;color:var(--text-secondary)}
+  .lpmd strong{font-weight:700;color:var(--text-primary)}
+  .lpmd blockquote{border-left:3px solid var(--primary);padding-left:1rem;margin-left:0;color:var(--text-secondary);font-style:italic}
+`;
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const LabProblemPage = () => {
   const { orgSlug, labSlug, problemSlug } = useParams();
@@ -257,45 +211,40 @@ const LabProblemPage = () => {
   const { showMessage } = useToast();
   const codeEditorRef = useRef(null);
 
-  const [lab, setLab] = useState(null);
+  const [lab, setLab]                     = useState(null);
   const [deadlinePassed, setDeadlinePassed] = useState(false);
-  const [problem, setProblem] = useState(null);
-  const [statement, setStatement] = useState("");
-  const [testCases, setTestCases] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [problem, setProblem]             = useState(null);
+  const [statement, setStatement]         = useState("");
+  const [testCases, setTestCases]         = useState([]);
+  const [loading, setLoading]             = useState(true);
 
-  const [submitting, setSubmitting] = useState(false);
-  const [results, setResults] = useState(null);
-  const [pollingId, setPollingId] = useState(null);
-  const [queuePosition, setQueuePosition] = useState(null);
+  const [submitting, setSubmitting]         = useState(false);
+  const [results, setResults]               = useState(null);
+  const [pollingId, setPollingId]           = useState(null);
+  const [queuePosition, setQueuePosition]   = useState(null);
 
-  const [activeTab, setActiveTab] = useState("description");
-  const [viewingSubmission, setViewingSubmission] = useState(null);
-  const [verdictFilter, setVerdictFilter] = useState(null);
-  const [submissions, setSubmissions] = useState([]);
+  const [activeTab, setActiveTab]                   = useState("description");
+  const [viewingSubmission, setViewingSubmission]   = useState(null);
+  const [verdictFilter, setVerdictFilter]           = useState(null);
+  const [submissions, setSubmissions]               = useState([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
-  const [submissionsLoaded, setSubmissionsLoaded] = useState(false);
+  const [submissionsLoaded, setSubmissionsLoaded]   = useState(false);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    const load = async () => {
+    (async () => {
       try {
         const orgResp = await ApiService.getOrganizationBySlug(orgSlug);
         if (cancelled || orgResp.statusCode !== 200) return;
         const labResp = await ApiService.getOrgLab(orgResp.data.id, labSlug);
         if (!cancelled && labResp.statusCode === 200) {
           setLab(labResp.data);
-          if (labResp.data.deadline && new Date(labResp.data.deadline).getTime() <= Date.now()) {
-            setDeadlinePassed(true);
-          }
+          if (labResp.data.deadline && new Date(labResp.data.deadline).getTime() <= Date.now()) setDeadlinePassed(true);
         }
-      } catch (err) {
-        if (!cancelled) showMessage(err.response?.data?.message || err.message, "error");
-      }
-    };
-    load();
+      } catch (err) { if (!cancelled) showMessage(err.response?.data?.message || err.message, "error"); }
+    })();
     return () => { cancelled = true; };
   }, [orgSlug, labSlug]);
 
@@ -303,46 +252,34 @@ const LabProblemPage = () => {
     if (!lab?.deadline || deadlinePassed) return;
     const diff = new Date(lab.deadline).getTime() - Date.now();
     if (diff <= 0) { setDeadlinePassed(true); return; }
-    const timerId = setTimeout(() => {
-      setDeadlinePassed(true);
-      showMessage("Lab deadline has passed! Submissions are now disabled.", "warning");
-    }, diff);
-    return () => clearTimeout(timerId);
+    const id = setTimeout(() => { setDeadlinePassed(true); showMessage("Lab deadline has passed! Submissions are now disabled.", "warning"); }, diff);
+    return () => clearTimeout(id);
   }, [lab?.deadline, deadlinePassed]);
 
   const fetchProblem = async () => {
     setLoading(true);
     try {
-      const response = await ApiService.getProblemBySlug(problemSlug);
-      if (response.statusCode === 200) {
-        setProblem(response.data);
-        const statementRes = await ApiService.fetchFileContent(response.data.statementFileUrl);
+      const resp = await ApiService.getProblemBySlug(problemSlug);
+      if (resp.statusCode === 200) {
+        setProblem(resp.data);
+        const statementRes = await ApiService.fetchFileContent(resp.data.statementFileUrl);
         setStatement(statementRes);
-        const sampleTestCases = response.data.testCases.filter((tc) => tc.isSample === true);
-        const fetched = await Promise.all(
-          sampleTestCases.map(async (tc) => ({
-            id: tc.id,
-            input: await ApiService.fetchFileContent(tc.inputFileUrl),
-            output: await ApiService.fetchFileContent(tc.expectedOutputFileUrl),
-          }))
-        );
+        const samples = resp.data.testCases.filter((tc) => tc.isSample === true);
+        const fetched = await Promise.all(samples.map(async (tc) => ({
+          id: tc.id,
+          input:  await ApiService.fetchFileContent(tc.inputFileUrl),
+          output: await ApiService.fetchFileContent(tc.expectedOutputFileUrl),
+        })));
         setTestCases(fetched);
       }
-    } catch (error) {
-      showMessage(error.response?.data?.message || error.message, "error");
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => {
-    setResults(null);
-    setSubmitting(false);
-    setActiveTab("description");
-    setViewingSubmission(null);
-    setVerdictFilter(null);
-    setSubmissions([]);
-    setSubmissionsLoaded(false);
+    setResults(null); setSubmitting(false); setActiveTab("description");
+    setViewingSubmission(null); setVerdictFilter(null);
+    setSubmissions([]); setSubmissionsLoaded(false);
     fetchProblem();
   }, [problemSlug]);
 
@@ -353,116 +290,67 @@ const LabProblemPage = () => {
     setLoadingSubmissions(true);
     try {
       const resp = await ApiService.getMySubmissions({ limit: 20, offset: 0, problemId: problem.id });
-      if (resp.statusCode === 200 && resp.data) {
-        setSubmissions(resp.data.content || []);
-        setSubmissionsLoaded(true);
-      }
-    } catch (error) {
-      showMessage(error.response?.data?.message || error.message, "error");
-    } finally {
-      setLoadingSubmissions(false);
-    }
+      if (resp.statusCode === 200 && resp.data) { setSubmissions(resp.data.content || []); setSubmissionsLoaded(true); }
+    } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); }
+    finally { setLoadingSubmissions(false); }
   };
 
   const handleSubmit = async () => {
-    if (submitting || deadlinePassed) return;
-    if (!codeEditorRef.current) return;
+    if (submitting || deadlinePassed || !codeEditorRef.current) return;
     const { code, language } = codeEditorRef.current.getCodeAndLanguage();
     if (!code?.trim()) { showMessage("Please write some code before submitting", "warning"); return; }
 
-    setSubmitting(true);
-    setResults(null);
-    setQueuePosition(null);
-
+    setSubmitting(true); setResults(null); setQueuePosition(null);
     try {
       const resp = await ApiService.createSubmission({
-        sourceCode: code,
-        submissionLanguage: mapEditorLanguageToSubmissionLanguage(language),
-        problemId: problem.id,
-        isPublic: true,
-        labId: lab?.id ?? null,
+        sourceCode: code, submissionLanguage: mapEditorLanguageToSubmissionLanguage(language),
+        problemId: problem.id, isPublic: true, labId: lab?.id ?? null,
       });
-
       const sub = resp.data;
       setQueuePosition(sub.queuePosition ?? null);
       setActiveTab("results");
 
       const intervalId = setInterval(async () => {
         try {
-          const statusResp = await ApiService.getSubmissionStatus(sub.id);
-          const updated = statusResp.data;
-          if (updated.submissionStatus === "PENDING") {
-            setQueuePosition(updated.queuePosition ?? null);
-          } else if (updated.submissionStatus === "RUNNING") {
-            setQueuePosition(null);
-          } else if (updated.submissionStatus === "COMPLETED") {
-            clearInterval(intervalId);
-            setPollingId(null);
-            setSubmitting(false);
-            setQueuePosition(null);
-            const allPassed = updated.submissionVerdict === "AC";
-            if (allPassed && !problem?.solved) {
-              setProblem((prev) => ({ ...prev, solved: true, attempted: false }));
-            } else if (!allPassed) {
-              setProblem((prev) => ({ ...prev, attempted: true }));
-            }
-            setResults({
-              allPassed,
-              passedCount: updated.testCasesPassed ?? 0,
-              totalCount: updated.totalTestCases ?? testCases.length,
-              verdict: updated.submissionVerdict,
-              errorMessage: updated.errorMessage,
-              executionTime: updated.executionTime,
-              memoryUsed: updated.memoryUsed,
-            });
-            showMessage(
-              allPassed ? "All test cases passed! 🎉" : `${updated.testCasesPassed}/${updated.totalTestCases} test cases passed — ${updated.submissionVerdict}`,
-              allPassed ? "success" : "warning"
-            );
+          const sr = await ApiService.getSubmissionStatus(sub.id);
+          const up = sr.data;
+          if (up.submissionStatus === "PENDING")   { setQueuePosition(up.queuePosition ?? null); }
+          else if (up.submissionStatus === "RUNNING") { setQueuePosition(null); }
+          else if (up.submissionStatus === "COMPLETED") {
+            clearInterval(intervalId); setPollingId(null); setSubmitting(false); setQueuePosition(null);
+            const allPassed = up.submissionVerdict === "AC";
+            if (allPassed && !problem?.solved) setProblem((p) => ({ ...p, solved: true, attempted: false }));
+            else if (!allPassed) setProblem((p) => ({ ...p, attempted: true }));
+            setResults({ allPassed, passedCount: up.testCasesPassed ?? 0, totalCount: up.totalTestCases ?? testCases.length, verdict: up.submissionVerdict, errorMessage: up.errorMessage, executionTime: up.executionTime, memoryUsed: up.memoryUsed });
+            showMessage(allPassed ? "All test cases passed!" : `${up.testCasesPassed}/${up.totalTestCases} passed — ${up.submissionVerdict}`, allPassed ? "success" : "warning");
             if (submissionsLoaded) await fetchSubmissions();
           }
-        } catch (err) {
-          clearInterval(intervalId);
-          setPollingId(null);
-          setSubmitting(false);
-          showMessage(err.response?.data?.message || err.message, "error");
-        }
+        } catch (err) { clearInterval(intervalId); setPollingId(null); setSubmitting(false); showMessage(err.response?.data?.message || err.message, "error"); }
       }, 2000);
-
       setPollingId(intervalId);
-    } catch (error) {
+    } catch (err) {
       setSubmitting(false);
-      if (error.response?.status === 429) {
-        showMessage("Please wait 5 seconds before submitting again", "warning");
-      } else {
-        showMessage(error.response?.data?.message || error.message, "error");
-      }
+      if (err.response?.status === 429) showMessage("Please wait 5 seconds before submitting again", "warning");
+      else showMessage(err.response?.data?.message || err.message, "error");
     }
   };
 
-  const exercises = lab?.exercises ?? [];
-  const problems = exercises.map((ex) => ({
-    problemId: ex.problemId,
-    problemSlug: ex.problemSlug,
-    problemTitle: ex.problemTitle,
-    problemDifficulty: ex.problemDifficulty,
-    problemOrder: ex.exerciseOrder,
-  }));
-  const currentIdx = problems.findIndex((p) => p.problemSlug === problemSlug);
-  const prevProblem = currentIdx > 0 ? problems[currentIdx - 1] : null;
-  const nextProblem = currentIdx < problems.length - 1 ? problems[currentIdx + 1] : null;
-  const basePath = `/organizations/${orgSlug}/labs/${labSlug}/problems`;
-  const goTo = (p) => navigate(`${basePath}/${p.problemSlug}`);
-  const currentExercise = exercises.find((ex) => ex.problemSlug === problemSlug);
-  const activeTags = (problem?.tags || []).filter((t) => t.isActive !== false);
+  const exercises    = lab?.exercises ?? [];
+  const problems     = exercises.map((ex) => ({ problemId: ex.problemId, problemSlug: ex.problemSlug, problemTitle: ex.problemTitle, problemDifficulty: ex.problemDifficulty, problemOrder: ex.exerciseOrder }));
+  const currentIdx   = problems.findIndex((p) => p.problemSlug === problemSlug);
+  const prevProblem  = currentIdx > 0 ? problems[currentIdx - 1] : null;
+  const nextProblem  = currentIdx < problems.length - 1 ? problems[currentIdx + 1] : null;
+  const basePath     = `/organizations/${orgSlug}/labs/${labSlug}/problems`;
+  const goTo         = (p) => navigate(`${basePath}/${p.problemSlug}`);
+  const currentEx    = exercises.find((ex) => ex.problemSlug === problemSlug);
+  const activeTags   = (problem?.tags || []).filter((t) => t.isActive !== false);
 
   if (loading || !lab) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: T.bg }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ width: 40, height: 40, border: `3px solid ${T.accentBorder}`, borderTop: `3px solid ${T.accent}`, borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 12px" }} />
-          <span style={{ color: T.textMuted, fontSize: 13 }}>Loading...</span>
-          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          <div className="spinner" style={{ borderTopColor: T.accent }} />
+          <span style={{ color: T.textDim, fontSize: "var(--text-sm)" }}>Loading...</span>
         </div>
       </div>
     );
@@ -470,62 +358,47 @@ const LabProblemPage = () => {
 
   const tabs = [
     { id: "description", label: "Description" },
-    { id: "testcases", label: `Test Cases (${testCases.length})` },
+    { id: "testcases",   label: `Test Cases (${testCases.length})` },
     { id: "submissions", label: "Submissions" },
-    ...(currentExercise?.solutionCode ? [{ id: "solution", label: "Solution" }] : []),
-    ...(results || submitting ? [{ id: "results", label: submitting ? "Judging..." : `Results ${results.passedCount}/${results.totalCount}` }] : []),
+    ...(currentEx?.solutionCode ? [{ id: "solution", label: "Solution" }] : []),
+    ...(results || submitting ? [{ id: "results", label: submitting ? "Judging…" : `Results ${results.passedCount}/${results.totalCount}` }] : []),
   ];
-
-  const markdownCss = {
-    "& h1,& h2,& h3,& h4": { fontWeight: "700", color: T.text, marginBottom: "0.6rem", marginTop: "1.4rem" },
-    "& h1": { fontSize: "1.2rem" },
-    "& h2": { fontSize: "1.05rem" },
-    "& h3": { fontSize: "0.95rem", color: T.textMuted },
-    "& p": { marginBottom: "0.9rem", color: "var(--text-secondary)" },
-    "& code": { backgroundColor: T.bg, padding: "0.15rem 0.45rem", borderRadius: "4px", fontSize: "0.85em", fontFamily: "'JetBrains Mono', monospace", color: T.accent, border: `1px solid ${T.border}` },
-    "& pre": { backgroundColor: T.bg, padding: "1rem 1.2rem", borderRadius: "8px", overflowX: "auto", marginBottom: "1rem", border: `1px solid ${T.border}` },
-    "& pre code": { backgroundColor: "transparent", padding: "0", color: "#e2e8f0", border: "none", fontSize: "0.85rem" },
-    "& ul,& ol": { paddingLeft: "1.4rem", marginBottom: "0.9rem" },
-    "& li": { marginBottom: "0.35rem", color: "var(--text-secondary)" },
-    "& strong": { fontWeight: "700", color: T.text },
-    "& blockquote": { borderLeft: `3px solid ${T.accent}`, paddingLeft: "1rem", marginLeft: "0", color: T.textMuted, fontStyle: "italic" },
-  };
 
   return (
     <div style={{ height: "100vh", width: "100vw", overflow: "hidden", background: T.bg, color: T.text, fontFamily: "var(--font-body)", display: "flex", flexDirection: "column" }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{MD_STYLE}</style>
 
       {/* ── Top Nav Bar ── */}
-      <div style={{ height: 44, background: T.surface, borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", padding: "0 12px", gap: 8, flexShrink: 0 }}>
-        <button
-          onClick={() => setSidebarOpen((prev) => !prev)}
-          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 6, background: sidebarOpen ? T.accentDim : "transparent", border: `1px solid ${sidebarOpen ? T.accent : T.border}`, color: sidebarOpen ? T.accent : T.textMuted, cursor: "pointer", transition: "all 0.15s" }}
-        >
-          <Menu size={16} />
+      <div style={{ height: 48, background: T.surface, borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", padding: "0 12px", gap: 8, flexShrink: 0 }}>
+
+        <button onClick={() => setSidebarOpen((v) => !v)}
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, borderRadius: "var(--radius-sm)", background: sidebarOpen ? T.accentDim : "transparent", border: `1px solid ${sidebarOpen ? T.accent : T.border}`, color: sidebarOpen ? T.accent : T.textMuted, cursor: "pointer", outline: "none", transition: "all 0.15s" }}>
+          <Menu size={15} />
         </button>
 
-        <span style={{ fontSize: 16, fontWeight: 800, color: T.accent, letterSpacing: "-0.03em", fontFamily: "'JetBrains Mono', monospace" }}>{"<OJ/>"}</span>
+        <div style={{ width: 1, height: 16, background: T.border }} />
 
-        <div style={{ width: 1, height: 18, background: T.border, margin: "0 4px" }} />
-        <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lab.title}</span>
+        {/* Lab name */}
+        <span style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: T.textMuted, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {lab.title}
+        </span>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: 8 }}>
-          <button
-            onClick={() => prevProblem && goTo(prevProblem)}
-            disabled={!prevProblem}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: prevProblem ? T.textMuted : T.textDim, cursor: prevProblem ? "pointer" : "not-allowed", opacity: prevProblem ? 1 : 0.4, transition: "all 0.12s" }}
-          >
-            <ChevronLeft size={16} />
+        {/* Prev / next */}
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: 4 }}>
+          <button onClick={() => prevProblem && goTo(prevProblem)} disabled={!prevProblem}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "var(--radius-sm)", background: "transparent", border: `1px solid ${T.border}`, color: prevProblem ? T.textMuted : T.textDim, cursor: prevProblem ? "pointer" : "not-allowed", opacity: prevProblem ? 1 : 0.35, outline: "none", transition: "all 0.12s" }}
+            onMouseEnter={(e) => { if (prevProblem) e.currentTarget.style.borderColor = T.borderBright; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; }}>
+            <ChevronLeft size={14} />
           </button>
-          <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, minWidth: 30, textAlign: "center" }}>
+          <span style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: T.textMuted, minWidth: 32, textAlign: "center", fontFamily: "var(--font-code)" }}>
             {currentIdx >= 0 ? `${currentIdx + 1}/${problems.length}` : "—"}
           </span>
-          <button
-            onClick={() => nextProblem && goTo(nextProblem)}
-            disabled={!nextProblem}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: nextProblem ? T.textMuted : T.textDim, cursor: nextProblem ? "pointer" : "not-allowed", opacity: nextProblem ? 1 : 0.4, transition: "all 0.12s" }}
-          >
-            <ChevronRight size={16} />
+          <button onClick={() => nextProblem && goTo(nextProblem)} disabled={!nextProblem}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "var(--radius-sm)", background: "transparent", border: `1px solid ${T.border}`, color: nextProblem ? T.textMuted : T.textDim, cursor: nextProblem ? "pointer" : "not-allowed", opacity: nextProblem ? 1 : 0.35, outline: "none", transition: "all 0.12s" }}
+            onMouseEnter={(e) => { if (nextProblem) e.currentTarget.style.borderColor = T.borderBright; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; }}>
+            <ChevronRight size={14} />
           </button>
         </div>
 
@@ -533,305 +406,297 @@ const LabProblemPage = () => {
 
         <LabTimer deadline={lab.deadline} />
 
-        <button
-          onClick={() => navigate(`/organizations/${orgSlug}/labs/${labSlug}`)}
-          style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 12px", borderRadius: 6, background: "transparent", border: `1px solid ${T.border}`, color: T.textMuted, fontSize: 11, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}
-        >
+        <button onClick={() => navigate(`/organizations/${orgSlug}/labs/${labSlug}`)}
+          style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 12px", borderRadius: "var(--radius-pill)", background: "transparent", border: `1px solid ${T.border}`, color: T.textMuted, fontSize: "var(--text-xs)", fontWeight: 600, cursor: "pointer", outline: "none", transition: "all 0.15s", fontFamily: "var(--font-body)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = T.surfaceHover; e.currentTarget.style.color = T.text; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}>
           ← Lab
         </button>
       </div>
 
       {/* ── Main body ── */}
       <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
+
         {sidebarOpen && (
           <ProblemSidebar
-            problems={problems}
-            currentSlug={problemSlug}
-            basePath={basePath}
+            problems={problems} currentSlug={problemSlug} basePath={basePath}
             onNavigate={(path) => { navigate(path); setSidebarOpen(false); }}
             onClose={() => setSidebarOpen(false)}
           />
         )}
 
         <div style={{ flex: 1, overflow: "hidden" }}>
-          <ResizablePane direction="horizontal" initialSizes={[42, 58]}>
+          <PanelGroup direction="horizontal" style={{ height: "100%" }}>
+
             {/* ══ LEFT: Problem Panel ══ */}
-            <div style={{ height: "100%", display: "flex", flexDirection: "column", background: T.surface, borderRight: `1px solid ${T.border}` }}>
-              {/* Problem header */}
-              <div style={{ padding: "20px 20px 16px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
-                <p style={{ fontSize: 19, fontWeight: 700, color: T.text, marginBottom: 12, lineHeight: 1.3, letterSpacing: "-0.02em" }}>{problem?.title}</p>
+            <Panel defaultSize={42} minSize={28}>
+              <div style={{ height: "100%", display: "flex", flexDirection: "column", background: T.surface, borderRight: `1px solid ${T.border}` }}>
 
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-                  {problem?.problemDifficulty && <DifficultyBadge difficulty={problem.problemDifficulty} />}
-                  {problem?.solved && (
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700, color: T.green, background: T.greenDim, border: `1px solid ${T.greenBorder}` }}>
-                      <CheckCircle size={11} /> Solved
-                    </span>
-                  )}
-                  {problem?.attempted && !problem?.solved && (
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700, color: "#f97316", background: "rgba(249,115,22,0.12)", border: "1px solid rgba(249,115,22,0.3)" }}>
-                      <Clock size={11} /> Attempted
-                    </span>
-                  )}
-                  <StatChip icon={<Gem size={11} />} value={`${problem?.point} pts`} color={T.accent} />
-                  <StatChip icon={<Timer size={11} />} value={`${problem?.timeLimit}s`} color={T.blue} />
-                  <StatChip icon={<HardDrive size={11} />} value={`${problem?.memoryLimit}MB`} color={T.textMuted} />
-                  {activeTags.length > 0 && (
-                    <>
-                      <div style={{ width: 1, height: 16, background: T.border, margin: "0 4px" }} />
-                      {activeTags.map((tag) => <TagChip key={tag.id} name={tag.name} />)}
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Tab bar */}
-              <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, padding: "0 8px", flexShrink: 0 }}>
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    style={{
-                      padding: "10px 16px", fontSize: 13, fontWeight: 500, cursor: "pointer",
-                      color: activeTab === tab.id ? T.text : T.textMuted, background: "transparent", border: "none",
-                      borderBottom: `2px solid ${activeTab === tab.id ? T.accent : "transparent"}`, transition: "all 0.15s",
-                    }}
-                    onClick={async () => {
-                      setActiveTab(tab.id);
-                      if (tab.id === "submissions" && !submissionsLoaded) await fetchSubmissions();
-                    }}
-                  >
-                    {tab.label}
-                    {tab.id === "results" && results && (
-                      <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: results.allPassed ? T.green : T.red, verticalAlign: "middle", marginLeft: 6 }} />
+                {/* Problem header */}
+                <div style={{ padding: "18px 20px 14px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+                  <p style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: T.text, margin: "0 0 10px 0", lineHeight: 1.3, letterSpacing: "-0.02em" }}>{problem?.title}</p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                    {problem?.problemDifficulty && <DifficultyBadge difficulty={problem.problemDifficulty} />}
+                    {problem?.solved && (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: "4px", fontSize: "var(--text-xs)", fontWeight: 700, color: T.green, background: T.greenDim, border: `1px solid ${T.green}44` }}>
+                        <CheckCircle size={11} />Solved
+                      </span>
                     )}
-                  </button>
-                ))}
-              </div>
-
-              {/* Tab content */}
-              <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
-                {/* Description */}
-                {activeTab === "description" && (
-                  <div style={{ fontSize: 13, lineHeight: 1.8, color: T.text }}>
-                    <ReactMarkdown>{statement}</ReactMarkdown>
-                  </div>
-                )}
-
-                {/* Test Cases */}
-                {activeTab === "testcases" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {testCases.map((tc, index) => (
-                      <div key={tc.id} style={{ borderRadius: 8, border: `1px solid ${T.border}`, overflow: "hidden" }}>
-                        <div style={{ padding: "6px 12px", background: T.bg, borderBottom: `1px solid ${T.border}` }}>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.05em" }}>CASE {index + 1}</span>
-                        </div>
-                        <div style={{ padding: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                          {[{ label: "INPUT", val: tc.input, color: "var(--text-secondary)" }, { label: "EXPECTED", val: tc.output, color: T.green }].map(({ label, val, color }) => (
-                            <div key={label}>
-                              <p style={{ margin: "0 0 4px", fontSize: 11, color: T.textDim, fontWeight: 600, letterSpacing: "0.04em" }}>{label}</p>
-                              <div style={{ background: T.bg, padding: 8, borderRadius: 6, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color, whiteSpace: "pre-wrap", border: `1px solid ${T.border}`, minHeight: 40 }}>
-                                {val}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Submissions */}
-                {activeTab === "submissions" && (
-                  <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-                    {viewingSubmission ? (
-                      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-                        <button
-                          onClick={() => setViewingSubmission(null)}
-                          style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, color: T.textMuted, background: "transparent", border: "none", cursor: "pointer", fontSize: 13, flexShrink: 0 }}
-                        >
-                          <span>←</span><span>All Submissions</span>
-                        </button>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, flexShrink: 0 }}>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: T.textMuted }}>Code</span>
-                          <div style={{ width: 1, height: 14, background: T.border }} />
-                          <span style={{ fontSize: 13, fontWeight: 600, color: T.textMuted, fontFamily: "'JetBrains Mono', monospace" }}>{viewingSubmission.submissionLanguage}</span>
-                          <div style={{ flex: 1 }} />
-                          <span style={{ fontSize: 11, fontWeight: 600, color: viewingSubmission.submissionVerdict === "AC" ? T.green : T.red }}>
-                            {VERDICT_LABEL[viewingSubmission.submissionVerdict] ?? viewingSubmission.submissionVerdict}
-                          </span>
-                          {viewingSubmission.executionTime != null && <span style={{ fontSize: 11, color: T.textMuted }}>{viewingSubmission.executionTime} s</span>}
-                          {viewingSubmission.memoryUsed != null && <span style={{ fontSize: 11, color: T.textMuted }}>{viewingSubmission.memoryUsed} KB</span>}
-                        </div>
-                        <div style={{ overflowY: "auto", borderRadius: 8, border: `1px solid ${T.border}`, background: "#1E1E1E" }}>
-                          <div style={{ display: "flex", fontFamily: "'JetBrains Mono', 'Fira Code', monospace", fontSize: 11, lineHeight: 1.8 }}>
-                            <div style={{ padding: "16px 12px", borderRight: `1px solid ${T.border}`, color: T.textDim, userSelect: "none", textAlign: "right", flexShrink: 0, background: "#1a1a1a", minWidth: 50 }}>
-                              {(viewingSubmission.sourceCode || "").split("\n").map((_, i) => (
-                                <div key={i} style={{ lineHeight: 1.8, fontSize: 11 }}>{i + 1}</div>
-                              ))}
-                            </div>
-                            <pre
-                              style={{ margin: 0, padding: 16, flex: 1, overflow: "auto" }}
-                              dangerouslySetInnerHTML={{
-                                __html: `<code class="hljs language-${getHljsLanguage(viewingSubmission.submissionLanguage)}" style="background:transparent;padding:0;font-size:0.75rem;font-family:'JetBrains Mono','Fira Code',monospace;line-height:1.8">${hljs.highlight(viewingSubmission.sourceCode || "// No source code available", { language: getHljsLanguage(viewingSubmission.submissionLanguage) }).value}</code>`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                        {submissions.length > 0 && (
-                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                            <button onClick={() => setVerdictFilter(null)} style={{ padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: "pointer", background: "transparent", border: "none", color: verdictFilter === null ? T.text : T.textMuted, borderBottom: `2px solid ${verdictFilter === null ? T.accent : "transparent"}` }}>All</button>
-                            {[...new Set(submissions.map((s) => s.submissionVerdict))].filter(Boolean).map((v) => (
-                              <button
-                                key={v}
-                                onClick={() => setVerdictFilter((prev) => prev === v ? null : v)}
-                                style={{ padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: "pointer", border: "none", color: v === "AC" ? T.green : T.red, background: verdictFilter === v ? (v === "AC" ? T.greenDim : T.redDim) : "transparent", borderBottom: `2px solid ${verdictFilter === v ? (v === "AC" ? T.green : T.red) : "transparent"}`, transition: "all 0.15s" }}
-                              >
-                                {VERDICT_LABEL[v] ?? v}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-
-                        {loadingSubmissions && (
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "16px 0" }}>
-                            <div style={{ width: 16, height: 16, border: `2px solid ${T.accentBorder}`, borderTop: `2px solid ${T.accent}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-                            <span style={{ fontSize: 13, color: T.textMuted }}>Loading submissions...</span>
-                          </div>
-                        )}
-
-                        {!loadingSubmissions && submissions.length === 0 && (
-                          <p style={{ fontSize: 13, color: T.textMuted }}>You have no submissions for this problem yet.</p>
-                        )}
-
-                        {!loadingSubmissions && submissions.length > 0 && (
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 100px 60px", padding: "6px 12px", borderBottom: `1px solid ${T.border}` }}>
-                            {["Submission", "Language", "Time / Mem", "Code"].map((h) => (
-                              <span key={h} style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: "0.05em" }}>{h}</span>
-                            ))}
-                          </div>
-                        )}
-
-                        {!loadingSubmissions && submissions
-                          .filter((s) => verdictFilter ? s.submissionVerdict === verdictFilter : true)
-                          .map((sub) => (
-                            <div
-                              key={sub.id}
-                              style={{ display: "grid", gridTemplateColumns: "1fr 100px 100px 60px", alignItems: "center", padding: "10px 12px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.bg, transition: "border-color 0.15s" }}
-                            >
-                              <div>
-                                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: sub.submissionVerdict === "AC" ? T.green : T.red }}>
-                                  {VERDICT_LABEL[sub.submissionVerdict] ?? sub.submissionVerdict}
-                                </p>
-                                <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
-                                  {sub.submissionDate && <span style={{ fontSize: 11, color: T.textMuted }}>{new Date(sub.submissionDate).toLocaleDateString()}</span>}
-                                  {sub.testCasesPassed != null && sub.totalTestCases != null && <span style={{ fontSize: 11, color: T.textMuted }}>· {sub.testCasesPassed}/{sub.totalTestCases} tests</span>}
-                                </div>
-                              </div>
-                              <span style={{ fontSize: 11, color: T.textMuted, fontFamily: "'JetBrains Mono', monospace" }}>{sub.submissionLanguage}</span>
-                              <div>
-                                {sub.executionTime != null && <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>{sub.executionTime} s</p>}
-                                {sub.memoryUsed != null && <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>{sub.memoryUsed} KB</p>}
-                              </div>
-                              <button onClick={() => setViewingSubmission(sub)} style={{ fontSize: 11, fontWeight: 600, color: T.accent, background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}>View</button>
-                            </div>
-                          ))}
-                      </div>
+                    {problem?.attempted && !problem?.solved && (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: "4px", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--amber-tle)", background: "var(--amber-subtle)", border: "1px solid rgba(251,191,36,0.3)" }}>
+                        <Clock size={11} />Attempted
+                      </span>
                     )}
-                  </div>
-                )}
-
-                {/* Solution */}
-                {activeTab === "solution" && currentExercise?.solutionCode && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    <div style={{ padding: 12, borderRadius: 8, background: `${T.green}15`, border: `1px solid ${T.greenBorder}` }}>
-                      <span style={{ fontSize: 13, color: T.green, fontWeight: 500 }}>✅ Solution published by the instructor</span>
-                    </div>
-                    <div style={{ borderRadius: 8, overflow: "hidden", border: `1px solid ${T.border}`, height: 450 }}>
-                      <Editor height="100%" theme="vs-dark" language="cpp" value={currentExercise.solutionCode} options={{ readOnly: true, minimap: { enabled: false }, fontSize: 14, lineNumbers: "on", scrollBeyondLastLine: false, domReadOnly: true }} />
-                    </div>
-                  </div>
-                )}
-
-                {/* Results */}
-                {activeTab === "results" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {submitting && queuePosition != null && (
-                      <div style={{ padding: 16, borderRadius: 8, background: T.blueDim, border: `1px solid ${T.blueBorder}`, display: "flex", alignItems: "center", gap: 12 }}>
-                        <div style={{ width: 20, height: 20, border: `2px solid ${T.blueBorder}`, borderTop: `2px solid ${T.blue}`, borderRadius: "50%", animation: "spin 1s linear infinite", flexShrink: 0 }} />
-                        <div>
-                          <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: T.blue }}>Waiting in queue</p>
-                          <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>Position: {queuePosition}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {submitting && queuePosition == null && (
-                      <div style={{ padding: 16, borderRadius: 8, background: T.accentDim, border: `1px solid ${T.accentBorder}`, display: "flex", alignItems: "center", gap: 12 }}>
-                        <div style={{ width: 20, height: 20, border: `2px solid ${T.accentBorder}`, borderTop: `2px solid ${T.accent}`, borderRadius: "50%", animation: "spin 1s linear infinite", flexShrink: 0 }} />
-                        <div>
-                          <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: T.accent }}>Judging...</p>
-                          <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>Running against test cases</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {results && (
+                    <StatChip icon={<Zap size={11} />}      value={`${problem?.point} pts`}    color={T.accent}   />
+                    <StatChip icon={<Timer size={11} />}     value={`${problem?.timeLimit}s`}    color={T.blue}     />
+                    <StatChip icon={<HardDrive size={11} />} value={`${problem?.memoryLimit}MB`} color={T.textMuted}/>
+                    {activeTags.length > 0 && (
                       <>
-                        <div style={{ padding: 16, borderRadius: 8, background: results.allPassed ? T.greenDim : T.redDim, border: `1px solid ${results.allPassed ? T.greenBorder : T.redBorder}`, display: "flex", alignItems: "center", gap: 12 }}>
-                          {results.allPassed ? <CheckCircle size={22} color={T.green} /> : <XCircle size={22} color={T.red} />}
-                          <div>
-                            <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: results.allPassed ? T.green : T.red }}>{VERDICT_LABEL[results.verdict] ?? results.verdict}</p>
-                            <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>{results.passedCount} / {results.totalCount} test cases passed</p>
-                            {(results.executionTime != null || results.memoryUsed != null) && (
-                              <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>
-                                {results.executionTime != null && `${results.executionTime} ms`}
-                                {results.executionTime != null && results.memoryUsed != null && " · "}
-                                {results.memoryUsed != null && `${results.memoryUsed} KB`}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        {results.errorMessage && (
-                          <div>
-                            <p style={{ margin: "0 0 4px", fontSize: 11, color: T.red, fontWeight: 600 }}>{results.verdict === "CE" ? "COMPILATION ERROR" : "ERROR"}</p>
-                            <div style={{ background: T.redDim, padding: 12, borderRadius: 6, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: T.red, whiteSpace: "pre-wrap", border: `1px solid ${T.redBorder}` }}>
-                              {results.errorMessage}
-                            </div>
-                          </div>
-                        )}
+                        <div style={{ width: 1, height: 14, background: T.border, margin: "0 2px" }} />
+                        {activeTags.map((tag) => <TagChip key={tag.id} name={tag.name} />)}
                       </>
                     )}
                   </div>
-                )}
+                </div>
+
+                {/* Tab bar */}
+                <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, padding: "0 4px", flexShrink: 0, overflowX: "auto" }}>
+                  {tabs.map((tab) => (
+                    <button key={tab.id}
+                      onClick={async () => { setActiveTab(tab.id); if (tab.id === "submissions" && !submissionsLoaded) await fetchSubmissions(); }}
+                      style={{ display: "flex", alignItems: "center", gap: 5, padding: "10px 14px", fontSize: "var(--text-sm)", fontWeight: 500, cursor: "pointer", color: activeTab === tab.id ? T.text : T.textMuted, background: "transparent", border: "none", borderBottom: `2px solid ${activeTab === tab.id ? T.accent : "transparent"}`, transition: "color 0.12s", outline: "none", whiteSpace: "nowrap", fontFamily: "var(--font-body)" }}>
+                      {tab.label}
+                      {tab.id === "results" && results && (
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: results.allPassed ? T.green : T.red }} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Tab content */}
+                <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
+
+                  {activeTab === "description" && (
+                    <div className="lpmd" style={{ fontSize: "var(--text-sm)", lineHeight: 1.8 }}>
+                      <ReactMarkdown>{statement}</ReactMarkdown>
+                    </div>
+                  )}
+
+                  {activeTab === "testcases" && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                      {testCases.length === 0 ? (
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, paddingTop: 40 }}>
+                          <Terminal size={26} style={{ color: T.textDim, opacity: 0.4 }} />
+                          <span style={{ fontSize: "var(--text-sm)", color: T.textDim }}>No sample test cases</span>
+                        </div>
+                      ) : testCases.map((tc, i) => (
+                        <div key={tc.id} style={{ borderRadius: "var(--radius-md)", border: `1px solid ${T.border}`, overflow: "hidden", background: T.surface }}>
+                          <div style={{ padding: "6px 14px", background: T.bg, borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, fontFamily: "var(--font-code)", color: T.accent, background: T.accentDim, border: `1px solid ${T.accentBorder}`, padding: "1px 7px", borderRadius: "var(--radius-sm)", letterSpacing: "0.06em" }}>CASE {i + 1}</span>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+                            {[{ label: "INPUT", val: tc.input, accent: false }, { label: "EXPECTED OUTPUT", val: tc.output, accent: true }].map(({ label, val, accent }, idx) => (
+                              <div key={label} style={{ borderRight: idx === 0 ? `1px solid ${T.border}` : "none" }}>
+                                <div style={{ padding: "5px 12px", borderBottom: `1px solid ${T.border}`, background: accent ? T.greenDim : "transparent" }}>
+                                  <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: accent ? T.green : T.textDim, letterSpacing: "0.06em", fontFamily: "var(--font-code)" }}>{label}</span>
+                                </div>
+                                <div style={{ padding: "10px 12px", fontFamily: "var(--font-code)", fontSize: "var(--text-xs)", color: accent ? T.green : T.text, whiteSpace: "pre-wrap", lineHeight: 1.7, minHeight: 40, maxHeight: 180, overflowY: "auto", background: accent ? T.greenDim : "transparent" }}>
+                                  {val || <span style={{ color: T.textDim, fontStyle: "italic", fontFamily: "var(--font-body)" }}>empty</span>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {activeTab === "submissions" && (
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      {viewingSubmission ? (
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <button onClick={() => setViewingSubmission(null)}
+                            style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14, color: T.textMuted, background: "transparent", border: "none", cursor: "pointer", fontSize: "var(--text-sm)", outline: "none", fontFamily: "var(--font-body)" }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = T.text; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = T.textMuted; }}>
+                            ← All Submissions
+                          </button>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+                            <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: (VERDICT_COLOR[viewingSubmission.submissionVerdict] || {}).c ?? T.textMuted, fontFamily: "var(--font-code)" }}>
+                              {VERDICT_LABEL[viewingSubmission.submissionVerdict] ?? viewingSubmission.submissionVerdict}
+                            </span>
+                            <span style={{ fontSize: "var(--text-xs)", color: T.textMuted, fontFamily: "var(--font-code)" }}>{viewingSubmission.submissionLanguage}</span>
+                            {viewingSubmission.executionTime != null && <span style={{ fontSize: "var(--text-xs)", color: T.textMuted }}>{viewingSubmission.executionTime}s</span>}
+                            {viewingSubmission.memoryUsed != null && <span style={{ fontSize: "var(--text-xs)", color: T.textMuted }}>{viewingSubmission.memoryUsed}KB</span>}
+                          </div>
+                          <div style={{ borderRadius: "var(--radius-md)", border: `1px solid ${T.border}`, background: "#1E1E1E", overflow: "hidden" }}>
+                            <div style={{ display: "flex", fontFamily: "var(--font-code)", fontSize: "var(--text-xs)", lineHeight: 1.8 }}>
+                              <div style={{ padding: "14px 10px", borderRight: `1px solid ${T.border}`, color: T.textDim, userSelect: "none", textAlign: "right", flexShrink: 0, background: "#1a1a1a", minWidth: 46 }}>
+                                {(viewingSubmission.sourceCode || "").split("\n").map((_, i) => <div key={i}>{i + 1}</div>)}
+                              </div>
+                              <pre style={{ margin: 0, padding: 14, flex: 1, overflow: "auto" }}
+                                dangerouslySetInnerHTML={{ __html: `<code class="hljs language-${getHljsLanguage(viewingSubmission.submissionLanguage)}" style="background:transparent;padding:0;font-size:0.75rem;font-family:var(--font-code);line-height:1.8">${hljs.highlight(viewingSubmission.sourceCode || "// No source code", { language: getHljsLanguage(viewingSubmission.submissionLanguage) }).value}</code>` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          {submissions.length > 0 && (
+                            <div style={{ display: "flex", gap: 4, borderBottom: `1px solid ${T.border}`, paddingBottom: 4 }}>
+                              {[null, ...[...new Set(submissions.map((s) => s.submissionVerdict))].filter(Boolean)].map((v) => (
+                                <button key={v ?? "all"} onClick={() => setVerdictFilter(v)}
+                                  style={{ padding: "3px 10px", borderRadius: "var(--radius-pill)", fontSize: "var(--text-xs)", fontWeight: 600, cursor: "pointer", border: "none", outline: "none", background: verdictFilter === v ? (v ? (VERDICT_COLOR[v] || {}).bg ?? T.accentDim : T.accentDim) : "transparent", color: verdictFilter === v ? (v ? (VERDICT_COLOR[v] || {}).c ?? T.accent : T.accent) : T.textMuted, fontFamily: "var(--font-body)", transition: "all 0.12s" }}>
+                                  {v ? (VERDICT_LABEL[v] ?? v) : "All"}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {loadingSubmissions ? (
+                            <div style={{ display: "flex", justifyContent: "center", padding: "32px 0" }}>
+                              <div className="spinner" style={{ borderTopColor: T.accent }} />
+                            </div>
+                          ) : submissions.length === 0 ? (
+                            <span style={{ fontSize: "var(--text-sm)", color: T.textDim, padding: "24px 0", textAlign: "center", display: "block" }}>No submissions yet.</span>
+                          ) : (
+                            submissions
+                              .filter((s) => verdictFilter ? s.submissionVerdict === verdictFilter : true)
+                              .map((sub) => {
+                                const vc = VERDICT_COLOR[sub.submissionVerdict] || { c: T.textMuted, bg: T.bg };
+                                return (
+                                  <div key={sub.id}
+                                    style={{ borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderLeft: `3px solid ${vc.c}`, transition: "background 0.12s", cursor: sub.sourceCode ? "pointer" : "default" }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = T.surfaceHover; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                                    onClick={() => sub.sourceCode && setViewingSubmission(sub)}>
+                                    <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-xs)", fontWeight: 700, color: vc.c, background: vc.bg, padding: "2px 7px", borderRadius: "var(--radius-sm)", flexShrink: 0 }}>
+                                      {sub.submissionVerdict ?? "—"}
+                                    </span>
+                                    <span style={{ fontSize: "var(--text-xs)", color: T.textMuted, fontFamily: "var(--font-code)" }}>{sub.submissionLanguage}</span>
+                                    <span style={{ fontSize: "var(--text-xs)", color: T.textDim, marginLeft: "auto", fontFamily: "var(--font-code)" }}>
+                                      {sub.testCasesPassed != null ? `${sub.testCasesPassed}/${sub.totalTestCases}` : ""}
+                                      {sub.executionTime != null ? ` · ${sub.executionTime}ms` : ""}
+                                    </span>
+                                  </div>
+                                );
+                              })
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === "solution" && currentEx?.solutionCode && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      <div style={{ padding: "10px 14px", borderRadius: "var(--radius-md)", background: T.greenDim, border: `1px solid ${T.green}33`, borderLeft: `4px solid ${T.green}` }}>
+                        <span style={{ fontSize: "var(--text-sm)", color: T.green, fontWeight: 600 }}>Solution published by instructor</span>
+                      </div>
+                      <div style={{ borderRadius: "var(--radius-md)", overflow: "hidden", border: `1px solid ${T.border}`, height: 420 }}>
+                        <Editor height="100%" theme="vs-dark" language="cpp" value={currentEx.solutionCode}
+                          options={{ readOnly: true, minimap: { enabled: false }, fontSize: 14, lineNumbers: "on", scrollBeyondLastLine: false, domReadOnly: true }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === "results" && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                      {submitting && queuePosition != null && (
+                        <div style={{ padding: "16px 18px", borderRadius: "var(--radius-md)", background: T.blueDim, border: `1px solid ${T.blue}33`, borderLeft: `4px solid ${T.blue}`, display: "flex", alignItems: "center", gap: 14 }}>
+                          <div className="spinner" style={{ borderTopColor: T.blue, width: 16, height: 16, flexShrink: 0 }} />
+                          <div>
+                            <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "var(--text-xl)", color: T.blue, margin: "0 0 2px", letterSpacing: "0.02em" }}>IN QUEUE</p>
+                            <p style={{ fontSize: "var(--text-xs)", color: T.textMuted, margin: 0, fontFamily: "var(--font-code)" }}>Position #{queuePosition}</p>
+                          </div>
+                        </div>
+                      )}
+                      {submitting && queuePosition == null && (
+                        <div style={{ padding: "16px 18px", borderRadius: "var(--radius-md)", background: T.accentDim, border: `1px solid ${T.accentBorder}`, borderLeft: `4px solid ${T.accent}`, display: "flex", alignItems: "center", gap: 14 }}>
+                          <div className="spinner" style={{ borderTopColor: T.accent, width: 16, height: 16, flexShrink: 0 }} />
+                          <div>
+                            <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "var(--text-xl)", color: T.accent, margin: "0 0 2px", letterSpacing: "0.02em" }}>JUDGING</p>
+                            <p style={{ fontSize: "var(--text-xs)", color: T.textMuted, margin: 0, fontFamily: "var(--font-code)" }}>Running against test cases…</p>
+                          </div>
+                        </div>
+                      )}
+                      {results && (
+                        <>
+                          <div style={{ padding: "16px 18px", borderRadius: "var(--radius-md)", background: results.allPassed ? T.greenDim : T.redDim, border: `1px solid ${results.allPassed ? T.green : T.red}33`, borderLeft: `4px solid ${results.allPassed ? T.green : T.red}` }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                              {results.allPassed ? <CheckCircle size={20} color={T.green} strokeWidth={2.5} /> : <XCircle size={20} color={T.red} strokeWidth={2.5} />}
+                              <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "var(--text-2xl)", letterSpacing: "0.01em", color: results.allPassed ? T.green : T.red }}>
+                                {VERDICT_LABEL[results.verdict] ?? results.verdict}
+                              </span>
+                            </div>
+                            <div style={{ height: 3, borderRadius: 2, background: "var(--bg-overlay)", overflow: "hidden", marginBottom: 6 }}>
+                              <div style={{ height: "100%", width: `${(results.passedCount / results.totalCount) * 100}%`, background: results.allPassed ? T.green : T.red, borderRadius: 2, transition: "width 0.5s ease" }} />
+                            </div>
+                            <span style={{ fontSize: "var(--text-xs)", color: T.textMuted, fontFamily: "var(--font-code)" }}>
+                              {results.passedCount} / {results.totalCount} test cases passed
+                            </span>
+                            {(results.executionTime != null || results.memoryUsed != null) && (
+                              <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+                                {results.executionTime != null && (
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "var(--text-xs)", fontFamily: "var(--font-code)", fontWeight: 600, color: T.textMuted, background: "var(--bg-overlay)", padding: "2px 7px", borderRadius: "var(--radius-sm)", border: `1px solid ${T.border}` }}>
+                                    <Clock size={10} />{results.executionTime} ms
+                                  </span>
+                                )}
+                                {results.memoryUsed != null && (
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "var(--text-xs)", fontFamily: "var(--font-code)", fontWeight: 600, color: T.textMuted, background: "var(--bg-overlay)", padding: "2px 7px", borderRadius: "var(--radius-sm)", border: `1px solid ${T.border}` }}>
+                                    <HardDrive size={10} />{results.memoryUsed} KB
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          {results.errorMessage && (
+                            <div style={{ borderRadius: "var(--radius-md)", border: `1px solid ${T.red}33`, overflow: "hidden" }}>
+                              <div style={{ padding: "6px 14px", background: T.redDim, borderBottom: `1px solid ${T.red}33` }}>
+                                <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: T.red, fontFamily: "var(--font-code)", letterSpacing: "0.06em" }}>
+                                  {results.verdict === "CE" ? "COMPILATION ERROR" : "RUNTIME ERROR"}
+                                </span>
+                              </div>
+                              <pre style={{ margin: 0, padding: "12px 14px", fontFamily: "var(--font-code)", fontSize: "var(--text-xs)", color: T.red, whiteSpace: "pre-wrap", background: T.bg, lineHeight: 1.7, maxHeight: 220, overflowY: "auto" }}>
+                                {results.errorMessage}
+                              </pre>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      {!submitting && !results && (
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, paddingTop: 40 }}>
+                          <Terminal size={26} style={{ color: T.textDim, opacity: 0.35 }} />
+                          <p style={{ margin: 0, fontSize: "var(--text-sm)", color: T.textDim }}>Submit your code to see results</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            </Panel>
+
+            <ResizeHandle direction="horizontal" />
 
             {/* ══ RIGHT: Code Editor Panel ══ */}
-            <div style={{ height: "100%", display: "flex", flexDirection: "column", background: T.bg }}>
-              <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
+            <Panel defaultSize={58} minSize={30}>
+              <div style={{ height: "100%", display: "flex", flexDirection: "column", background: T.bg }}>
                 <CodeEditor
                   ref={codeEditorRef}
                   rightHeaderContent={
                     <button
-                      style={{
-                        padding: "4px 20px", borderRadius: 6, fontWeight: 700, fontSize: 13,
-                        background: deadlinePassed ? T.textDim : T.accent,
-                        color: deadlinePassed ? T.textMuted : "#000",
-                        border: "none", cursor: deadlinePassed ? "not-allowed" : "pointer", transition: "all 0.15s",
-                      }}
                       onClick={handleSubmit}
                       disabled={submitting || deadlinePassed}
-                    >
-                      {submitting ? "Running..." : deadlinePassed ? "Deadline Passed" : "Run & Submit"}
+                      style={{ padding: "5px 18px", background: deadlinePassed ? T.borderBright : T.accent, color: deadlinePassed ? T.textMuted : "#000", fontWeight: 700, fontSize: "var(--text-sm)", borderRadius: "var(--radius-sm)", border: "none", cursor: deadlinePassed ? "not-allowed" : "pointer", outline: "none", transition: "all 0.15s", opacity: submitting ? 0.7 : 1, fontFamily: "var(--font-body)" }}
+                      onMouseEnter={(e) => { if (!deadlinePassed && !submitting) { e.currentTarget.style.background = "var(--primary-bright)"; e.currentTarget.style.transform = "translateY(-1px)"; } }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = deadlinePassed ? T.borderBright : T.accent; e.currentTarget.style.transform = "translateY(0)"; }}>
+                      {submitting ? "Running…" : deadlinePassed ? "Deadline Passed" : "Run & Submit"}
                     </button>
                   }
                 />
               </div>
-            </div>
-          </ResizablePane>
+            </Panel>
+
+          </PanelGroup>
         </div>
       </div>
     </div>

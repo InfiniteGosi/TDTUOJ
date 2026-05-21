@@ -134,20 +134,20 @@ const AdminContestPage = () => {
 
             <table className="table">
               <thead>
-                <tr>
-                  <th style={{ width: "5%" }}>#</th>
-                  <th style={{ width: "27%" }}>Contest</th>
-                  <th style={{ width: "11%" }}>Status</th>
-                  <th style={{ width: "17%" }}>Start</th>
-                  <th style={{ width: "17%" }}>End</th>
-                  <th style={{ textAlign: "center", width: "7%" }}>Problems</th>
-                  <th style={{ textAlign: "center", width: "16%" }}>Actions</th>
+                <tr style={{ background: "var(--primary-subtle)" }}>
+                  <th style={{ width: "5%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
+                  <th style={{ width: "27%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Contest</th>
+                  <th style={{ width: "11%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</th>
+                  <th style={{ width: "17%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Start</th>
+                  <th style={{ width: "17%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>End</th>
+                  <th style={{ textAlign: "center", width: "7%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Problems</th>
+                  <th style={{ textAlign: "center", width: "16%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length > 0 ? (
-                  filtered.map((contest, idx) => (
-                    <tr key={contest.id} style={{ background: idx % 2 === 0 ? "var(--bg-base)" : "var(--bg-raised)" }}>
+                  filtered.map((contest) => (
+                    <tr key={contest.id}>
                       <td><span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{contest.id}</span></td>
                       <td>
                         <div>
@@ -199,11 +199,12 @@ const AdminContestPage = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: "center", padding: "40px 0" }}>
-                      <div className="flex flex-col items-center gap-2">
-                        <Trophy size={32} color="var(--text-muted)" />
-                        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>No contests found</span>
+                    <td colSpan={7} style={{ padding: "56px 24px", textAlign: "center" }}>
+                      <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--bg-overlay)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+                        <Trophy size={22} color="var(--text-muted)" />
                       </div>
+                      <div style={{ fontSize: "var(--text-base)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 4 }}>No contests found</div>
+                      <div style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>Click 'New Contest' to create one</div>
                     </td>
                   </tr>
                 )}

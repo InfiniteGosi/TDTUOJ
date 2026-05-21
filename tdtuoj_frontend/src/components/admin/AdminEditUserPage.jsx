@@ -1,296 +1,439 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Lock, Shield, User } from "lucide-react";
+import {
+  ArrowLeft, Lock, Shield, User, Camera, Save,
+  Eye, EyeOff, Crown, CheckCircle, AlertTriangle,
+} from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useConfirmDialog } from "../common/ConfirmDialog";
 import AvatarUploadModal from "../common/AvatarUploadModal";
 import { useToast } from "../common/ToastMessage";
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const AVAILABLE_ROLES = ["PARTICIPANT", "CREATOR", "ADMIN"];
 
-const ROLE_BADGE = {
-  ADMIN:       { bg: "var(--red-subtle)",     color: "var(--red-wa)" },
-  CREATOR:     { bg: "var(--amber-subtle)",   color: "var(--amber-tle)" },
-  PARTICIPANT: { bg: "var(--primary-subtle)", color: "var(--primary)" },
+const ROLE_META = {
+  ADMIN:       { bg: "var(--red-subtle)",     color: "var(--red-wa)",    icon: Shield,    desc: "Full platform access and user management" },
+  CREATOR:     { bg: "var(--amber-subtle)",   color: "var(--amber-tle)", icon: Crown,     desc: "Can create and manage problems and contests" },
+  PARTICIPANT: { bg: "var(--primary-subtle)", color: "var(--primary)",   icon: User,      desc: "Standard user — can compete and submit" },
 };
 
-const getRoleIcon = (roleName) => {
-  switch (roleName) {
-    case "ADMIN": return <Shield size={14} />;
-    case "CREATOR": return <User size={14} />;
-    default: return null;
-  }
+const MAX_ABOUT = 500;
+
+// ─── PasswordField ────────────────────────────────────────────────────────────
+
+const PasswordField = ({ value, onChange }) => {
+  const [show, setShow] = useState(false);
+  return (
+    <div style={{ position: "relative" }}>
+      <input
+        className="input w-full"
+        name="password"
+        type={show ? "text" : "password"}
+        value={value}
+        onChange={onChange}
+        placeholder="Leave blank to keep current password"
+        autoComplete="new-password"
+        style={{ paddingRight: 40 }}
+      />
+      <button
+        type="button"
+        onClick={() => setShow((s) => !s)}
+        style={{
+          position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+          background: "none", border: "none", cursor: "pointer", display: "flex",
+          color: "var(--text-muted)", transition: "color 0.1s", padding: 2,
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text-primary)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}
+      >
+        {show ? <EyeOff size={15} /> : <Eye size={15} />}
+      </button>
+    </div>
+  );
 };
+
+// ─── AdminEditUserPage ────────────────────────────────────────────────────────
 
 const AdminEditUserPage = () => {
   const { userId } = useParams();
-  const [user, setUser] = useState(null);
+  const [user, setUser]     = useState(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const navigate = useNavigate();
+  const [saving, setSaving]   = useState(false);
+  const navigate               = useNavigate();
   const { ConfirmDialog, showConfirm } = useConfirmDialog();
-  const { showMessage } = useToast();
+  const { showMessage }        = useToast();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isHoveringAvatar, setIsHoveringAvatar] = useState(false);
+  const [isHoveringAvatar, setIsHoveringAvatar]   = useState(false);
 
-  const [formData, setFormData] = useState({ name: "", about: "", email: "", password: "", isActive: true });
+  const [formData, setFormData]   = useState({ name: "", about: "", email: "", password: "", isActive: true });
   const [selectedRoles, setSelectedRoles] = useState(["PARTICIPANT"]);
-  const [profileImage, setProfileImage] = useState(null);
-  const [previewImage, setPreviewImage] = useState("");
+  const [profileImage, setProfileImage]   = useState(null);
+  const [previewImage, setPreviewImage]   = useState("");
 
   useEffect(() => {
-    const fetchUser = async () => {
+    (async () => {
       try {
         setLoading(true);
-        const response = await ApiService.getUserByUserIdAsAdmin(userId);
-        if (response.statusCode === 200) {
-          const userData = response.data;
-          setUser(userData);
-          setFormData({ name: userData.name || "", about: userData.about || "", email: userData.email || "", password: "", isActive: userData.isActive ?? true });
-          setPreviewImage(userData.profileUrl || "");
-          setSelectedRoles(userData.roles?.map((r) => r.name) || ["PARTICIPANT"]);
+        const res = await ApiService.getUserByUserIdAsAdmin(userId);
+        if (res.statusCode === 200) {
+          const u = res.data;
+          setUser(u);
+          setFormData({ name: u.name || "", about: u.about || "", email: u.email || "", password: "", isActive: u.isActive ?? true });
+          setPreviewImage(u.profileUrl || "");
+          setSelectedRoles(u.roles?.map((r) => r.name) || ["PARTICIPANT"]);
         }
-      } catch (error) { showMessage(error.response?.data?.message || error.message, "error"); } finally { setLoading(false); }
-    };
-    fetchUser();
+      } catch (e) { showMessage(e.response?.data?.message || e.message, "error"); }
+      finally { setLoading(false); }
+    })();
   }, [userId]);
 
-  const handleInputChange = (e) => { const { name, value } = e.target; setFormData((prev) => ({ ...prev, [name]: value })); };
-  const handleRoleToggle = (role) => setSelectedRoles((prev) => prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "about" && value.length > MAX_ABOUT) return;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleRoleToggle = (role) =>
+    setSelectedRoles((prev) => prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]);
 
   const handleSaveAvatar = (previewUrl, imageFile) => {
     setProfileImage(imageFile);
     setPreviewImage(previewUrl);
-    showMessage("Avatar selected! Click 'Save Changes' to apply.", "success");
+    showMessage("Avatar selected — click Save Changes to apply.", "success");
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (selectedRoles.length === 0) { showMessage("User must have at least one role.", "error"); return; }
-    showConfirm("Update User", `Are you sure you want to update the account for "${user?.username}"?`, async () => {
+    showConfirm("Update User", `Save changes to "${user?.username}"?`, async () => {
       try {
         setSaving(true);
-        const formDataToSend = new FormData();
-        formDataToSend.append("id", user.id);
-        formDataToSend.append("name", formData.name);
-        formDataToSend.append("about", formData.about);
-        formDataToSend.append("email", formData.email);
-        formDataToSend.append("isActive", formData.isActive);
-        if (formData.password) formDataToSend.append("password", formData.password);
-        selectedRoles.forEach((role) => formDataToSend.append("roleNames", role));
-        if (profileImage) formDataToSend.append("imageFile", profileImage);
-        const response = await ApiService.updateUserAsAdmin(formDataToSend);
-        if (response.statusCode === 200) { showMessage("User updated successfully!", "success"); setTimeout(() => navigate("/admin/users"), 1200); }
-      } catch (error) { showMessage(error.response?.data?.message || "Failed to update user", "error"); } finally { setSaving(false); }
+        const fd = new FormData();
+        fd.append("id", user.id);
+        fd.append("name", formData.name);
+        fd.append("about", formData.about);
+        fd.append("email", formData.email);
+        fd.append("isActive", formData.isActive);
+        if (formData.password) fd.append("password", formData.password);
+        selectedRoles.forEach((r) => fd.append("roleNames", r));
+        if (profileImage) fd.append("imageFile", profileImage);
+        const res = await ApiService.updateUserAsAdmin(fd);
+        if (res.statusCode === 200) {
+          showMessage("User updated!", "success");
+          setTimeout(() => navigate("/admin/users"), 1200);
+        }
+      } catch (e) { showMessage(e.response?.data?.message || "Failed to update user", "error"); }
+      finally { setSaving(false); }
     });
   };
 
-  const getInitials = (username) => username ? username.substring(0, 2).toUpperCase() : "U";
+  const initials = (u) => (u ? u.substring(0, 2).toUpperCase() : "U");
+  const aboutPct   = Math.round((formData.about.length / MAX_ABOUT) * 100);
+  const aboutColor = aboutPct >= 90 ? "var(--red-wa)" : aboutPct >= 70 ? "var(--amber-tle)" : "var(--text-muted)";
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
-        <div className="page-container" style={{ maxWidth: 700 }}>
-          <div className="flex flex-col items-center gap-4" style={{ padding: "80px 0" }}>
-            <div className="spinner" />
-            <span className="text-muted">Loading user...</span>
-          </div>
-        </div>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="spinner" />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
-        <div className="page-container" style={{ maxWidth: 700 }}>
-          <div className="flex flex-col items-center gap-4" style={{ padding: "80px 0" }}>
-            <p style={{ fontSize: 24, color: "var(--text-muted)" }}>User not found</p>
-            <button className="btn btn-primary" onClick={() => navigate("/admin/users")}>Back to Users</button>
-          </div>
-        </div>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+        <span style={{ fontSize: "var(--text-base)", color: "var(--text-secondary)" }}>User not found</span>
+        <button className="btn btn-primary" onClick={() => navigate("/admin/users")}>Back to Users</button>
       </div>
     );
   }
 
-  const sectionCard = { background: "var(--bg-raised)", borderRadius: 10, border: "1px solid var(--border-subtle)", padding: 24 };
-
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0 64px" }}>
       <div className="page-container" style={{ maxWidth: 700 }}>
         <div className="flex flex-col gap-6">
-          {/* Header */}
-          <div className="flex items-center gap-4">
-            <button className="btn btn-ghost" onClick={() => navigate("/admin/users")}>
-              <ArrowLeft size={20} /> Back
-            </button>
-            <div>
-              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "var(--text-primary)" }}>Edit User</h2>
-              <p style={{ margin: 0, fontSize: 13, color: "var(--text-muted)" }}>@{user.username}</p>
+
+          {/* ── Back ── */}
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ alignSelf: "flex-start", gap: 6 }}
+            onClick={() => navigate("/admin/users")}
+          >
+            <ArrowLeft size={16} /> Back to Users
+          </button>
+
+          {/* ── Page header ── */}
+          <div style={{ borderLeft: "4px solid var(--primary)", paddingLeft: 16 }}>
+            <div style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: "var(--text-muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Admin / Users / @{user.username}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <User size={20} color="var(--primary)" />
+              <h2 style={{ margin: 0, fontSize: "var(--text-lg)", fontWeight: 800, color: "var(--text-primary)" }}>
+                Edit User
+              </h2>
+              {/* Status pill */}
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "2px 10px", borderRadius: "var(--radius-pill)",
+                background: formData.isActive ? "var(--green-subtle)" : "var(--red-subtle)",
+                fontSize: "var(--text-xs)", fontWeight: 700,
+                color: formData.isActive ? "var(--green-ac)" : "var(--red-wa)",
+              }}>
+                {formData.isActive ? <CheckCircle size={11} /> : <AlertTriangle size={11} />}
+                {formData.isActive ? "Active" : "Inactive"}
+              </span>
             </div>
           </div>
 
-          {/* Profile Picture */}
-          <div style={sectionCard}>
-            <h3 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>Profile Picture</h3>
-            <div className="flex items-center gap-6">
+          {/* ── Avatar card ── */}
+          <div className="card" style={{ padding: 24 }}>
+            <div style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 18 }}>
+              Profile Picture
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
               <div
-                style={{ position: "relative", cursor: "pointer" }}
+                style={{ position: "relative", cursor: "pointer", flexShrink: 0 }}
                 onMouseEnter={() => setIsHoveringAvatar(true)}
                 onMouseLeave={() => setIsHoveringAvatar(false)}
                 onClick={() => setIsUploadModalOpen(true)}
               >
                 {previewImage ? (
-                  <img src={previewImage} alt={user.username} style={{ width: 120, height: 120, borderRadius: "50%", objectFit: "cover", border: "4px solid var(--primary)" }} />
+                  <img src={previewImage} alt={user.username} style={{ width: 88, height: 88, borderRadius: "50%", objectFit: "cover", border: "3px solid var(--primary)", display: "block" }} />
                 ) : (
-                  <div style={{ width: 120, height: 120, borderRadius: "50%", background: "var(--primary-subtle)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 700, border: "4px solid var(--primary)" }}>
-                    {getInitials(user.username)}
+                  <div style={{ width: 88, height: 88, borderRadius: "50%", background: "var(--primary-subtle)", border: "3px solid var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, fontWeight: 800, color: "var(--primary)" }}>
+                    {initials(user.username)}
                   </div>
                 )}
-                {isHoveringAvatar && (
-                  <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="white" style={{ marginBottom: 8 }}>
-                      <path d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z" />
-                      <path d="M21 5h-3.17l-1.24-1.35A1.99 1.99 0 0015.12 3H8.88c-.56 0-1.1.24-1.48.65L6.17 5H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V7a2 2 0 00-2-2zm-9 13a5.5 5.5 0 110-11 5.5 5.5 0 010 11z" />
-                    </svg>
-                    <span style={{ color: "white", fontSize: 13, fontWeight: 500 }}>Edit</span>
-                  </div>
-                )}
+                <div style={{
+                  position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(0,0,0,0.55)",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
+                  opacity: isHoveringAvatar ? 1 : 0, transition: "opacity 0.15s",
+                }}>
+                  <Camera size={20} color="white" />
+                  <span style={{ color: "white", fontSize: 10, fontWeight: 700 }}>Edit</span>
+                </div>
               </div>
               <div>
-                <p style={{ margin: 0, fontSize: 13, color: "var(--text-secondary)" }}>Click on the avatar to upload a new profile picture</p>
-                <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted)" }}>JPG, PNG or GIF. Max size 5MB.</p>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  style={{ border: "1px solid var(--border-default)", marginBottom: 8 }}
+                  onClick={() => setIsUploadModalOpen(true)}
+                >
+                  <Camera size={13} /> Upload Photo
+                </button>
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", lineHeight: 1.6 }}>
+                  JPG, PNG or GIF · Max 5 MB
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Basic Information */}
-          <div style={sectionCard}>
-            <h3 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>Basic Information</h3>
-            <div className="flex flex-col gap-4">
-              <div className="form-group">
-                <label className="form-label">Username</label>
-                <input className="input w-full" value={user.username} readOnly style={{ background: "var(--bg-raised)", cursor: "not-allowed" }} />
-                <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--text-muted)" }}>Username cannot be changed</p>
+          {/* ── Basic info card ── */}
+          <div className="card" style={{ padding: 24 }}>
+            <div style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 18 }}>
+              Basic Information
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+              {/* Username — read only */}
+              <div>
+                <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Username</label>
+                <input className="input w-full" value={user.username} readOnly style={{ cursor: "not-allowed", opacity: 0.55, background: "var(--bg-overlay)" }} />
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: 4 }}>Username cannot be changed.</div>
               </div>
-              <div className="form-group">
-                <label className="form-label">Display Name</label>
+
+              {/* Display name */}
+              <div>
+                <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Display Name</label>
                 <input className="input w-full" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter display name" />
               </div>
-              <div className="form-group">
-                <label className="form-label">Email</label>
+
+              {/* Email */}
+              <div>
+                <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Email</label>
                 <input className="input w-full" name="email" type="email" value={formData.email} onChange={handleInputChange} placeholder="Enter email address" />
               </div>
-              <div className="form-group">
-                <label className="form-label">About</label>
-                <textarea className="input w-full" name="about" value={formData.about} onChange={handleInputChange} placeholder="About this user..." style={{ minHeight: 100, resize: "vertical" }} />
-                <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--text-muted)" }}>{formData.about.length} / 500 characters</p>
+
+              {/* About */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <label style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>About</label>
+                  <span style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: aboutColor }}>{formData.about.length} / {MAX_ABOUT}</span>
+                </div>
+                <textarea
+                  className="input w-full"
+                  name="about"
+                  value={formData.about}
+                  onChange={handleInputChange}
+                  placeholder="About this user…"
+                  rows={3}
+                  style={{ resize: "vertical", lineHeight: 1.6 }}
+                />
+                <div style={{ height: 2, borderRadius: 999, background: "var(--bg-overlay)", marginTop: 6, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${aboutPct}%`, background: aboutColor, borderRadius: 999, transition: "width 0.2s, background 0.2s" }} />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Account Status */}
-          <div style={sectionCard}>
-            <h3 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>Account Status</h3>
-            <div
-              className="flex items-center justify-between"
-              style={{ padding: 16, background: formData.isActive ? "var(--green-subtle)" : "var(--red-subtle)", borderRadius: 8, border: `1px solid ${formData.isActive ? "var(--green-subtle)" : "var(--red-subtle)"}` }}
-            >
+          {/* ── Account status card ── */}
+          <div className="card" style={{ padding: 24 }}>
+            <div style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 16 }}>
+              Account Status
+            </div>
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "14px 16px", borderRadius: "var(--radius-md)",
+              background: formData.isActive ? "var(--green-subtle)" : "var(--red-subtle)",
+              border: `1px solid ${formData.isActive ? "var(--green-ac)" : "var(--red-wa)"}33`,
+            }}>
               <div>
-                <p style={{ margin: 0, fontWeight: 600, color: formData.isActive ? "var(--green-ac)" : "var(--red-wa)" }}>{formData.isActive ? "Active" : "Inactive"}</p>
-                <p style={{ margin: 0, fontSize: 13, color: formData.isActive ? "var(--green-ac)" : "var(--red-wa)" }}>
+                <div style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: formData.isActive ? "var(--green-ac)" : "var(--red-wa)" }}>
+                  {formData.isActive ? "Active" : "Inactive"}
+                </div>
+                <div style={{ fontSize: "var(--text-xs)", color: formData.isActive ? "var(--green-ac)" : "var(--red-wa)", marginTop: 2, opacity: 0.8 }}>
                   {formData.isActive ? "User can log in and access the platform" : "User is deactivated and cannot log in"}
-                </p>
+                </div>
               </div>
-              {/* Toggle */}
               <button
                 type="button"
                 onClick={() => setFormData((prev) => ({ ...prev, isActive: !prev.isActive }))}
-                style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: formData.isActive ? "var(--green-ac)" : "var(--border-default)", position: "relative", transition: "background 0.2s", flexShrink: 0 }}
+                style={{
+                  position: "relative", width: 44, height: 24, borderRadius: 12,
+                  border: "none", cursor: "pointer", flexShrink: 0,
+                  background: formData.isActive ? "var(--green-ac)" : "var(--border-default)",
+                  boxShadow: formData.isActive ? "0 0 0 3px var(--green-subtle)" : "inset 0 0 0 1px var(--border-default)",
+                  transition: "background 0.18s, box-shadow 0.18s",
+                }}
               >
-                <span style={{ position: "absolute", top: 2, left: formData.isActive ? 22 : 2, width: 20, height: 20, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)", transition: "left 0.2s" }} />
+                <span style={{
+                  position: "absolute", top: 3, width: 18, height: 18, borderRadius: "50%",
+                  background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+                  left: formData.isActive ? 23 : 3, transition: "left 0.18s",
+                }} />
               </button>
             </div>
           </div>
 
-          {/* Roles */}
-          <div style={sectionCard}>
-            <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>Roles</h3>
-              <div className="flex items-center gap-2">
+          {/* ── Roles card ── */}
+          <div className="card" style={{ padding: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em" }}>
+                Roles
+              </div>
+              <div style={{ display: "flex", gap: 4 }}>
                 {selectedRoles.map((role) => {
-                  const s = ROLE_BADGE[role] || { bg: "var(--bg-raised)", color: "var(--text-secondary)" };
+                  const s = ROLE_META[role] || { bg: "var(--bg-raised)", color: "var(--text-secondary)" };
                   return (
-                    <span key={role} style={{ display: "inline-block", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: s.bg, color: s.color }}>{role}</span>
+                    <span key={role} style={{ display: "inline-flex", padding: "2px 8px", borderRadius: "var(--radius-pill)", fontSize: 10, fontWeight: 700, background: s.bg, color: s.color }}>
+                      {role}
+                    </span>
                   );
                 })}
               </div>
             </div>
-            <div className="flex flex-col gap-3">
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {AVAILABLE_ROLES.map((role) => {
                 const isChecked = selectedRoles.includes(role);
-                const s = ROLE_BADGE[role] || { bg: "var(--bg-overlay)", color: "var(--text-secondary)" };
+                const s = ROLE_META[role];
+                const Icon = s.icon;
                 return (
                   <div
                     key={role}
-                    style={{ padding: 16, border: `2px solid ${isChecked ? s.color + "66" : "var(--border-default)"}`, borderRadius: 10, background: isChecked ? s.bg : "var(--bg-overlay)", cursor: "pointer", transition: "all 0.2s" }}
                     onClick={() => handleRoleToggle(role)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: "12px 14px", borderRadius: "var(--radius-md)", cursor: "pointer",
+                      border: `1.5px solid ${isChecked ? s.color + "55" : "var(--border-subtle)"}`,
+                      background: isChecked ? s.bg : "var(--bg-surface)",
+                      transition: "all 0.12s",
+                    }}
+                    onMouseEnter={(e) => { if (!isChecked) e.currentTarget.style.borderColor = "var(--border-default)"; }}
+                    onMouseLeave={(e) => { if (!isChecked) e.currentTarget.style.borderColor = "var(--border-subtle)"; }}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {/* Checkbox */}
-                        <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${isChecked ? s.color : "var(--border-strong)"}`, background: isChecked ? s.color : "var(--bg-overlay)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          {isChecked && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            {getRoleIcon(role)}
-                            <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{role}</span>
-                          </div>
-                          <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted)" }}>
-                            {role === "ADMIN" && "Full platform access and user management"}
-                            {role === "CREATOR" && "Can create and manage content"}
-                            {role === "PARTICIPANT" && "Standard user access"}
-                          </p>
-                        </div>
-                      </div>
-                      <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: isChecked ? s.bg : "transparent", color: isChecked ? s.color : "var(--text-muted)", border: isChecked ? "none" : `1px solid var(--border-default)` }}>
-                        {isChecked ? "Assigned" : "Not assigned"}
-                      </span>
+                    {/* Checkbox */}
+                    <div style={{
+                      width: 18, height: 18, borderRadius: 4, flexShrink: 0,
+                      border: `2px solid ${isChecked ? s.color : "var(--border-default)"}`,
+                      background: isChecked ? s.color : "none",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      transition: "all 0.12s",
+                    }}>
+                      {isChecked && (
+                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                          <path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
                     </div>
+
+                    {/* Role icon */}
+                    <div style={{ width: 30, height: 30, borderRadius: "var(--radius-sm)", flexShrink: 0, background: isChecked ? s.color + "22" : "var(--bg-overlay)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Icon size={14} color={isChecked ? s.color : "var(--text-muted)"} />
+                    </div>
+
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: isChecked ? s.color : "var(--text-primary)" }}>{role}</div>
+                      <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: 1 }}>{s.desc}</div>
+                    </div>
+
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: "var(--radius-pill)",
+                      background: isChecked ? s.bg : "var(--bg-overlay)",
+                      color: isChecked ? s.color : "var(--text-muted)",
+                      border: `1px solid ${isChecked ? s.color + "44" : "var(--border-subtle)"}`,
+                    }}>
+                      {isChecked ? "Assigned" : "Not assigned"}
+                    </span>
                   </div>
                 );
               })}
             </div>
+
             {selectedRoles.length === 0 && (
-              <p style={{ fontSize: 13, color: "#ef4444", marginTop: 8 }}>⚠ At least one role must be selected.</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, fontSize: "var(--text-xs)", fontWeight: 600, color: "var(--red-wa)" }}>
+                <AlertTriangle size={13} /> At least one role must be assigned.
+              </div>
             )}
           </div>
 
-          {/* Security */}
-          <div style={sectionCard}>
-            <div className="flex items-center gap-3" style={{ marginBottom: 16 }}>
-              <div style={{ padding: 8, background: "var(--primary-subtle)", borderRadius: 8, color: "var(--primary)" }}>
-                <Lock size={20} />
+          {/* ── Password card ── */}
+          <div className="card" style={{ padding: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18, paddingBottom: 16, borderBottom: "1px solid var(--border-subtle)" }}>
+              <div style={{ width: 36, height: 36, borderRadius: "var(--radius-md)", background: "var(--primary-subtle)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Lock size={16} color="var(--primary)" />
               </div>
               <div>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>Reset Password</h3>
-                <p style={{ margin: 0, fontSize: 13, color: "var(--text-muted)" }}>Leave blank to keep the current password</p>
+                <div style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--text-primary)" }}>Reset Password</div>
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: 1 }}>Leave blank to keep the current password.</div>
               </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">New Password</label>
-              <input className="input w-full" name="password" type="password" value={formData.password} onChange={handleInputChange} placeholder="Enter new password (optional)" />
+            <div>
+              <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                New Password
+              </label>
+              <PasswordField value={formData.password} onChange={handleInputChange} />
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-4">
+          {/* ── Actions ── */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}>
             <button className="btn btn-ghost" onClick={() => navigate("/admin/users")}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleSave} disabled={saving || selectedRoles.length === 0}>
-              {saving ? <div className="spinner" style={{ width: 16, height: 16 }} /> : null}
-              {saving ? "Saving..." : "Save Changes"}
+            <button
+              className="btn btn-primary"
+              onClick={handleSave}
+              disabled={saving || selectedRoles.length === 0}
+              style={{ gap: 8, minWidth: 130 }}
+            >
+              {saving
+                ? <><div className="spinner" style={{ width: 14, height: 14 }} /> Saving…</>
+                : <><Save size={14} /> Save Changes</>
+              }
             </button>
           </div>
+
         </div>
       </div>
 

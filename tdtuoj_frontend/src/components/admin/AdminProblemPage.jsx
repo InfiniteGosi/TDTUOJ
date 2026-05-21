@@ -357,23 +357,23 @@ const AdminProblemPage = () => {
 
             <table className="table">
               <thead>
-                <tr>
-                  <th style={{ textAlign: "center", width: "7%" }}>#</th>
-                  <th style={{ width: "25%" }}>Problem</th>
-                  <th style={{ width: "10%" }}>Difficulty</th>
-                  <th style={{ width: "27%" }}>Tags</th>
-                  <th style={{ textAlign: "center", width: "10%" }}>Points</th>
-                  <th style={{ textAlign: "center", width: "10%" }}>Time Limit</th>
-                  <th style={{ textAlign: "center", width: "11%" }}>Actions</th>
+                <tr style={{ background: "var(--primary-subtle)" }}>
+                  <th style={{ textAlign: "center", width: "7%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
+                  <th style={{ width: "25%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Problem</th>
+                  <th style={{ width: "10%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Difficulty</th>
+                  <th style={{ width: "27%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Tags</th>
+                  <th style={{ textAlign: "center", width: "10%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Points</th>
+                  <th style={{ textAlign: "center", width: "10%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Time Limit</th>
+                  <th style={{ textAlign: "center", width: "11%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {problems.length > 0 ? (
-                  problems.map((problem, index) => {
+                  problems.map((problem) => {
                     const inactiveTags = getInactiveTags(problem);
                     const hasInactiveTags = inactiveTags.length > 0;
                     return (
-                      <tr key={problem.id} style={{ background: index % 2 === 0 ? "var(--bg-base)" : "var(--bg-raised)" }}>
+                      <tr key={problem.id}>
                         <td style={{ textAlign: "center" }}>
                           <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{problem.id}</span>
                         </td>
@@ -438,21 +438,21 @@ const AdminProblemPage = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: "center", padding: "48px 0" }}>
-                      <div className="flex flex-col items-center gap-3">
-                        <Book size={44} color="var(--text-muted)" />
-                        <p style={{ fontSize: 16, color: "var(--text-muted)", margin: 0, fontWeight: 500 }}>
-                          {hasActiveFilters || searchQuery ? "No problems match your filters" : "No problems yet"}
-                        </p>
-                        <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
-                          {hasActiveFilters || searchQuery ? "Try adjusting your search or filters" : "Click 'Add Problem' to create your first problem!"}
-                        </p>
-                        {hasActiveFilters && (
-                          <button className="btn btn-ghost btn-sm" style={{ border: "1px solid var(--primary)", color: "var(--primary)" }} onClick={resetFilters}>
-                            Clear all filters
-                          </button>
-                        )}
+                    <td colSpan={7} style={{ padding: "56px 24px", textAlign: "center" }}>
+                      <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--bg-overlay)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+                        <Book size={22} color="var(--text-muted)" />
                       </div>
+                      <div style={{ fontSize: "var(--text-base)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 4 }}>
+                        {hasActiveFilters || searchQuery ? "No problems match your filters" : "No problems yet"}
+                      </div>
+                      <div style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)", marginBottom: hasActiveFilters ? 12 : 0 }}>
+                        {hasActiveFilters || searchQuery ? "Try adjusting your search or filters" : "Click 'Add Problem' to create your first problem"}
+                      </div>
+                      {hasActiveFilters && (
+                        <button className="btn btn-ghost btn-sm" style={{ border: "1px solid var(--primary)", color: "var(--primary)" }} onClick={resetFilters}>
+                          Clear all filters
+                        </button>
+                      )}
                     </td>
                   </tr>
                 )}

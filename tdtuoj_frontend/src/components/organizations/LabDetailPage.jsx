@@ -1,8 +1,20 @@
 import { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import {
-  ArrowLeft, Clock, CheckCircle, AlertTriangle, Circle,
-  BookOpen, BarChart3, Eye, EyeOff, Trash2, FileText, Pencil, Code, X,
+  ArrowLeft,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  Circle,
+  BookOpen,
+  BarChart3,
+  Eye,
+  EyeOff,
+  Trash2,
+  FileText,
+  Pencil,
+  Code,
+  X,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import ApiService from "../../services/ApiService";
@@ -13,16 +25,41 @@ const LANG_LABELS = { CPP: "C++", JAVA: "Java", PYTHON: "Python", C: "C" };
 
 const StatusBadge = ({ status }) => {
   const MAP = {
-    SOLVED: { icon: CheckCircle, color: "#16a34a", bg: "#dcfce7", label: "Solved" },
-    ATTEMPTED: { icon: AlertTriangle, color: "#ea580c", bg: "#fff7ed", label: "Attempted" },
-    NOT_STARTED: { icon: Circle, color: "#9ca3af", bg: "#f9fafb", label: "Not started" },
+    SOLVED: {
+      icon: CheckCircle,
+      color: "var(--green-ac)",
+      bg: "var(--green-subtle)",
+      label: "Solved",
+    },
+    ATTEMPTED: {
+      icon: AlertTriangle,
+      color: "var(--amber-tle)",
+      bg: "var(--amber-subtle)",
+      label: "Attempted",
+    },
+    NOT_STARTED: {
+      icon: Circle,
+      color: "var(--text-muted)",
+      bg: "var(--bg-overlay)",
+      label: "Not started",
+    },
   };
   const s = MAP[status] || MAP.NOT_STARTED;
   const Icon = s.icon;
   return (
-    <div className="flex items-center gap-1" style={{ display: "inline-flex", padding: "3px 8px", borderRadius: 6, background: s.bg }}>
+    <div
+      className="flex items-center gap-1"
+      style={{
+        display: "inline-flex",
+        padding: "3px 8px",
+        borderRadius: 6,
+        background: s.bg,
+      }}
+    >
       <Icon size={13} color={s.color} />
-      <span style={{ fontSize: 11, fontWeight: 600, color: s.color }}>{s.label}</span>
+      <span style={{ fontSize: 11, fontWeight: 600, color: s.color }}>
+        {s.label}
+      </span>
     </div>
   );
 };
@@ -33,7 +70,13 @@ const DeadlineBanner = ({ deadline }) => {
   const dl = new Date(deadline);
   const diff = dl - now;
   const isPast = diff < 0;
-  const fmt = dl.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const fmt = dl.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   let timeLeft = "";
   if (!isPast) {
     const days = Math.floor(diff / 86400000);
@@ -42,14 +85,41 @@ const DeadlineBanner = ({ deadline }) => {
     timeLeft = days > 0 ? `${days}d ${hours}h left` : `${hours}h ${mins}m left`;
   }
   return (
-    <div style={{ background: isPast ? "#fee2e2" : "#fff7ed", border: `1px solid ${isPast ? "#fca5a5" : "#fed7aa"}`, borderRadius: 10, padding: "10px 16px" }}>
+    <div
+      style={{
+        background: isPast ? "var(--red-subtle)" : "var(--amber-subtle)",
+        border: `1px solid ${isPast ? "var(--red-wa)" : "var(--amber-tle)"}`,
+        borderRadius: 10,
+        padding: "10px 16px",
+      }}
+    >
       <div className="flex items-center gap-2">
-        <Clock size={16} color={isPast ? "#dc2626" : "#ea580c"} />
-        <span style={{ fontSize: 13, fontWeight: 600, color: isPast ? "#b91c1c" : "#c2410c" }}>
+        <Clock
+          size={16}
+          color={isPast ? "var(--red-wa)" : "var(--amber-tle)"}
+        />
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: isPast ? "var(--red-wa)" : "var(--amber-tle)",
+          }}
+        >
           {isPast ? "Deadline passed" : "Deadline"}: {fmt}
         </span>
         {!isPast && (
-          <span style={{ padding: "1px 8px", borderRadius: 6, background: "#fed7aa", fontSize: 11, fontWeight: 700, color: "#c2410c" }}>{timeLeft}</span>
+          <span
+            style={{
+              padding: "1px 8px",
+              borderRadius: 6,
+              background: "var(--amber-subtle)",
+              fontSize: 11,
+              fontWeight: 700,
+              color: "var(--amber-tle)",
+            }}
+          >
+            {timeLeft}
+          </span>
         )}
       </div>
     </div>
@@ -57,9 +127,9 @@ const DeadlineBanner = ({ deadline }) => {
 };
 
 const DIFF_COLORS = {
-  EASY: { color: "#16a34a", bg: "#dcfce7" },
-  MEDIUM: { color: "#ea580c", bg: "#fff7ed" },
-  HARD: { color: "#dc2626", bg: "#fee2e2" },
+  EASY: { color: "var(--green-ac)", bg: "var(--green-subtle)" },
+  MEDIUM: { color: "var(--amber-tle)", bg: "var(--amber-subtle)" },
+  HARD: { color: "var(--red-wa)", bg: "var(--red-subtle)" },
 };
 
 const LabDetailPage = () => {
@@ -89,20 +159,26 @@ const LabDetailPage = () => {
     }
   };
 
-  useEffect(() => { fetchData(); }, [orgSlug, labSlug]);
+  useEffect(() => {
+    fetchData();
+  }, [orgSlug, labSlug]);
 
   const canManage = org && org.myRole === "OWNER";
 
   const handleDelete = () => {
-    showConfirm("Delete Lab", `Are you sure you want to delete "${lab.title}"? This cannot be undone.`, async () => {
-      try {
-        await ApiService.deleteLab(org.id, lab.id);
-        showMessage("Lab deleted", "success");
-        navigate(`/organizations/${orgSlug}`);
-      } catch (e) {
-        showMessage(e.response?.data?.message || e.message, "error");
-      }
-    });
+    showConfirm(
+      "Delete Lab",
+      `Are you sure you want to delete "${lab.title}"? This cannot be undone.`,
+      async () => {
+        try {
+          await ApiService.deleteLab(org.id, lab.id);
+          showMessage("Lab deleted", "success");
+          navigate(`/organizations/${orgSlug}`);
+        } catch (e) {
+          showMessage(e.response?.data?.message || e.message, "error");
+        }
+      },
+    );
   };
 
   const handlePublishSolutions = async () => {
@@ -110,7 +186,12 @@ const LabDetailPage = () => {
       const resp = await ApiService.publishSolutions(org.id, lab.id);
       if (resp.statusCode === 200) {
         setLab(resp.data);
-        showMessage(resp.data.solutionsPublished ? "Solutions published!" : "Solutions unpublished", "success");
+        showMessage(
+          resp.data.solutionsPublished
+            ? "Solutions published!"
+            : "Solutions unpublished",
+          "success",
+        );
       }
     } catch (e) {
       showMessage(e.response?.data?.message || e.message, "error");
@@ -119,7 +200,15 @@ const LabDetailPage = () => {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "var(--bg-base)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <div className="spinner" />
       </div>
     );
@@ -127,7 +216,14 @@ const LabDetailPage = () => {
 
   if (!lab) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "80px 0", textAlign: "center" }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "var(--bg-base)",
+          padding: "80px 0",
+          textAlign: "center",
+        }}
+      >
         <span className="text-muted">Lab not found</span>
       </div>
     );
@@ -136,50 +232,115 @@ const LabDetailPage = () => {
   const exercises = lab.exercises || [];
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "var(--bg-base)",
+        padding: "32px 0",
+      }}
+    >
       <div className="page-container">
         <div className="flex flex-col gap-6">
           {/* Back */}
-          <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }} onClick={() => navigate(`/organizations/${orgSlug}`)}>
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ alignSelf: "flex-start" }}
+            onClick={() => navigate(`/organizations/${orgSlug}`)}
+          >
             <ArrowLeft size={18} /> Back to {org?.name}
           </button>
 
           {/* Header */}
           <div className="card" style={{ padding: 24 }}>
-            <div className="flex items-center justify-between" style={{ alignItems: "flex-start" }}>
+            <div
+              className="flex items-center justify-between"
+              style={{ alignItems: "flex-start" }}
+            >
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
                   <BookOpen size={22} color="var(--primary)" />
-                  <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>{lab.title}</h2>
+                  <h2
+                    style={{
+                      margin: 0,
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    {lab.title}
+                  </h2>
                 </div>
-                {lab.description && <p className="text-sm text-muted" style={{ margin: 0 }}>{lab.description}</p>}
+                {lab.description && (
+                  <p className="text-sm text-muted" style={{ margin: 0 }}>
+                    {lab.description}
+                  </p>
+                )}
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-muted">
-                    {exercises.length} exercise{exercises.length !== 1 ? "s" : ""} · {lab.totalPoints} pts total
+                    {exercises.length} exercise
+                    {exercises.length !== 1 ? "s" : ""} · {lab.totalPoints} pts
+                    total
                   </span>
                   {lab.solutionsPublished && (
-                    <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: "#dbeafe", color: "#2563eb" }}>Solutions published</span>
+                    <span
+                      style={{
+                        padding: "2px 8px",
+                        borderRadius: 6,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        background: "var(--blue-subtle)",
+                        color: "var(--blue-ce)",
+                      }}
+                    >
+                      Solutions published
+                    </span>
                   )}
                 </div>
               </div>
 
               {canManage && (
                 <div className="flex items-center gap-2">
-                  <button className="btn btn-ghost btn-sm" style={{ border: "1px solid var(--border-default)" }} onClick={() => navigate(`/organizations/${orgSlug}/labs/${labSlug}/edit`)}>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ border: "1px solid var(--border-default)" }}
+                    onClick={() =>
+                      navigate(`/organizations/${orgSlug}/labs/${labSlug}/edit`)
+                    }
+                  >
                     <Pencil size={14} /> Edit
                   </button>
-                  <button className="btn btn-ghost btn-sm" style={{ border: "1px solid var(--border-default)" }} onClick={() => navigate(`/organizations/${orgSlug}/labs/${labSlug}/progress`)}>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ border: "1px solid var(--border-default)" }}
+                    onClick={() =>
+                      navigate(
+                        `/organizations/${orgSlug}/labs/${labSlug}/progress`,
+                      )
+                    }
+                  >
                     <BarChart3 size={14} /> Progress
                   </button>
                   <button
                     className="btn btn-ghost btn-sm"
-                    style={{ border: `1px solid ${lab.solutionsPublished ? "#f97316" : "#3b82f6"}`, color: lab.solutionsPublished ? "#f97316" : "#3b82f6" }}
+                    style={{
+                      border: `1px solid ${lab.solutionsPublished ? "var(--amber-tle)" : "var(--blue-ce)"}`,
+                      color: lab.solutionsPublished
+                        ? "var(--amber-tle)"
+                        : "var(--blue-ce)",
+                    }}
                     onClick={handlePublishSolutions}
                   >
-                    {lab.solutionsPublished ? <EyeOff size={14} /> : <Eye size={14} />}
+                    {lab.solutionsPublished ? (
+                      <EyeOff size={14} />
+                    ) : (
+                      <Eye size={14} />
+                    )}
                     {lab.solutionsPublished ? "Unpublish" : "Publish"} Solutions
                   </button>
-                  <button className="btn btn-danger btn-sm" onClick={handleDelete}>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={handleDelete}
+                  >
                     <Trash2 size={14} /> Delete
                   </button>
                 </div>
@@ -200,50 +361,142 @@ const LabDetailPage = () => {
                   <th style={{ width: "12%" }}>Difficulty</th>
                   <th style={{ width: "10%" }}>Points</th>
                   <th style={{ width: "12%" }}>Status</th>
-                  <th style={{ width: "8%" }}>Subs</th>
-                  {lab.solutionsPublished && <th style={{ width: "10%" }}>Solution</th>}
+                  <th style={{ width: "8%" }}>Submissions</th>
+                  {lab.solutionsPublished && (
+                    <th style={{ width: "10%" }}>Solution</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {exercises.map((ex) => {
-                  const dc = DIFF_COLORS[ex.problemDifficulty] || { color: "#6b7280", bg: "#f9fafb" };
+                  const dc = DIFF_COLORS[ex.problemDifficulty] || {
+                    color: "var(--text-secondary)",
+                    bg: "var(--bg-overlay)",
+                  };
                   return (
                     <tr
                       key={ex.id}
                       style={{ cursor: "pointer" }}
-                      onClick={() => navigate(`/organizations/${orgSlug}/labs/${labSlug}/problems/${ex.problemSlug}`)}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background =
+                          "var(--primary-subtle)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = "")
+                      }
+                      onClick={() =>
+                        navigate(
+                          `/organizations/${orgSlug}/labs/${labSlug}/problems/${ex.problemSlug}`,
+                        )
+                      }
                     >
                       <td>
-                        <div style={{ width: 28, height: 28, borderRadius: 6, background: "var(--bg-overlay)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)" }}>{String.fromCharCode(64 + ex.exerciseOrder)}</span>
+                        <div
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 6,
+                            background: "var(--bg-overlay)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: "var(--primary)",
+                            }}
+                          >
+                            {String.fromCharCode(64 + ex.exerciseOrder)}
+                          </span>
                         </div>
                       </td>
-                      <td><span style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{ex.problemTitle}</span></td>
                       <td>
-                        <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: dc.bg, color: dc.color }}>
+                        <span
+                          style={{
+                            fontWeight: 600,
+                            color: "var(--text-primary)",
+                            fontSize: 13,
+                          }}
+                        >
+                          {ex.problemTitle}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            padding: "2px 8px",
+                            borderRadius: 6,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            background: dc.bg,
+                            color: dc.color,
+                          }}
+                        >
                           {ex.problemDifficulty || "—"}
                         </span>
                       </td>
-                      <td><span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)" }}>{ex.points}</span></td>
-                      <td><StatusBadge status={ex.status || "NOT_STARTED"} /></td>
-                      <td><span className="text-sm text-muted">{ex.submissionCount ?? 0}</span></td>
+                      <td>
+                        <span
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: "var(--text-secondary)",
+                          }}
+                        >
+                          {ex.points}
+                        </span>
+                      </td>
+                      <td>
+                        <StatusBadge status={ex.status || "NOT_STARTED"} />
+                      </td>
+                      <td>
+                        <span className="text-sm text-muted">
+                          {ex.submissionCount ?? 0}
+                        </span>
+                      </td>
                       {lab.solutionsPublished && (
                         <td>
                           {ex.solutionCode ? (
                             <button
-                              style={{ background: "none", border: "none", cursor: "pointer" }}
-                              onClick={(e) => { e.stopPropagation(); setViewingSolution(ex); }}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setViewingSolution(ex);
+                              }}
                             >
-                              <div className="flex items-center gap-1" style={{ color: "var(--primary)" }}>
+                              <div
+                                className="flex items-center gap-1"
+                                style={{ color: "var(--primary)" }}
+                              >
                                 <Code size={14} />
-                                <span style={{ fontSize: 11, fontWeight: 500 }}>View</span>
+                                <span style={{ fontSize: 11, fontWeight: 500 }}>
+                                  View
+                                </span>
                               </div>
                             </button>
                           ) : ex.solutionFileUrl ? (
-                            <a href={ex.solutionFileUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex items-center gap-1" style={{ color: "#3b82f6" }}>
+                            <a
+                              href={ex.solutionFileUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div
+                                className="flex items-center gap-1"
+                                style={{ color: "var(--blue-ce)" }}
+                              >
                                 <FileText size={14} />
-                                <span style={{ fontSize: 11, fontWeight: 500 }}>File</span>
+                                <span style={{ fontSize: 11, fontWeight: 500 }}>
+                                  File
+                                </span>
                               </div>
                             </a>
                           ) : (
@@ -264,29 +517,92 @@ const LabDetailPage = () => {
       {/* Solution Code Modal */}
       {viewingSolution && (
         <div
-          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.7)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
           onClick={() => setViewingSolution(null)}
         >
           <div
-            style={{ background: "#111827", borderRadius: 14, padding: 24, maxWidth: 700, width: "90%", maxHeight: "80vh", overflow: "auto", position: "relative" }}
+            style={{
+              background: "var(--bg-void)",
+              borderRadius: 14,
+              padding: 24,
+              maxWidth: 700,
+              width: "90%",
+              maxHeight: "80vh",
+              overflow: "auto",
+              position: "relative",
+            }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
+            <div
+              className="flex items-center justify-between"
+              style={{ marginBottom: 16 }}
+            >
               <div>
-                <p style={{ margin: 0, color: "white", fontWeight: 700, fontSize: 16 }}>{viewingSolution.problemTitle}</p>
-                <p style={{ margin: 0, color: "#9ca3af", fontSize: 11 }}>Solution · {LANG_LABELS[viewingSolution.solutionLanguage] || "C++"}</p>
+                <p
+                  style={{
+                    margin: 0,
+                    color: "var(--text-primary)",
+                    fontWeight: 700,
+                    fontSize: 16,
+                  }}
+                >
+                  {viewingSolution.problemTitle}
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    color: "var(--text-muted)",
+                    fontSize: 11,
+                  }}
+                >
+                  Solution ·{" "}
+                  {LANG_LABELS[viewingSolution.solutionLanguage] || "C++"}
+                </p>
               </div>
-              <button style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }} onClick={() => setViewingSolution(null)}>
+              <button
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-muted)",
+                }}
+                onClick={() => setViewingSolution(null)}
+              >
                 <X size={20} />
               </button>
             </div>
-            <div style={{ borderRadius: 8, overflow: "hidden", height: 400, border: "1px solid #374151" }}>
+            <div
+              style={{
+                borderRadius: 8,
+                overflow: "hidden",
+                height: 400,
+                border: "1px solid var(--border-default)",
+              }}
+            >
               <Editor
                 height="100%"
                 theme="vs-dark"
                 language="cpp"
                 value={viewingSolution.solutionCode}
-                options={{ readOnly: true, minimap: { enabled: false }, fontSize: 14, lineNumbers: "on", scrollBeyondLastLine: false, domReadOnly: true }}
+                options={{
+                  readOnly: true,
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  lineNumbers: "on",
+                  scrollBeyondLastLine: false,
+                  domReadOnly: true,
+                }}
               />
             </div>
           </div>

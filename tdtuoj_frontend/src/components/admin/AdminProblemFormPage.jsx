@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Plus, Trash2, FileText, Upload, Edit2, Eye, ArrowLeft, User, Tag as TagIcon, X, AlertTriangle, Sparkles,
+  Plus, Trash2, FileText, Save, Edit2, Eye,
+  ArrowLeft, User, Tag as TagIcon, X, AlertTriangle, Sparkles,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
 import SuggestiveSearch from "../common/SuggestiveSearch";
 import Editor from "@monaco-editor/react";
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const STATEMENT_PLACEHOLDER = `## Two sum
 Find the sum of two given elements. Both the numbers will always be 0 or positive.
@@ -22,189 +25,272 @@ Output
 3
 \`\`\``;
 
-const DIFFICULTY_OPTIONS = [
-  { value: "", label: "Select difficulty..." },
-  { value: "EASY", label: "Easy" },
-  { value: "MEDIUM", label: "Medium" },
-  { value: "HARD", label: "Hard" },
-];
-
-const DIFFICULTY_COLORS = { EASY: "var(--diff-easy)", MEDIUM: "var(--diff-medium)", HARD: "var(--diff-hard)" };
 const POINT_RANGES = { EASY: { min: 1, max: 10 }, MEDIUM: { min: 11, max: 20 }, HARD: { min: 21, max: 30 } };
-const getPointRange = (difficulty) => POINT_RANGES[difficulty] || { min: 1, max: 300 };
+const getPointRange = (d) => POINT_RANGES[d] || { min: 1, max: 300 };
 
-// ─── AI Loading Messages ─────────────────────────────────────────────────────
+// ─── Shared label style ───────────────────────────────────────────────────────
 
-const PDF_MESSAGES = [
-  { text: "Reading your PDF..." },
-  { text: "Scanning problem statement..." },
-  { text: "Analyzing constraints..." },
-  { text: "Extracting test cases..." },
-  { text: "Suggesting relevant tags..." },
-  { text: "Assessing difficulty level..." },
-  { text: "Polishing results..." },
-  { text: "Almost there..." },
+const LBL = { display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" };
+const SEC = { fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 18 };
+
+// ─── DifficultyPicker ─────────────────────────────────────────────────────────
+
+const DIFF_OPTS = [
+  { value: "EASY",   label: "Easy",   color: "var(--diff-easy,var(--green-ac))",  bg: "var(--green-subtle)"  },
+  { value: "MEDIUM", label: "Medium", color: "var(--diff-medium,var(--amber-tle))", bg: "var(--amber-subtle)" },
+  { value: "HARD",   label: "Hard",   color: "var(--diff-hard,var(--red-wa))",   bg: "var(--red-subtle)"    },
 ];
 
-const GEN_MESSAGES = [
-  { text: "Thinking about the problem..." },
-  { text: "Designing edge cases..." },
-  { text: "Computing expected outputs..." },
-  { text: "Creating test scenarios..." },
-  { text: "Checking boundary conditions..." },
-  { text: "Validating inputs..." },
-  { text: "Verifying correctness..." },
-  { text: "Finalizing test cases..." },
-];
+const DifficultyPicker = ({ value, onChange }) => (
+  <div style={{ display: "flex", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
+    {DIFF_OPTS.map(({ value: v, label, color, bg }, i) => {
+      const active = value === v;
+      return (
+        <button
+          key={v}
+          type="button"
+          onClick={() => onChange(v)}
+          style={{
+            flex: 1, padding: "8px 0", border: "none",
+            borderLeft: i > 0 ? "1px solid var(--border-subtle)" : "none",
+            background: active ? bg : "var(--bg-surface)",
+            color: active ? color : "var(--text-muted)",
+            fontWeight: active ? 800 : 500,
+            fontSize: "var(--text-xs)",
+            cursor: "pointer",
+            transition: "all 0.12s",
+            letterSpacing: "0.04em",
+          }}
+          onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = "var(--bg-overlay)"; e.currentTarget.style.color = color; } }}
+          onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = "var(--bg-surface)"; e.currentTarget.style.color = "var(--text-muted)"; } }}
+        >
+          {label}
+        </button>
+      );
+    })}
+  </div>
+);
+
+// ─── NumericStepper ───────────────────────────────────────────────────────────
+
+const NumericStepper = ({ value, onChange, min = 0, max = Infinity, step = 1, presets, disabled = false, unit = "" }) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft]     = useState(String(value ?? ""));
+
+  const clamp = (n) => Math.min(max, Math.max(min, n));
+  const commit = (raw) => { const n = clamp(parseInt(raw) || min); onChange(n); setDraft(String(n)); setEditing(false); };
+  const adjust = (delta) => { const n = clamp((parseInt(value) || 0) + delta); onChange(n); setDraft(String(n)); };
+
+  const btnStyle = (side) => ({
+    width: 30, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+    background: "none", border: "none",
+    borderRight: side === "left" ? "1px solid var(--border-subtle)" : "none",
+    borderLeft:  side === "right" ? "1px solid var(--border-subtle)" : "none",
+    cursor: disabled ? "not-allowed" : "pointer",
+    color: "var(--text-muted)", transition: "background 0.1s, color 0.1s",
+    opacity: disabled ? 0.4 : 1,
+  });
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+      <div style={{ display: "flex", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", overflow: "hidden", background: disabled ? "var(--bg-overlay)" : "var(--bg-raised)" }}>
+        <button type="button" style={btnStyle("left")} onClick={() => !disabled && adjust(-step)}
+          onMouseEnter={(e) => { if (!disabled) { e.currentTarget.style.background = "var(--bg-overlay)"; e.currentTarget.style.color = "var(--text-primary)"; } }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--text-muted)"; }}>
+          <svg width="10" height="2" viewBox="0 0 10 2"><rect width="10" height="2" rx="1" fill="currentColor"/></svg>
+        </button>
+
+        {editing ? (
+          <input
+            autoFocus type="number" value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => commit(draft)}
+            onKeyDown={(e) => { if (e.key === "Enter") commit(draft); if (e.key === "Escape") { setDraft(String(value)); setEditing(false); } }}
+            style={{ flex: 1, textAlign: "center", background: "none", border: "none", outline: "none", fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--primary)", height: 32, minWidth: 0 }}
+            min={min} max={max}
+          />
+        ) : (
+          <button type="button" onClick={() => { if (!disabled) { setDraft(String(value ?? "")); setEditing(true); } }}
+            title="Click to type"
+            style={{ flex: 1, background: "none", border: "none", cursor: disabled ? "not-allowed" : "text", fontSize: "var(--text-sm)", fontWeight: 700, color: disabled ? "var(--text-muted)" : "var(--primary)", textAlign: "center", height: 32, minWidth: 0 }}>
+            {value !== "" && value !== undefined ? `${value}${unit}` : <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>—</span>}
+          </button>
+        )}
+
+        <button type="button" style={btnStyle("right")} onClick={() => !disabled && adjust(+step)}
+          onMouseEnter={(e) => { if (!disabled) { e.currentTarget.style.background = "var(--bg-overlay)"; e.currentTarget.style.color = "var(--text-primary)"; } }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--text-muted)"; }}>
+          <svg width="10" height="10" viewBox="0 0 10 10"><rect x="4" width="2" height="10" rx="1" fill="currentColor"/><rect y="4" width="10" height="2" rx="1" fill="currentColor"/></svg>
+        </button>
+      </div>
+
+      {presets && !disabled && (
+        <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+          {presets.map((p) => (
+            <button key={p} type="button" onClick={() => { onChange(p); setDraft(String(p)); }}
+              style={{
+                padding: "1px 7px", borderRadius: "var(--radius-pill)",
+                border: `1px solid ${Number(value) === p ? "var(--primary)" : "var(--border-subtle)"}`,
+                background: Number(value) === p ? "var(--primary-subtle)" : "none",
+                color: Number(value) === p ? "var(--primary)" : "var(--text-muted)",
+                fontSize: 10, fontWeight: 700, cursor: "pointer", transition: "all 0.1s",
+              }}>
+              {p}{unit}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── AI Loading ───────────────────────────────────────────────────────────────
+
+const PDF_MESSAGES = ["Reading your PDF…","Scanning problem statement…","Analyzing constraints…","Extracting test cases…","Suggesting relevant tags…","Assessing difficulty level…","Polishing results…","Almost there…"];
+const GEN_MESSAGES = ["Thinking about the problem…","Designing edge cases…","Computing expected outputs…","Creating test scenarios…","Checking boundary conditions…","Validating inputs…","Verifying correctness…","Finalizing test cases…"];
 
 if (typeof document !== "undefined" && !document.getElementById("ai-loading-styles")) {
-  const style = document.createElement("style");
-  style.id = "ai-loading-styles";
-  style.textContent = `
-    @keyframes ai-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    @keyframes ai-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.95); } }
-    @keyframes ai-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes ai-dot { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
-    @keyframes ai-shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+  const s = document.createElement("style");
+  s.id = "ai-loading-styles";
+  s.textContent = `
+    @keyframes ai-spin    { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    @keyframes ai-pulse   { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(.95)} }
+    @keyframes ai-fade-in { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes ai-dot     { 0%,80%,100%{transform:scale(.6);opacity:.4} 40%{transform:scale(1);opacity:1} }
+    @keyframes ai-shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
   `;
-  document.head.appendChild(style);
+  document.head.appendChild(s);
 }
 
 const AILoadingOverlay = ({ mode }) => {
-  const [msgIndex, setMsgIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
-  const messages = mode === "pdf" ? PDF_MESSAGES : GEN_MESSAGES;
+  const [idx, setIdx]   = useState(0);
+  const [vis, setVis]   = useState(true);
+  const msgs = mode === "pdf" ? PDF_MESSAGES : GEN_MESSAGES;
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => { setMsgIndex((i) => (i + 1) % messages.length); setVisible(true); }, 300);
+    const t = setInterval(() => {
+      setVis(false);
+      setTimeout(() => { setIdx((i) => (i + 1) % msgs.length); setVis(true); }, 300);
     }, 2200);
-    return () => clearInterval(interval);
-  }, [messages.length]);
-
-  const msg = messages[msgIndex];
-  const title = mode === "pdf" ? "AI Reading PDF" : "AI Generating Test Cases";
+    return () => clearInterval(t);
+  }, [msgs.length]);
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}>
-      <div style={{ background: "var(--bg-base)", borderRadius: 16, padding: 40, maxWidth: 420, width: "90%", boxShadow: "0 25px 60px rgba(0,0,0,0.3)", textAlign: "center", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: "linear-gradient(90deg, var(--primary) 0%, var(--primary-bright) 50%, var(--primary) 100%)", backgroundSize: "200% auto", animation: "ai-shimmer 2s linear infinite" }} />
+      <div style={{ background: "var(--bg-raised)", border: "1px solid var(--border-default)", borderRadius: "var(--radius-lg)", padding: 40, maxWidth: 420, width: "90%", boxShadow: "0 25px 60px rgba(0,0,0,0.4)", textAlign: "center", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg,var(--primary) 0%,var(--primary-bright,var(--primary)) 50%,var(--primary) 100%)", backgroundSize: "200% auto", animation: "ai-shimmer 2s linear infinite" }} />
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
-          <div style={{ position: "relative", width: 72, height: 72 }}>
+          <div style={{ position: "relative", width: 64, height: 64 }}>
             <div style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "3px solid var(--primary-subtle)" }} />
-            <div style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "3px solid transparent", borderTopColor: "var(--primary)", borderRightColor: "var(--primary-bright)", animation: "ai-spin 1s linear infinite" }} />
-            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, animation: "ai-pulse 2s ease-in-out infinite" }}>✨</div>
+            <div style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "3px solid transparent", borderTopColor: "var(--primary)", animation: "ai-spin 1s linear infinite" }} />
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, animation: "ai-pulse 2s ease-in-out infinite" }}>✨</div>
           </div>
         </div>
-        <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, background: "linear-gradient(90deg, var(--primary), var(--primary-bright))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{title}</p>
-        <div style={{ minHeight: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <p style={{ fontSize: 15, color: "var(--text-secondary)", animation: visible ? "ai-fade-in 0.3s ease-out" : "none", opacity: visible ? 1 : 0, transition: "opacity 0.3s" }}>{msg.text}</p>
+        <p style={{ fontSize: "var(--text-base)", fontWeight: 700, marginBottom: 8, color: "var(--primary)" }}>
+          {mode === "pdf" ? "AI Reading PDF" : "AI Generating Test Cases"}
+        </p>
+        <div style={{ minHeight: 48, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <p style={{ fontSize: "var(--text-sm)", color: "var(--text-secondary)", animation: vis ? "ai-fade-in 0.3s ease-out" : "none", opacity: vis ? 1 : 0, transition: "opacity 0.3s", margin: 0 }}>{msgs[idx]}</p>
         </div>
         <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
-          {[0, 1, 2].map((i) => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary-bright)", animation: `ai-dot 1.4s ease-in-out ${i * 0.16}s infinite` }} />)}
+          {[0,1,2].map((i) => <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--primary)", animation: `ai-dot 1.4s ease-in-out ${i*0.16}s infinite` }} />)}
         </div>
-        <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 20 }}>This may take up to 30 seconds — Gemini is working hard!</p>
+        <p style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: 18 }}>Gemini is working — this may take up to 30 seconds.</p>
       </div>
     </div>
   );
 };
 
+// ─── AdminProblemFormPage ─────────────────────────────────────────────────────
+
 const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id }       = useParams();
+  const navigate     = useNavigate();
   const { showMessage } = useToast();
-  const [loading, setLoading] = useState(false);
+
+  const [loading, setLoading]         = useState(false);
   const [loadingData, setLoadingData] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
   const [dataVersion, setDataVersion] = useState(0);
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [authorInfo, setAuthorInfo] = useState({ id: null, username: null });
+  const [authorInfo, setAuthorInfo]   = useState({ id: null, username: null });
   const [aiExtracting, setAiExtracting] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [generateCount, setGenerateCount] = useState(5);
   const pdfInputRef = useRef(null);
 
   const [problemData, setProblemData] = useState({ title: "", point: "", timeLimit: "", memoryLimit: "", statement: "", problemDifficulty: "", solutionCode: "" });
-  const [testCases, setTestCases] = useState([{ input: "", expectedOutput: "", isSample: false }]);
+  const [testCases, setTestCases]     = useState([{ input: "", expectedOutput: "", isSample: false }]);
   const [availableTags, setAvailableTags] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedTags, setSelectedTags]   = useState([]);
   const [tagSearchQuery, setTagSearchQuery] = useState("");
   const [showTagDropdown, setShowTagDropdown] = useState(false);
 
   const fetchActiveTags = async () => {
     try {
-      const response = await ApiService.getAllTags({ limit: 200, offset: 0 });
-      if (response.statusCode === 200) {
-        setAvailableTags((response.data.content || []).filter((t) => t.isActive === true));
-      }
-    } catch (err) { console.error("Failed to fetch tags:", err); }
+      const r = await ApiService.getAllTags({ limit: 200, offset: 0 });
+      if (r.statusCode === 200) setAvailableTags((r.data.content || []).filter((t) => t.isActive === true));
+    } catch {}
   };
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
+    (async () => {
       try {
-        const profile = await ApiService.getOwnProfile();
-        if (profile?.data?.id) setCurrentUserId(profile.data.id);
-      } catch (err) { showMessage("Failed to fetch user profile", "error"); }
-    };
-    fetchCurrentUser();
+        const p = await ApiService.getOwnProfile();
+        if (p?.data?.id) setCurrentUserId(p.data.id);
+      } catch { showMessage("Failed to fetch user profile", "error"); }
+    })();
     fetchActiveTags();
   }, []);
 
   useEffect(() => {
-    const fetchProblemData = async () => {
-      if (!id) return;
+    if (!id) return;
+    (async () => {
       setLoadingData(true);
       setProblemData({ title: "", point: "", timeLimit: "", memoryLimit: "", statement: "", problemDifficulty: "", solutionCode: "" });
       setTestCases([{ input: "", expectedOutput: "" }]);
       setSelectedTags([]);
       setAuthorInfo({ id: null, username: null });
       try {
-        const response = await ApiService.getProblemById(id);
-        if (response.statusCode === 200 && response.data) {
-          const problem = response.data;
-          setAuthorInfo({ id: problem.authorId || null, username: problem.authorUserName || null });
-          if (problem.tags && problem.tags.length > 0) setSelectedTags(problem.tags);
-          let statementContent = "";
-          if (problem.statementFileUrl) {
-            try {
-              const statementResponse = await fetch(`${problem.statementFileUrl}?t=${Date.now()}`);
-              statementContent = await statementResponse.text();
-            } catch (err) { showMessage("Failed to load problem statement", "warning"); }
+        const r = await ApiService.getProblemById(id);
+        if (r.statusCode === 200 && r.data) {
+          const p = r.data;
+          setAuthorInfo({ id: p.authorId || null, username: p.authorUserName || null });
+          if (p.tags?.length) setSelectedTags(p.tags);
+          let stmt = "";
+          if (p.statementFileUrl) {
+            try { const res = await fetch(`${p.statementFileUrl}?t=${Date.now()}`); stmt = await res.text(); } catch {}
           }
-          setProblemData({ title: problem.title || "", point: problem.point || "", timeLimit: problem.timeLimit || "", memoryLimit: problem.memoryLimit || "", statement: statementContent, problemDifficulty: problem.problemDifficulty || "", solutionCode: problem.solutionCode || "" });
-          if (problem.testCases && problem.testCases.length > 0) {
-            const loaded = await Promise.all(
-              problem.testCases.map(async (tc, index) => {
-                let input = "", expectedOutput = "";
-                try {
-                  if (tc.inputFileUrl) { const resp = await fetch(`${tc.inputFileUrl}?t=${Date.now()}`); const text = await resp.text(); input = text.startsWith("<?xml") || text.startsWith("<Error") ? "" : text; }
-                  if (tc.expectedOutputFileUrl) { const resp = await fetch(`${tc.expectedOutputFileUrl}?t=${Date.now()}`); const text = await resp.text(); expectedOutput = text.startsWith("<?xml") || text.startsWith("<Error") ? "" : text; }
-                } catch (err) { console.error(`Error fetching test case ${index} files:`, err); }
-                return { id: tc.id, input, expectedOutput, isSample: tc.isSample ?? false, dirty: false };
-              })
-            );
+          setProblemData({ title: p.title || "", point: p.point || "", timeLimit: p.timeLimit || "", memoryLimit: p.memoryLimit || "", statement: stmt, problemDifficulty: p.problemDifficulty || "", solutionCode: p.solutionCode || "" });
+          if (p.testCases?.length) {
+            const loaded = await Promise.all(p.testCases.map(async (tc, i) => {
+              let input = "", expectedOutput = "";
+              try {
+                if (tc.inputFileUrl) { const res = await fetch(`${tc.inputFileUrl}?t=${Date.now()}`); const t = await res.text(); input = t.startsWith("<?xml") || t.startsWith("<Error") ? "" : t; }
+                if (tc.expectedOutputFileUrl) { const res = await fetch(`${tc.expectedOutputFileUrl}?t=${Date.now()}`); const t = await res.text(); expectedOutput = t.startsWith("<?xml") || t.startsWith("<Error") ? "" : t; }
+              } catch {}
+              return { id: tc.id, input, expectedOutput, isSample: tc.isSample ?? false, dirty: false };
+            }));
             setTestCases(loaded);
           } else { setTestCases([{ input: "", expectedOutput: "" }]); }
         } else { showMessage("Failed to load problem", "error"); }
-      } catch (err) { showMessage(err.response?.data?.message || err.message || "Failed to load problem", "error"); } finally { setLoadingData(false); }
-    };
-    fetchProblemData();
+      } catch (e) { showMessage(e.response?.data?.message || e.message || "Failed to load problem", "error"); }
+      finally { setLoadingData(false); }
+    })();
   }, [id, dataVersion]);
 
-  const inactiveTags = selectedTags.filter((t) => t.isActive === false);
+  const inactiveTags   = selectedTags.filter((t) => t.isActive === false);
   const hasInactiveTags = inactiveTags.length > 0;
-  const addTag = (tag) => { if (!selectedTags.find((t) => t.id === tag.id)) setSelectedTags((prev) => [...prev, tag]); setTagSearchQuery(""); setShowTagDropdown(false); };
-  const removeTag = (tagId) => setSelectedTags((prev) => prev.filter((t) => t.id !== tagId));
-  const removeAllInactiveTags = () => setSelectedTags((prev) => prev.filter((t) => t.isActive !== false));
-  const filteredDropdownTags = availableTags.filter((t) => !selectedTags.find((s) => s.id === t.id) && t.name.toLowerCase().includes(tagSearchQuery.toLowerCase()));
+  const addTag    = (tag) => { if (!selectedTags.find((t) => t.id === tag.id)) setSelectedTags((p) => [...p, tag]); setTagSearchQuery(""); setShowTagDropdown(false); };
+  const removeTag = (tagId) => setSelectedTags((p) => p.filter((t) => t.id !== tagId));
+  const removeAllInactiveTags = () => setSelectedTags((p) => p.filter((t) => t.isActive !== false));
+  const filteredDropdownTags  = availableTags.filter((t) => !selectedTags.find((s) => s.id === t.id) && t.name.toLowerCase().includes(tagSearchQuery.toLowerCase()));
 
-  const handleProblemChange = (field, value) => setProblemData((prev) => ({ ...prev, [field]: value, ...(field === "problemDifficulty" ? { point: "" } : {}) }));
-  const addTestCase = () => setTestCases((prev) => [...prev, { input: "", expectedOutput: "", isSample: false, dirty: true }]);
-  const removeTestCase = (index) => { if (testCases.length > 1) setTestCases((prev) => prev.filter((_, i) => i !== index)); };
-  const handleTestCaseChange = (index, field, value) => setTestCases((prev) => prev.map((tc, i) => i === index ? { ...tc, [field]: value, dirty: true } : tc));
-  const stringToFile = (content, filename, mimeType) => new File([new Blob([content], { type: mimeType })], filename, { type: mimeType });
+  const handleProblemChange = (field, value) => setProblemData((p) => ({ ...p, [field]: value, ...(field === "problemDifficulty" ? { point: "" } : {}) }));
+  const addTestCase = () => setTestCases((p) => [...p, { input: "", expectedOutput: "", isSample: false, dirty: true }]);
+  const removeTestCase = (i) => { if (testCases.length > 1) setTestCases((p) => p.filter((_, j) => j !== i)); };
+  const handleTestCaseChange = (i, field, value) => setTestCases((p) => p.map((tc, j) => j === i ? { ...tc, [field]: value, dirty: true } : tc));
+  const stringToFile = (content, name, mime) => new File([new Blob([content], { type: mime })], name, { type: mime });
 
   const handlePdfImport = async (e) => {
     const file = e.target.files[0];
@@ -212,470 +298,535 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
     if (file.size > 4 * 1024 * 1024) { showMessage("PDF must be under 4MB", "error"); e.target.value = ""; return; }
     setAiExtracting(true);
     try {
-      const response = await ApiService.extractProblemFromPdf(file);
-      if (response.statusCode === 200 && response.data) {
-        const d = response.data;
+      const r = await ApiService.extractProblemFromPdf(file);
+      if (r.statusCode === 200 && r.data) {
+        const d = r.data;
         setProblemData((prev) => ({ title: d.title || "", point: d.point || "", timeLimit: d.timeLimit || "", memoryLimit: d.memoryLimit || "", statement: d.statement || "", problemDifficulty: d.difficulty || "", solutionCode: prev.solutionCode }));
-        if (d.testCases && d.testCases.length > 0) setTestCases(d.testCases.map((tc) => ({ input: tc.input || "", expectedOutput: tc.expectedOutput || "", isSample: tc.isSample ?? false, dirty: true })));
-        if (d.suggestedTags && d.suggestedTags.length > 0) {
+        if (d.testCases?.length) setTestCases(d.testCases.map((tc) => ({ input: tc.input || "", expectedOutput: tc.expectedOutput || "", isSample: tc.isSample ?? false, dirty: true })));
+        if (d.suggestedTags?.length) {
           const matched = availableTags.filter((t) => d.suggestedTags.includes(t.name));
-          if (matched.length > 0) setSelectedTags((prev) => { const existingIds = new Set(prev.map((t) => t.id)); return [...prev, ...matched.filter((t) => !existingIds.has(t.id))]; });
+          if (matched.length) setSelectedTags((p) => { const ids = new Set(p.map((t) => t.id)); return [...p, ...matched.filter((t) => !ids.has(t.id))]; });
         }
-        showMessage(d.testCasesGenerated ? `Extracted! ${d.testCases?.length || 0} test cases generated by AI.` : `Problem extracted from PDF — please review all fields before saving.`, "success");
-      } else { showMessage(response.message || "Failed to extract from PDF", "error"); }
-    } catch (err) { showMessage(err.response?.data?.message || err.message || "Failed to extract from PDF", "error"); } finally { setAiExtracting(false); e.target.value = ""; }
+        showMessage(d.testCasesGenerated ? `Extracted! ${d.testCases?.length || 0} test cases generated.` : "Extracted — review all fields before saving.", "success");
+      } else { showMessage(r.message || "Failed to extract from PDF", "error"); }
+    } catch (e) { showMessage(e.response?.data?.message || e.message || "Failed to extract from PDF", "error"); }
+    finally { setAiExtracting(false); e.target.value = ""; }
   };
 
   const handleGenerateTestCases = async () => {
     if (!problemData.statement.trim()) { showMessage("Write problem statement first", "error"); return; }
     setAiGenerating(true);
     try {
-      const response = await ApiService.generateTestCases(problemData.statement, generateCount);
-      if (response.statusCode === 200 && response.data?.testCases) {
-        const generated = response.data.testCases.map((tc) => ({ input: tc.input || "", expectedOutput: tc.expectedOutput || "", isSample: tc.isSample ?? false, dirty: true }));
-        setTestCases((prev) => { const hasOnlyEmpty = prev.length === 1 && !prev[0].input.trim() && !prev[0].expectedOutput.trim(); return hasOnlyEmpty ? generated : [...prev, ...generated]; });
-        showMessage(`${generated.length} test cases generated by AI — please review!`, "success");
-      } else { showMessage(response.message || "Failed to generate test cases", "error"); }
-    } catch (err) { showMessage(err.response?.data?.message || err.message || "Failed to generate test cases", "error"); } finally { setAiGenerating(false); }
+      const r = await ApiService.generateTestCases(problemData.statement, generateCount);
+      if (r.statusCode === 200 && r.data?.testCases) {
+        const gen = r.data.testCases.map((tc) => ({ input: tc.input || "", expectedOutput: tc.expectedOutput || "", isSample: tc.isSample ?? false, dirty: true }));
+        setTestCases((p) => { const empty = p.length === 1 && !p[0].input.trim() && !p[0].expectedOutput.trim(); return empty ? gen : [...p, ...gen]; });
+        showMessage(`${gen.length} test cases generated — please review!`, "success");
+      } else { showMessage(r.message || "Failed to generate test cases", "error"); }
+    } catch (e) { showMessage(e.response?.data?.message || e.message || "Failed to generate test cases", "error"); }
+    finally { setAiGenerating(false); }
   };
 
   const validateForm = () => {
-    if (!problemData.title.trim()) { showMessage("Problem title is required", "error"); return false; }
-    if (!problemData.point || problemData.point <= 0) { showMessage("Point must be greater than 0", "error"); return false; }
+    if (!problemData.title.trim())             { showMessage("Problem title is required", "error"); return false; }
+    if (!problemData.point || problemData.point <= 0) { showMessage("Points must be greater than 0", "error"); return false; }
     if (problemData.problemDifficulty) {
-      const range = getPointRange(problemData.problemDifficulty);
-      if (problemData.point < range.min || problemData.point > range.max) { showMessage(`Points for ${problemData.problemDifficulty.toLowerCase()} problems must be between ${range.min} and ${range.max}`, "error"); return false; }
+      const { min, max } = getPointRange(problemData.problemDifficulty);
+      if (problemData.point < min || problemData.point > max) { showMessage(`Points for ${problemData.problemDifficulty.toLowerCase()} must be ${min}–${max}`, "error"); return false; }
     }
-    if (!problemData.timeLimit || problemData.timeLimit <= 0) { showMessage("Time limit must be greater than 0", "error"); return false; }
-    if (problemData.timeLimit > 10) { showMessage("Time limit cannot exceed 10 seconds", "error"); return false; }
-    if (problemData.memoryLimit < 16) { showMessage("Memory limit must be at least 16MB", "error"); return false; }
-    if (problemData.memoryLimit > 1024) { showMessage("Memory limit cannot exceed 1024MB", "error"); return false; }
-    if (!problemData.statement.trim()) { showMessage("Problem statement is required", "error"); return false; }
-    if (!problemData.problemDifficulty) { showMessage("Problem difficulty is required", "error"); return false; }
-    if (hasInactiveTags) { showMessage("Please remove disabled tags before saving.", "error"); return false; }
+    if (!problemData.timeLimit || problemData.timeLimit <= 0) { showMessage("Time limit must be > 0", "error"); return false; }
+    if (problemData.timeLimit > 10)            { showMessage("Time limit cannot exceed 10s", "error"); return false; }
+    if (problemData.memoryLimit < 16)          { showMessage("Memory limit must be ≥ 16MB", "error"); return false; }
+    if (problemData.memoryLimit > 1024)        { showMessage("Memory limit cannot exceed 1024MB", "error"); return false; }
+    if (!problemData.statement.trim())         { showMessage("Problem statement is required", "error"); return false; }
+    if (!problemData.problemDifficulty)        { showMessage("Problem difficulty is required", "error"); return false; }
+    if (hasInactiveTags)                       { showMessage("Remove disabled tags before saving.", "error"); return false; }
     for (let i = 0; i < testCases.length; i++) {
-      if (!testCases[i].input.trim()) { showMessage(`Input is required for test case ${i + 1}`, "error"); return false; }
-      if (!testCases[i].expectedOutput.trim()) { showMessage(`Expected output is required for test case ${i + 1}`, "error"); return false; }
+      if (!testCases[i].input.trim())          { showMessage(`Input required for test case ${i + 1}`, "error"); return false; }
+      if (!testCases[i].expectedOutput.trim()) { showMessage(`Expected output required for test case ${i + 1}`, "error"); return false; }
     }
     return true;
   };
 
   const handleSubmit = async () => {
-    if (!currentUserId) { showMessage("User profile not loaded. Please try again.", "error"); return; }
+    if (!currentUserId) { showMessage("User profile not loaded. Try again.", "error"); return; }
     if (!validateForm()) return;
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("title", problemData.title);
-      formData.append("point", problemData.point);
-      formData.append("timeLimit", problemData.timeLimit);
-      formData.append("memoryLimit", problemData.memoryLimit);
-      formData.append("authorId", currentUserId);
-      formData.append("problemDifficulty", problemData.problemDifficulty);
-      formData.append("statementFile", stringToFile(problemData.statement, "statement.md", "text/markdown"));
-      if (problemData.solutionCode) { formData.append("solutionCode", problemData.solutionCode); formData.append("solutionLanguage", "CPP"); }
-      if (mode === "my" && !id) formData.append("isPublic", false);
-      const activeSelectedTags = selectedTags.filter((t) => t.isActive !== false);
-      activeSelectedTags.forEach((tag) => formData.append("tagNames", tag.name));
-      testCases.forEach((tc, index) => {
-        if (tc.id) formData.append(`testCases[${index}].id`, tc.id);
-        formData.append(`testCases[${index}].isSample`, tc.isSample ?? false);
+      const fd = new FormData();
+      fd.append("title",             problemData.title);
+      fd.append("point",             problemData.point);
+      fd.append("timeLimit",         problemData.timeLimit);
+      fd.append("memoryLimit",       problemData.memoryLimit);
+      fd.append("authorId",          currentUserId);
+      fd.append("problemDifficulty", problemData.problemDifficulty);
+      fd.append("statementFile",     stringToFile(problemData.statement, "statement.md", "text/markdown"));
+      if (problemData.solutionCode)  { fd.append("solutionCode", problemData.solutionCode); fd.append("solutionLanguage", "CPP"); }
+      if (mode === "my" && !id)      fd.append("isPublic", false);
+      selectedTags.filter((t) => t.isActive !== false).forEach((t) => fd.append("tagNames", t.name));
+      testCases.forEach((tc, i) => {
+        if (tc.id) fd.append(`testCases[${i}].id`, tc.id);
+        fd.append(`testCases[${i}].isSample`, tc.isSample ?? false);
         if (!tc.id || tc.dirty) {
-          formData.append(`testCases[${index}].inputFile`, stringToFile(tc.input, `input_${index}.txt`, "text/plain"));
-          formData.append(`testCases[${index}].expectedOutputFile`, stringToFile(tc.expectedOutput, `output_${index}.txt`, "text/plain"));
+          fd.append(`testCases[${i}].inputFile`,          stringToFile(tc.input,          `input_${i}.txt`,  "text/plain"));
+          fd.append(`testCases[${i}].expectedOutputFile`, stringToFile(tc.expectedOutput, `output_${i}.txt`, "text/plain"));
         }
       });
-      let response;
-      if (id) { formData.append("id", id); response = await ApiService.updateProblem(formData); }
-      else { response = await ApiService.createProblem(formData); }
-      if (response.statusCode === 201 || response.statusCode === 200) {
-        showMessage(response.message || `Problem ${id ? "updated" : "created"} successfully!`, "success");
+      let resp;
+      if (id) { fd.append("id", id); resp = await ApiService.updateProblem(fd); }
+      else    { resp = await ApiService.createProblem(fd); }
+      if (resp.statusCode === 201 || resp.statusCode === 200) {
+        showMessage(resp.message || `Problem ${id ? "updated" : "created"}!`, "success");
         if (id) { setTimeout(() => setDataVersion((v) => v + 1), 1000); }
-        else { const dest = backPath || (mode === "my" ? "/admin/my-problems" : "/admin/problems"); setTimeout(() => navigate(dest), 1500); }
-      } else { showMessage(response.message || `Failed to ${id ? "update" : "create"} problem`, "error"); }
-    } catch (err) { showMessage(err.response?.data?.message || err.response?.data?.error || err.message || `Failed to ${id ? "update" : "create"} problem`, "error"); } finally { setLoading(false); }
+        else    { setTimeout(() => navigate(backPath || (mode === "my" ? "/admin/my-problems" : "/admin/problems")), 1500); }
+      } else { showMessage(resp.message || `Failed to ${id ? "update" : "create"} problem`, "error"); }
+    } catch (e) { showMessage(e.response?.data?.message || e.message || `Failed to ${id ? "update" : "create"} problem`, "error"); }
+    finally { setLoading(false); }
   };
+
+  const destPath = backPath || (mode === "my" ? "/admin/my-problems" : "/admin/problems");
 
   if (loadingData) {
     return (
       <div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div className="card" style={{ padding: 32 }}>
-          <div className="flex flex-col items-center gap-4">
-            <p style={{ fontSize: 18, color: "var(--text-primary)" }}>Loading problem data...</p>
-            <div className="spinner" />
-          </div>
-        </div>
+        <div className="spinner" />
       </div>
     );
   }
 
-  const sectionStyle = { borderBottom: "1px solid var(--border-default)", paddingBottom: 24 };
-  const labelStyle = { fontSize: 13, fontWeight: 500, color: "var(--text-primary)", marginBottom: 8, display: "block" };
-
   return (
     <div
-      style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 16px" }}
+      style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0 64px" }}
       onClick={() => showTagDropdown && setShowTagDropdown(false)}
     >
       {(aiExtracting || aiGenerating) && <AILoadingOverlay mode={aiExtracting ? "pdf" : "gen"} />}
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        <div className="card" style={{ padding: 32 }}>
-          {/* Header */}
-          <div className="flex items-center justify-between" style={{ marginBottom: 24 }}>
-            <div className="flex items-center gap-3">
-              <FileText size={32} color="var(--primary)" />
-              <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>{id ? "Edit Problem" : "Create New Problem"}</h2>
+
+      <div className="page-container" style={{ maxWidth: 1100 }}>
+        <div className="flex flex-col gap-6">
+
+          {/* ── Back ── */}
+          <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start", gap: 6 }} onClick={() => navigate(destPath)}>
+            <ArrowLeft size={16} /> Back to Problems
+          </button>
+
+          {/* ── Page header ── */}
+          <div style={{ borderLeft: "4px solid var(--primary)", paddingLeft: 16, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: "var(--text-muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Admin / Problems
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <FileText size={20} color="var(--primary)" />
+                <h2 style={{ margin: 0, fontSize: "var(--text-lg)", fontWeight: 800, color: "var(--text-primary)" }}>
+                  {id ? "Edit Problem" : "Create Problem"}
+                </h2>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
+
+            {/* PDF import */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
               <input type="file" accept=".pdf" ref={pdfInputRef} style={{ display: "none" }} onChange={handlePdfImport} />
               <button
                 className="btn btn-ghost btn-sm"
-                style={{ border: "1px solid var(--border-accent)", color: "var(--primary)" }}
+                style={{ border: "1px solid var(--border-accent)", color: "var(--primary)", gap: 6 }}
                 onClick={() => pdfInputRef.current?.click()}
                 disabled={aiExtracting}
               >
-                <Sparkles size={16} /> Import from PDF
-              </button>
-              <button className="btn btn-ghost" onClick={() => navigate(backPath || (mode === "my" ? "/admin/my-problems" : "/admin/problems"))}>
-                <ArrowLeft size={20} /> Back to Problems
+                <Sparkles size={14} /> Import from PDF
               </button>
             </div>
           </div>
 
-          <div className="flex flex-col gap-6">
-            {/* Problem Details */}
-            <div style={sectionStyle}>
-              <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
-                <h3 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Problem Details</h3>
-                {id && authorInfo.id && (
-                  <div className="flex items-center gap-2" style={{ background: "var(--bg-raised)", border: "1px solid var(--border-accent)", borderRadius: 10, padding: "8px 16px" }}>
-                    <User size={16} color="var(--primary)" />
-                    <span style={{ fontSize: 13, color: "var(--text-primary)" }}>Author:</span>
-                    <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 13, background: "var(--primary-subtle)", color: "var(--primary)", fontWeight: 500 }}>{authorInfo.username}</span>
-                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>(ID: {authorInfo.id})</span>
+          {/* ── Problem details card ── */}
+          <div className="card" style={{ padding: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+              <div style={SEC}>Problem Details</div>
+              {id && authorInfo.id && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "var(--bg-overlay)", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)" }}>
+                  <User size={13} color="var(--primary)" />
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>Author</span>
+                  <span style={{ display: "inline-flex", padding: "1px 8px", borderRadius: "var(--radius-pill)", fontSize: "var(--text-xs)", fontWeight: 700, background: "var(--primary-subtle)", color: "var(--primary)" }}>
+                    {authorInfo.username}
+                  </span>
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>#{authorInfo.id}</span>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Title */}
+              <div>
+                <label style={LBL}>Title <span style={{ color: "var(--red-wa)" }}>*</span></label>
+                <input className="input w-full" value={problemData.title} onChange={(e) => handleProblemChange("title", e.target.value)} placeholder="Enter problem title" style={{ fontSize: "var(--text-base)" }} />
+              </div>
+
+              {/* Difficulty + numeric row */}
+              <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
+
+                {/* Difficulty */}
+                <div style={{ flex: "2 1 200px" }}>
+                  <label style={LBL}>Difficulty <span style={{ color: "var(--red-wa)" }}>*</span></label>
+                  <DifficultyPicker value={problemData.problemDifficulty} onChange={(v) => handleProblemChange("problemDifficulty", v)} />
+                  {!problemData.problemDifficulty && (
+                    <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 4 }}>Select difficulty to unlock points range.</div>
+                  )}
+                </div>
+
+                {/* Points */}
+                <div style={{ flex: "1 1 130px" }}>
+                  <label style={LBL}>
+                    Points <span style={{ color: "var(--red-wa)" }}>*</span>
+                    {problemData.problemDifficulty && (
+                      <span style={{ marginLeft: 4, fontWeight: 500, color: "var(--text-muted)", textTransform: "none", letterSpacing: 0 }}>
+                        {getPointRange(problemData.problemDifficulty).min}–{getPointRange(problemData.problemDifficulty).max}
+                      </span>
+                    )}
+                  </label>
+                  <NumericStepper
+                    value={problemData.point === "" ? "" : Number(problemData.point)}
+                    onChange={(n) => handleProblemChange("point", n)}
+                    min={problemData.problemDifficulty ? getPointRange(problemData.problemDifficulty).min : 1}
+                    max={problemData.problemDifficulty ? getPointRange(problemData.problemDifficulty).max : 300}
+                    step={1}
+                    disabled={!problemData.problemDifficulty}
+                    presets={problemData.problemDifficulty
+                      ? Array.from({ length: getPointRange(problemData.problemDifficulty).max - getPointRange(problemData.problemDifficulty).min + 1 }, (_, i) => getPointRange(problemData.problemDifficulty).min + i).filter((_, i, a) => i === 0 || i === Math.floor(a.length / 2) || i === a.length - 1)
+                      : undefined}
+                  />
+                </div>
+
+                {/* Time limit */}
+                <div style={{ flex: "1 1 130px" }}>
+                  <label style={LBL}>Time Limit <span style={{ color: "var(--red-wa)" }}>*</span></label>
+                  <NumericStepper
+                    value={problemData.timeLimit === "" ? "" : Number(problemData.timeLimit)}
+                    onChange={(n) => handleProblemChange("timeLimit", n)}
+                    min={1} max={10} step={1} unit="s"
+                    presets={[1, 2, 3, 5]}
+                  />
+                </div>
+
+                {/* Memory */}
+                <div style={{ flex: "1 1 130px" }}>
+                  <label style={LBL}>Memory <span style={{ color: "var(--red-wa)" }}>*</span></label>
+                  <NumericStepper
+                    value={problemData.memoryLimit === "" ? "" : Number(problemData.memoryLimit)}
+                    onChange={(n) => handleProblemChange("memoryLimit", n)}
+                    min={16} max={1024} step={64} unit="MB"
+                    presets={[64, 128, 256, 512]}
+                  />
+                </div>
+
+              </div>
+
+              {/* Tags */}
+              <div onClick={(e) => e.stopPropagation()}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <label style={{ ...LBL, marginBottom: 0, display: "flex", alignItems: "center", gap: 5 }}>
+                    <TagIcon size={12} /> Tags
+                  </label>
+                  {hasInactiveTags && (
+                    <button className="btn btn-ghost btn-sm" style={{ color: "var(--amber-tle)", gap: 4 }} onClick={removeAllInactiveTags}>
+                      <Trash2 size={12} /> Remove disabled
+                    </button>
+                  )}
+                </div>
+
+                {hasInactiveTags && (
+                  <div style={{ marginBottom: 10, padding: "10px 14px", background: "var(--amber-subtle)", border: "1px solid var(--amber-tle)", borderRadius: "var(--radius-md)", display: "flex", alignItems: "flex-start", gap: 8 }}>
+                    <AlertTriangle size={14} color="var(--amber-tle)" style={{ flexShrink: 0, marginTop: 1 }} />
+                    <div>
+                      <div style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--amber-tle)", marginBottom: 2 }}>
+                        {inactiveTags.length} disabled tag{inactiveTags.length > 1 ? "s" : ""} detected
+                      </div>
+                      <div style={{ fontSize: "var(--text-xs)", color: "var(--amber-tle)", opacity: 0.9 }}>
+                        {inactiveTags.map((t) => t.name).join(", ")} — remove before saving.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ padding: "10px 12px", border: `1px solid ${hasInactiveTags ? "var(--amber-tle)" : "var(--border-default)"}`, borderRadius: "var(--radius-md)", background: "var(--bg-raised)", minHeight: 48, position: "relative" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {selectedTags.map((tag) => (
+                      <span
+                        key={tag.id}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 4,
+                          padding: "3px 10px", borderRadius: "var(--radius-pill)", fontSize: "var(--text-xs)",
+                          background: tag.isActive === false ? "var(--amber-subtle)" : "var(--primary-subtle)",
+                          color: tag.isActive === false ? "var(--amber-tle)" : "var(--primary)",
+                          border: `1px solid ${tag.isActive === false ? "var(--amber-tle)" : "transparent"}`,
+                        }}
+                        title={tag.isActive === false ? "Disabled tag — remove before saving" : tag.name}
+                      >
+                        {tag.isActive === false && <AlertTriangle size={10} />}
+                        <span style={{ textDecoration: tag.isActive === false ? "line-through" : "none" }}>{tag.name}</span>
+                        <button style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", color: "inherit" }} onClick={() => removeTag(tag.id)}>
+                          <X size={11} />
+                        </button>
+                      </span>
+                    ))}
+
+                    {/* Add tag button + dropdown */}
+                    <div style={{ position: "relative" }}>
+                      <button
+                        style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: "var(--radius-pill)", border: "1px dashed var(--border-accent)", background: "none", color: "var(--primary)", fontSize: "var(--text-xs)", cursor: "pointer" }}
+                        onClick={(e) => { e.stopPropagation(); setShowTagDropdown((v) => !v); }}
+                      >
+                        <Plus size={11} /> Add tag
+                      </button>
+
+                      {showTagDropdown && (
+                        <div
+                          style={{ position: "absolute", top: "110%", left: 0, zIndex: 30, background: "var(--bg-raised)", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", boxShadow: "0 8px 24px rgba(0,0,0,0.3)", width: 220, maxHeight: 260, overflowY: "auto" }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div style={{ borderBottom: "1px solid var(--border-subtle)", position: "sticky", top: 0, background: "var(--bg-raised)" }}>
+                            <SuggestiveSearch value={tagSearchQuery} onChange={setTagSearchQuery} suggestions={["Search tags…"]} style={{ width: "100%" }} />
+                          </div>
+                          {filteredDropdownTags.length === 0 ? (
+                            <div style={{ padding: 12, textAlign: "center", fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>
+                              {availableTags.length === 0 ? "No active tags" : "All active tags already added"}
+                            </div>
+                          ) : filteredDropdownTags.map((tag) => (
+                            <div
+                              key={tag.id}
+                              style={{ padding: "8px 12px", cursor: "pointer", fontSize: "var(--text-sm)", color: "var(--text-primary)", transition: "background 0.1s" }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-overlay)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}
+                              onClick={() => addTag(tag)}
+                            >
+                              {tag.name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: 4 }}>
+                  Only active tags can be assigned.
+                </div>
+              </div>
+
+              {/* Statement */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <label style={{ ...LBL, marginBottom: 0 }}>Problem Statement (Markdown) <span style={{ color: "var(--red-wa)" }}>*</span></label>
+                  {/* Edit / Preview toggle */}
+                  <div style={{ display: "flex", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
+                    {[{ label: "Edit", icon: Edit2, val: false }, { label: "Preview", icon: Eye, val: true }].map(({ label, icon: Icon, val }) => (
+                      <button
+                        key={label}
+                        onClick={() => setPreviewMode(val)}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 5,
+                          padding: "5px 12px", border: "none",
+                          background: previewMode === val ? "var(--primary-subtle)" : "var(--bg-surface)",
+                          color: previewMode === val ? "var(--primary)" : "var(--text-secondary)",
+                          fontWeight: previewMode === val ? 700 : 400,
+                          fontSize: "var(--text-xs)", cursor: "pointer",
+                          borderRight: val === false ? "1px solid var(--border-default)" : "none",
+                          transition: "all 0.12s",
+                        }}
+                      >
+                        <Icon size={12} /> {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {!previewMode ? (
+                  <>
+                    <div style={{ border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", overflow: "hidden", height: 350 }}>
+                      <Editor
+                        height="100%" theme="vs-dark" language="markdown"
+                        value={problemData.statement}
+                        onChange={(v) => handleProblemChange("statement", v || "")}
+                        options={{ minimap: { enabled: false }, fontSize: 14, lineNumbers: "on", wordWrap: "on", scrollBeyondLastLine: false, automaticLayout: true }}
+                      />
+                    </div>
+                    <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: 6 }}>Saved as a .md file — use standard Markdown syntax.</div>
+                  </>
+                ) : (
+                  <div style={{ minHeight: 300, padding: 20, background: "var(--bg-surface)", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", overflowY: "auto", maxHeight: 500 }}>
+                    {problemData.statement ? (
+                      <div className="markdown-preview"><ReactMarkdown>{problemData.statement}</ReactMarkdown></div>
+                    ) : (
+                      <p style={{ color: "var(--text-muted)", fontStyle: "italic", margin: 0 }}>Nothing to preview yet.</p>
+                    )}
                   </div>
                 )}
               </div>
+            </div>
+          </div>
 
-              <div className="flex flex-col gap-4">
-                {/* Title */}
-                <div>
-                  <label style={labelStyle}>Title *</label>
-                  <input className="input w-full" value={problemData.title} onChange={(e) => handleProblemChange("title", e.target.value)} placeholder="Enter problem title" style={{ fontSize: 15 }} />
-                </div>
-
-                {/* Numeric fields */}
-                <div className="flex gap-4">
-                  <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>
-                      Points *{" "}
-                      {problemData.problemDifficulty && (
-                        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                          ({getPointRange(problemData.problemDifficulty).min}–{getPointRange(problemData.problemDifficulty).max} for {problemData.problemDifficulty.toLowerCase()})
-                        </span>
-                      )}
-                    </label>
-                    <input
-                      type="number" className="input w-full"
-                      value={problemData.point}
-                      onChange={(e) => handleProblemChange("point", e.target.value)}
-                      onBlur={() => {
-                        if (problemData.point && problemData.problemDifficulty) {
-                          const range = getPointRange(problemData.problemDifficulty);
-                          if (problemData.point < range.min || problemData.point > range.max) showMessage(`Points for ${problemData.problemDifficulty.toLowerCase()} problems must be between ${range.min} and ${range.max}`, "error");
-                        }
-                      }}
-                      placeholder={problemData.problemDifficulty ? `${getPointRange(problemData.problemDifficulty).min}–${getPointRange(problemData.problemDifficulty).max}` : "Select difficulty first"}
-                      min={getPointRange(problemData.problemDifficulty).min}
-                      max={getPointRange(problemData.problemDifficulty).max}
-                      disabled={!problemData.problemDifficulty}
-                    />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>Time Limit (s) * <span style={{ fontSize: 11, color: "var(--text-muted)" }}>(max 10s)</span></label>
-                    <input type="number" className="input w-full" value={problemData.timeLimit} onChange={(e) => handleProblemChange("timeLimit", e.target.value)} placeholder="2" min={1} max={10} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>Memory Limit (MB) * <span style={{ fontSize: 11, color: "var(--text-muted)" }}>(max 1024MB)</span></label>
-                    <input type="number" className="input w-full" value={problemData.memoryLimit} onChange={(e) => handleProblemChange("memoryLimit", e.target.value)} placeholder="256" min={16} max={1024} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>Difficulty *</label>
-                    <select
-                      className="select w-full"
-                      value={problemData.problemDifficulty}
-                      onChange={(e) => handleProblemChange("problemDifficulty", e.target.value)}
-                      style={{ color: problemData.problemDifficulty ? DIFFICULTY_COLORS[problemData.problemDifficulty] : undefined, fontWeight: problemData.problemDifficulty ? 600 : undefined }}
-                    >
-                      {DIFFICULTY_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value} style={{ color: opt.value ? DIFFICULTY_COLORS[opt.value] : "inherit", fontWeight: opt.value ? 600 : "normal" }}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Tags */}
-                <div>
-                  <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
-                    <div className="flex items-center gap-1">
-                      <TagIcon size={16} color="var(--primary)" />
-                      <span style={labelStyle}>Tags</span>
-                    </div>
-                    {hasInactiveTags && (
-                      <button className="btn btn-ghost btn-sm" style={{ color: "#f97316" }} onClick={removeAllInactiveTags}>
-                        <Trash2 size={12} /> Remove all disabled tags
-                      </button>
-                    )}
-                  </div>
-
-                  {hasInactiveTags && (
-                    <div style={{ marginBottom: 12, padding: 12, background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 8 }}>
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle size={16} color="#f97316" style={{ flexShrink: 0 }} />
-                        <div>
-                          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#c2410c" }}>
-                            {inactiveTags.length} disabled tag{inactiveTags.length > 1 ? "s" : ""} detected
-                          </p>
-                          <p style={{ margin: 0, fontSize: 11, color: "#ea580c" }}>
-                            The following tag{inactiveTags.length > 1 ? "s have" : " has"} been disabled: <strong>{inactiveTags.map((t) => t.name).join(", ")}</strong>. Please remove or replace them.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div style={{ padding: 12, border: `1px solid ${hasInactiveTags ? "#fed7aa" : "var(--border-default)"}`, borderRadius: 8, background: "var(--bg-raised)", minHeight: 52, position: "relative" }}>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedTags.map((tag) => (
-                        <span
-                          key={tag.id}
-                          style={{
-                            display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 9999, fontSize: 13,
-                            background: tag.isActive === false ? "transparent" : "var(--primary-subtle)",
-                            color: tag.isActive === false ? "#f97316" : "var(--primary)",
-                            border: `1px solid ${tag.isActive === false ? "#fed7aa" : "transparent"}`,
-                            opacity: tag.isActive === false ? 0.8 : 1,
-                          }}
-                          title={tag.isActive === false ? "This tag is disabled — remove it before saving" : tag.name}
-                        >
-                          {tag.isActive === false && <AlertTriangle size={11} />}
-                          <span style={{ textDecoration: tag.isActive === false ? "line-through" : "none" }}>{tag.name}</span>
-                          <button style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }} onClick={() => removeTag(tag.id)}>
-                            <X size={12} />
-                          </button>
-                        </span>
-                      ))}
-
-                      <div style={{ position: "relative" }}>
-                        <button
-                          style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 9999, border: "1px dashed var(--primary-subtle)", background: "#fff", color: "var(--primary)", fontSize: 12, cursor: "pointer" }}
-                          onClick={(e) => { e.stopPropagation(); setShowTagDropdown((v) => !v); }}
-                        >
-                          <Plus size={12} /> Add tag
-                        </button>
-
-                        {showTagDropdown && (
-                          <div
-                            style={{ position: "absolute", top: "110%", left: 0, zIndex: 30, background: "var(--bg-base)", border: "1px solid var(--border-default)", borderRadius: 10, boxShadow: "var(--shadow-md)", width: 220, maxHeight: 260, overflowY: "auto" }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div style={{ borderBottom: "1px solid var(--border-default)", position: "sticky", top: 0, background: "var(--bg-base)" }}>
-                              <SuggestiveSearch
-                                value={tagSearchQuery}
-                                onChange={(val) => setTagSearchQuery(val)}
-                                suggestions={["Search active tags...", "Filter tags"]}
-                                style={{ width: "100%" }}
-                              />
-                            </div>
-                            {filteredDropdownTags.length === 0 ? (
-                              <div style={{ padding: 12, textAlign: "center" }}>
-                                <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{availableTags.length === 0 ? "No active tags available" : "All active tags already added"}</span>
-                              </div>
-                            ) : (
-                              filteredDropdownTags.map((tag) => (
-                                <div key={tag.id} style={{ padding: "8px 12px", cursor: "pointer" }} onClick={() => addTag(tag)}>
-                                  <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{tag.name}</span>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <p style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4 }}>Only active tags can be assigned. Inactive tags must be removed before saving.</p>
-                </div>
-
-                {/* Statement */}
-                <div>
-                  <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
-                    <label style={{ ...labelStyle, marginBottom: 0 }}>Problem Statement (Markdown) *</label>
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="btn btn-sm"
-                        style={{ background: !previewMode ? "var(--primary)" : "transparent", color: !previewMode ? "var(--bg-void)" : "var(--text-secondary)", border: `1px solid ${!previewMode ? "var(--primary)" : "var(--border-default)"}` }}
-                        onClick={() => setPreviewMode(false)}
-                      >
-                        <Edit2 size={14} /> Edit
-                      </button>
-                      <button
-                        className="btn btn-sm"
-                        style={{ background: previewMode ? "var(--primary)" : "transparent", color: previewMode ? "var(--bg-void)" : "var(--text-secondary)", border: `1px solid ${previewMode ? "var(--primary)" : "var(--border-default)"}` }}
-                        onClick={() => setPreviewMode(true)}
-                      >
-                        <Eye size={14} /> Preview
-                      </button>
-                    </div>
-                  </div>
-
-                  {!previewMode ? (
-                    <>
-                      <div style={{ border: "1px solid var(--border-default)", borderRadius: 8, overflow: "hidden", height: 350 }}>
-                        <Editor
-                          height="100%" theme="vs-dark" language="markdown"
-                          value={problemData.statement}
-                          onChange={(val) => handleProblemChange("statement", val || "")}
-                          options={{ minimap: { enabled: false }, fontSize: 14, lineNumbers: "on", wordWrap: "on", scrollBeyondLastLine: false, automaticLayout: true }}
-                        />
-                      </div>
-                      <p style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 8 }}>This will be converted to a .md file. Use Markdown syntax for formatting.</p>
-                    </>
-                  ) : (
-                    <div style={{ minHeight: 300, padding: 16, background: "var(--bg-base)", border: "1px solid var(--border-default)", borderRadius: 8, overflowY: "auto", maxHeight: 500 }}>
-                      {problemData.statement ? (
-                        <div className="markdown-preview">
-                          <ReactMarkdown>{problemData.statement}</ReactMarkdown>
-                        </div>
-                      ) : (
-                        <p style={{ color: "var(--text-muted)", fontStyle: "italic" }}>No content to preview. Start typing in the editor...</p>
-                      )}
-                    </div>
-                  )}
-                </div>
+          {/* ── Solution code card (my-problems mode) ── */}
+          {mode === "my" && (
+            <div className="card" style={{ padding: 24 }}>
+              <div style={{ ...SEC, marginBottom: 4 }}>Solution Code (C++)</div>
+              <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginBottom: 14 }}>Optional — shown to students when you publish solutions in a lab.</div>
+              <div style={{ border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", overflow: "hidden", height: 350 }}>
+                <Editor
+                  height="100%" theme="vs-dark" language="cpp"
+                  value={problemData.solutionCode}
+                  onChange={(v) => handleProblemChange("solutionCode", v || "")}
+                  options={{ minimap: { enabled: false }, fontSize: 14, lineNumbers: "on", scrollBeyondLastLine: false, automaticLayout: true }}
+                />
               </div>
             </div>
+          )}
 
-            {/* Solution Code (My Problems mode only) */}
-            {mode === "my" && (
-              <div style={sectionStyle}>
-                <h3 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)", margin: "0 0 8px" }}>Solution Code (C++)</h3>
-                <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>Optional. This code will be shown to students when you publish solutions in a lab.</p>
-                <div style={{ border: "1px solid var(--border-default)", borderRadius: 8, overflow: "hidden", height: 350 }}>
-                  <Editor
-                    height="100%" theme="vs-dark" language="cpp"
-                    value={problemData.solutionCode}
-                    onChange={(val) => handleProblemChange("solutionCode", val || "")}
-                    options={{ minimap: { enabled: false }, fontSize: 14, lineNumbers: "on", scrollBeyondLastLine: false, automaticLayout: true }}
-                  />
-                </div>
-              </div>
-            )}
+          {/* ── Test cases card ── */}
+          <div className="card" style={{ padding: 24 }}>
 
-            {/* Test Cases */}
-            <div>
-              <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
-                <h3 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Test Cases</h3>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number" className="input"
-                    style={{ width: 70, textAlign: "center" }}
-                    min={1} max={50}
+            {/* Section header */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <div style={SEC}>Test Cases</div>
+              <span style={{ display: "inline-flex", padding: "2px 9px", borderRadius: "var(--radius-pill)", fontSize: "var(--text-xs)", fontWeight: 700, background: "var(--primary-subtle)", color: "var(--primary)" }}>
+                {testCases.length}
+              </span>
+            </div>
+
+            {/* AI generate toolbar */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "10px 14px", marginBottom: 16,
+              background: "var(--bg-surface)", border: "1px solid var(--border-subtle)",
+              borderRadius: "var(--radius-md)",
+            }}>
+              <Sparkles size={13} color="var(--primary)" style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: "var(--text-secondary)", flex: 1 }}>
+                AI generate
+              </span>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <div>
+                  <div style={{ fontSize: 10, color: "var(--text-muted)", marginBottom: 4, textAlign: "center" }}>Count</div>
+                  <NumericStepper
                     value={generateCount}
-                    onChange={(e) => setGenerateCount(Math.min(50, Math.max(1, parseInt(e.target.value) || 1)))}
-                    title="Number of test cases to generate (max 50)"
+                    onChange={(n) => setGenerateCount(n)}
+                    min={1} max={50} step={1}
+                    presets={[3, 5, 10, 20]}
                   />
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    style={{ border: "1px solid var(--border-accent)", color: "var(--primary)" }}
-                    onClick={handleGenerateTestCases}
-                    disabled={aiGenerating || !problemData.statement.trim()}
-                    title={!problemData.statement.trim() ? "Write problem statement first" : `Generate ${generateCount} test case(s) using AI`}
-                  >
-                    <Sparkles size={14} /> AI Generate
-                  </button>
                 </div>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                {testCases.map((testCase, index) => (
-                  <div key={index} style={{ background: "var(--bg-raised)", padding: 16, borderRadius: 10 }}>
-                    <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
-                      <div className="flex items-center gap-3">
-                        <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>Test Case {index + 1}</h4>
-                        <button
-                          style={{
-                            display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 12px", borderRadius: 9999, cursor: "pointer",
-                            background: testCase.isSample ? "#f0fdf4" : "var(--bg-raised)",
-                            border: `1px solid ${testCase.isSample ? "#86efac" : "var(--border-default)"}`,
-                          }}
-                          onClick={() => handleTestCaseChange(index, "isSample", !testCase.isSample)}
-                          title="Sample test cases are visible to users solving the problem"
-                        >
-                          <span style={{ width: 10, height: 10, borderRadius: "50%", background: testCase.isSample ? "#4ade80" : "var(--text-muted)", flexShrink: 0 }} />
-                          <span style={{ fontSize: 11, fontWeight: 500, color: testCase.isSample ? "#15803d" : "var(--text-secondary)" }}>
-                            {testCase.isSample ? "Sample (visible)" : "Hidden"}
-                          </span>
-                        </button>
-                      </div>
-                      {testCases.length > 1 && (
-                        <button className="btn btn-ghost btn-sm" style={{ color: "#ef4444" }} onClick={() => removeTestCase(index)}>
-                          <Trash2 size={18} />
-                        </button>
-                      )}
-                    </div>
-                    <div className="flex gap-4">
-                      <div style={{ flex: 1 }}>
-                        <label style={labelStyle}>Input *</label>
-                        <textarea
-                          className="input w-full"
-                          value={testCase.input}
-                          onChange={(e) => handleTestCaseChange(index, "input", e.target.value)}
-                          placeholder="Enter test input..."
-                          style={{ minHeight: 120, fontFamily: "monospace", fontSize: 13, resize: "vertical" }}
-                        />
-                        <p style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4 }}>Will be saved as {index}.txt</p>
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <label style={labelStyle}>Expected Output *</label>
-                        <textarea
-                          className="input w-full"
-                          value={testCase.expectedOutput}
-                          onChange={(e) => handleTestCaseChange(index, "expectedOutput", e.target.value)}
-                          placeholder="Enter expected output..."
-                          style={{ minHeight: 120, fontFamily: "monospace", fontSize: 13, resize: "vertical" }}
-                        />
-                        <p style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4 }}>Will be saved as {index}.txt</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                <button className="btn btn-ghost w-full" style={{ border: "1px dashed var(--border-accent)", color: "var(--primary)" }} onClick={addTestCase}>
-                  <Plus size={20} /> Add Test Case
+                <button
+                  className="btn btn-ghost btn-sm"
+                  style={{ border: "1px solid var(--border-accent)", color: "var(--primary)", gap: 6, marginTop: 20, alignSelf: "flex-start" }}
+                  onClick={handleGenerateTestCases}
+                  disabled={aiGenerating || !problemData.statement.trim()}
+                  title={!problemData.statement.trim() ? "Write problem statement first" : `Generate ${generateCount} test case(s) with AI`}
+                >
+                  <Sparkles size={13} /> Generate
                 </button>
               </div>
             </div>
 
-            {/* Submit */}
-            <div className="flex items-center justify-end gap-3" style={{ paddingTop: 24, borderTop: "1px solid var(--border-subtle)" }}>
-              {hasInactiveTags && (
-                <span style={{ fontSize: 13, color: "#f97316", display: "flex", alignItems: "center", gap: 4 }}>
-                  <AlertTriangle size={14} /> Remove disabled tags before saving
-                </span>
-              )}
+            {/* Test case rows */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {testCases.map((tc, i) => (
+                <div
+                  key={i}
+                  style={{ background: "var(--bg-raised)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", overflow: "hidden" }}
+                >
+                  {/* Test case header bar */}
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "8px 12px",
+                    borderBottom: "1px solid var(--border-subtle)",
+                    background: "var(--bg-overlay)",
+                  }}>
+                    <div style={{ width: 22, height: 22, borderRadius: "var(--radius-sm)", background: "var(--primary-subtle)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: "var(--primary)" }}>{i + 1}</span>
+                    </div>
+
+                    <button
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 5,
+                        padding: "2px 9px", borderRadius: "var(--radius-pill)", cursor: "pointer",
+                        background: tc.isSample ? "var(--green-subtle)" : "transparent",
+                        border: `1px solid ${tc.isSample ? "var(--green-ac)" : "var(--border-default)"}`,
+                        transition: "all 0.12s",
+                      }}
+                      onClick={() => handleTestCaseChange(i, "isSample", !tc.isSample)}
+                    >
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: tc.isSample ? "var(--green-ac)" : "var(--text-muted)", flexShrink: 0 }} />
+                      <span style={{ fontSize: 10, fontWeight: 700, color: tc.isSample ? "var(--green-ac)" : "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                        {tc.isSample ? "Sample" : "Hidden"}
+                      </span>
+                    </button>
+
+                    <div style={{ flex: 1 }} />
+
+                    {testCases.length > 1 && (
+                      <button
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 6px", borderRadius: "var(--radius-sm)", display: "flex", color: "var(--text-muted)", transition: "color 0.12s, background 0.12s" }}
+                        onClick={() => removeTestCase(i)}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = "var(--red-wa)"; e.currentTarget.style.background = "var(--red-subtle)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; e.currentTarget.style.background = "none"; }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Input / output textareas */}
+                  <div style={{ display: "flex", gap: 0 }}>
+                    <div style={{ flex: 1, padding: "12px 14px", borderRight: "1px solid var(--border-subtle)" }}>
+                      <label style={{ ...LBL, marginBottom: 6 }}>Input <span style={{ color: "var(--red-wa)" }}>*</span></label>
+                      <textarea
+                        className="input w-full"
+                        value={tc.input}
+                        onChange={(e) => handleTestCaseChange(i, "input", e.target.value)}
+                        placeholder="Enter test input…"
+                        style={{ minHeight: 100, fontFamily: "var(--font-code)", fontSize: 13, resize: "vertical", border: "none", padding: 0, background: "transparent", outline: "none" }}
+                      />
+                    </div>
+                    <div style={{ flex: 1, padding: "12px 14px" }}>
+                      <label style={{ ...LBL, marginBottom: 6 }}>Expected Output <span style={{ color: "var(--red-wa)" }}>*</span></label>
+                      <textarea
+                        className="input w-full"
+                        value={tc.expectedOutput}
+                        onChange={(e) => handleTestCaseChange(i, "expectedOutput", e.target.value)}
+                        placeholder="Enter expected output…"
+                        style={{ minHeight: 100, fontFamily: "var(--font-code)", fontSize: 13, resize: "vertical", border: "none", padding: 0, background: "transparent", outline: "none" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
               <button
-                className="btn btn-primary"
-                style={{ fontSize: 15, padding: "10px 24px" }}
-                onClick={handleSubmit}
-                disabled={loading || hasInactiveTags}
+                className="btn btn-ghost w-full"
+                style={{ border: "1.5px dashed var(--border-accent)", color: "var(--primary)", gap: 6 }}
+                onClick={addTestCase}
               >
-                <Upload size={20} />
-                {loading ? (id ? "Updating..." : "Creating...") : (id ? "Update Problem" : "Create Problem")}
+                <Plus size={14} /> Add Test Case
               </button>
             </div>
           </div>
+
+          {/* ── Submit ── */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10, paddingTop: 8 }}>
+            {hasInactiveTags && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "var(--text-xs)", fontWeight: 600, color: "var(--amber-tle)" }}>
+                <AlertTriangle size={13} /> Remove disabled tags before saving
+              </div>
+            )}
+            <button className="btn btn-ghost" onClick={() => navigate(destPath)}>Cancel</button>
+            <button
+              className="btn btn-primary"
+              onClick={handleSubmit}
+              disabled={loading || hasInactiveTags}
+              style={{ gap: 8, minWidth: 150 }}
+            >
+              {loading
+                ? <><div className="spinner" style={{ width: 14, height: 14 }} /> {id ? "Updating…" : "Creating…"}</>
+                : <><Save size={14} /> {id ? "Update Problem" : "Create Problem"}</>
+              }
+            </button>
+          </div>
+
         </div>
       </div>
     </div>

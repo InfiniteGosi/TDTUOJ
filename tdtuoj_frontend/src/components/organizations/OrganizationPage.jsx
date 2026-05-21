@@ -1,291 +1,211 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Building2,
-  Users,
-  Globe,
-  Lock,
-  ChevronRight,
-  ChevronLeft,
-} from "lucide-react";
+import { Building2, Users, Globe, Lock, ChevronRight } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
 import SuggestiveSearch from "../common/SuggestiveSearch";
 import FilterPills from "../common/FilterPills";
+import Pagination from "../common/Pagination";
 
-// ─── Organization Card ────────────────────────────────────────────────────────
-
-const OrgCard = ({ org, onEnter }) => {
-  const accentColor =
-    org.myRole === "OWNER" ? "#f59e0b" : org.myRole ? "#22c55e" : "var(--primary)";
-  const roleBg =
-    org.myRole === "OWNER"
-      ? "#fffbeb"
-      : org.myRole === "ADMIN"
-      ? "#eff6ff"
-      : "#f0fdf4";
-  const roleColor =
-    org.myRole === "OWNER"
-      ? "#d97706"
-      : org.myRole === "ADMIN"
-      ? "#3b82f6"
-      : "#16a34a";
-
-  return (
-    <div
-      className="card"
-      style={{ cursor: "pointer", overflow: "hidden", display: "flex", flexDirection: "column", transition: "all 0.2s" }}
-      onClick={() => onEnter(org.slug)}
-    >
-      {/* Accent bar */}
-      <div style={{ height: 4, background: accentColor }} />
-
-      <div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
-        {/* Header row */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {org.isPublic ? (
-              <Globe size={13} color="#9ca3af" />
-            ) : (
-              <Lock size={13} color="#9ca3af" />
-            )}
-            <span className="text-xs text-muted">{org.isPublic ? "Public" : "Private"}</span>
-          </div>
-          {org.myRole && (
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                padding: "2px 8px",
-                borderRadius: 9999,
-                fontSize: 11,
-                fontWeight: 600,
-                background: roleBg,
-                color: roleColor,
-              }}
-            >
-              {org.myRole.charAt(0) + org.myRole.slice(1).toLowerCase()}
-            </span>
-          )}
-        </div>
-
-        {/* Name */}
-        <div>
-          <p style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)", marginBottom: 4, lineHeight: 1.3 }}>
-            {org.name}
-          </p>
-          {org.about && (
-            <p className="text-sm text-muted" style={{ marginTop: 4 }}>
-              {org.about}
-            </p>
-          )}
-        </div>
-
-        {/* Meta */}
-        <div className="flex items-center gap-2" style={{ marginTop: "auto" }}>
-          <Users size={13} color="#9ca3af" />
-          <span className="text-xs text-muted">
-            {org.totalMembers ?? 0} {(org.totalMembers ?? 0) === 1 ? "member" : "members"}
-          </span>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div
-        className="flex items-center justify-between"
-        style={{ padding: "10px 20px", background: "var(--bg-raised)", borderTop: "1px solid var(--border-subtle)" }}
-      >
-        <span className="text-xs text-muted">by {org.creatorUsername ?? "—"}</span>
-        <div className="flex items-center gap-1" style={{ color: "var(--primary)", fontSize: 12, fontWeight: 600 }}>
-          <span>Detail</span>
-          <ChevronRight size={13} />
-        </div>
-      </div>
-    </div>
-  );
+const ROLE_STYLE = {
+  OWNER:  { label: "Owner",  color: "var(--amber-tle)", bg: "var(--amber-subtle)" },
+  ADMIN:  { label: "Admin",  color: "var(--blue-ce)",   bg: "var(--blue-subtle)"  },
+  MEMBER: { label: "Member", color: "var(--green-ac)",  bg: "var(--green-subtle)" },
 };
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 const OrganizationPage = () => {
   const navigate = useNavigate();
   const { showMessage } = useToast();
 
   const [organizations, setOrganizations] = useState([]);
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const [search, setSearch]               = useState("");
+  const [loading, setLoading]             = useState(true);
+  const [page, setPage]                   = useState(0);
+  const [size, setSize]                   = useState(10);
+  const [totalPages, setTotalPages]       = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const [tab, setTab] = useState("ALL");
-  const SIZE = 12;
+  const [tab, setTab]                     = useState("ALL");
 
   const isAuthenticated = ApiService.isAuthenticated();
 
   const fetchOrgs = async () => {
     try {
       setLoading(true);
-      let resp;
-      if (tab === "MY" && isAuthenticated) {
-        resp = await ApiService.getMyOrganizations({ page, size: SIZE });
-      } else {
-        resp = await ApiService.getOrganizations({ page, size: SIZE, search });
-      }
+      const resp = tab === "MY" && isAuthenticated
+        ? await ApiService.getMyOrganizations({ page, size })
+        : await ApiService.getOrganizations({ page, size, search });
       if (resp.statusCode === 200) {
-        const data = resp.data;
+        const data    = resp.data;
         const content = data.content ?? data;
-        const pageInfo = data.page ?? {};
+        const pi      = data.page ?? {};
         setOrganizations(content);
-        setTotalPages(pageInfo.totalPages ?? 1);
-        setTotalElements(pageInfo.totalElements ?? content.length);
+        setTotalPages(pi.totalPages ?? 1);
+        setTotalElements(pi.totalElements ?? content.length);
       }
     } catch (err) {
       showMessage(err.response?.data?.message || err.message, "error");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    fetchOrgs();
-  }, [page, tab]);
+  useEffect(() => { fetchOrgs(); }, [page, size, tab]);
 
   useEffect(() => {
-    if (tab === "ALL") {
-      const timer = setTimeout(() => {
-        setPage(0);
-        fetchOrgs();
-      }, 300);
-      return () => clearTimeout(timer);
-    }
+    if (tab !== "ALL") return;
+    const t = setTimeout(() => { setPage(0); fetchOrgs(); }, 300);
+    return () => clearTimeout(t);
   }, [search]);
 
-  const TABS = isAuthenticated ? ["ALL", "MY"] : ["ALL"];
-
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "var(--space-8) 0" }}>
       <div className="page-container">
-        <div className="flex flex-col gap-6">
-          {/* Hero Header */}
-          <div
-            style={{
-              background: "linear-gradient(135deg, var(--navy) 0%, var(--navy-bright) 100%)",
-              borderRadius: 16,
-              padding: "40px",
-              color: "white",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                opacity: 0.1,
-                backgroundImage:
-                  "radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)",
-                backgroundSize: "60px 60px",
-              }}
-            />
-            <div className="flex flex-col gap-3" style={{ position: "relative" }}>
-              <div className="flex items-center gap-3">
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
+
+          {/* ── Hero ── */}
+          <div style={{
+            background: "linear-gradient(135deg, var(--navy) 0%, var(--navy-bright) 100%)",
+            borderRadius: "var(--radius-xl)", padding: "var(--space-10)",
+            color: "#fff", position: "relative", overflow: "hidden", minHeight: 160,
+          }}>
+            <div style={{ position: "absolute", inset: 0, opacity: 0.1, backgroundImage: "radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+            <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <Building2 size={36} />
-                <h2 style={{ fontSize: 32, fontWeight: 900, margin: 0 }}>Organizations</h2>
+                <h1 style={{ fontSize: "var(--text-3xl)", fontWeight: 900, margin: 0 }}>Organizations</h1>
               </div>
-              <p style={{ fontSize: 16, opacity: 0.85, margin: 0 }}>
+              <p style={{ fontSize: "var(--text-lg)", opacity: 0.85, margin: 0 }}>
                 Browse and join study groups, teams, and communities
               </p>
-              <div>
-                <span
-                  style={{
-                    display: "inline-block",
-                    background: "rgba(255,255,255,0.2)",
-                    color: "white",
-                    padding: "4px 12px",
-                    borderRadius: 9999,
-                    fontSize: 13,
-                  }}
-                >
-                  {totalElements} organizations
-                </span>
-              </div>
+              <span style={{ display: "inline-block", background: "rgba(255,255,255,0.2)", color: "#fff", padding: "4px 12px", borderRadius: "var(--radius-pill)", fontSize: "var(--text-sm)", alignSelf: "flex-start", marginTop: "var(--space-1)" }}>
+                {totalElements} organizations
+              </span>
             </div>
           </div>
 
-          {/* Action Bar */}
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Search */}
+          {/* ── Toolbar ── */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <SuggestiveSearch
               value={search}
               onChange={(val) => setSearch(val)}
-              suggestions={[
-                "Search organizations...",
-                "Find your class group",
-                "Look up a department",
-              ]}
-              style={{ width: "100%", maxWidth: 320 }}
+              suggestions={["Search organizations...", "Find your class group", "Look up a department"]}
+              style={{ flex: 1, minWidth: 180, maxWidth: 320 }}
             />
+            {isAuthenticated && (
+              <FilterPills
+                value={tab}
+                onChange={(v) => { setTab(v); setPage(0); }}
+                options={[
+                  { value: "ALL", label: "All"     },
+                  { value: "MY",  label: "My Orgs" },
+                ]}
+              />
+            )}
+          </div>
 
-            <FilterPills
-              value={tab}
-              onChange={(v) => { setTab(v); setPage(0); }}
-              options={[
-                { value: "ALL", label: "All" },
-                { value: "MY",  label: "My Orgs" },
-              ]}
+          {/* ── Table ── */}
+          <div style={{ background: "var(--bg-raised)", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-default)", boxShadow: "0 2px 8px rgba(0,0,0,0.3)", overflow: "hidden", position: "relative" }}>
+            {loading && (
+              <div style={{ position: "absolute", inset: 0, background: "rgba(15,15,15,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+                <div className="spinner" />
+              </div>
+            )}
+
+            <table className="table" style={{ width: "100%" }}>
+              <thead>
+                <tr>
+                  <th style={{ width: "4%",  textAlign: "center", fontSize: 13, fontWeight: 700 }}>#</th>
+                  <th style={{ width: "36%", fontSize: 13, fontWeight: 700 }}>Organization</th>
+                  <th style={{ width: "11%", fontSize: 13, fontWeight: 700 }}>Visibility</th>
+                  <th style={{ width: "13%", fontSize: 13, fontWeight: 700 }}>Your Role</th>
+                  <th style={{ width: "10%", textAlign: "center", fontSize: 13, fontWeight: 700 }}>Members</th>
+                  <th style={{ width: "20%", fontSize: 13, fontWeight: 700 }}>Creator</th>
+                  <th style={{ width: "6%"  }} />
+                </tr>
+              </thead>
+              <tbody>
+                {organizations.length > 0 ? organizations.map((org, idx) => {
+                  const rowBg = idx % 2 === 0 ? "var(--bg-raised)" : "var(--bg-overlay)";
+                  const rs    = org.myRole ? ROLE_STYLE[org.myRole] : null;
+                  return (
+                    <tr key={org.id}
+                      style={{ background: rowBg, cursor: "pointer", transition: "background 0.12s" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-subtle)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = rowBg; }}
+                      onClick={() => navigate(`/organizations/${org.slug}`)}>
+
+                      <td style={{ textAlign: "center" }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{page * size + idx + 1}</span>
+                      </td>
+
+                      <td>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>{org.name}</span>
+                          {org.about && (
+                            <span style={{ fontSize: 12, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 280 }}>
+                              {org.about}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      <td>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: "var(--text-xs)", fontWeight: 600, color: "var(--text-muted)" }}>
+                          {org.isPublic ? <Globe size={12} /> : <Lock size={12} />}
+                          {org.isPublic ? "Public" : "Private"}
+                        </span>
+                      </td>
+
+                      <td>
+                        {rs ? (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: "var(--radius-pill)", fontSize: "var(--text-xs)", fontWeight: 700, background: rs.bg, color: rs.color, border: `1px solid ${rs.color}33` }}>
+                            {rs.label}
+                          </span>
+                        ) : <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>—</span>}
+                      </td>
+
+                      <td style={{ textAlign: "center" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-secondary)" }}>
+                          <Users size={13} color="var(--text-muted)" />{org.totalMembers ?? 0}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>{org.creatorUsername ?? "—"}</span>
+                      </td>
+
+                      <td style={{ textAlign: "center" }}>
+                        <ChevronRight size={15} color="var(--text-muted)" />
+                      </td>
+                    </tr>
+                  );
+                }) : (
+                  <tr>
+                    <td colSpan={7} style={{ textAlign: "center", padding: "48px 0" }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+                        <Building2 size={40} color="var(--border-default)" />
+                        <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text-muted)" }}>
+                          {tab === "MY" ? "You haven't joined any organizations yet" : "No organizations found"}
+                        </span>
+                        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                          {tab === "MY" ? "Browse organizations and join one" : "Try adjusting your search"}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              totalElements={totalElements}
+              limit={size}
+              onLimitChange={(l) => { setSize(l); setPage(0); }}
+              offset={page * size}
             />
           </div>
 
-          {/* Content */}
-          {loading ? (
-            <div className="flex flex-col items-center gap-4" style={{ padding: "80px 0" }}>
-              <div className="spinner" />
-              <span className="text-muted">Loading organizations...</span>
-            </div>
-          ) : organizations.length === 0 ? (
-            <div className="flex flex-col items-center gap-3" style={{ padding: "64px 0" }}>
-              <Building2 size={48} color="var(--border-default)" />
-              <p style={{ fontSize: 16, fontWeight: 600, color: "var(--text-muted)", margin: 0 }}>
-                {tab === "MY" ? "You haven't joined any organizations yet" : "No organizations found"}
-              </p>
-              <p className="text-sm text-muted" style={{ margin: 0 }}>
-                {tab === "MY" ? "Browse organizations and join one" : "Try adjusting your search"}
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
-              {organizations.map((org) => (
-                <OrgCard
-                  key={org.id}
-                  org={org}
-                  onEnter={(slug) => navigate(`/organizations/${slug}`)}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2">
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                disabled={page === 0}
-              >
-                <ChevronLeft size={16} /> Previous
-              </button>
-              <span className="text-sm text-muted" style={{ padding: "0 8px" }}>
-                Page {page + 1} of {totalPages}
-              </span>
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={page >= totalPages - 1}
-              >
-                Next <ChevronRight size={16} />
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

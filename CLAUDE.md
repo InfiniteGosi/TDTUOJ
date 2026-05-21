@@ -346,6 +346,17 @@ A standout feature that instruments user code to trace variable state at each st
 
 ---
 
+## Build Verification Rule
+
+**Before finishing any task that modifies backend or frontend code, you MUST run the build and confirm it passes. Do not report the task as done until the build succeeds.**
+
+- **Frontend**: run `npm run build` inside `tdtuoj_frontend/`. Fix all errors before finishing.
+- **Backend**: run `./mvnw compile -q` inside `TDTUOJ_backend/`. Fix all compilation errors before finishing.
+
+If the build cannot be run (services unavailable, etc.), explicitly state this and warn the user to verify manually.
+
+---
+
 ## Common Tasks
 
 ### Adding a New Backend Module

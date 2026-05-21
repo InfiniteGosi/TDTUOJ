@@ -121,53 +121,52 @@ const AdminUserPage = () => {
 
             <table className="table">
               <thead>
-                <tr>
-                  <th style={{ textAlign: "center", width: "8%" }}>ID</th>
-                  <th style={{ width: "35%" }}>User</th>
-                  <th style={{ width: "25%" }}>Email</th>
-                  <th style={{ width: "17%" }}>Roles</th>
-                  <th style={{ textAlign: "center", width: "10%" }}>Status</th>
-                  <th style={{ textAlign: "center", width: "10%" }}>Actions</th>
+                <tr style={{ background: "var(--primary-subtle)" }}>
+                  <th style={{ textAlign: "center", width: "8%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
+                  <th style={{ width: "35%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>User</th>
+                  <th style={{ width: "25%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Email</th>
+                  <th style={{ width: "17%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Roles</th>
+                  <th style={{ textAlign: "center", width: "10%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</th>
+                  <th style={{ textAlign: "center", width: "10%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {users.length > 0 ? (
-                  users.map((user, index) => {
+                  users.map((user) => {
                     const isSelf = currentUser?.id === user.id;
                     return (
-                      <tr key={user.id} style={{ background: index % 2 === 0 ? "var(--bg-base)" : "var(--bg-raised)" }}>
+                      <tr key={user.id}>
                         <td style={{ textAlign: "center" }}>
-                          <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 13, fontWeight: 700, background: "var(--primary-subtle)", color: "var(--primary)" }}>#{user.id}</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{user.id}</span>
                         </td>
                         <td>
-                          <div className="flex items-center gap-3">
-                            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "var(--primary-subtle)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, overflow: "hidden", flexShrink: 0 }}>
-                              {user.profileUrl ? (
-                                <img src={user.profileUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                              ) : (
-                                (user.name || user.username).charAt(0).toUpperCase()
-                              )}
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--primary-subtle)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, overflow: "hidden", flexShrink: 0 }}>
+                              {user.profileUrl
+                                ? <img src={user.profileUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                : (user.name || user.username).charAt(0).toUpperCase()
+                              }
                             </div>
                             <div>
-                              <div className="flex items-center gap-2">
-                                <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{user.username}</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-primary)" }}>{user.username}</span>
                                 {isSelf && (
-                                  <span style={{ display: "inline-block", padding: "1px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: "var(--amber-subtle)", color: "var(--amber-tle)" }}>
-                                    It&apos;s you
+                                  <span style={{ display: "inline-flex", padding: "1px 7px", borderRadius: "var(--radius-pill)", fontSize: 10, fontWeight: 700, background: "var(--amber-subtle)", color: "var(--amber-tle)" }}>
+                                    you
                                   </span>
                                 )}
                               </div>
-                              {user.name && <p style={{ margin: 0, fontSize: 12, color: "var(--text-muted)" }}>{user.name}</p>}
+                              {user.name && <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: 1 }}>{user.name}</div>}
                             </div>
                           </div>
                         </td>
-                        <td><span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{user.email}</span></td>
+                        <td><span style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)" }}>{user.email}</span></td>
                         <td>
-                          <div className="flex flex-wrap gap-1">
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                             {user.roles?.map((role) => {
                               const s = ROLE_BADGE[role.name] || { bg: "var(--bg-raised)", color: "var(--text-secondary)" };
                               return (
-                                <span key={role.id} style={{ display: "inline-block", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: s.bg, color: s.color }}>
+                                <span key={role.id} style={{ display: "inline-flex", padding: "2px 8px", borderRadius: "var(--radius-pill)", fontSize: 10, fontWeight: 700, background: s.bg, color: s.color }}>
                                   {role.name}
                                 </span>
                               );
@@ -175,18 +174,23 @@ const AdminUserPage = () => {
                           </div>
                         </td>
                         <td style={{ textAlign: "center" }}>
-                          <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 600, background: user.isActive ? "var(--green-subtle)" : "var(--red-subtle)", color: user.isActive ? "var(--green-ac)" : "var(--red-wa)" }}>
+                          <span style={{ display: "inline-flex", padding: "2px 9px", borderRadius: "var(--radius-pill)", fontSize: 10, fontWeight: 700, background: user.isActive ? "var(--green-subtle)" : "var(--red-subtle)", color: user.isActive ? "var(--green-ac)" : "var(--red-wa)" }}>
                             {user.isActive ? "Active" : "Inactive"}
                           </span>
                         </td>
                         <td style={{ textAlign: "center" }}>
                           {isSelf ? (
-                            <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: "var(--bg-raised)", color: "var(--text-muted)" }}>
-                              It&apos;s you
+                            <span style={{ display: "inline-flex", padding: "2px 9px", borderRadius: "var(--radius-pill)", fontSize: 10, fontWeight: 600, background: "var(--bg-overlay)", color: "var(--text-muted)" }}>
+                              you
                             </span>
                           ) : (
-                            <button className="btn btn-ghost btn-sm" title="Edit User" style={{ padding: "5px 7px" }} onClick={() => navigate(`/admin/users/edit/${user.id}`)}>
-                              <Edit size={16} color="var(--primary)" />
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              title="Edit User"
+                              style={{ padding: "5px 8px", gap: 4 }}
+                              onClick={() => navigate(`/admin/users/edit/${user.id}`)}
+                            >
+                              <Edit size={14} color="var(--primary)" />
                             </button>
                           )}
                         </td>
@@ -195,15 +199,15 @@ const AdminUserPage = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: "center", padding: "40px 0" }}>
-                      <div className="flex flex-col items-center gap-3">
-                        <Users size={48} color="var(--text-muted)" />
-                        <p style={{ fontSize: 16, color: "var(--text-muted)", margin: 0, fontWeight: 500 }}>
-                          {searchQuery ? "No users match your search" : "No users found"}
-                        </p>
-                        <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
-                          {searchQuery ? "Try adjusting your search terms" : "Click 'Add User' to create your first user!"}
-                        </p>
+                    <td colSpan={6} style={{ padding: "56px 24px", textAlign: "center" }}>
+                      <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--bg-overlay)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+                        <Users size={22} color="var(--text-muted)" />
+                      </div>
+                      <div style={{ fontSize: "var(--text-base)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 4 }}>
+                        {searchQuery ? "No users match your search" : "No users found"}
+                      </div>
+                      <div style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
+                        {searchQuery ? "Try different search terms" : "Click 'Add User' to get started"}
                       </div>
                     </td>
                   </tr>

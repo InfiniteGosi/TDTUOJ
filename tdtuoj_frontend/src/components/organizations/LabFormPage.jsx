@@ -1,16 +1,146 @@
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, Plus, Trash2, Search, BookOpen, Save } from "lucide-react";
+import {
+  ArrowLeft, Plus, Trash2, BookOpen, Save, Clock,
+  Sparkles, AlertCircle, Minus,
+} from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import SuggestiveSearch from "../common/SuggestiveSearch";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
 import DateTimePicker from "../common/DateTimePicker";
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 const DIFF_COLORS = {
-  EASY: { color: "#16a34a", bg: "#dcfce7" },
-  MEDIUM: { color: "#ea580c", bg: "#fff7ed" },
-  HARD: { color: "#dc2626", bg: "#fee2e2" },
+  EASY:   { color: "var(--green-ac)",  bg: "var(--green-subtle)"  },
+  MEDIUM: { color: "var(--amber-tle)", bg: "var(--amber-subtle)"  },
+  HARD:   { color: "var(--red-wa)",    bg: "var(--red-subtle)"    },
 };
+
+const DiffBadge = ({ diff }) => {
+  const s = DIFF_COLORS[diff] || { color: "var(--text-secondary)", bg: "var(--bg-overlay)" };
+  return (
+    <span style={{
+      display: "inline-flex", padding: "1px 7px", borderRadius: "var(--radius-pill)",
+      fontSize: "var(--text-xs)", fontWeight: 700, background: s.bg, color: s.color,
+    }}>
+      {diff || "—"}
+    </span>
+  );
+};
+
+// ─── PointsStepper ───────────────────────────────────────────────────────────
+
+const STEP = 10;
+const PRESETS = [25, 50, 100, 150, 200];
+
+const PointsStepper = ({ value, onChange }) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value));
+
+  const commit = (raw) => {
+    const n = Math.max(0, parseInt(raw) || 0);
+    onChange(n);
+    setDraft(String(n));
+    setEditing(false);
+  };
+
+  const adjust = (delta) => {
+    const n = Math.max(0, (value || 0) + delta);
+    onChange(n);
+    setDraft(String(n));
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5, flexShrink: 0 }}>
+      {/* Stepper row */}
+      <div style={{
+        display: "flex", alignItems: "center",
+        border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)",
+        overflow: "hidden", background: "var(--bg-raised)",
+      }}>
+        <button
+          type="button"
+          onClick={() => adjust(-STEP)}
+          style={{
+            width: 28, height: 30, display: "flex", alignItems: "center", justifyContent: "center",
+            background: "none", border: "none", borderRight: "1px solid var(--border-subtle)",
+            cursor: "pointer", color: "var(--text-muted)", transition: "background 0.1s, color 0.1s",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-overlay)"; e.currentTarget.style.color = "var(--text-primary)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--text-muted)"; }}
+        >
+          <Minus size={12} />
+        </button>
+
+        {editing ? (
+          <input
+            autoFocus
+            type="number"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => commit(draft)}
+            onKeyDown={(e) => { if (e.key === "Enter") commit(draft); if (e.key === "Escape") { setDraft(String(value)); setEditing(false); } }}
+            style={{
+              width: 52, textAlign: "center", background: "none", border: "none", outline: "none",
+              fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--primary)", padding: "0 4px", height: 30,
+            }}
+            min={0}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => { setDraft(String(value)); setEditing(true); }}
+            title="Click to edit"
+            style={{
+              width: 52, height: 30, background: "none", border: "none", cursor: "text",
+              fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--primary)", textAlign: "center",
+            }}
+          >
+            {value}
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={() => adjust(+STEP)}
+          style={{
+            width: 28, height: 30, display: "flex", alignItems: "center", justifyContent: "center",
+            background: "none", border: "none", borderLeft: "1px solid var(--border-subtle)",
+            cursor: "pointer", color: "var(--text-muted)", transition: "background 0.1s, color 0.1s",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-overlay)"; e.currentTarget.style.color = "var(--text-primary)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--text-muted)"; }}
+        >
+          <Plus size={12} />
+        </button>
+      </div>
+
+      {/* Preset chips */}
+      <div style={{ display: "flex", gap: 3 }}>
+        {PRESETS.map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => { onChange(p); setDraft(String(p)); }}
+            style={{
+              padding: "1px 6px", borderRadius: "var(--radius-pill)",
+              border: `1px solid ${value === p ? "var(--primary)" : "var(--border-subtle)"}`,
+              background: value === p ? "var(--primary-subtle)" : "none",
+              color: value === p ? "var(--primary)" : "var(--text-muted)",
+              fontSize: 10, fontWeight: 700, cursor: "pointer",
+              transition: "all 0.1s",
+            }}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── LabFormPage ──────────────────────────────────────────────────────────────
 
 const LabFormPage = () => {
   const { orgSlug, labSlug } = useParams();
@@ -18,18 +148,22 @@ const LabFormPage = () => {
   const navigate = useNavigate();
   const { showMessage } = useToast();
 
-  const [org, setOrg] = useState(null);
-  const [title, setTitle] = useState("");
+  const [org, setOrg]               = useState(null);
+  const [title, setTitle]           = useState("");
   const [description, setDescription] = useState("");
-  const [deadline, setDeadline] = useState("");
-  const [exercises, setExercises] = useState([]);
-  const [labId, setLabId] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [deadline, setDeadline]     = useState("");
+  const [exercises, setExercises]   = useState([]);
+  const [labId, setLabId]           = useState(null);
+  const [loading, setLoading]       = useState(true);
+  const [saving, setSaving]         = useState(false);
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery]   = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [searching, setSearching] = useState(false);
+  const [searching, setSearching]       = useState(false);
+
+  const backTo = isEdit
+    ? `/organizations/${orgSlug}/labs/${labSlug}`
+    : `/organizations/${orgSlug}`;
 
   useEffect(() => {
     (async () => {
@@ -57,7 +191,7 @@ const LabFormPage = () => {
             }
           }
         }
-      } catch (e) {
+      } catch {
         showMessage("Failed to load", "error");
       } finally {
         setLoading(false);
@@ -89,13 +223,20 @@ const LabFormPage = () => {
   const addExercise = (problem) => {
     setExercises((prev) => [
       ...prev,
-      { problemId: problem.id, problemTitle: problem.title, problemSlug: problem.slug, problemDifficulty: problem.problemDifficulty, points: problem.point || 100 },
+      {
+        problemId: problem.id,
+        problemTitle: problem.title,
+        problemSlug: problem.slug,
+        problemDifficulty: problem.problemDifficulty,
+        points: problem.point || 100,
+      },
     ]);
     setSearchResults((prev) => prev.filter((p) => p.id !== problem.id));
   };
 
   const removeExercise = (idx) => setExercises((prev) => prev.filter((_, i) => i !== idx));
-  const updatePoints = (idx, pts) => setExercises((prev) => prev.map((e, i) => (i === idx ? { ...e, points: parseInt(pts) || 0 } : e)));
+  const updatePoints = (idx, pts) =>
+    setExercises((prev) => prev.map((e, i) => (i === idx ? { ...e, points: typeof pts === "number" ? pts : parseInt(pts) || 0 } : e)));
 
   const handleSave = async () => {
     if (!title.trim()) { showMessage("Title is required", "error"); return; }
@@ -137,135 +278,274 @@ const LabFormPage = () => {
     );
   }
 
+  const totalPoints = exercises.reduce((s, e) => s + (e.points || 0), 0);
+
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
-      <div className="page-container" style={{ maxWidth: 900 }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0 64px" }}>
+      <div className="page-container" style={{ maxWidth: 860 }}>
         <div className="flex flex-col gap-6">
-          {/* Back */}
+
+          {/* ── Back ── */}
           <button
             className="btn btn-ghost btn-sm"
-            style={{ alignSelf: "flex-start" }}
-            onClick={() => navigate(`/organizations/${orgSlug}`)}
+            style={{ alignSelf: "flex-start", gap: 6 }}
+            onClick={() => navigate(backTo)}
           >
-            <ArrowLeft size={18} /> Back to {org?.name}
+            <ArrowLeft size={16} />
+            {isEdit ? `Back to ${labSlug}` : `Back to ${org?.name}`}
           </button>
 
-          {/* Info card */}
-          <div className="card" style={{ padding: 24 }}>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <BookOpen size={22} color="#7c3aed" />
-                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>
-                  {isEdit ? "Edit Lab" : "Create Lab"}
-                </h2>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <div className="form-group">
-                  <label className="form-label">Title *</label>
-                  <input className="input w-full" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Lab 1 — Arrays & Strings" />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Description</label>
-                  <input className="input w-full" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional description..." />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Deadline</label>
-                  <DateTimePicker value={deadline} onChange={setDeadline} placeholder="Pick deadline date & time" />
-                </div>
-              </div>
+          {/* ── Page header ── */}
+          <div style={{ borderLeft: "4px solid var(--primary)", paddingLeft: 16 }}>
+            <div style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: "var(--text-muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              {org?.name} / {isEdit ? "Edit Lab" : "New Lab"}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <BookOpen size={20} color="var(--primary)" />
+              <h2 style={{ margin: 0, fontSize: "var(--text-lg)", fontWeight: 800, color: "var(--text-primary)" }}>
+                {isEdit ? "Edit Lab" : "Create Lab"}
+              </h2>
             </div>
           </div>
 
-          {/* Exercises card */}
+          {/* ── Lab details card ── */}
           <div className="card" style={{ padding: 24 }}>
-            <div className="flex flex-col gap-4">
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>
-                Exercises ({exercises.length})
-              </h3>
+            <div style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 18 }}>
+              Lab Details
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-              {exercises.map((ex, idx) => {
-                const dc = DIFF_COLORS[ex.problemDifficulty] || { color: "#6b7280", bg: "#f9fafb" };
-                return (
-                  <div
-                    key={ex.problemId}
-                    className="flex items-center gap-3"
-                    style={{ background: "var(--bg-raised)", borderRadius: 10, padding: 12, border: "1px solid var(--border-subtle)" }}
-                  >
-                    <div style={{ width: 28, height: 28, borderRadius: 6, background: "#ede9fe", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "#7c3aed" }}>{String.fromCharCode(65 + idx)}</span>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{ex.problemTitle}</p>
-                      <span style={{ display: "inline-block", padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 700, background: dc.bg, color: dc.color }}>
-                        {ex.problemDifficulty || "—"}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs text-muted">pts:</span>
-                      <input
-                        type="number"
-                        className="input"
-                        value={ex.points}
-                        onChange={(e) => updatePoints(idx, e.target.value)}
-                        style={{ width: 60, textAlign: "center", padding: "3px 6px" }}
-                      />
-                    </div>
-                    <button style={{ background: "none", border: "none", cursor: "pointer", padding: 6, borderRadius: 6 }} onClick={() => removeExercise(idx)}>
-                      <Trash2 size={16} color="#ef4444" />
-                    </button>
-                  </div>
-                );
-              })}
-
-              {/* Search problems */}
+              {/* Title */}
               <div>
-                <label className="form-label" style={{ marginBottom: 8 }}>Search your problems to add</label>
-                <SuggestiveSearch
-                  value={searchQuery}
-                  onChange={(val) => setSearchQuery(val)}
-                  suggestions={["Search by title...", "Find problems to add"]}
-                  style={{ width: "100%" }}
+                <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Title <span style={{ color: "var(--red-wa)" }}>*</span>
+                </label>
+                <input
+                  className="input w-full"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Lab 1 — Arrays & Strings"
+                  style={{ fontSize: "var(--text-base)" }}
                 />
-
-                {searching && (
-                  <div style={{ padding: 12, textAlign: "center" }}>
-                    <div className="spinner" style={{ width: 20, height: 20, margin: "0 auto" }} />
-                  </div>
-                )}
-
-                {!searching && searchResults.length > 0 && (
-                  <div className="flex flex-col gap-1" style={{ marginTop: 8, maxHeight: 250, overflowY: "auto" }}>
-                    {searchResults.map((p) => {
-                      const dc = DIFF_COLORS[p.problemDifficulty] || { color: "#6b7280", bg: "#f9fafb" };
-                      return (
-                        <div
-                          key={p.id}
-                          className="flex items-center gap-2"
-                          style={{ background: "var(--bg-raised)", border: "1px solid var(--border-subtle)", borderRadius: 8, padding: "6px 10px", cursor: "pointer" }}
-                          onClick={() => addExercise(p)}
-                        >
-                          <Plus size={14} color="#7c3aed" />
-                          <span style={{ fontSize: 13, fontWeight: 500, flex: 1, color: "var(--text-primary)" }}>{p.title}</span>
-                          <span style={{ padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 700, background: dc.bg, color: dc.color }}>{p.problemDifficulty || "—"}</span>
-                          <span className="text-xs text-muted">{p.point}pts</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
+
+              {/* Description */}
+              <div>
+                <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Description
+                  <span style={{ marginLeft: 6, fontSize: "var(--text-xs)", fontWeight: 500, color: "var(--text-muted)", textTransform: "none", letterSpacing: 0 }}>optional</span>
+                </label>
+                <textarea
+                  className="input w-full"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Brief description of what students will practice…"
+                  rows={3}
+                  style={{ resize: "vertical", lineHeight: 1.6 }}
+                />
+              </div>
+
+              {/* Deadline */}
+              <div>
+                <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <Clock size={12} /> Deadline
+                    <span style={{ marginLeft: 2, fontSize: "var(--text-xs)", fontWeight: 500, color: "var(--text-muted)", textTransform: "none", letterSpacing: 0 }}>optional</span>
+                  </span>
+                </label>
+                <DateTimePicker value={deadline} onChange={setDeadline} placeholder="Pick deadline date & time" />
+              </div>
+
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-3">
-            <button className="btn btn-ghost" onClick={() => navigate(`/organizations/${orgSlug}`)}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-              {saving ? <div className="spinner" style={{ width: 16, height: 16 }} /> : <Save size={16} />}
-              {saving ? "Saving..." : isEdit ? "Save Changes" : "Create Lab"}
+          {/* ── Exercises card ── */}
+          <div className="card" style={{ padding: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+              <div style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em" }}>
+                Exercises
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {exercises.length > 0 && (
+                  <span style={{
+                    padding: "2px 10px", borderRadius: "var(--radius-pill)",
+                    background: "var(--primary-subtle)", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)",
+                  }}>
+                    {exercises.length} problem{exercises.length !== 1 ? "s" : ""}
+                  </span>
+                )}
+                {totalPoints > 0 && (
+                  <span style={{
+                    padding: "2px 10px", borderRadius: "var(--radius-pill)",
+                    background: "var(--amber-subtle)", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--amber-tle)",
+                  }}>
+                    {totalPoints} pts total
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Exercise list */}
+            {exercises.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                {exercises.map((ex, idx) => {
+                  return (
+                    <div
+                      key={ex.problemId}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 12,
+                        background: "var(--bg-raised)", borderRadius: "var(--radius-md)",
+                        padding: "10px 14px", border: "1px solid var(--border-subtle)",
+                        transition: "border-color 0.12s",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border-default)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-subtle)"; }}
+                    >
+                      {/* Index badge */}
+                      <div style={{
+                        width: 26, height: 26, borderRadius: "var(--radius-sm)", flexShrink: 0,
+                        background: "var(--primary-subtle)", display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        <span style={{ fontSize: "var(--text-xs)", fontWeight: 800, color: "var(--primary)" }}>
+                          {String.fromCharCode(65 + idx)}
+                        </span>
+                      </div>
+
+                      {/* Title + diff */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {ex.problemTitle}
+                        </div>
+                        <div style={{ marginTop: 2 }}>
+                          <DiffBadge diff={ex.problemDifficulty} />
+                        </div>
+                      </div>
+
+                      {/* Points stepper */}
+                      <PointsStepper
+                        value={ex.points}
+                        onChange={(n) => updatePoints(idx, n)}
+                      />
+
+                      {/* Remove */}
+                      <button
+                        onClick={() => removeExercise(idx)}
+                        style={{
+                          background: "none", border: "none", cursor: "pointer",
+                          padding: 6, borderRadius: "var(--radius-sm)", display: "flex",
+                          color: "var(--text-muted)", transition: "color 0.12s, background 0.12s",
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = "var(--red-wa)"; e.currentTarget.style.background = "var(--red-subtle)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; e.currentTarget.style.background = "none"; }}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{
+                padding: "28px 16px", textAlign: "center", marginBottom: 20,
+                border: "1.5px dashed var(--border-default)", borderRadius: "var(--radius-md)",
+                background: "var(--bg-surface)",
+              }}>
+                <Sparkles size={20} style={{ margin: "0 auto 8px", display: "block", color: "var(--text-muted)" }} />
+                <div style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 4 }}>
+                  No exercises yet
+                </div>
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>
+                  Search and add problems below.
+                </div>
+              </div>
+            )}
+
+            {/* Divider */}
+            <div style={{ borderTop: "1px solid var(--border-subtle)", marginBottom: 16 }} />
+
+            {/* Search to add */}
+            <div>
+              <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Add Problems
+              </label>
+              <SuggestiveSearch
+                value={searchQuery}
+                onChange={(val) => setSearchQuery(val)}
+                suggestions={["Search by title...", "Find problems to add"]}
+                style={{ width: "100%" }}
+              />
+
+              {searching && (
+                <div style={{ padding: "14px 0", textAlign: "center" }}>
+                  <div className="spinner" style={{ width: 18, height: 18, margin: "0 auto" }} />
+                </div>
+              )}
+
+              {!searching && searchResults.length > 0 && (
+                <div style={{
+                  marginTop: 8, maxHeight: 260, overflowY: "auto",
+                  border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)",
+                  background: "var(--bg-raised)",
+                }}>
+                  {searchResults.map((p, i) => (
+                    <div
+                      key={p.id}
+                      onClick={() => addExercise(p)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "9px 14px", cursor: "pointer",
+                        borderTop: i > 0 ? "1px solid var(--border-subtle)" : "none",
+                        transition: "background 0.1s",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-overlay)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}
+                    >
+                      <div style={{
+                        width: 24, height: 24, borderRadius: "var(--radius-sm)", flexShrink: 0,
+                        background: "var(--primary-subtle)", display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        <Plus size={13} color="var(--primary)" />
+                      </div>
+                      <span style={{ fontSize: "var(--text-sm)", fontWeight: 500, flex: 1, color: "var(--text-primary)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {p.title}
+                      </span>
+                      <DiffBadge diff={p.problemDifficulty} />
+                      <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", flexShrink: 0 }}>{p.point} pts</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!searching && searchQuery.trim() && searchResults.length === 0 && (
+                <div style={{ marginTop: 8, padding: "12px 14px", borderRadius: "var(--radius-md)", background: "var(--bg-surface)", border: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", gap: 8 }}>
+                  <AlertCircle size={14} color="var(--text-muted)" />
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>No matching problems found.</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── Actions ── */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}>
+            <button
+              className="btn btn-ghost"
+              onClick={() => navigate(backTo)}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={handleSave}
+              disabled={saving}
+              style={{ gap: 8, minWidth: 130 }}
+            >
+              {saving
+                ? <><div className="spinner" style={{ width: 15, height: 15 }} /> Saving…</>
+                : <><Save size={15} /> {isEdit ? "Save Changes" : "Create Lab"}</>
+              }
             </button>
           </div>
+
         </div>
       </div>
     </div>

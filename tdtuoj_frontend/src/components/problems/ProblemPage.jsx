@@ -638,13 +638,13 @@ const ProblemPage = () => {
             ) : (
               <table className="table" style={{ width: "100%" }}>
                 <thead>
-                  <tr>
-                    <th style={{ textAlign: "center", width: "7%", fontSize: 13, fontWeight: 700 }}>#</th>
-                    <th style={{ width: "30%", fontSize: 13, fontWeight: 700 }}>Problem</th>
-                    <th style={{ width: "12%", fontSize: 13, fontWeight: 700 }}>Difficulty</th>
-                    <th style={{ width: "30%", fontSize: 13, fontWeight: 700 }}>Topics</th>
-                    <th style={{ textAlign: "center", width: "12%", fontSize: 13, fontWeight: 700 }}>Points</th>
-                    <th style={{ textAlign: "center", width: "9%", fontSize: 13, fontWeight: 700 }}>Status</th>
+                  <tr style={{ background: "var(--primary-subtle)" }}>
+                    <th style={{ textAlign: "center", width: "7%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
+                    <th style={{ width: "30%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Problem</th>
+                    <th style={{ width: "12%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Difficulty</th>
+                    <th style={{ width: "30%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Topics</th>
+                    <th style={{ textAlign: "center", width: "12%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Points</th>
+                    <th style={{ textAlign: "center", width: "9%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -768,13 +768,13 @@ const ProblemPage = () => {
 
             <table className="table" style={{ width: "100%" }}>
               <thead>
-                <tr>
-                  <th style={{ textAlign: "center", width: "7%", fontSize: 13, fontWeight: 700 }}>#</th>
-                  <th style={{ width: "30%", fontSize: 13, fontWeight: 700 }}>Problem</th>
-                  <th style={{ width: "12%", fontSize: 13, fontWeight: 700 }}>Difficulty</th>
-                  <th style={{ width: "30%", fontSize: 13, fontWeight: 700 }}>Topics</th>
-                  <th style={{ textAlign: "center", width: "12%", fontSize: 13, fontWeight: 700 }}>Points</th>
-                  <th style={{ textAlign: "center", width: "9%", fontSize: 13, fontWeight: 700 }}>Solve</th>
+                <tr style={{ background: "var(--primary-subtle)" }}>
+                  <th style={{ textAlign: "center", width: "7%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
+                  <th style={{ width: "30%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Problem</th>
+                  <th style={{ width: "12%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Difficulty</th>
+                  <th style={{ width: "30%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Topics</th>
+                  <th style={{ textAlign: "center", width: "12%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Points</th>
+                  <th style={{ textAlign: "center", width: "9%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Solve</th>
                 </tr>
               </thead>
 

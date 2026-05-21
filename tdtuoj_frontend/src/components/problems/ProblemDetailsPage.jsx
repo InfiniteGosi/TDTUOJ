@@ -1856,7 +1856,7 @@ const ProblemDetailsPage = () => {
                 {/* ── Comments ── */}
                 {activeInSlot.left === "comments" && renderPanelContent("comments")}
               </div>
-              </>}
+              </>
             </Panel>
 
             <ResizeHandle direction="horizontal" />

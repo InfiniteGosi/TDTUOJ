@@ -81,8 +81,8 @@ const LabListSection = ({ org, canManage, onNavigateToLab, onCreateLab }) => {
       )}
 
       {!loading && labs.length === 0 && (
-        <div className="empty-state">
-          <BookOpen size={40} className="empty-state-icon" />
+        <div style={{ padding: "48px 0", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          <BookOpen size={40} style={{ color: "var(--border-default)" }} />
           <div style={{ fontWeight: 500, color: "var(--text-secondary)" }}>No labs yet</div>
           {canManage && (
             <div style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
@@ -133,15 +133,15 @@ const LabListSection = ({ org, canManage, onNavigateToLab, onCreateLab }) => {
       })}
 
       {totalPages > 1 && (
-        <div className="pagination">
-          <button className={`pagination-btn ${page <= 0 ? "" : ""}`}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <button className="btn btn-ghost btn-sm"
             onClick={() => page > 0 && setPage((p) => p - 1)} disabled={page <= 0}>
             <ChevronLeft size={14} />
           </button>
           <span style={{ fontSize: "var(--text-sm)", color: "var(--text-secondary)", fontFamily: "var(--font-code)" }}>
             {page + 1} / {totalPages}
           </span>
-          <button className="pagination-btn"
+          <button className="btn btn-ghost btn-sm"
             onClick={() => page < totalPages - 1 && setPage((p) => p + 1)} disabled={page >= totalPages - 1}>
             <ChevronRight size={14} />
           </button>

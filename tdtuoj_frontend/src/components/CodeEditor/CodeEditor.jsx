@@ -1,10 +1,9 @@
 import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { createPortal } from "react-dom";
 import Editor from "@monaco-editor/react";
-import { initVimMode } from "monaco-vim";
 import LanguageSelector from "./LanguageSelector";
 import { CODE_SNIPPETS } from "./constants";
-import { Settings, X, Type, AlignJustify, Keyboard, Zap } from "lucide-react";
+import { Settings, X, Type, AlignJustify, Zap } from "lucide-react";
 
 // ─── Monaco theme definitions ─────────────────────────────────────────────────
 const ARENA_DARK = {
@@ -122,8 +121,6 @@ const sChip = (active) => ({
 
 const CodeEditor = forwardRef(({ rightHeaderContent }, ref) => {
   const editorRef      = useRef(null);
-  const vimModeRef     = useRef(null);
-  const statusBarRef   = useRef(null);
   const panelRef       = useRef(null);
   const settingsBtnRef = useRef(null);
 
@@ -139,13 +136,12 @@ const CodeEditor = forwardRef(({ rightHeaderContent }, ref) => {
   const saved = loadSettings();
   const [fontSize,     setFontSize]     = useState(saved.fontSize     ?? 14);
   const [tabSize,      setTabSize]      = useState(saved.tabSize      ?? 4);
-  const [keyBinding,   setKeyBinding]   = useState(saved.keyBinding   ?? "normal");
   const [intellisense, setIntellisense] = useState(saved.intellisense ?? false);
 
   // Persist on change
   useEffect(() => {
-    saveSettings({ fontSize, tabSize, keyBinding, intellisense });
-  }, [fontSize, tabSize, keyBinding, intellisense]);
+    saveSettings({ fontSize, tabSize, intellisense });
+  }, [fontSize, tabSize, intellisense]);
 
   // Track theme changes
   useEffect(() => {
@@ -168,30 +164,6 @@ const CodeEditor = forwardRef(({ rightHeaderContent }, ref) => {
     if (!editorRef.current) return;
     editorRef.current.updateOptions(buildOptions());
   }, [fontSize, tabSize, intellisense]); // eslint-disable-line
-
-  // Handle vim mode toggle
-  useEffect(() => {
-    if (!editorRef.current) return;
-    // Dispose existing vim instance
-    if (vimModeRef.current) { vimModeRef.current.dispose(); vimModeRef.current = null; }
-
-    if (keyBinding === "vim") {
-      vimModeRef.current = initVimMode(editorRef.current, statusBarRef.current);
-
-      // vim steals focus from Monaco's hidden textarea on insert; re-focus on every keydown
-      // so characters actually land in the editor.
-      const refocusOnKey = () => { editorRef.current?.focus(); };
-      editorRef.current.getDomNode()?.addEventListener("keydown", refocusOnKey, true);
-      // store cleanup alongside vim ref
-      vimModeRef._refocusCleanup = () =>
-        editorRef.current?.getDomNode()?.removeEventListener("keydown", refocusOnKey, true);
-
-      editorRef.current.focus();
-    } else {
-      if (vimModeRef._refocusCleanup) { vimModeRef._refocusCleanup(); vimModeRef._refocusCleanup = null; }
-      editorRef.current.focus();
-    }
-  }, [keyBinding]);
 
   // Click-outside to close settings
   useEffect(() => {
@@ -230,14 +202,6 @@ const CodeEditor = forwardRef(({ rightHeaderContent }, ref) => {
     monaco.editor.setTheme(isDark ? "arena-dark" : "arena-light");
     editor.updateOptions(buildOptions());
     editor.focus();
-    // Trigger keyBinding effect now that editorRef is ready
-    if (keyBinding === "vim") {
-      vimModeRef.current = initVimMode(editor, statusBarRef.current);
-      const refocusOnKey = () => { editor.focus(); };
-      editor.getDomNode()?.addEventListener("keydown", refocusOnKey, true);
-      vimModeRef._refocusCleanup = () =>
-        editor.getDomNode()?.removeEventListener("keydown", refocusOnKey, true);
-    }
   };
 
   const onSelect = (lang) => { setLanguage(lang); setValue(CODE_SNIPPETS[lang]); };
@@ -321,23 +285,6 @@ const CodeEditor = forwardRef(({ rightHeaderContent }, ref) => {
         </div>
       </div>
 
-      {/* Key binding */}
-      <div style={{ marginBottom: 20 }}>
-        <span style={sLabel}><Keyboard size={11} />KEY BINDING</span>
-        <div style={{ display: "flex", gap: 6 }}>
-          {[{ key: "normal", label: "Normal" }, { key: "vim", label: "Vim" }].map(({ key, label }) => (
-            <button key={key} onClick={() => setKeyBinding(key)} style={sChip(keyBinding === key)}>
-              {label}
-            </button>
-          ))}
-        </div>
-        {keyBinding === "vim" && (
-          <p style={{ marginTop: 8, marginBottom: 0, fontSize: "var(--text-xs)", color: "var(--text-muted)", fontFamily: "var(--font-body)" }}>
-            Normal mode active — press <code style={{ fontFamily: "var(--font-code)", color: "var(--primary)" }}>i</code> to insert
-          </p>
-        )}
-      </div>
-
       {/* Intellisense */}
       <div style={{ marginBottom: 0 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -391,23 +338,6 @@ const CodeEditor = forwardRef(({ rightHeaderContent }, ref) => {
         />
       </div>
 
-      {/* ── Vim status bar — always rendered, visibility toggled via opacity/height ── */}
-      <div
-        ref={statusBarRef}
-        style={{
-          height: keyBinding === "vim" ? "22px" : "0px",
-          overflow: "hidden",
-          background: "var(--bg-void)",
-          borderTop: keyBinding === "vim" ? "1px solid var(--border-subtle)" : "none",
-          padding: keyBinding === "vim" ? "2px 12px" : "0",
-          fontFamily: "var(--font-code)",
-          fontSize: "var(--text-xs)",
-          color: "var(--text-secondary)",
-          flexShrink: 0,
-          transition: "height 0.15s",
-          boxSizing: "border-box",
-        }}
-      />
     </div>
   );
 });

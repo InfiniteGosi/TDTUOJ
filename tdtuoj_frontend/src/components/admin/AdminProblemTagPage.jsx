@@ -139,26 +139,26 @@ const AdminProblemTagPage = () => {
 
             <table className="table">
               <thead>
-                <tr>
-                  <th style={{ textAlign: "center", width: "10%" }}>ID</th>
-                  <th style={{ width: "50%" }}>Tag Name</th>
-                  <th style={{ textAlign: "center", width: "20%" }}>Status</th>
-                  <th style={{ textAlign: "center", width: "20%" }}>Actions</th>
+                <tr style={{ background: "var(--primary-subtle)" }}>
+                  <th style={{ textAlign: "center", width: "10%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
+                  <th style={{ width: "50%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Tag Name</th>
+                  <th style={{ textAlign: "center", width: "20%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</th>
+                  <th style={{ textAlign: "center", width: "20%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {tags.length > 0 ? (
-                  tags.map((tag, index) => (
-                    <tr key={tag.id} style={{ background: index % 2 === 0 ? "var(--bg-base)" : "var(--bg-raised)" }}>
+                  tags.map((tag) => (
+                    <tr key={tag.id}>
                       <td style={{ textAlign: "center" }}>
-                        <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 13, fontWeight: 700, background: "var(--primary-subtle)", color: "var(--primary)" }}>
-                          #{tag.id}
-                        </span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{tag.id}</span>
                       </td>
                       <td>
-                        <div className="flex items-center gap-2">
-                          <TagIcon size={16} color="var(--primary)" />
-                          <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)" }}>{tag.name}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ width: 28, height: 28, borderRadius: "var(--radius-sm)", background: "var(--primary-subtle)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <TagIcon size={13} color="var(--primary)" />
+                          </div>
+                          <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-primary)" }}>{tag.name}</span>
                         </div>
                       </td>
                       <td>
@@ -185,50 +185,25 @@ const AdminProblemTagPage = () => {
                             }}
                           >
                             {togglingIds.has(tag.id) ? (
-                              <span style={{
-                                position: "absolute", inset: 0,
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                              }}>
-                                <span style={{
-                                  width: 12, height: 12,
-                                  border: "2px solid rgba(255,255,255,0.3)",
-                                  borderTopColor: "#fff",
-                                  borderRadius: "50%",
-                                  animation: "spin 0.6s linear infinite",
-                                  display: "inline-block",
-                                }} />
+                              <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <span style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
                               </span>
                             ) : (
-                              <span style={{
-                                position: "absolute",
-                                top: 3,
-                                left: tag.isActive ? 23 : 3,
-                                width: 18, height: 18,
-                                borderRadius: "50%",
-                                background: "#fff",
-                                boxShadow: "0 1px 4px rgba(0,0,0,0.35)",
-                                transition: `left var(--transition-spring)`,
-                              }} />
+                              <span style={{ position: "absolute", top: 3, left: tag.isActive ? 23 : 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,0.35)", transition: "left var(--transition-spring)" }} />
                             )}
                           </button>
-                          <span style={{
-                            fontSize: 10, fontWeight: 700,
-                            letterSpacing: "0.08em",
-                            textTransform: "uppercase",
-                            color: tag.isActive ? "var(--green-ac)" : "var(--text-muted)",
-                            transition: "color var(--transition-base)",
-                          }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: tag.isActive ? "var(--green-ac)" : "var(--text-muted)", transition: "color var(--transition-base)" }}>
                             {tag.isActive ? "ON" : "OFF"}
                           </span>
                         </div>
                       </td>
                       <td>
-                        <div className="flex items-center justify-center gap-2">
-                          <button className="btn btn-ghost btn-sm" title="Edit Tag" style={{ padding: "5px 7px" }} onClick={() => handleEditTag(tag)}>
-                            <Edit size={16} color="var(--primary)" />
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                          <button className="btn btn-ghost btn-sm" title="Edit Tag" style={{ padding: "5px 8px" }} onClick={() => handleEditTag(tag)}>
+                            <Edit size={14} color="var(--primary)" />
                           </button>
-                          <button className="btn btn-ghost btn-sm" title="Delete Tag" style={{ padding: "5px 7px" }} onClick={() => handleDeleteTag(tag.id)}>
-                            <Trash2 size={16} color="var(--red-wa)" />
+                          <button className="btn btn-ghost btn-sm" title="Delete Tag" style={{ padding: "5px 8px" }} onClick={() => handleDeleteTag(tag.id)}>
+                            <Trash2 size={14} color="var(--red-wa)" />
                           </button>
                         </div>
                       </td>
@@ -236,15 +211,15 @@ const AdminProblemTagPage = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} style={{ textAlign: "center", padding: "40px 0" }}>
-                      <div className="flex flex-col items-center gap-3">
-                        <TagIcon size={48} color="var(--text-muted)" />
-                        <p style={{ fontSize: 16, color: "var(--text-muted)", margin: 0, fontWeight: 500 }}>
-                          {searchQuery ? "No tags match your search" : "No tags found"}
-                        </p>
-                        <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
-                          {searchQuery ? "Try adjusting your search terms" : "Click 'Add Tag' to create your first tag!"}
-                        </p>
+                    <td colSpan={4} style={{ padding: "56px 24px", textAlign: "center" }}>
+                      <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--bg-overlay)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+                        <TagIcon size={22} color="var(--text-muted)" />
+                      </div>
+                      <div style={{ fontSize: "var(--text-base)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 4 }}>
+                        {searchQuery ? "No tags match your search" : "No tags found"}
+                      </div>
+                      <div style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
+                        {searchQuery ? "Try different search terms" : "Click 'Add Tag' to create your first tag"}
                       </div>
                     </td>
                   </tr>
