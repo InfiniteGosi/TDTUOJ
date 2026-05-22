@@ -23,7 +23,7 @@ const DiffBadge = ({ difficulty }) => {
   const s = DIFF_STYLE[difficulty];
   if (!s) return null;
   return (
-    <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 9999, fontSize: 11, fontWeight: 600, background: s.bg, color: s.hex }}>
+    <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: 9999, fontSize: 11, fontWeight: 700, background: s.bg, color: s.hex, border: `1px solid ${s.hex}33` }}>
       {s.label}
     </span>
   );

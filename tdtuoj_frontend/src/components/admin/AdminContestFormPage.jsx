@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   Trophy, ArrowLeft, Save, Plus, Trash2, Search, ChevronDown, AlertTriangle, Clock, CalendarClock, User,
 } from "lucide-react";
+import Toggle from "../common/Toggle";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
 import DateTimePicker from "../common/DateTimePicker";
@@ -18,6 +19,36 @@ const Field = ({ label, required, children, hint }) => (
     </div>
     {children}
     {hint && <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{hint}</span>}
+  </div>
+);
+
+// ─── Section card ──────────────────────────────────────────────────────────────
+
+const SectionCard = ({ number, title, children, delay = 0 }) => (
+  <div style={{
+    background: "var(--bg-base)",
+    border: "1px solid var(--border-default)",
+    borderRadius: 12,
+    padding: "28px 28px 28px",
+    position: "relative",
+    marginTop: 32,
+    animation: `fadeUp 350ms cubic-bezier(0.16,1,0.3,1) ${delay}ms both`,
+    transition: "border-color 200ms ease",
+  }}>
+    <div style={{
+      position: "absolute", top: -14, left: 20,
+      width: 28, height: 28, borderRadius: "50%",
+      background: "var(--primary)", color: "var(--bg-void)",
+      fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 700,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      boxShadow: "0 0 0 3px var(--bg-void), 0 0 16px rgba(245,160,0,0.4)",
+    }}>{number}</div>
+    <div style={{
+      fontSize: 10, fontWeight: 700, color: "var(--primary)",
+      letterSpacing: "0.14em", marginBottom: 20,
+      fontFamily: "var(--font-display)",
+    }}>{title}</div>
+    {children}
   </div>
 );
 
@@ -48,7 +79,11 @@ const ProblemPicker = ({ selectedProblems, onChange }) => {
 
   return (
     <div className="flex flex-col gap-3">
-      {selectedProblems.length > 0 && (
+      {selectedProblems.length === 0 ? (
+        <div style={{ border: "1.5px dashed var(--border-default)", borderRadius: 10, padding: "24px 16px", textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>
+          No problems added yet. Use the button below to add problems to this contest.
+        </div>
+      ) : (
         <div style={{ border: "1px solid var(--border-default)", borderRadius: 10, overflow: "hidden" }}>
           {selectedProblems.map((p, idx) => (
             <div
@@ -57,10 +92,10 @@ const ProblemPicker = ({ selectedProblems, onChange }) => {
               style={{ padding: "10px 16px", borderBottom: idx < selectedProblems.length - 1 ? "1px solid var(--border-subtle)" : 0, background: idx % 2 === 0 ? "var(--bg-base)" : "var(--bg-raised)" }}
             >
               <div className="flex items-center gap-3">
-                <div style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--primary-subtle)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--primary)", color: "var(--bg-void)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
                   {String.fromCharCode(64 + p.problemOrder)}
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{p.problemTitle}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{p.problemTitle}</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1">
@@ -73,7 +108,11 @@ const ProblemPicker = ({ selectedProblems, onChange }) => {
                     min={0}
                   />
                 </div>
-                <button type="button" style={{ background: "none", border: "none", cursor: "pointer", padding: 4, borderRadius: 6, color: "var(--red-wa)" }} onClick={() => remove(p.problemId)}>
+                <button
+                  type="button"
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 4, borderRadius: 6, color: "var(--red-wa)" }}
+                  onClick={() => remove(p.problemId)}
+                >
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -88,16 +127,17 @@ const ProblemPicker = ({ selectedProblems, onChange }) => {
           onClick={() => setOpen((v) => !v)}
           style={{
             display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 10,
-            border: `1.5px dashed ${open ? "var(--primary-bright)" : "var(--border-default)"}`,
+            border: `1.5px dashed ${open ? "var(--primary)" : "var(--border-default)"}`,
             background: "var(--bg-base)", color: open ? "var(--primary)" : "var(--text-secondary)", fontSize: 13, fontWeight: 500, cursor: "pointer",
+            transition: "color 150ms ease, border-color 150ms ease",
           }}
         >
           <Plus size={14} /> Add Problem
-          <ChevronDown size={14} style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
+          <ChevronDown size={14} style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s ease" }} />
         </button>
 
         {open && (
-          <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 50, background: "var(--bg-base)", border: "1px solid var(--border-default)", borderRadius: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.1)", width: 320, maxHeight: 280, overflowY: "auto" }}>
+          <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 50, background: "var(--bg-base)", border: "1px solid var(--border-default)", borderRadius: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.25)", width: 320, maxHeight: 280, overflowY: "auto" }}>
             <div style={{ borderBottom: "1px solid var(--border-default)", position: "sticky", top: 0, background: "var(--bg-base)" }}>
               <SuggestiveSearch
                 value={search}
@@ -110,8 +150,11 @@ const ProblemPicker = ({ selectedProblems, onChange }) => {
               <div style={{ padding: "10px 16px" }}><span style={{ fontSize: 11, color: "var(--text-muted)" }}>No problems available</span></div>
             ) : (
               available.slice(0, 30).map((problem) => (
-                <div key={problem.id} style={{ padding: "8px 16px", cursor: "pointer" }} onClick={() => add(problem)}>
-                  <p style={{ margin: 0, fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>{problem.title}</p>
+                <div key={problem.id} style={{ padding: "8px 16px", cursor: "pointer", transition: "background 120ms" }} onClick={() => add(problem)}
+                  onMouseEnter={e => e.currentTarget.style.background = "var(--bg-raised)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                >
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--text-primary)", fontWeight: 700 }}>{problem.title}</p>
                   <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted)" }}>{problem.point ?? 0} pts · {problem.problemDifficulty ?? "—"}</p>
                 </div>
               ))
@@ -178,7 +221,7 @@ const ScheduleTimeline = ({ form }) => {
             <div key={ev.key} className="flex items-center gap-3" style={{ position: "relative" }}>
               <div className="flex flex-col items-center" style={{ width: 16, flexShrink: 0 }}>
                 {i > 0 && <div style={{ width: 2, height: 8, background: "var(--border-default)" }} />}
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: ev.color, border: "2px solid var(--bg-void)", flexShrink: 0 }} />
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: ev.color, border: "2px solid var(--bg-void)", flexShrink: 0, boxShadow: `0 0 8px ${ev.color}` }} />
                 {i < events.length - 1 && <div style={{ width: 2, flex: 1, minHeight: 8, background: "var(--border-default)" }} />}
               </div>
               <div style={{ flex: 1, background: ev.bg, borderRadius: 6, padding: "6px 12px", marginBottom: 4 }}>
@@ -222,20 +265,6 @@ const ScheduleTimeline = ({ form }) => {
     </div>
   );
 };
-
-// Toggle button helper
-const Toggle = ({ value, onChange, label }) => (
-  <div className="flex items-center gap-3">
-    <button
-      type="button"
-      onClick={() => onChange(!value)}
-      style={{ width: 40, height: 24, borderRadius: 12, background: value ? "var(--primary)" : "var(--border-default)", position: "relative", border: "none", cursor: "pointer", transition: "background 0.2s" }}
-    >
-      <span style={{ position: "absolute", top: 2, left: value ? 18 : 2, width: 20, height: 20, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)", transition: "left 0.2s" }} />
-    </button>
-    <span style={{ fontSize: 13, color: "var(--text-primary)" }}>{label}</span>
-  </div>
-);
 
 const AdminContestFormPage = () => {
   const { id } = useParams();
@@ -293,7 +322,7 @@ const AdminContestFormPage = () => {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ minHeight: "100vh", background: "var(--bg-void)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div className="flex flex-col items-center gap-3">
           <div className="spinner" />
           <span className="text-muted">Loading contest...</span>
@@ -302,127 +331,176 @@ const AdminContestFormPage = () => {
     );
   }
 
-  const sectionLabel = { fontSize: 11, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.1em", marginBottom: 16, display: "block" };
-
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0" }}>
-      <div className="page-container" style={{ maxWidth: 800 }}>
-        <div className="flex flex-col gap-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button className="btn btn-ghost btn-sm" onClick={() => navigate("/admin/contests")} style={{ padding: 8 }}>
-                <ArrowLeft size={20} />
-              </button>
-              <div className="flex items-center gap-2">
-                <Trophy size={24} color="var(--primary)" />
-                <h2 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>
-                  {isEdit ? "Edit Contest" : "Create Contest"}
-                </h2>
-              </div>
-            </div>
-            <span style={{ display: "inline-block", padding: "4px 12px", borderRadius: 9999, fontSize: 13, fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
-              ICPC Style
+    <>
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+
+      <div style={{
+        minHeight: "100vh",
+        background: "var(--bg-void)",
+        backgroundImage: "radial-gradient(circle, rgba(245,160,0,0.04) 1px, transparent 1px)",
+        backgroundSize: "24px 24px",
+      }}>
+        {/* Sticky top bar */}
+        <div style={{
+          position: "sticky", top: 0, zIndex: 20,
+          height: 56,
+          background: "var(--bg-raised)",
+          borderBottom: "1px solid var(--border-subtle)",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.3)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "0 24px",
+        }}>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => navigate("/admin/contests")}
+              style={{ padding: "6px 8px" }}
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <Trophy size={20} color="var(--primary)" />
+            <span style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
+              {isEdit ? "Edit Contest" : "Create Contest"}
             </span>
           </div>
+          <div className="flex items-center gap-3">
+            <span style={{
+              padding: "3px 12px", borderRadius: 9999,
+              background: "var(--primary-subtle)", color: "var(--primary)",
+              fontFamily: "var(--font-display)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em",
+            }}>
+              ICPC STYLE
+            </span>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={saving}
+              onClick={handleSubmit}
+              style={{ display: "flex", alignItems: "center", gap: 6 }}
+            >
+              {saving ? (
+                <>
+                  <div style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTop: "2px solid #fff", animation: "spin 0.8s linear infinite" }} />
+                  Saving...
+                </>
+              ) : (
+                <><Save size={14} /> Save</>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div style={{ maxWidth: 860, margin: "0 auto", padding: "32px 24px 64px" }}>
 
           {/* Creator info (edit mode) */}
           {isEdit && creatorInfo.id && (
-            <div className="flex items-center gap-2" style={{ background: "var(--primary-subtle)", border: "1px solid var(--border-accent)", borderRadius: 10, padding: "8px 16px", alignSelf: "flex-start" }}>
-              <User size={16} color="var(--primary)" />
-              <span style={{ fontSize: 13, color: "var(--text-primary)" }}>Creator:</span>
-              <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 13, background: "var(--primary-subtle)", color: "var(--primary)", fontWeight: 500 }}>{creatorInfo.username}</span>
+            <div className="flex items-center gap-2" style={{
+              background: "var(--bg-raised)",
+              border: "1px solid var(--border-default)",
+              borderLeft: "3px solid var(--primary)",
+              borderRadius: 10, padding: "8px 16px",
+              display: "inline-flex", alignItems: "center", gap: 8,
+              marginBottom: 4,
+            }}>
+              <User size={15} color="var(--primary)" />
+              <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>Creator:</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)" }}>{creatorInfo.username}</span>
               <span style={{ fontSize: 11, color: "var(--text-muted)" }}>(ID: {creatorInfo.id})</span>
             </div>
           )}
 
           {/* Form */}
           <form onSubmit={handleSubmit}>
-            <div className="card" style={{ padding: 32 }}>
-              <div className="flex flex-col gap-6">
-                {/* Basic Info */}
-                <div>
-                  <span style={sectionLabel}>BASIC INFO</span>
-                  <div className="flex flex-col gap-4">
-                    <Field label="Contest Name" required>
-                      <input className="input w-full" placeholder="e.g. TDTU Spring Cup 2025" value={form.name} onChange={(e) => set("name", e.target.value)} />
+
+            {/* Card 1 — Basics */}
+            <SectionCard number={1} title="BASICS" delay={0}>
+              <div className="flex flex-col gap-4">
+                <Field label="Contest Name" required>
+                  <input className="input w-full" placeholder="e.g. TDTU Spring Cup 2025" value={form.name} onChange={(e) => set("name", e.target.value)} />
+                </Field>
+                <Field label="Description">
+                  <textarea
+                    className="input w-full"
+                    placeholder="Describe the contest, rules, prizes..."
+                    value={form.description}
+                    onChange={(e) => set("description", e.target.value)}
+                    rows={4}
+                    style={{ resize: "vertical" }}
+                  />
+                </Field>
+              </div>
+            </SectionCard>
+
+            {/* Card 2 — Schedule */}
+            <SectionCard number={2} title="SCHEDULE" delay={60}>
+              <div className="flex gap-6" style={{ alignItems: "flex-start" }}>
+                <div className="flex flex-col gap-4" style={{ flex: 1 }}>
+                  <Field label="Registration Opens" hint="Leave blank to allow registration any time. Closes automatically when contest starts.">
+                    <DateTimePicker value={form.registrationStart} onChange={(v) => set("registrationStart", v)} placeholder="Pick opening date & time" />
+                  </Field>
+                  <div className="flex gap-4">
+                    <Field label="Start Time" required>
+                      <DateTimePicker value={form.startTime} onChange={(v) => set("startTime", v)} placeholder="Pick start date & time" />
                     </Field>
-                    <Field label="Description">
-                      <textarea
-                        className="input w-full"
-                        placeholder="Describe the contest, rules, prizes..."
-                        value={form.description}
-                        onChange={(e) => set("description", e.target.value)}
-                        rows={4}
-                        style={{ resize: "vertical" }}
-                      />
+                    <Field label="End Time" required>
+                      <DateTimePicker value={form.endTime} onChange={(v) => set("endTime", v)} placeholder="Pick end date & time" />
                     </Field>
                   </div>
                 </div>
-
-                <div style={{ borderTop: "1px solid var(--border-subtle)" }} />
-
-                {/* Schedule */}
-                <div>
-                  <span style={sectionLabel}>SCHEDULE</span>
-                  <div className="flex gap-6" style={{ alignItems: "flex-start" }}>
-                    <div className="flex flex-col gap-4" style={{ flex: 1 }}>
-                      <Field label="Registration Opens" hint="Leave blank to allow registration any time. Closes automatically when contest starts.">
-                        <DateTimePicker value={form.registrationStart} onChange={(v) => set("registrationStart", v)} placeholder="Pick opening date & time" />
-                      </Field>
-                      <div className="flex gap-4">
-                        <Field label="Start Time" required>
-                          <DateTimePicker value={form.startTime} onChange={(v) => set("startTime", v)} placeholder="Pick start date & time" />
-                        </Field>
-                        <Field label="End Time" required>
-                          <DateTimePicker value={form.endTime} onChange={(v) => set("endTime", v)} placeholder="Pick end date & time" />
-                        </Field>
-                      </div>
-                    </div>
-                    <div style={{ width: 280, minWidth: 240, flexShrink: 0, paddingTop: 24 }}>
-                      <ScheduleTimeline form={form} />
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ borderTop: "1px solid var(--border-subtle)" }} />
-
-                {/* Settings */}
-                <div>
-                  <span style={sectionLabel}>SETTINGS</span>
-                  <div className="flex flex-col gap-4">
-                    <Field label="Max Participants" hint="Leave blank for unlimited">
-                      <input type="number" className="input" placeholder="e.g. 500" value={form.maxParticipant} onChange={(e) => set("maxParticipant", e.target.value)} min={1} style={{ width: 200 }} />
-                    </Field>
-                    <div className="flex gap-6">
-                      <Toggle value={form.isPublic} onChange={(v) => set("isPublic", v)} label="Public contest" />
-                      <Toggle value={form.isRated} onChange={(v) => set("isRated", v)} label="Rated contest" />
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ borderTop: "1px solid var(--border-subtle)" }} />
-
-                {/* Problems */}
-                <div>
-                  <span style={sectionLabel}>PROBLEMS ({form.problems.length})</span>
-                  <ProblemPicker selectedProblems={form.problems} onChange={(p) => set("problems", p)} />
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-end gap-3" style={{ paddingTop: 8 }}>
-                  <button type="button" className="btn btn-ghost" onClick={() => navigate("/admin/contests")}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" disabled={saving}>
-                    {saving ? <div className="spinner" style={{ width: 16, height: 16 }} /> : <Save size={16} />}
-                    {saving ? "Saving..." : isEdit ? "Save Changes" : "Create Contest"}
-                  </button>
+                <div style={{ width: 280, minWidth: 240, flexShrink: 0, paddingTop: 24 }}>
+                  <ScheduleTimeline form={form} />
                 </div>
               </div>
+            </SectionCard>
+
+            {/* Card 3 — Settings */}
+            <SectionCard number={3} title="SETTINGS" delay={120}>
+              <div className="flex flex-col gap-4">
+                <Field label="Max Participants" hint="Leave blank for unlimited">
+                  <input type="number" className="input" placeholder="e.g. 500" value={form.maxParticipant} onChange={(e) => set("maxParticipant", e.target.value)} min={1} style={{ width: 200 }} />
+                </Field>
+                <div className="flex gap-6">
+                  <Toggle value={form.isPublic} onChange={(v) => set("isPublic", v)} label="Public contest" />
+                  <Toggle value={form.isRated} onChange={(v) => set("isRated", v)} label="Rated contest" />
+                </div>
+              </div>
+            </SectionCard>
+
+            {/* Card 4 — Problems */}
+            <SectionCard number={4} title={`PROBLEMS (${form.problems.length})`} delay={180}>
+              <ProblemPicker selectedProblems={form.problems} onChange={(p) => set("problems", p)} />
+            </SectionCard>
+
+            {/* Bottom actions */}
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 32, paddingBottom: 16 }}>
+              <button type="button" className="btn btn-ghost" onClick={() => navigate("/admin/contests")}>Cancel</button>
+              <button type="submit" className="btn btn-primary" disabled={saving} style={{ minWidth: 160, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                {saving ? (
+                  <>
+                    <div style={{ width: 16, height: 16, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTop: "2px solid #fff", animation: "spin 0.8s linear infinite" }} />
+                    Saving...
+                  </>
+                ) : (
+                  <><Save size={15} /> {isEdit ? "Save Changes" : "Create Contest"}</>
+                )}
+              </button>
             </div>
+
           </form>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -9,6 +9,7 @@ import SortBar from "../common/SortBar";
 import { useConfirmDialog } from "../common/ConfirmDialog";
 import { useToast } from "../common/ToastMessage";
 import TagFormDialog from "./TagFormDialog";
+import Toggle from "../common/Toggle";
 
 const AdminProblemTagPage = () => {
   const { ConfirmDialog, showConfirm } = useConfirmDialog();
@@ -163,35 +164,13 @@ const AdminProblemTagPage = () => {
                       </td>
                       <td>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                          <button
-                            onClick={() => !togglingIds.has(tag.id) && handleToggleActive(tag.id)}
+                          <Toggle
+                            value={tag.isActive}
+                            onChange={() => handleToggleActive(tag.id)}
+                            loading={togglingIds.has(tag.id)}
                             disabled={togglingIds.has(tag.id)}
-                            title={tag.isActive ? "Deactivate" : "Activate"}
-                            style={{
-                              position: "relative",
-                              width: 44, height: 24,
-                              borderRadius: 12,
-                              border: "none",
-                              padding: 0,
-                              cursor: togglingIds.has(tag.id) ? "not-allowed" : "pointer",
-                              background: tag.isActive ? "var(--green-ac)" : "var(--bg-overlay)",
-                              boxShadow: tag.isActive
-                                ? "0 0 0 3px var(--green-subtle), var(--glow-green)"
-                                : "inset 0 0 0 1px var(--border-default)",
-                              transition: "background var(--transition-base), box-shadow var(--transition-base)",
-                              opacity: togglingIds.has(tag.id) ? 0.65 : 1,
-                              outline: "none",
-                              flexShrink: 0,
-                            }}
-                          >
-                            {togglingIds.has(tag.id) ? (
-                              <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                <span style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.6s linear infinite", display: "inline-block" }} />
-                              </span>
-                            ) : (
-                              <span style={{ position: "absolute", top: 3, left: tag.isActive ? 23 : 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,0.35)", transition: "left var(--transition-spring)" }} />
-                            )}
-                          </button>
+                            color="var(--green-ac)"
+                          />
                           <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: tag.isActive ? "var(--green-ac)" : "var(--text-muted)", transition: "color var(--transition-base)" }}>
                             {tag.isActive ? "ON" : "OFF"}
                           </span>

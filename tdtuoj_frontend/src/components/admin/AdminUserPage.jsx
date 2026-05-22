@@ -166,7 +166,7 @@ const AdminUserPage = () => {
                             {user.roles?.map((role) => {
                               const s = ROLE_BADGE[role.name] || { bg: "var(--bg-raised)", color: "var(--text-secondary)" };
                               return (
-                                <span key={role.id} style={{ display: "inline-flex", padding: "2px 8px", borderRadius: "var(--radius-pill)", fontSize: 10, fontWeight: 700, background: s.bg, color: s.color }}>
+                                <span key={role.id} style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: 9999, fontSize: 11, fontWeight: 700, background: s.bg, color: s.color, border: `1px solid ${s.color}33` }}>
                                   {role.name}
                                 </span>
                               );
@@ -174,7 +174,7 @@ const AdminUserPage = () => {
                           </div>
                         </td>
                         <td style={{ textAlign: "center" }}>
-                          <span style={{ display: "inline-flex", padding: "2px 9px", borderRadius: "var(--radius-pill)", fontSize: 10, fontWeight: 700, background: user.isActive ? "var(--green-subtle)" : "var(--red-subtle)", color: user.isActive ? "var(--green-ac)" : "var(--red-wa)" }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: 9999, fontSize: 11, fontWeight: 700, background: user.isActive ? "var(--green-subtle)" : "var(--red-subtle)", color: user.isActive ? "var(--green-ac)" : "var(--red-wa)", border: `1px solid ${user.isActive ? "var(--green-ac)" : "var(--red-wa)"}33` }}>
                             {user.isActive ? "Active" : "Inactive"}
                           </span>
                         </td>

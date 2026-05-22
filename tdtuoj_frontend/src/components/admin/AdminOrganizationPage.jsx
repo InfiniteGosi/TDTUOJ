@@ -308,7 +308,7 @@ const AdminOrganizationPage = () => {
                       </td>
                       <td>
                         <div className="flex items-center gap-1">
-                          {org.isPublic ? <><Globe size={12} color="var(--text-muted)" /><span style={{ fontSize: 11, color: "var(--text-muted)" }}>Public</span></> : <><Lock size={12} color="var(--text-muted)" /><span style={{ fontSize: 11, color: "var(--text-muted)" }}>Private</span></>}
+                          {org.isPublic ? <><Globe size={12} color="var(--text-muted)" /><span style={{ fontSize: 11, color: "var(--text-muted)", border: "1px solid var(--text-muted)33", padding: "2px 8px", borderRadius: 4 }}>Public</span></> : <><Lock size={12} color="var(--text-muted)" /><span style={{ fontSize: 11, color: "var(--text-muted)", border: "1px solid var(--text-muted)33", padding: "2px 8px", borderRadius: 4 }}>Private</span></>}
                         </div>
                       </td>
                       <td style={{ textAlign: "center" }}>
