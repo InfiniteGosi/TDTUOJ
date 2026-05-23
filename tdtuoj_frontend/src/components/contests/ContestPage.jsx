@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Trophy, Calendar, Users, Lock, Globe, ChevronRight, Clock, Star,
 } from "lucide-react";
@@ -76,6 +76,8 @@ const ContestPage = () => {
 
   const [contests, setContests]           = useState([]);
   const [search, setSearch]               = useState("");
+  const [searchParams] = useSearchParams();
+  useEffect(() => { const q = searchParams.get("q"); if (q) setSearch(q); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [loading, setLoading]             = useState(true);
   const [page, setPage]                   = useState(0);
   const [size, setSize]                   = useState(10);

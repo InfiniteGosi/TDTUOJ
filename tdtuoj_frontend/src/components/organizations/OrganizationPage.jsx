@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Building2, Users, Globe, Lock, ChevronRight } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
@@ -19,6 +19,8 @@ const OrganizationPage = () => {
 
   const [organizations, setOrganizations] = useState([]);
   const [search, setSearch]               = useState("");
+  const [searchParams] = useSearchParams();
+  useEffect(() => { const q = searchParams.get("q"); if (q) setSearch(q); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [loading, setLoading]             = useState(true);
   const [page, setPage]                   = useState(0);
   const [size, setSize]                   = useState(10);

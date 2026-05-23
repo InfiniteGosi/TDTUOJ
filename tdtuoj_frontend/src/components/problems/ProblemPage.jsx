@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Book,
   Trophy,
@@ -294,6 +294,8 @@ const ProblemPage = () => {
 
   const [problems, setProblems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchParams] = useSearchParams();
+  useEffect(() => { const q = searchParams.get("q"); if (q) setSearchQuery(q); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const filterWrapperRef = useRef(null);

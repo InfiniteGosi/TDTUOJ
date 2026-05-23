@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Trophy,
   Star,
@@ -93,6 +93,8 @@ const UserPage = () => {
   const { showMessage } = useToast();
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchParams] = useSearchParams();
+  useEffect(() => { const q = searchParams.get("q"); if (q) setSearchQuery(q); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     limit: 10,
