@@ -179,14 +179,14 @@ const ContestPage = () => {
 
             <table className="table" style={{ width: "100%" }}>
               <thead>
-                <tr>
-                  <th style={{ width: "4%",  textAlign: "center", fontSize: 13, fontWeight: 700 }}>#</th>
-                  <th style={{ width: "34%", fontSize: 13, fontWeight: 700 }}>Contest</th>
-                  <th style={{ width: "11%", fontSize: 13, fontWeight: 700 }}>Status</th>
-                  <th style={{ width: "8%",  fontSize: 13, fontWeight: 700 }}>Style</th>
-                  <th style={{ width: "22%", fontSize: 13, fontWeight: 700 }}>Schedule</th>
-                  <th style={{ width: "10%", textAlign: "center", fontSize: 13, fontWeight: 700 }}>Registered</th>
-                  <th style={{ width: "7%",  textAlign: "center", fontSize: 13, fontWeight: 700 }}>Problems</th>
+                <tr className="public-table-header">
+                  <th style={{ width: "4%",  textAlign: "center" }}>#</th>
+                  <th style={{ width: "34%" }}>Contest</th>
+                  <th style={{ width: "11%" }}>Status</th>
+                  <th style={{ width: "8%"  }}>Style</th>
+                  <th style={{ width: "22%" }}>Schedule</th>
+                  <th style={{ width: "10%", textAlign: "center" }}>Registered</th>
+                  <th style={{ width: "7%",  textAlign: "center" }}>Problems</th>
                   <th style={{ width: "4%"  }} />
                 </tr>
               </thead>
