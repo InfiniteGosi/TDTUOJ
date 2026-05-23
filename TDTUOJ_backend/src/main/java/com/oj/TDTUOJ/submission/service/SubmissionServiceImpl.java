@@ -186,4 +186,13 @@ public class SubmissionServiceImpl implements SubmissionService {
                 .data(dtoPage)
                 .build();
     }
+
+    @Override
+    public Response<Long> getTotalSubmissionsCount() {
+        return Response.<Long>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Total submissions count")
+                .data(submissionRepository.count())
+                .build();
+    }
 }

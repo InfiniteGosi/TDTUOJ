@@ -328,6 +328,13 @@ export default class ApiService {
     return resp.data; // your backend wraps in Response<SubmissionDTO>
   }
 
+  static async getTotalSubmissionsCount() {
+    const resp = await axios.get(`${this.BASE_URL}/submissions/count`, {
+      headers: this.getHeader(),
+    });
+    return resp.data;
+  }
+
   static async getMySubmissions({
     limit = 20,
     offset = 0,

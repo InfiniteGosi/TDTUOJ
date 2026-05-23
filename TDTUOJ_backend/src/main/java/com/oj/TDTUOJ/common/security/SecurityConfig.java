@@ -59,6 +59,7 @@ public class SecurityConfig {
                                 "/api/organizations/**",
                                 "/api/status/**",
                                 "/api/files/**",
+                                "/api/submissions/count",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/actuator/**").permitAll()

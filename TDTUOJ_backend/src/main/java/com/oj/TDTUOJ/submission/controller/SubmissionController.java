@@ -31,6 +31,11 @@ public class SubmissionController {
         return ResponseEntity.ok(submissionService.getSubmissionStatus(id));
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<Response<Long>> getTotalSubmissionsCount() {
+        return ResponseEntity.ok(submissionService.getTotalSubmissionsCount());
+    }
+
     @GetMapping("/me")
     public ResponseEntity<Response<Page<SubmissionDTO>>> getMySubmissions(
             @RequestParam(defaultValue = "20") Integer limit,

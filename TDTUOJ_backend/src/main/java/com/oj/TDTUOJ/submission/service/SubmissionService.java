@@ -12,4 +12,6 @@ public interface SubmissionService {
                                                    Long problemId);
 
     Response<SubmissionDTO> getSubmissionStatus(Long id);
+
+    Response<Long> getTotalSubmissionsCount();
 }

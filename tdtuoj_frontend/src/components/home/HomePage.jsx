@@ -149,9 +149,10 @@ const HomePage = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [problemsRes, usersRes] = await Promise.all([
+        const [problemsRes, usersRes, submissionsRes] = await Promise.all([
           ApiService.getAllProblems({ limit: 1, offset: 0 }).catch(() => null),
           ApiService.getAllUsers({ limit: 1, offset: 0 }).catch(() => null),
+          ApiService.getTotalSubmissionsCount().catch(() => null),
         ]);
         setStats((prev) => ({
           ...prev,
@@ -163,6 +164,10 @@ const HomePage = () => {
             usersRes?.data?.page?.totalElements != null
               ? usersRes.data.page.totalElements.toLocaleString()
               : "1000+",
+          submissions:
+            submissionsRes?.statusCode === 200 && submissionsRes.data != null
+              ? Number(submissionsRes.data).toLocaleString()
+              : "50k+",
         }));
       } catch {
         setStats({ problems: "500+", users: "1000+", submissions: "50k+" });
