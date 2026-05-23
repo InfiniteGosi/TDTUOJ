@@ -219,7 +219,7 @@ const UserPage = () => {
       </div>
 
       {/* ── Table card ─────────────────────────────────────────────────────── */}
-      <div className="card" style={{ padding: 0, overflow: "hidden", position: "relative" }}>
+      <div style={{ background: "var(--bg-raised)", borderRadius: "var(--radius-lg)", boxShadow: "0 2px 8px rgba(0,0,0,0.3)", overflow: "hidden", position: "relative" }}>
         {/* Overlay spinner during re-fetch */}
         {loading && (
           <div
@@ -240,7 +240,7 @@ const UserPage = () => {
 
         <table className="table" style={{ margin: 0 }}>
           <thead>
-            <tr>
+            <tr className="public-table-header">
               <th style={{ textAlign: "center", width: "8%" }}>Rank</th>
               <th style={{ width: "38%" }}>User</th>
               <th style={{ width: "22%" }}>Roles</th>
@@ -251,11 +251,15 @@ const UserPage = () => {
           </thead>
           <tbody>
             {users.length > 0 ? (
-              users.map((user) => (
+              users.map((user, index) => {
+                const rowBg = index % 2 === 0 ? "var(--bg-raised)" : "var(--bg-overlay)";
+                return (
                 <tr
                   key={user.id}
                   onClick={() => handleOnClick(user.username)}
-                  style={{ cursor: "pointer" }}
+                  style={{ background: rowBg, cursor: "pointer", transition: "background 0.15s" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-subtle)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = rowBg; }}
                 >
                   {/* Rank */}
                   <td style={{ textAlign: "center" }}>
@@ -334,7 +338,7 @@ const UserPage = () => {
                     </span>
                   </td>
                 </tr>
-              ))
+              ); })
             ) : (
               <tr>
                 <td colSpan={6}>
