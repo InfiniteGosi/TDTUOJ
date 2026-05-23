@@ -127,7 +127,7 @@ const OrganizationPage = () => {
                   const rs    = org.myRole ? ROLE_STYLE[org.myRole] : null;
                   return (
                     <tr key={org.id}
-                      style={{ background: rowBg, cursor: "pointer", transition: "background 0.12s" }}
+                      style={{ background: rowBg, cursor: "pointer", transition: "background 0.15s" }}
                       onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-subtle)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = rowBg; }}
                       onClick={() => navigate(`/organizations/${org.slug}`)}>

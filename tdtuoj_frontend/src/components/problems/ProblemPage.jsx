@@ -638,13 +638,13 @@ const ProblemPage = () => {
             ) : (
               <table className="table" style={{ width: "100%" }}>
                 <thead>
-                  <tr style={{ background: "var(--primary-subtle)" }}>
-                    <th style={{ textAlign: "center", width: "7%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
-                    <th style={{ width: "30%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Problem</th>
-                    <th style={{ width: "12%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Difficulty</th>
-                    <th style={{ width: "30%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Topics</th>
-                    <th style={{ textAlign: "center", width: "12%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Points</th>
-                    <th style={{ textAlign: "center", width: "9%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</th>
+                  <tr className="public-table-header">
+                    <th style={{ textAlign: "center", width: "7%" }}>#</th>
+                    <th style={{ width: "30%" }}>Problem</th>
+                    <th style={{ width: "12%" }}>Difficulty</th>
+                    <th style={{ width: "30%" }}>Topics</th>
+                    <th style={{ textAlign: "center", width: "12%" }}>Points</th>
+                    <th style={{ textAlign: "center", width: "9%" }}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -768,13 +768,13 @@ const ProblemPage = () => {
 
             <table className="table" style={{ width: "100%" }}>
               <thead>
-                <tr style={{ background: "var(--primary-subtle)" }}>
-                  <th style={{ textAlign: "center", width: "7%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
-                  <th style={{ width: "30%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Problem</th>
-                  <th style={{ width: "12%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Difficulty</th>
-                  <th style={{ width: "30%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Topics</th>
-                  <th style={{ textAlign: "center", width: "12%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Points</th>
-                  <th style={{ textAlign: "center", width: "9%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Solve</th>
+                <tr className="public-table-header">
+                  <th style={{ textAlign: "center", width: "7%" }}>#</th>
+                  <th style={{ width: "30%" }}>Problem</th>
+                  <th style={{ width: "12%" }}>Difficulty</th>
+                  <th style={{ width: "30%" }}>Topics</th>
+                  <th style={{ textAlign: "center", width: "12%" }}>Points</th>
+                  <th style={{ textAlign: "center", width: "9%" }}>Solve</th>
                 </tr>
               </thead>
 
