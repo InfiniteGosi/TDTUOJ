@@ -658,7 +658,7 @@ const ProblemPage = () => {
                           cursor: "pointer",
                           transition: "background 0.15s",
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(246,201,14,0.06)"; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-subtle)"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = index % 2 === 0 ? "var(--bg-raised)" : "var(--bg-overlay)"; }}
                         onClick={() => navigate(`/problems/${problem.slug}`)}
                       >
@@ -792,7 +792,7 @@ const ProblemPage = () => {
                           cursor: "pointer",
                           transition: "background 0.15s",
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--cyan-subtle)"; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-subtle)"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = index % 2 === 0 ? "var(--bg-raised)" : "var(--bg-overlay)"; }}
                         onClick={() => navigate(`/problems/${problem.slug}`)}
                       >
