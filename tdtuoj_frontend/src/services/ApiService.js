@@ -419,10 +419,12 @@ export default class ApiService {
 
   // ─── Contests ────────────────────────────────────────────────────────────────
 
-  static async getPublicContests({ page = 0, size = 20 } = {}) {
+  static async getPublicContests({ page = 0, size = 20, search = "" } = {}) {
+    const params = { page, size };
+    if (search) params.search = search;
     const resp = await axios.get(`${this.BASE_URL}/contests`, {
       headers: this.getHeader(),
-      params: { page, size },
+      params,
     });
     return resp.data;
   }
@@ -812,5 +814,30 @@ export default class ApiService {
       { headers: this.getHeader() },
     );
     return resp.data;
+  }
+
+  // ─── Global multi-resource search ──────────────────────────────────────────
+  static async globalSearch(query, perCategory = 5) {
+    if (!query || query.trim().length < 2) {
+      return { problems: [], users: [], contests: [], organizations: [] };
+    }
+    const q = query.trim();
+    const [problems, users, contests, organizations] = await Promise.allSettled([
+      this.getAllProblems({ limit: perCategory, offset: 0, title: q }),
+      this.getAllUsers({ limit: perCategory, offset: 0, username: q }),
+      this.getPublicContests({ page: 0, size: perCategory, search: q }),
+      this.getOrganizations({ page: 0, size: perCategory, search: q }),
+    ]);
+    const extract = (r) => {
+      if (r.status !== "fulfilled" || r.value?.statusCode !== 200) return [];
+      const d = r.value.data;
+      return d?.content ?? (Array.isArray(d) ? d : []);
+    };
+    return {
+      problems:      extract(problems),
+      users:         extract(users),
+      contests:      extract(contests),
+      organizations: extract(organizations),
+    };
   }
 }
