@@ -102,7 +102,7 @@ const OrganizationPage = () => {
           </div>
 
           {/* ── Table ── */}
-          <div style={{ background: "var(--bg-raised)", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-default)", boxShadow: "0 2px 8px rgba(0,0,0,0.3)", overflow: "hidden", position: "relative" }}>
+          <div style={{ background: "var(--bg-raised)", borderRadius: "var(--radius-lg)", boxShadow: "0 2px 8px rgba(0,0,0,0.3)", overflow: "hidden", position: "relative" }}>
             {loading && (
               <div style={{ position: "absolute", inset: 0, background: "rgba(15,15,15,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
                 <div className="spinner" />
@@ -111,13 +111,13 @@ const OrganizationPage = () => {
 
             <table className="table" style={{ width: "100%" }}>
               <thead>
-                <tr>
-                  <th style={{ width: "4%",  textAlign: "center", fontSize: 13, fontWeight: 700 }}>#</th>
-                  <th style={{ width: "36%", fontSize: 13, fontWeight: 700 }}>Organization</th>
-                  <th style={{ width: "11%", fontSize: 13, fontWeight: 700 }}>Visibility</th>
-                  <th style={{ width: "13%", fontSize: 13, fontWeight: 700 }}>Your Role</th>
-                  <th style={{ width: "10%", textAlign: "center", fontSize: 13, fontWeight: 700 }}>Members</th>
-                  <th style={{ width: "20%", fontSize: 13, fontWeight: 700 }}>Creator</th>
+                <tr className="public-table-header">
+                  <th style={{ width: "4%",  textAlign: "center" }}>#</th>
+                  <th style={{ width: "36%" }}>Organization</th>
+                  <th style={{ width: "11%" }}>Visibility</th>
+                  <th style={{ width: "13%" }}>Your Role</th>
+                  <th style={{ width: "10%", textAlign: "center" }}>Members</th>
+                  <th style={{ width: "20%" }}>Creator</th>
                   <th style={{ width: "6%"  }} />
                 </tr>
               </thead>
