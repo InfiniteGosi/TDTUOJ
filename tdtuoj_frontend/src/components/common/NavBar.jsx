@@ -5,6 +5,7 @@ import ThemeToggle from "./ThemeToggle";
 import ApiService from "../../services/ApiService";
 import { Menu, X, ChevronDown, LogOut, User, Settings, LayoutDashboard } from "lucide-react";
 import TDTULogo from "./TDTULogo";
+import GlobalSearchBar from "./GlobalSearchBar";
 
 const NavBar = () => {
   const isAuthenticated = ApiService.isAuthenticated();
@@ -90,7 +91,7 @@ const NavBar = () => {
           </Link>
 
           {/* Desktop nav links */}
-          <div className="flex items-center gap-1 hide-mobile" style={{ flex: 1 }}>
+          <div className="flex items-center gap-1 hide-mobile">
             {NAV_LINKS.map(({ to, label }) => (
               <Link key={to} to={to} style={{
                 padding: "var(--space-2) var(--space-3)",
@@ -105,6 +106,11 @@ const NavBar = () => {
                 {label}
               </Link>
             ))}
+          </div>
+
+          {/* Global search — desktop only */}
+          <div className="hide-mobile" style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+            <GlobalSearchBar />
           </div>
 
           {/* Right side */}
@@ -218,6 +224,9 @@ const NavBar = () => {
             padding: "var(--space-4) var(--space-4)",
             display: "flex", flexDirection: "column", gap: "var(--space-1)",
           }}>
+            <div style={{ padding: "0 var(--space-2)", marginBottom: "var(--space-2)" }}>
+              <GlobalSearchBar />
+            </div>
             {NAV_LINKS.map(({ to, label }) => (
               <Link key={to} to={to} style={{
                 padding: "var(--space-3) var(--space-4)",
