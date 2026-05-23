@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { PieChart, Pie, Cell, Label, Tooltip, ResponsiveContainer } from "recharts";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
 import SuggestiveSearch from "../common/SuggestiveSearch";
@@ -34,73 +35,136 @@ const problemLabel = (order) =>
 
 const acRateColor = (r) => r >= 60 ? "var(--green-ac)" : r >= 30 ? "var(--amber-tle)" : "var(--red-wa)";
 
-// ── DonutChart (pure SVG, no deps) ────────────────────────────────────────
+// ── Verdict chart colors (hex — CSS vars don't work as SVG fill) ──────────
+const VERDICT_CHART_COLORS = {
+  AC:  "#22C55E",
+  WA:  "#EF4444",
+  TLE: "#F5A000",
+  CE:  "#60A5FA",
+  MLE: "#A78BFA",
+  SF:  "#6B7A95",
+};
+
 const DONUT_SEGMENTS = [
-  { key: "acCount",  color: "var(--green-ac)",    label: "AC"  },
-  { key: "waCount",  color: "var(--red-wa)",       label: "WA"  },
-  { key: "tleCount", color: "var(--amber-tle)",    label: "TLE" },
-  { key: "ceCount",  color: "var(--blue-ce)",      label: "CE"  },
-  { key: "mleCount", color: "var(--purple-mle)",   label: "MLE" },
-  { key: "sfCount",  color: "var(--gray-pending)", label: "SF"  },
+  { key: "acCount",  label: "AC",  color: VERDICT_CHART_COLORS.AC  },
+  { key: "waCount",  label: "WA",  color: VERDICT_CHART_COLORS.WA  },
+  { key: "tleCount", label: "TLE", color: VERDICT_CHART_COLORS.TLE },
+  { key: "ceCount",  label: "CE",  color: VERDICT_CHART_COLORS.CE  },
+  { key: "mleCount", label: "MLE", color: VERDICT_CHART_COLORS.MLE },
+  { key: "sfCount",  label: "SF",  color: VERDICT_CHART_COLORS.SF  },
 ];
 
+// ── Verdict legend data ────────────────────────────────────────────────────
+const VERDICT_LEGEND = [
+  { label: "AC",  full: "Accepted",             color: VERDICT_CHART_COLORS.AC  },
+  { label: "WA",  full: "Wrong Answer",          color: VERDICT_CHART_COLORS.WA  },
+  { label: "TLE", full: "Time Limit Exceeded",   color: VERDICT_CHART_COLORS.TLE },
+  { label: "CE",  full: "Compile Error",         color: VERDICT_CHART_COLORS.CE  },
+  { label: "MLE", full: "Memory Limit Exceeded", color: VERDICT_CHART_COLORS.MLE },
+  { label: "SF",  full: "System Failure",        color: VERDICT_CHART_COLORS.SF  },
+];
+
+const VerdictLegend = () => (
+  <div style={{ display: "flex", flexWrap: "wrap", gap: "5px 18px", marginTop: 10, marginLeft: 13 }}>
+    {VERDICT_LEGEND.map(({ label, full, color }) => (
+      <span key={label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11 }}>
+        <span style={{ width: 8, height: 8, borderRadius: 2, background: color, flexShrink: 0 }} />
+        <span style={{ fontWeight: 700, color, fontFamily: "var(--font-display)", letterSpacing: "0.05em" }}>{label}</span>
+        <span style={{ color: "var(--text-muted)" }}>— {full}</span>
+      </span>
+    ))}
+  </div>
+);
+
+// ── VerdictTooltip ─────────────────────────────────────────────────────────
+const VerdictTooltip = ({ active, payload }) => {
+  if (!active || !payload?.length) return null;
+  const d = payload[0];
+  return (
+    <div style={{
+      background: "var(--bg-raised)",
+      border: "1px solid var(--border-default)",
+      borderRadius: 8,
+      padding: "8px 12px",
+      boxShadow: "var(--shadow-md)",
+      fontSize: 12,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+        <div style={{ width: 10, height: 10, borderRadius: 2, background: d.payload.fill, flexShrink: 0 }} />
+        <span style={{ fontWeight: 700, color: "var(--text-primary)", fontFamily: "var(--font-display)" }}>
+          {d.name}
+        </span>
+      </div>
+      <div style={{ color: "var(--text-secondary)" }}>
+        {d.value} submissions · {Math.round(d.payload.pct * 100)}%
+      </div>
+    </div>
+  );
+};
+
+// ── DonutChart (recharts) ──────────────────────────────────────────────────
 const DonutChart = ({ ps, size = 130 }) => {
-  const r = 44;
-  const cx = size / 2;
-  const cy = size / 2;
-  const circ = 2 * Math.PI * r;
   const total = ps.totalSubmissions || 0;
+  const acRate = ps.acRate ?? 0;
+  const acRateHex = acRate >= 60 ? VERDICT_CHART_COLORS.AC : acRate >= 30 ? VERDICT_CHART_COLORS.TLE : VERDICT_CHART_COLORS.WA;
 
   if (total === 0) {
     return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--bg-raised)" strokeWidth={16} />
-        <text x={cx} y={cy} textAnchor="middle" dy=".35em" fontSize={11} fill="var(--text-muted)">No data</text>
-      </svg>
+      <div style={{ width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          <circle cx={size / 2} cy={size / 2} r={44} fill="none" style={{ stroke: "var(--bg-raised)" }} strokeWidth={16} />
+          <text x={size / 2} y={size / 2} textAnchor="middle" dy=".35em" fontSize={11} fill="var(--text-muted)">No data</text>
+        </svg>
+      </div>
     );
   }
 
-  let acc = 0;
-  const arcs = DONUT_SEGMENTS
-    .map((seg) => ({ ...seg, count: ps[seg.key] ?? 0 }))
-    .filter((seg) => seg.count > 0)
-    .map((seg) => {
-      const len = (seg.count / total) * circ;
-      const arc = {
-        ...seg,
-        dashArray: `${len} ${circ - len}`,
-        // start at 12 o'clock: dashOffset = circ/4 - accumulated
-        dashOffset: circ / 4 - acc,
-      };
-      acc += len;
-      return arc;
-    });
-
-  const acCount = ps.acCount ?? 0;
-  const acRate  = ps.acRate  ?? 0;
+  const data = DONUT_SEGMENTS
+    .map((seg) => ({ name: seg.label, value: ps[seg.key] ?? 0, fill: seg.color, pct: (ps[seg.key] ?? 0) / total }))
+    .filter((d) => d.value > 0);
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}
-      style={{ overflow: "visible" }}>
-      {/* background ring */}
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f1f5f9" strokeWidth={16} />
-      {arcs.map((arc, i) => (
-        <circle key={i} cx={cx} cy={cy} r={r} fill="none"
-          stroke={arc.color} strokeWidth={16}
-          strokeDasharray={arc.dashArray}
-          strokeDashoffset={arc.dashOffset}
-          style={{ transition: "stroke-dasharray .5s ease" }}
-        />
-      ))}
-      {/* centre label */}
-      <text x={cx} y={cy - 7} textAnchor="middle" fontSize={15}
-        fontWeight="800" fill={acRateColor(acRate)}>
-        {acRate}%
-      </text>
-      <text x={cx} y={cy + 10} textAnchor="middle" fontSize={10} fill="var(--text-muted)">
-        AC rate
-      </text>
-    </svg>
+    <div style={{ width: size, height: size }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            innerRadius={size * 0.33}
+            outerRadius={size * 0.46}
+            cornerRadius={5}
+            paddingAngle={2}
+            startAngle={90}
+            endAngle={-270}
+            animationBegin={0}
+            animationDuration={650}
+            animationEasing="ease-out"
+          >
+            {data.map((entry, i) => (
+              <Cell key={i} fill={entry.fill} />
+            ))}
+            <Label
+              content={({ viewBox }) => {
+                const { cx, cy } = viewBox;
+                return (
+                  <g>
+                    <text x={cx} y={cy - 5} textAnchor="middle" fontSize={16} fontWeight={900}
+                      fill={acRateHex} fontFamily="var(--font-display)">
+                      {acRate}%
+                    </text>
+                    <text x={cx} y={cy + 11} textAnchor="middle" fontSize={9}
+                      fill="var(--text-muted)" fontFamily="var(--font-body)">
+                      AC rate
+                    </text>
+                  </g>
+                );
+              }}
+            />
+          </Pie>
+          <Tooltip content={<VerdictTooltip />} />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 
@@ -112,6 +176,7 @@ const VerdictBadge = ({ verdict }) => {
       background: cfg.bg, color: cfg.color,
       padding: "1px 8px", borderRadius: 9999,
       fontSize: 12, fontWeight: 700,
+      border: `1px solid ${cfg.color}40`,
     }}>{cfg.label}</span>
   );
 };
@@ -119,12 +184,13 @@ const VerdictBadge = ({ verdict }) => {
 // ── StatCard ───────────────────────────────────────────────────────────────
 const StatCard = ({ label, value, sub, color = "var(--primary)" }) => (
   <div style={{
-    background: "var(--bg-base)", borderRadius: 12, padding: "18px 22px",
-    boxShadow: "0 1px 6px rgba(0,0,0,.08)", flex: 1, minWidth: 140,
+    background: "var(--bg-base)", borderRadius: 12, padding: "20px 24px",
+    border: "1px solid var(--border-default)",
     borderTop: `3px solid ${color}`,
+    flex: 1, minWidth: 140,
   }}>
-    <div style={{ fontSize: 28, fontWeight: 800, color }}>{value ?? "—"}</div>
-    <div style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 600, marginTop: 2 }}>{label}</div>
+    <div style={{ fontSize: 32, fontWeight: 800, color, fontFamily: "var(--font-display)", lineHeight: 1.1 }}>{value ?? "—"}</div>
+    <div style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 500, marginTop: 6 }}>{label}</div>
     {sub && <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{sub}</div>}
   </div>
 );
@@ -138,10 +204,10 @@ const SubmissionRow = ({ s, problems }) => {
       gap: 8, alignItems: "center",
       padding: "8px 12px", borderBottom: "1px solid var(--border-subtle)", fontSize: 13,
     }}>
-      <span style={{ fontWeight: 700, color: "var(--primary)" }}>
+      <span style={{ fontWeight: 700, color: "var(--primary)", fontFamily: "var(--font-display)", fontSize: 15 }}>
         {prob ? problemLabel(prob.problemOrder) : "?"}
       </span>
-      <span style={{ color: "var(--text-primary)", fontFamily: "monospace", fontSize: 12, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+      <span style={{ color: "var(--text-muted)", fontFamily: "var(--font-code)", fontSize: 12, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
         {s.submissionLanguage}
       </span>
       <VerdictBadge verdict={s.submissionVerdict ?? s.submissionStatus} />
@@ -156,39 +222,44 @@ const CodeModal = ({ submission, onClose }) => {
   if (!submission) return null;
   return (
     <div style={{
-      position: "fixed", inset: 0, background: "rgba(0,0,0,.55)",
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
+      backdropFilter: "blur(8px)",
       display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
     }} onClick={onClose}>
       <div style={{
-        background: "var(--bg-overlay)", borderRadius: 14, width: "min(900px, 95vw)",
+        background: "var(--bg-base)", borderRadius: 14, width: "min(900px, 95vw)",
         maxHeight: "85vh", display: "flex", flexDirection: "column",
         boxShadow: "0 20px 60px rgba(0,0,0,.5)",
+        border: "1px solid var(--border-default)",
       }} onClick={(e) => e.stopPropagation()}>
         {/* header */}
         <div style={{
           display: "flex", justifyContent: "space-between", alignItems: "center",
           padding: "14px 20px", borderBottom: "1px solid var(--border-default)",
+          background: "var(--bg-overlay)",
         }}>
-          <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 15 }}>
               Source Code
             </span>
-            <span style={{ color: "var(--primary)", marginLeft: 10, fontSize: 13 }}>
+            <span style={{ color: "var(--primary)", fontSize: 13 }}>
               {submission.submissionLanguage}
             </span>
             <VerdictBadge verdict={submission.submissionVerdict ?? submission.submissionStatus} />
           </div>
           <button onClick={onClose} style={{
-            background: "none", border: "none", color: "var(--text-secondary)",
-            fontSize: 22, cursor: "pointer", lineHeight: 1,
+            background: "var(--bg-overlay)", border: "1px solid var(--border-subtle)",
+            borderRadius: 8, width: 32, height: 32,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "var(--text-primary)", fontSize: 16, cursor: "pointer", lineHeight: 1,
           }}>✕</button>
         </div>
         {/* code */}
         <pre style={{
           flex: 1, overflow: "auto", margin: 0,
-          padding: "18px 20px", fontSize: 13,
-          color: "var(--text-primary)", fontFamily: "'Fira Code', 'Cascadia Code', monospace",
-          lineHeight: 1.6, background: "transparent",
+          padding: "18px 20px",
+          color: "var(--text-primary)", fontFamily: "var(--font-code)",
+          fontSize: 13, lineHeight: 1.65, background: "transparent",
         }}>
           {submission.sourceCode ?? "(no source code)"}
         </pre>
@@ -325,8 +396,11 @@ const AdminContestMonitorPage = () => {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-void)", fontFamily: "var(--font-body)" }}>
       <style>{`
-        @keyframes spin{to{transform:rotate(360deg)}}
-        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+        @keyframes spin { to { transform: rotate(360deg) } }
+        @keyframes pulse { 0%,100%{opacity:1; transform:scale(1)} 50%{opacity:.5; transform:scale(0.85)} }
+        @keyframes slideInRight { from { opacity:0; transform:translateX(20px) } to { opacity:1; transform:translateX(0) } }
+        @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+        @keyframes pulseGlow { 0%,100%{box-shadow:0 0 0 0 rgba(0,230,118,0.4)} 50%{box-shadow:0 0 0 6px rgba(0,230,118,0)} }
         body{margin:0}
         *{box-sizing:border-box}
       `}</style>
@@ -342,20 +416,22 @@ const AdminContestMonitorPage = () => {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <button onClick={() => navigate("/admin/contests")} style={{
-            background: "var(--bg-overlay)", border: "1px solid var(--border-default)", color: "var(--text-primary)",
-            borderRadius: 8, padding: "4px 12px", cursor: "pointer", fontSize: 13,
+            background: "var(--bg-overlay)", border: "1px solid var(--border-default)",
+            borderRadius: 8, padding: "5px 14px", cursor: "pointer", fontSize: 13,
+            color: "var(--text-primary)",
           }}>← Back</button>
-          <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 17 }}>
-            📊 {m?.contestName ?? "Contest Monitor"}
+          <span style={{ color: "var(--text-primary)", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20 }}>
+            {m?.contestName ?? "Contest Monitor"}
           </span>
           {/* live indicator */}
           {pollInterval > 0 && (
             <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{
                 width: 8, height: 8, borderRadius: "50%", background: "var(--green-ac)",
-                animation: "pulse 1.5s infinite",
+                animation: "pulseGlow 2s infinite",
+                display: "inline-block",
               }} />
-              <span style={{ color: "var(--green-subtle)", fontSize: 12 }}>Live</span>
+              <span style={{ color: "var(--green-ac)", fontSize: 11, fontWeight: 700, fontFamily: "var(--font-display)" }}>LIVE</span>
             </span>
           )}
         </div>
@@ -366,10 +442,11 @@ const AdminContestMonitorPage = () => {
           <div style={{ display: "flex", gap: 4 }}>
             {POLL_OPTIONS.map((o) => (
               <button key={o.value} onClick={() => setPollInterval(o.value)} style={{
-                padding: "4px 10px", borderRadius: 6, fontSize: 12, cursor: "pointer",
-                fontWeight: 600, border: "none",
+                padding: "4px 12px", borderRadius: 9999, fontSize: 12, cursor: "pointer",
+                fontWeight: 600, border: `1px solid ${pollInterval === o.value ? "var(--primary)" : "var(--border-default)"}`,
                 background: pollInterval === o.value ? "var(--primary)" : "var(--bg-overlay)",
                 color: pollInterval === o.value ? "var(--bg-void)" : "var(--text-secondary)",
+                transition: "background .15s, color .15s",
               }}>{o.label}</button>
             ))}
           </div>
@@ -396,14 +473,19 @@ const AdminContestMonitorPage = () => {
         <section style={{
           background: "var(--bg-base)", borderRadius: 14, boxShadow: "0 1px 8px rgba(0,0,0,.07)",
           marginBottom: 28, overflow: "hidden",
+          border: "1px solid var(--border-default)",
         }}>
           <div style={{ padding: "16px 22px", borderBottom: "1px solid var(--border-subtle)" }}>
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>
+            <h2 style={{
+              margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)",
+              borderLeft: "3px solid var(--primary)", paddingLeft: 10,
+            }}>
               Problem Statistics
             </h2>
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--text-muted)" }}>
+            <p style={{ margin: "4px 0 0 13px", fontSize: 12, color: "var(--text-muted)" }}>
               Verdict breakdown per problem — lower AC rate = harder problem
             </p>
+            <VerdictLegend />
           </div>
 
           {/* header row */}
@@ -411,7 +493,8 @@ const AdminContestMonitorPage = () => {
             display: "grid",
             gridTemplateColumns: "50px 1fr 70px 70px 70px 70px 70px 70px 80px 100px",
             gap: 6, padding: "8px 22px",
-            background: "var(--bg-raised)", fontSize: 12, fontWeight: 700, color: "var(--primary)",
+            background: "var(--bg-raised)", fontSize: 11, fontWeight: 700, color: "var(--primary)",
+            fontFamily: "var(--font-display)", letterSpacing: "0.1em", textTransform: "uppercase",
           }}>
             <span>#</span><span>Problem</span>
             <span style={{ textAlign: "center" }}>Total</span>
@@ -440,7 +523,7 @@ const AdminContestMonitorPage = () => {
                 onMouseEnter={(e) => e.currentTarget.style.background = "var(--bg-raised)"}
                 onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
               >
-                <span style={{ fontWeight: 800, color: "var(--primary)", fontSize: 15 }}>
+                <span style={{ fontWeight: 800, color: "var(--primary)", fontSize: 18, fontFamily: "var(--font-display)" }}>
                   {problemLabel(ps.problemOrder)}
                 </span>
                 <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{ps.problemTitle}</span>
@@ -457,7 +540,7 @@ const AdminContestMonitorPage = () => {
                     color: acRateColor(ps.acRate ?? 0),
                   }}>{ps.acRate ?? 0}%</span>
                   {/* mini bar */}
-                  <div style={{ height: 3, background: "var(--bg-raised)", borderRadius: 9, marginTop: 3 }}>
+                  <div style={{ height: 4, background: "var(--bg-raised)", borderRadius: 9, marginTop: 3 }}>
                     <div style={{
                       height: "100%", borderRadius: 9,
                       width: `${ps.acRate ?? 0}%`,
@@ -477,14 +560,19 @@ const AdminContestMonitorPage = () => {
             background: "var(--bg-base)", borderRadius: 14,
             boxShadow: "0 1px 8px rgba(0,0,0,.07)",
             marginBottom: 28, overflow: "hidden",
+            border: "1px solid var(--border-default)",
           }}>
             <div style={{ padding: "16px 22px", borderBottom: "1px solid var(--border-subtle)" }}>
-              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>
+              <h2 style={{
+                margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)",
+                borderLeft: "3px solid var(--primary)", paddingLeft: 10,
+              }}>
                 Verdict Distribution
               </h2>
-              <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--text-muted)" }}>
+              <p style={{ margin: "4px 0 0 13px", fontSize: 12, color: "var(--text-muted)" }}>
                 Per-problem donut charts
               </p>
+              <VerdictLegend />
             </div>
             <div style={{ display: "flex", gap: 0, overflowX: "auto", padding: "4px 0" }}>
               {(m?.problemStats ?? []).map((ps) => (
@@ -495,11 +583,13 @@ const AdminContestMonitorPage = () => {
                 }}>
                   <div style={{ marginBottom: 10 }}>
                     <span style={{
-                      display: "inline-block", background: "var(--primary-subtle)", color: "var(--primary)",
-                      fontWeight: 800, fontSize: 18,
-                      width: 36, height: 36, lineHeight: "36px", borderRadius: "50%",
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      background: "var(--primary-subtle)", color: "var(--primary)",
+                      fontWeight: 800, fontSize: 20,
+                      fontFamily: "var(--font-display)",
+                      width: 40, height: 40, borderRadius: "50%",
                     }}>{problemLabel(ps.problemOrder)}</span>
-                    <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4, fontWeight: 500 }}>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, fontWeight: 500 }}>
                       {ps.problemTitle}
                     </div>
                   </div>
@@ -533,15 +623,19 @@ const AdminContestMonitorPage = () => {
           <section style={{
             flex: 1, background: "var(--bg-base)", borderRadius: 14,
             boxShadow: "0 1px 8px rgba(0,0,0,.07)", overflow: "hidden",
+            border: "1px solid var(--border-default)",
           }}>
             {/* header + search */}
             <div style={{ padding: "16px 22px", borderBottom: "1px solid var(--border-subtle)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
                 <div>
-                  <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>
+                  <h2 style={{
+                    margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-primary)",
+                    borderLeft: "3px solid var(--primary)", paddingLeft: 10,
+                  }}>
                     Participants ({allParticipants.length})
                   </h2>
-                  <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--text-muted)" }}>
+                  <p style={{ margin: "4px 0 0 13px", fontSize: 12, color: "var(--text-muted)" }}>
                     Click row to view submissions · Click name to open profile
                   </p>
                 </div>
@@ -559,7 +653,8 @@ const AdminContestMonitorPage = () => {
             <div style={{
               display: "grid", gridTemplateColumns: "1fr 70px 70px 160px",
               gap: 8, padding: "8px 22px",
-              background: "var(--bg-raised)", fontSize: 12, fontWeight: 700, color: "var(--primary)",
+              background: "var(--bg-raised)", fontSize: 11, fontWeight: 700, color: "var(--primary)",
+              fontFamily: "var(--font-display)", letterSpacing: "0.1em", textTransform: "uppercase",
             }}>
               <span>Participant</span>
               <span style={{ textAlign: "center" }}>Subs</span>
@@ -583,6 +678,7 @@ const AdminContestMonitorPage = () => {
                       borderBottom: "1px solid var(--border-subtle)", fontSize: 13, cursor: "pointer",
                       background: isSelected ? "var(--primary-subtle)" : "transparent",
                       transition: "background .15s",
+                      borderLeft: isSelected ? "3px solid var(--primary)" : "3px solid transparent",
                     }}
                     onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "var(--bg-raised)"; }}
                     onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = isSelected ? "var(--primary-subtle)" : "transparent"; }}
@@ -591,7 +687,7 @@ const AdminContestMonitorPage = () => {
                     <span
                       onClick={(e) => { e.stopPropagation(); navigate(`/users/${p.username}`); }}
                       style={{
-                        fontWeight: isSelected ? 700 : 500,
+                        fontWeight: 600,
                         color: "var(--primary)",
                         textDecoration: "underline",
                         textDecorationColor: "transparent",
@@ -625,7 +721,7 @@ const AdminContestMonitorPage = () => {
                   style={{
                     padding: "4px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600,
                     border: "1px solid var(--border-default)", cursor: safeParticipantPage === 0 ? "not-allowed" : "pointer",
-                    background: safeParticipantPage === 0 ? "var(--bg-raised)" : "var(--bg-base)",
+                    background: safeParticipantPage === 0 ? "var(--bg-raised)" : "var(--bg-raised)",
                     color: safeParticipantPage === 0 ? "var(--text-muted)" : "var(--text-primary)",
                   }}
                 >← Prev</button>
@@ -637,7 +733,7 @@ const AdminContestMonitorPage = () => {
                     style={{
                       padding: "4px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700,
                       border: `1px solid ${p === safeParticipantPage ? "var(--primary)" : "var(--border-default)"}`,
-                      background: p === safeParticipantPage ? "var(--primary)" : "var(--bg-base)",
+                      background: p === safeParticipantPage ? "var(--primary)" : "var(--bg-raised)",
                       color: p === safeParticipantPage ? "var(--bg-void)" : "var(--text-primary)",
                       cursor: p === safeParticipantPage ? "default" : "pointer",
                     }}
@@ -652,7 +748,7 @@ const AdminContestMonitorPage = () => {
                     padding: "4px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600,
                     border: "1px solid var(--border-default)",
                     cursor: safeParticipantPage >= totalParticipantPages - 1 ? "not-allowed" : "pointer",
-                    background: safeParticipantPage >= totalParticipantPages - 1 ? "var(--bg-raised)" : "var(--bg-base)",
+                    background: "var(--bg-raised)",
                     color: safeParticipantPage >= totalParticipantPages - 1 ? "var(--text-muted)" : "var(--text-primary)",
                   }}
                 >Next →</button>
@@ -668,18 +764,20 @@ const AdminContestMonitorPage = () => {
           {/* Submission side panel */}
           {selectedUser && (
             <section style={{
-              width: 480, background: "var(--bg-base)", borderRadius: 14,
+              width: 460, background: "var(--bg-base)", borderRadius: 14,
               boxShadow: "0 1px 8px rgba(0,0,0,.07)", overflow: "hidden",
               position: "sticky", top: 72,
+              border: "1px solid var(--border-default)",
+              animation: "slideInRight 250ms cubic-bezier(0.16,1,0.3,1) both",
             }}>
               {/* panel header */}
               <div style={{
                 padding: "14px 18px", borderBottom: "1px solid var(--border-subtle)",
                 display: "flex", justifyContent: "space-between", alignItems: "center",
-                background: "var(--bg-overlay)",
+                background: "var(--bg-raised)",
               }}>
                 <div>
-                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 15 }}>
+                  <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 16, fontFamily: "var(--font-display)" }}>
                     {selectedUser.username}
                   </div>
                   <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 2 }}>
@@ -687,8 +785,10 @@ const AdminContestMonitorPage = () => {
                   </div>
                 </div>
                 <button onClick={() => setSelectedUser(null)} style={{
-                  background: "none", border: "none", cursor: "pointer",
-                  fontSize: 18, color: "var(--text-secondary)",
+                  background: "var(--bg-overlay)", border: "1px solid var(--border-subtle)",
+                  borderRadius: 8, width: 32, height: 32,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "var(--text-primary)", fontSize: 16, cursor: "pointer",
                 }}>✕</button>
               </div>
 
@@ -700,6 +800,7 @@ const AdminContestMonitorPage = () => {
                 }}>
                   <button onClick={() => setSelectedProblemFilter(null)} style={{
                     padding: "3px 12px", borderRadius: 9999, fontSize: 12, cursor: "pointer",
+                    height: 28,
                     fontWeight: 600, border: "1.5px solid",
                     borderColor: !selectedProblemFilter ? "var(--primary)" : "var(--border-default)",
                     background: !selectedProblemFilter ? "var(--primary-subtle)" : "var(--bg-base)",
@@ -710,6 +811,7 @@ const AdminContestMonitorPage = () => {
                       onClick={() => setSelectedProblemFilter(ps.problemId)}
                       style={{
                         padding: "3px 12px", borderRadius: 9999, fontSize: 12, cursor: "pointer",
+                        height: 28,
                         fontWeight: 600, border: "1.5px solid",
                         borderColor: selectedProblemFilter === ps.problemId ? "var(--primary)" : "var(--border-default)",
                         background: selectedProblemFilter === ps.problemId ? "var(--primary-subtle)" : "var(--bg-base)",
@@ -729,6 +831,7 @@ const AdminContestMonitorPage = () => {
                   display: "grid", gridTemplateColumns: "48px 1fr 90px 90px 120px",
                   gap: 8, padding: "6px 12px",
                   background: "var(--bg-raised)", fontSize: 11, fontWeight: 700, color: "var(--primary)",
+                  fontFamily: "var(--font-display)", letterSpacing: "0.1em", textTransform: "uppercase",
                 }}>
                   <span>#</span><span>Lang</span><span>Verdict</span><span>Time</span><span>Submitted</span>
                 </div>

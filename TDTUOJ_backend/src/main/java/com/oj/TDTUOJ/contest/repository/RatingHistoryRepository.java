@@ -9,8 +9,8 @@ import java.util.List;
 @Repository
 public interface RatingHistoryRepository extends JpaRepository<RatingHistory, Long> {
 
-    /** Profile page: show rating history newest first. */
-    List<RatingHistory> findByUserIdOrderByCreatedAtDesc(Long userId);
+    /** Profile page: show rating history newest first. ID as tiebreaker for same-timestamp entries. */
+    List<RatingHistory> findByUserIdOrderByCreatedAtDescIdDesc(Long userId);
 
     /** Idempotency guard: prevent double-processing. */
     boolean existsByContestIdAndUserId(Long contestId, Long userId);

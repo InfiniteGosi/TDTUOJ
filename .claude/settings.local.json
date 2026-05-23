@@ -10,7 +10,10 @@
       "Bash(npm run *)",
       "Skill(frontend-design)",
       "Read(//mnt/d/OJ/**)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(.\\\\mvnw compile *)"
     ]
   }
 }

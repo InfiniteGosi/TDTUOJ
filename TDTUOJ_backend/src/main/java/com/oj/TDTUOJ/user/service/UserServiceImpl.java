@@ -13,6 +13,8 @@ import com.oj.TDTUOJ.user.dto.ChangePasswordRequest;
 import com.oj.TDTUOJ.user.dto.UserDTO;
 import com.oj.TDTUOJ.user.entity.User;
 import com.oj.TDTUOJ.user.repository.UserRepository;
+import com.oj.TDTUOJ.userStatistics.entity.UserStatistics;
+import com.oj.TDTUOJ.userStatistics.repository.UserStatisticsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -30,8 +32,10 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,6 +48,7 @@ public class UserServiceImpl implements UserService {
     private final ModelMapper modelMapper;
     private final AwsS3Service awsS3Service;
     private final RatingHistoryRepository ratingHistoryRepository;
+    private final UserStatisticsRepository userStatisticsRepository;
 
     @Override
     public User getCurrentLoggedInUser() {
@@ -115,7 +120,19 @@ public class UserServiceImpl implements UserService {
             userPage = userRepository.findAll(pageable);
         }
 
-        Page<UserDTO> pageDTO = userPage.map(user -> modelMapper.map(user, UserDTO.class));
+        List<Long> userIds = userPage.getContent().stream().map(User::getId).collect(Collectors.toList());
+        Map<Long, UserStatistics> statsMap = userStatisticsRepository.findAllByUserIdIn(userIds)
+                .stream().collect(Collectors.toMap(UserStatistics::getUserId, Function.identity()));
+
+        Page<UserDTO> pageDTO = userPage.map(user -> {
+            UserDTO dto = modelMapper.map(user, UserDTO.class);
+            UserStatistics stats = statsMap.get(user.getId());
+            if (stats != null) {
+                dto.setPoint(stats.getTotalPoints());
+                dto.setRating(stats.getCurrentRating());
+            }
+            return dto;
+        });
 
         return Response.<Page<UserDTO>>builder()
                 .statusCode(HttpStatus.OK.value())
@@ -287,7 +304,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new NotFoundException("User not found: " + username));
 
         List<RatingHistoryDTO> history = ratingHistoryRepository
-                .findByUserIdOrderByCreatedAtDesc(user.getId())
+                .findByUserIdOrderByCreatedAtDescIdDesc(user.getId())
                 .stream()
                 .map(rh -> {
                     RatingHistoryDTO dto = new RatingHistoryDTO();

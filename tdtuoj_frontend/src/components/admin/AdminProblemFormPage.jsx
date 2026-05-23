@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Plus, Trash2, FileText, Save, Edit2, Eye,
+  Plus, Trash2, FileText, Save,
   ArrowLeft, User, Tag as TagIcon, X, AlertTriangle, Sparkles,
+  Terminal, CheckSquare,
 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import MDEditor from "@uiw/react-md-editor";
+import "@uiw/react-md-editor/markdown-editor.css";
+import "@uiw/react-markdown-preview/markdown.css";
 import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
 import SuggestiveSearch from "../common/SuggestiveSearch";
@@ -210,8 +213,10 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
 
   const [loading, setLoading]         = useState(false);
   const [loadingData, setLoadingData] = useState(false);
-  const [previewMode, setPreviewMode] = useState(false);
   const [dataVersion, setDataVersion] = useState(0);
+  const [editorTheme, setEditorTheme] = useState(
+    () => document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"
+  );
   const [currentUserId, setCurrentUserId] = useState(null);
   const [authorInfo, setAuthorInfo]   = useState({ id: null, username: null });
   const [aiExtracting, setAiExtracting] = useState(false);
@@ -241,6 +246,14 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
       } catch { showMessage("Failed to fetch user profile", "error"); }
     })();
     fetchActiveTags();
+  }, []);
+
+  useEffect(() => {
+    const obs = new MutationObserver(() => {
+      setEditorTheme(document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark");
+    });
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => obs.disconnect();
   }, []);
 
   useEffect(() => {
@@ -612,52 +625,21 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
 
               {/* Statement */}
               <div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                  <label style={{ ...LBL, marginBottom: 0 }}>Problem Statement (Markdown) <span style={{ color: "var(--red-wa)" }}>*</span></label>
-                  {/* Edit / Preview toggle */}
-                  <div style={{ display: "flex", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
-                    {[{ label: "Edit", icon: Edit2, val: false }, { label: "Preview", icon: Eye, val: true }].map(({ label, icon: Icon, val }) => (
-                      <button
-                        key={label}
-                        onClick={() => setPreviewMode(val)}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 5,
-                          padding: "5px 12px", border: "none",
-                          background: previewMode === val ? "var(--primary-subtle)" : "var(--bg-surface)",
-                          color: previewMode === val ? "var(--primary)" : "var(--text-secondary)",
-                          fontWeight: previewMode === val ? 700 : 400,
-                          fontSize: "var(--text-xs)", cursor: "pointer",
-                          borderRight: val === false ? "1px solid var(--border-default)" : "none",
-                          transition: "all 0.12s",
-                        }}
-                      >
-                        <Icon size={12} /> {label}
-                      </button>
-                    ))}
-                  </div>
+                <label style={{ ...LBL, marginBottom: 8 }}>
+                  Problem Statement (Markdown) <span style={{ color: "var(--red-wa)" }}>*</span>
+                </label>
+                <div data-color-mode={editorTheme} style={{ borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--border-default)" }}>
+                  <MDEditor
+                    value={problemData.statement}
+                    onChange={(v) => handleProblemChange("statement", v || "")}
+                    height={420}
+                    preview="edit"
+                    visibleDragbar={false}
+                  />
                 </div>
-
-                {!previewMode ? (
-                  <>
-                    <div style={{ border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", overflow: "hidden", height: 350 }}>
-                      <Editor
-                        height="100%" theme="vs-dark" language="markdown"
-                        value={problemData.statement}
-                        onChange={(v) => handleProblemChange("statement", v || "")}
-                        options={{ minimap: { enabled: false }, fontSize: 14, lineNumbers: "on", wordWrap: "on", scrollBeyondLastLine: false, automaticLayout: true }}
-                      />
-                    </div>
-                    <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: 6 }}>Saved as a .md file — use standard Markdown syntax.</div>
-                  </>
-                ) : (
-                  <div style={{ minHeight: 300, padding: 20, background: "var(--bg-surface)", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", overflowY: "auto", maxHeight: 500 }}>
-                    {problemData.statement ? (
-                      <div className="markdown-preview"><ReactMarkdown>{problemData.statement}</ReactMarkdown></div>
-                    ) : (
-                      <p style={{ color: "var(--text-muted)", fontStyle: "italic", margin: 0 }}>Nothing to preview yet.</p>
-                    )}
-                  </div>
-                )}
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: 6 }}>
+                  Saved as a .md file. Use the toolbar for formatting or switch to Preview / Live mode.
+                </div>
               </div>
             </div>
           </div>
@@ -683,7 +665,7 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
 
             {/* Section header */}
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <div style={SEC}>Test Cases</div>
+              <div style={{ ...SEC, marginBottom: 0 }}>Test Cases</div>
               <span style={{ display: "inline-flex", padding: "2px 9px", borderRadius: "var(--radius-pill)", fontSize: "var(--text-xs)", fontWeight: 700, background: "var(--primary-subtle)", color: "var(--primary)" }}>
                 {testCases.length}
               </span>
@@ -723,36 +705,51 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
             </div>
 
             {/* Test case rows */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {testCases.map((tc, i) => (
                 <div
                   key={i}
-                  style={{ background: "var(--bg-raised)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", overflow: "hidden" }}
+                  style={{
+                    background: "var(--bg-base)",
+                    border: "1px solid var(--border-default)",
+                    borderRadius: 10,
+                    overflow: "hidden",
+                    transition: "border-color 150ms ease",
+                  }}
                 >
-                  {/* Test case header bar */}
+                  {/* ── Header bar ── */}
                   <div style={{
                     display: "flex", alignItems: "center", gap: 10,
-                    padding: "8px 12px",
-                    borderBottom: "1px solid var(--border-subtle)",
-                    background: "var(--bg-overlay)",
+                    padding: "9px 14px",
+                    background: "var(--bg-raised)",
+                    borderBottom: "1px solid var(--border-default)",
                   }}>
-                    <div style={{ width: 22, height: 22, borderRadius: "var(--radius-sm)", background: "var(--primary-subtle)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <span style={{ fontSize: 10, fontWeight: 800, color: "var(--primary)" }}>{i + 1}</span>
-                    </div>
+                    {/* Index badge */}
+                    <span style={{
+                      width: 24, height: 24, borderRadius: 6,
+                      background: "var(--primary)", color: "var(--bg-void)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 11, fontWeight: 800,
+                      fontFamily: "var(--font-display)", flexShrink: 0,
+                    }}>
+                      {i + 1}
+                    </span>
 
+                    {/* Sample / Hidden pill */}
                     <button
+                      type="button"
+                      onClick={() => handleTestCaseChange(i, "isSample", !tc.isSample)}
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 5,
-                        padding: "2px 9px", borderRadius: "var(--radius-pill)", cursor: "pointer",
+                        padding: "3px 10px", borderRadius: 999, cursor: "pointer",
                         background: tc.isSample ? "var(--green-subtle)" : "transparent",
                         border: `1px solid ${tc.isSample ? "var(--green-ac)" : "var(--border-default)"}`,
-                        transition: "all 0.12s",
+                        transition: "all 120ms",
                       }}
-                      onClick={() => handleTestCaseChange(i, "isSample", !tc.isSample)}
                     >
-                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: tc.isSample ? "var(--green-ac)" : "var(--text-muted)", flexShrink: 0 }} />
-                      <span style={{ fontSize: 10, fontWeight: 700, color: tc.isSample ? "var(--green-ac)" : "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                        {tc.isSample ? "Sample" : "Hidden"}
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: tc.isSample ? "var(--green-ac)" : "var(--text-muted)", flexShrink: 0 }} />
+                      <span style={{ fontSize: 10, fontWeight: 700, color: tc.isSample ? "var(--green-ac)" : "var(--text-muted)", letterSpacing: "0.06em" }}>
+                        {tc.isSample ? "SAMPLE" : "HIDDEN"}
                       </span>
                     </button>
 
@@ -760,7 +757,8 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
 
                     {testCases.length > 1 && (
                       <button
-                        style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 6px", borderRadius: "var(--radius-sm)", display: "flex", color: "var(--text-muted)", transition: "color 0.12s, background 0.12s" }}
+                        type="button"
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 6px", borderRadius: 6, display: "flex", color: "var(--text-muted)", transition: "color 120ms, background 120ms" }}
                         onClick={() => removeTestCase(i)}
                         onMouseEnter={(e) => { e.currentTarget.style.color = "var(--red-wa)"; e.currentTarget.style.background = "var(--red-subtle)"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; e.currentTarget.style.background = "none"; }}
@@ -770,26 +768,70 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
                     )}
                   </div>
 
-                  {/* Input / output textareas */}
-                  <div style={{ display: "flex", gap: 0 }}>
-                    <div style={{ flex: 1, padding: "12px 14px", borderRight: "1px solid var(--border-subtle)" }}>
-                      <label style={{ ...LBL, marginBottom: 6 }}>Input <span style={{ color: "var(--red-wa)" }}>*</span></label>
+                  {/* ── Input / Output columns ── */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+
+                    {/* Input */}
+                    <div style={{ borderRight: "1px solid var(--border-default)" }}>
+                      <div style={{
+                        padding: "7px 14px",
+                        borderBottom: "1px solid var(--border-subtle)",
+                        background: "rgba(96,165,250,0.05)",
+                        display: "flex", alignItems: "center", gap: 6,
+                      }}>
+                        <Terminal size={11} color="var(--blue-ce)" />
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "var(--blue-ce)", letterSpacing: "0.08em" }}>INPUT</span>
+                        <span style={{ color: "var(--red-wa)", fontSize: 10 }}>*</span>
+                        {tc.input && (
+                          <span style={{ marginLeft: "auto", fontSize: 9, color: "var(--text-muted)" }}>
+                            {tc.input.split("\n").length} lines
+                          </span>
+                        )}
+                      </div>
                       <textarea
-                        className="input w-full"
                         value={tc.input}
                         onChange={(e) => handleTestCaseChange(i, "input", e.target.value)}
                         placeholder="Enter test input…"
-                        style={{ minHeight: 100, fontFamily: "var(--font-code)", fontSize: 13, resize: "vertical", border: "none", padding: 0, background: "transparent", outline: "none" }}
+                        style={{
+                          display: "block", width: "100%", minHeight: 120,
+                          padding: "12px 14px", boxSizing: "border-box",
+                          background: "transparent", border: "none", outline: "none",
+                          fontFamily: "var(--font-code)", fontSize: 13,
+                          color: "var(--text-primary)", resize: "vertical",
+                          lineHeight: 1.65,
+                        }}
                       />
                     </div>
-                    <div style={{ flex: 1, padding: "12px 14px" }}>
-                      <label style={{ ...LBL, marginBottom: 6 }}>Expected Output <span style={{ color: "var(--red-wa)" }}>*</span></label>
+
+                    {/* Expected Output */}
+                    <div>
+                      <div style={{
+                        padding: "7px 14px",
+                        borderBottom: "1px solid var(--border-subtle)",
+                        background: "rgba(34,197,94,0.05)",
+                        display: "flex", alignItems: "center", gap: 6,
+                      }}>
+                        <CheckSquare size={11} color="var(--green-ac)" />
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "var(--green-ac)", letterSpacing: "0.08em" }}>EXPECTED OUTPUT</span>
+                        <span style={{ color: "var(--red-wa)", fontSize: 10 }}>*</span>
+                        {tc.expectedOutput && (
+                          <span style={{ marginLeft: "auto", fontSize: 9, color: "var(--text-muted)" }}>
+                            {tc.expectedOutput.split("\n").length} lines
+                          </span>
+                        )}
+                      </div>
                       <textarea
-                        className="input w-full"
                         value={tc.expectedOutput}
                         onChange={(e) => handleTestCaseChange(i, "expectedOutput", e.target.value)}
                         placeholder="Enter expected output…"
-                        style={{ minHeight: 100, fontFamily: "var(--font-code)", fontSize: 13, resize: "vertical", border: "none", padding: 0, background: "transparent", outline: "none" }}
+                        style={{
+                          display: "block", width: "100%", minHeight: 120,
+                          padding: "12px 14px", boxSizing: "border-box",
+                          background: "transparent", border: "none", outline: "none",
+                          fontFamily: "var(--font-code)", fontSize: 13,
+                          color: "var(--text-primary)", resize: "vertical",
+                          lineHeight: 1.65,
+                        }}
                       />
                     </div>
                   </div>

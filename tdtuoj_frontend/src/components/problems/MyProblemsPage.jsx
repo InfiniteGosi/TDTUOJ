@@ -118,14 +118,14 @@ const MyProblemsPage = () => {
 
             <table className="table">
               <thead>
-                <tr>
-                  <th style={{ width: "7%", textAlign: "center" }}>#</th>
-                  <th style={{ width: "35%" }}>Problem</th>
-                  <th style={{ width: "12%" }}>Difficulty</th>
-                  <th style={{ width: "10%", textAlign: "center" }}>Points</th>
-                  <th style={{ width: "10%", textAlign: "center" }}>Visibility</th>
-                  <th style={{ width: "12%" }}>Time Limit</th>
-                  <th style={{ width: "14%", textAlign: "center" }}>Actions</th>
+                <tr style={{ background: "var(--primary-subtle)" }}>
+                  <th style={{ width: "7%", textAlign: "center", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
+                  <th style={{ width: "35%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Problem</th>
+                  <th style={{ width: "12%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Difficulty</th>
+                  <th style={{ width: "10%", textAlign: "center", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Points</th>
+                  <th style={{ width: "10%", textAlign: "center", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Visibility</th>
+                  <th style={{ width: "12%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Time Limit</th>
+                  <th style={{ width: "14%", textAlign: "center", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>

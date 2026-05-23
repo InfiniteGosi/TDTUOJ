@@ -37,6 +37,10 @@ public class UserDTO {
 
 
 
+    private Integer point;
+
+    private Integer rating;
+
     private Set<RoleDTO> roles;
 
     private List<String> roleNames;
