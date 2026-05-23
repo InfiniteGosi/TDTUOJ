@@ -60,12 +60,14 @@ public class ContestServiceImpl implements ContestService {
     // ── Read operations ───────────────────────────────────────────────────── //
 
     @Override
-    public Response<Page<ContestDTO>> getPublicContests(int page, int size) {
+    public Response<Page<ContestDTO>> getPublicContests(int page, int size, String search) {
         if (size <= 0) size = 20;
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.DESC, "startTime"));
-        Page<ContestDTO> dtoPage = contestRepository.findByIsPublicTrue(pageable)
-                .map(this::toDTO);
+        Page<Contest> pageEntities = (search != null && !search.isBlank())
+                ? contestRepository.findByIsPublicTrueAndNameContainingIgnoreCase(search.trim(), pageable)
+                : contestRepository.findByIsPublicTrue(pageable);
+        Page<ContestDTO> dtoPage = pageEntities.map(this::toDTO);
         return Response.<Page<ContestDTO>>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Contests retrieved successfully")

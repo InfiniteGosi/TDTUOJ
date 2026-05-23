@@ -21,6 +21,8 @@ public interface ContestRepository extends JpaRepository<Contest, Long> {
 
     Page<Contest> findByIsPublicTrue(Pageable pageable);
 
+    Page<Contest> findByIsPublicTrueAndNameContainingIgnoreCase(String name, Pageable pageable);
+
     /**
      * Finds rated contests that have ended but whose ratings have not been processed yet.
      * Uses JPQL to also handle NULL values (from existing rows before the column was added).

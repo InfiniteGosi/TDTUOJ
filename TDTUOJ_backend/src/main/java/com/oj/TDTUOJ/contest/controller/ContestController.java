@@ -28,9 +28,10 @@ public class ContestController {
     @GetMapping
     public ResponseEntity<Response<Page<ContestDTO>>> getPublicContests(
             @RequestParam(defaultValue = "0")  int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String search
     ) {
-        return ResponseEntity.ok(contestService.getPublicContests(page, size));
+        return ResponseEntity.ok(contestService.getPublicContests(page, size, search));
     }
 
     @GetMapping("/{id}")

@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface ContestService {
 
-    Response<Page<ContestDTO>> getPublicContests(int page, int size);
+    Response<Page<ContestDTO>> getPublicContests(int page, int size, String search);
 
     Response<ContestDTO> getContestBySlug(String slug);
 
