@@ -631,6 +631,18 @@ button {
   border-bottom: none;
 }
 
+/* ── Public table header standard ────────────────────────────── */
+.public-table-header {
+  background: var(--primary-subtle);
+}
+.public-table-header th {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 /* ── 13. TABS (plain, for use before Radix wired up) ─────────── */
 
 .tabs {
@@ -1044,6 +1056,33 @@ code:not(pre code) {
 
 @media (min-width: 769px) {
   .hide-desktop { display: none !important; }
+}
+
+/* ── 32. MD EDITOR OVERRIDES ─────────────────────────────────── */
+
+/* Toolbar button size */
+.w-md-editor-toolbar ul li button {
+  width: 30px !important;
+  height: 30px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* SVG icon size */
+.w-md-editor-toolbar ul li button svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Toolbar padding */
+.w-md-editor-toolbar {
+  padding: 6px 8px !important;
+}
+
+/* Divider spacing */
+.w-md-editor-toolbar ul {
+  gap: 2px !important;
 }
 
 /* ── 32. PROBLEM DESCRIPTION MARKDOWN ───────────────────────── */
