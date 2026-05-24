@@ -121,7 +121,11 @@ public class GeminiProblemAIService implements ProblemAIService {
         Map<String, Object> body = Map.of(
                 "contents", List.of(Map.of(
                         "parts", List.of(Map.of("text", prompt))
-                ))
+                )),
+                "generationConfig", Map.of(
+                        "maxOutputTokens", 65536,
+                        "temperature", 0.2
+                )
         );
 
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
@@ -135,7 +139,12 @@ public class GeminiProblemAIService implements ProblemAIService {
                         .block();
 
                 List<Map> candidates = (List<Map>) response.get("candidates");
-                Map content = (Map) candidates.get(0).get("content");
+                Map candidate = candidates.get(0);
+                String finishReason = (String) candidate.get("finishReason");
+                if ("MAX_TOKENS".equals(finishReason)) {
+                    throw new RuntimeException("AI response truncated (MAX_TOKENS). Reduce test case count or shrink constraint sizes.");
+                }
+                Map content = (Map) candidate.get("content");
                 List<Map> parts = (List<Map>) content.get("parts");
                 return (String) parts.get(0).get("text");
 
@@ -263,6 +272,8 @@ public class GeminiProblemAIService implements ProblemAIService {
                 - Each test case must have valid input matching problem constraints exactly
                 - Each test case must have the correct expected output
                 - Input and output format must match exactly what the problem describes
+                - SIZE BUDGET: keep each test case under 4KB total. If problem constraints permit large N (e.g. N=100 with 2D matrix, or large arrays), scale DOWN to a representative size (e.g. N=10–20) rather than emitting massive payloads. Do NOT pad with thousands of identical or maximum-value entries.
+                - Total output across all test cases must fit comfortably under 50KB
                 - Return ONLY a valid JSON array — no markdown fences, no explanation
 
                 JSON schema:

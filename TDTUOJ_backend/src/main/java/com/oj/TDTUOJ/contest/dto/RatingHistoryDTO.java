@@ -26,4 +26,6 @@ public class RatingHistoryDTO {
     private Integer rank;
 
     private LocalDateTime createdAt;
+
+    private LocalDateTime contestEndTime;
 }

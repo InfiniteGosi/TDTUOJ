@@ -25,6 +25,8 @@ public class ContestMonitorDTO {
     private Long   contestId;
     private String contestName;
     private String contestSlug;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
 
     /** Total number of registered participants. */
     private Integer totalRegistered;

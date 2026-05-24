@@ -553,6 +553,8 @@ public class ContestServiceImpl implements ContestService {
                 .contestId(contestId)
                 .contestName(contest.getName())
                 .contestSlug(contest.getSlug())
+                .startTime(contest.getStartTime())
+                .endTime(contest.getEndTime())
                 .totalRegistered((int) registrantCount)
                 .totalActiveParticipants(activeCount)
                 .totalSubmissions(submissions.size())

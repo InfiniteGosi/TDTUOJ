@@ -8,28 +8,36 @@
 
 ## Context
 
-User reports the Rating History chart on `ProfilePage.jsx` is wrong. Tooltip data they hovered:
+After the v1 fix (contestEndTime field, ordering, unique constraint, synthetic-start removal, `interval={0}`) the chart **still misrepresents the rating progression**. New evidence from two accounts:
 
-- "19 Apr 26" — **Test diff**, Rating **1500**, **+0**, Rank #1
-- "06 May 26" — **TDTU Game**, Rating **1475**, **-25**, Rank #2
+**Account `lol1`** — Contests tab shows 3 rows (Test diff 1500 +0, TDTU Cup 1467 **+0**, TDTU Game 1475 **-25**). Chart plots `1500 → 1467 → 1475` (down-then-up). The arithmetic does **not** chain: TDTU Cup change `+0` ≠ `1467 - 1500`; TDTU Game change `-25` ≠ `1475 - 1467`.
 
-Expected shape with these two contests + a synthetic start: flat at 1500 then a single drop to 1475 (`___\`).
+**Account `SuperDog123`** — Contests tab shows 4 rows (Hello 1500 +0, Test diff 1467 **-33**, TDTU Cup 1409 **-25**, TDTU Game 1442 **+0**). Chart plots `1500 → 1467 → 1409 → 1442`. Chain math: Hello→Test diff `-33` checks out (1500→1467); TDTU Cup change `-25` but actual `newRating` is `1409` (delta should be `-58`); TDTU Game change `+0` but actual `newRating` jumps `1409→1442` (delta should be `+33`).
 
-Observed shape: flat at 1500 → drop to ~1465 → rise to 1475 (`___\/_`). X-axis renders **4 ticks** ("12 Apr 26", "19 Apr 26", "19 Apr 26", "06 May 26") — i.e. the chart is receiving 4 data points (1 synthetic + 3 contests), but the user only knows of 2 contests.
+### Real root cause (v1 missed it): **broken rating chain across contests**
 
-### Why this happens — three real defects feeding each other
+Each `RatingHistory` row stores `oldRating` / `newRating` / `ratingChange` as a **snapshot taken at the moment `processRatings(contest)` ran**, against `UserStatistics.currentRating` at that moment. Once any contest is reprocessed (or contests are processed out of chronological end-time order), subsequent rows are **not** recomputed — so `row[n].oldRating ≠ row[n-1].newRating` and the chart's chronological plot of `newRating` no longer traces a coherent path.
 
-1. **`@CreationTimestamp` collision on `rating_history.created_at`.** `ContestRatingService.processRatings()` (`TDTUOJ_backend/src/main/java/com/oj/TDTUOJ/contest/service/ContestRatingService.java:170-179`) inserts one row per participant inside a single `@Transactional` loop. Hibernate stamps `created_at` at insert time, so multiple rows in the same batch can share the same millisecond. The repo already added secondary `id DESC` (`RatingHistoryRepository.java:13`), which fixes intra-batch ordering, but `created_at` still has **nothing to do with when the contest actually ended** — only when the scheduler happened to process it. Two contests processed in the same scheduler tick get the same X-axis date.
+Concretely in `ContestRatingService.processRatings()` (`TDTUOJ_backend/src/main/java/com/oj/TDTUOJ/contest/service/ContestRatingService.java`):
 
-2. **No DB-level uniqueness on `(user_id, contest_id)`.** `processRatings()` rolls back then re-inserts inside `@Transactional`, but the scheduler (`ContestRatingScheduler`) runs every 60s and there is no `@Async`/lock guard. Repository exposes `existsByContestIdAndUserId` but `processRatings()` does **not** call it — it relies solely on `findByContestId` + `deleteAll` then re-insert. A race or interrupted run can leave duplicate rows. The phantom 3rd data point in the user's chart is most plausibly a duplicate of either Test diff or TDTU Game with stale `old/newRating` from an earlier rating pass.
+- Lines 61-84 roll back **only this contest's** `ratingChange` from `UserStatistics`, leaving every later contest's history row untouched even though its stored `oldRating` is now stale.
+- Lines 115-127 read `stats.currentRating` per-user without considering whether later contests have already mutated it.
+- Line 178 stamps `contestEndTime` correctly (v1 fix), but the scheduler (`ContestRatingScheduler:36-37`) iterates `findUnprocessedRatedContests(now)` in repository-default order — **not** sorted by `endTime ASC` — so a contest that ended later can be processed first.
 
-3. **Synthetic start point is confusing.** `ProfilePage.jsx:298-303` prepends a fake data point dated 7 days before the first contest, with `rating = points[0].oldRating`. This is what produces the extra "12 Apr 26" tick. If the underlying chronological ordering is wrong (defect 1), this synthetic anchor amplifies the visual lie.
+Net effect: panel column "Change" reflects the historical snapshot, panel column "Rating" reflects the snapshot's `newRating`, the chart plots those `newRating` values along the (correct) `contestEndTime` axis — but the three pieces do not reconcile because the chain was never repaired after each rollback.
+
+### Defects (v1) — still relevant background
+
+1. **`@CreationTimestamp` collision** on `rating_history.created_at` — fixed by v1 (`contestEndTime` is now the chronological key).
+2. **No DB unique constraint on `(user_id, contest_id)`** — fixed by v1 (`uk_rating_history_user_contest`).
+3. **Synthetic start point** — fixed by v1 (removed).
+4. **NEW — chain inconsistency** — addressed by v2 below.
 
 ---
 
 ## Investigation Step (run before/with the fix)
 
-Confirm whether the bottom-dip data point is a duplicate row or a legitimate 3rd contest the user forgot about.
+Confirm chain integrity for the affected users. Expect `prev.new_rating == curr.old_rating` walking by `c.end_time ASC`.
 
 ```sql
 -- Replace <username> below.
@@ -43,48 +51,75 @@ WHERE u.username = '<username>'
 ORDER BY c.end_time ASC, rh.id ASC;
 ```
 
-- If 3+ rows appear and (`contest_id`, `user_id`) repeats → **duplicate** → fix #2 below cleans it up.
-- If 3 rows appear with distinct `contest_id` → it's a real 3rd contest the user did not mention; only fix #1 and #3 below are required to make the chart honest.
+- If `old_rating[n] ≠ new_rating[n-1]` for any row → **chain broken** (the lol1 / SuperDog123 case). v2 fix below recomputes downstream rows.
+- If `(contest_id, user_id)` repeats → duplicate; dedup SQL still applies.
+- If chain is clean and chart still wrong → re-open this doc; bug is elsewhere.
 
 ---
 
-## Fix Plan
+## v1 (already applied — kept for reference)
+
+Entity `contestEndTime` field, `uk_rating_history_user_contest` unique constraint, `ContestRatingService` populates `contestEndTime`, repo renamed to `findByUserIdOrderByContestEndTimeDescIdDesc`, DTO exposes the field, `UserServiceImpl.getRatingHistory()` maps it, `ProfilePage.RatingChart` sorts by it / drops synthetic point / uses `interval={0}`.
+
+These remain correct. The chart bug persists because the **stored snapshot values are themselves wrong**, not because of ordering or rendering.
+
+---
+
+## Fix Plan — v2 (chain rebuild)
+
+Two complementary changes. Backend is the real fix; frontend tweak is a defensive display so future data anomalies do not lie visually.
 
 ### Backend
 
-**File:** `TDTUOJ_backend/src/main/java/com/oj/TDTUOJ/contest/entity/RatingHistory.java`
+**File:** `TDTUOJ_backend/src/main/java/com/oj/TDTUOJ/contest/repository/ContestRepository.java`
 
-- [ ] Add `private LocalDateTime contestEndTime;` field. This becomes the **chronological key** for ordering and display, independent of insert time.
-- [ ] Add `@Table(name = "rating_history", uniqueConstraints = @UniqueConstraint(name = "uk_rating_history_user_contest", columnNames = {"user_id", "contest_id"}))`. Prevents future duplicate rows at DB layer. `ddl-auto: update` will add the constraint on next boot; if a duplicate already exists Hibernate will error — that's the signal to run the dedup SQL in the migration section.
-
-**File:** `TDTUOJ_backend/src/main/java/com/oj/TDTUOJ/contest/service/ContestRatingService.java`
-
-- [ ] In the builder at lines 170-179, also set `.contestEndTime(contest.getEndTime())`.
-- [ ] In the rollback block (lines 61-84), keep the `deleteAll` logic — once the unique constraint exists, `existsByContestIdAndUserId` becomes a redundant defence and we don't need to refactor.
+- [ ] Confirm `findUnprocessedRatedContests(LocalDateTime now)` orders by `endTime ASC`. If not, change its JPQL / derived name (e.g. rename to `findUnprocessedRatedContestsOrderByEndTimeAsc`, or add `ORDER BY c.endTime ASC` in `@Query`). Reason: scheduler must always process older contests first so each `processRatings` sees a clean prior chain.
 
 **File:** `TDTUOJ_backend/src/main/java/com/oj/TDTUOJ/contest/repository/RatingHistoryRepository.java`
 
-- [ ] Replace `findByUserIdOrderByCreatedAtDescIdDesc` with `findByUserIdOrderByContestEndTimeDescIdDesc`. Keep both during the transition if any other caller exists (none found in current scan, so straight rename is safe).
+- [ ] Add `List<RatingHistory> findByUserIdAndContestEndTimeGreaterThanOrderByContestEndTimeAscIdAsc(Long userId, LocalDateTime endTime);` — used by the chain-rebuild step to enumerate downstream rows that need their `oldRating` / `newRating` / `ratingChange` rewritten when an upstream contest is reprocessed.
+- [ ] Add `List<RatingHistory> findByUserIdOrderByContestEndTimeAscIdAsc(Long userId);` — used by a backfill routine to recompute the entire chain for an affected user.
 
-**File:** `TDTUOJ_backend/src/main/java/com/oj/TDTUOJ/user/service/UserServiceImpl.java`
+**File:** `TDTUOJ_backend/src/main/java/com/oj/TDTUOJ/contest/service/ContestRatingService.java`
 
-- [ ] In `getRatingHistory()` (line 302+), call the renamed repo method. Map `contestEndTime` into the DTO.
+- [ ] Replace the per-contest snapshot model with a **chain-aware** persistence: keep `ratingChange` as the source of truth, recompute `oldRating` / `newRating` on every affected row.
+- [ ] After the existing insert loop (line 192) completes for the freshly-processed contest, for **each affected `userId`** invoke a new private method `rebuildChainFrom(userId, contest.getEndTime())` that:
+    1. Loads `findByUserIdAndContestEndTimeGreaterThanOrderByContestEndTimeAscIdAsc(userId, contest.endTime)`.
+    2. Loads the just-inserted row (or `contest.endTime` row) as the chain seed, taking its `newRating`.
+    3. Walks each downstream row in order, setting `oldRating = runningRating`, then `runningRating += row.ratingChange` (cap to `≥1`), then `newRating = runningRating`. Save.
+    4. After the walk, sets `UserStatistics.currentRating = runningRating` and bumps `maxRating` if needed. This **overrides** the per-row `stats.setCurrentRating(newRating)` write at line 184 because that write is only correct when no downstream rows exist.
+- [ ] In the rollback block (lines 61-84), after deleting this contest's `RatingHistory` rows, also invoke `rebuildChainFrom(userId, contest.getEndTime())` for each affected user **before** the new insert loop runs, so that `stats.currentRating` reflects the chain with this contest removed. The existing arithmetic at line 67 (`stats.currentRating - rh.ratingChange`) is only correct when this is the user's most recent contest by end-time; for older contests it produces the wrong baseline and is what allowed the chain to break in the first place.
+- [ ] Keep `ratingChange` computation as-is (seed-vs-rank formula on the participants' chain-correct ratings at this contest's end-time). The `oldRating` fed into the formula must come from "user's `newRating` from the immediately-prior contest by `contestEndTime`, or `DEFAULT_RATING` if none." Replace the line 117 `userStatisticsRepository.findByUserId(...)` lookup with this prior-chain lookup: `ratingHistoryRepository.findTopByUserIdAndContestEndTimeLessThanOrderByContestEndTimeDescIdDesc(userId, contest.endTime)` → if present, `oldRating = prior.newRating`, else `oldRating = DEFAULT_RATING`. Add that derived query method to the repo.
 
-**File:** `TDTUOJ_backend/src/main/java/com/oj/TDTUOJ/contest/dto/RatingHistoryDTO.java`
+**File:** `TDTUOJ_backend/src/main/java/com/oj/TDTUOJ/contest/service/ContestRatingScheduler.java`
 
-- [ ] Add `private LocalDateTime contestEndTime;` field.
+- [ ] Confirm the loop at line 46 processes contests in `endTime ASC` order (relies on repo change above). If the repo cannot be changed (e.g. used elsewhere with different ordering), sort `candidates` in-place: `candidates.sort(Comparator.comparing(Contest::getEndTime));`.
 
-### Backend — one-time data fix (only if investigation SQL finds duplicates)
+### Backend — one-time data fix
+
+After the code change ships, run a one-time backfill that walks every user's existing `rating_history` chronologically and rewrites `old_rating` / `new_rating`. Expose this as a transient admin endpoint (e.g. `POST /api/admin/rating/rebuild-chains`) or run it once via a `CommandLineRunner` guarded by an env flag, then remove. Algorithm (pseudo-SQL — actually do it in Java/JPA for correctness):
+
+```
+for each user_id with rows in rating_history:
+  running = 1500
+  for each row ordered by contest_end_time ASC, id ASC:
+    row.old_rating = running
+    running = max(1, running + row.rating_change)
+    row.new_rating = running
+    save(row)
+  user_statistics[user_id].current_rating = running
+  user_statistics[user_id].max_rating = max(max_rating, max(new_rating over chain))
+```
+
+Dedup SQL from v1 still applies if the investigation finds duplicates:
 
 ```sql
--- Keep newest row per (user_id, contest_id), delete older copies.
 DELETE FROM rating_history a
 USING rating_history b
 WHERE a.user_id = b.user_id
   AND a.contest_id = b.contest_id
   AND a.id < b.id;
 
--- Backfill contest_end_time for existing rows.
 UPDATE rating_history rh
 SET contest_end_time = c.end_time
 FROM contest c
@@ -92,35 +127,36 @@ WHERE c.id = rh.contest_id
   AND rh.contest_end_time IS NULL;
 ```
 
+Run dedup + `contest_end_time` backfill **before** the chain-rebuild routine.
+
 ### Frontend
 
 **File:** `tdtuoj_frontend/src/components/profile/ProfilePage.jsx`
 
-- [ ] In `RatingChart` (line 288), change `points` sort key to use `contestEndTime` falling back to `createdAt` (for safety until backfill runs).
-- [ ] Remove the synthetic start point (lines 298-303 + spread at 302-311). Render only real contest data points. The first contest naturally shows its own `oldRating` via the tooltip's "before" value; the fake "12 Apr 26" anchor adds no information and was the source of the misleading flat tail.
-- [ ] In the `chartData` map, use `p.contestEndTime ?? p.createdAt` for the `name` axis label.
-- [ ] If the chart looks too sparse with only N real points, set `<XAxis interval={0}>` so each contest gets a tick, removing Recharts' auto-collapsing that produced the duplicate "19 Apr 26" labels.
+- [ ] In `RatingChart` (around line 302), stop plotting `p.newRating` directly. Compute `chartData[i].rating` as a running fold over `ratingChange` starting from `points[0].oldRating ?? 1500`. This makes the chart self-consistent even if a single row's stored `newRating` ever drifts again. The tooltip should still surface `p.ratingChange` and `p.rank` from the row (those remain truthful).
+- [ ] In the Contests table (around line 949), also recompute the displayed `Rating` column the same way (running fold) instead of `c.newRating`, so panel and chart always agree. Tooltip / Change column continues to use `c.ratingChange`.
+- [ ] Add a dev-only `console.assert` (gated by `import.meta.env.DEV`) that walks `points` chronologically and warns if `points[i].oldRating !== points[i-1].newRating` — early-warning for future drift.
 
 **File:** `tdtuoj_frontend/src/services/ApiService.js`
 
-- [ ] No change. `getRatingHistory()` is a pass-through; new `contestEndTime` flows naturally in the JSON.
+- [ ] No change.
 
 ---
 
-## File Map (Summary)
+## File Map (Summary — v2 delta on top of v1)
 
 **Backend (modify):**
-- `contest/entity/RatingHistory.java` — add `contestEndTime`, unique constraint
-- `contest/service/ContestRatingService.java` — populate `contestEndTime` on insert
-- `contest/repository/RatingHistoryRepository.java` — rename query method
-- `contest/dto/RatingHistoryDTO.java` — expose `contestEndTime`
-- `user/service/UserServiceImpl.java` — call renamed repo method, map field
+- `contest/repository/ContestRepository.java` — `findUnprocessedRatedContests` must order by `endTime ASC`
+- `contest/repository/RatingHistoryRepository.java` — add chain-walk queries (`findByUserIdAndContestEndTimeGreaterThan…`, `findByUserIdOrderByContestEndTimeAscIdAsc`, `findTopByUserIdAndContestEndTimeLessThan…`)
+- `contest/service/ContestRatingService.java` — derive `oldRating` from prior chain row not `stats.currentRating`; add `rebuildChainFrom(userId, fromEndTime)`; invoke after every insert and after rollback; final `stats.currentRating` is the chain tail
+- `contest/service/ContestRatingScheduler.java` — guarantee `endTime ASC` processing order (sort in-place if repo ordering not changed)
+- New one-shot admin/CLI route to rebuild all users' chains
 
 **Frontend (modify):**
-- `src/components/profile/ProfilePage.jsx` — drop synthetic start, sort by `contestEndTime`, fix X-axis ticks
+- `src/components/profile/ProfilePage.jsx` — `RatingChart` and Contests table compute displayed rating as running fold of `ratingChange` for self-consistency; dev assert on chain integrity
 
-**DB (one-time, only if duplicates exist):**
-- Dedup query + backfill `contest_end_time`
+**DB (one-time):**
+- Dedup, `contest_end_time` backfill (from v1), then chain rebuild routine.
 
 ---
 
@@ -128,13 +164,12 @@ WHERE c.id = rh.contest_id
 
 - [ ] `./mvnw compile -q` inside `TDTUOJ_backend/` passes.
 - [ ] `npm run build` inside `tdtuoj_frontend/` passes.
-- [ ] Boot backend. Confirm Hibernate adds `contest_end_time` column and `uk_rating_history_user_contest` constraint without error. If Hibernate errors on the constraint, run the dedup SQL above and reboot.
-- [ ] Run the investigation SQL above for the affected user. Expect either: (a) only 2 distinct `contest_id` rows after dedup, or (b) 3 distinct `contest_id` rows confirming the legitimate 3rd contest.
-- [ ] Load `/users/<username>` in the browser. Chart should now:
-    - Have exactly one tick per real contest (no synthetic "12 Apr 26").
-    - Show contests in true chronological order by `contestEndTime`.
-    - For the reported user: render `____\` (flat 1500 → drop to 1475) if duplicate found and removed, OR render the truthful 3-contest shape with each tick hover identifying its contest.
-- [ ] Manually re-trigger `processRatings` on a test contest (admin re-process) twice and confirm the unique constraint blocks duplicates rather than silently inserting them.
+- [ ] Investigation SQL for `lol1` and `SuperDog123` returns rows whose `old_rating[n] == new_rating[n-1]` walking `c.end_time ASC` (chain integrity restored by backfill).
+- [ ] On `/users/lol1`: Chart values match Contests panel exactly. Each contest row's `rating - prev.rating == ratingChange`.
+- [ ] On `/users/SuperDog123`: same check across all 4 contests; specifically TDTU Cup change matches `1409 - 1467` (or whatever the post-rebuild value is — the point is `change` and `rating` reconcile).
+- [ ] Admin re-process a contest in the middle of the chain: all downstream rows' `oldRating` / `newRating` get rewritten; `UserStatistics.currentRating` equals the chain tail.
+- [ ] Scheduler logs show `endTime ASC` processing order when multiple contests end in the same tick.
+- [ ] Dev-mode `console.assert` is silent on a healthy profile.
 
 ---
 
@@ -143,3 +178,5 @@ WHERE c.id = rh.contest_id
 - Recharts version upgrade, tooltip restyle, or any UX polish beyond what's required to render truthful data.
 - Backfilling `created_at` — leave as-is; `contestEndTime` supersedes it for chronology.
 - Removing the `@CreationTimestamp` annotation — keep it for audit trail.
+- Changing the seed-vs-rank delta formula itself. v2 only fixes how stored snapshots stay consistent; the delta math is unchanged.
+- Migrating to a derived (compute-on-read) model where `oldRating` / `newRating` are not stored at all. Tempting, but defers the cost to every profile load and breaks any analytics that read `new_rating` directly. The chain-rebuild approach keeps reads cheap and writes idempotent.

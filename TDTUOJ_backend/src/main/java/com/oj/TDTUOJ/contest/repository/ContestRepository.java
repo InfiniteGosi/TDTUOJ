@@ -29,6 +29,7 @@ public interface ContestRepository extends JpaRepository<Contest, Long> {
      */
     @Query("SELECT c FROM Contest c WHERE c.isRated = true " +
            "AND (c.ratingProcessed = false OR c.ratingProcessed IS NULL) " +
-           "AND c.endTime < :now")
+           "AND c.endTime < :now " +
+           "ORDER BY c.endTime ASC, c.id ASC")
     List<Contest> findUnprocessedRatedContests(@Param("now") LocalDateTime now);
 }

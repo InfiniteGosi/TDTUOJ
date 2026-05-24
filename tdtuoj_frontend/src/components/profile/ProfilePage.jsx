@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Trophy,
@@ -286,7 +286,11 @@ const RatingTooltip = ({ active, payload }) => {
 };
 
 const RatingChart = ({ data }) => {
-  const points = [...data].reverse();
+  const points = [...data].sort((a, b) => {
+    const ta = new Date(a.contestEndTime ?? a.createdAt).getTime();
+    const tb = new Date(b.contestEndTime ?? b.createdAt).getTime();
+    return ta - tb;
+  });
   if (points.length === 0) return null;
 
   const fmtAxis = (dt) => {
@@ -295,20 +299,30 @@ const RatingChart = ({ data }) => {
     return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" });
   };
 
-  const startDate = points[0]?.createdAt
-    ? new Date(new Date(points[0].createdAt).getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    : null;
-
-  const chartData = [
-    { name: startDate ? fmtAxis(startDate) : "Start", rating: points[0].oldRating },
-    ...points.map((p) => ({
-      name: p.createdAt ? fmtAxis(p.createdAt) : p.contestName,
-      rating: p.newRating,
-      change: p.ratingChange,
+  // Render rating as a running fold of ratingChange so the line is always
+  // self-consistent even if a stored newRating row ever drifts. Seed from the
+  // first row's oldRating (or 1500 if missing).
+  let running = points[0]?.oldRating ?? 1500;
+  if (import.meta.env.DEV) {
+    for (let i = 1; i < points.length; i++) {
+      if (points[i].oldRating !== points[i - 1].newRating) {
+        console.warn(
+          `[RatingChart] chain drift at index ${i}: oldRating=${points[i].oldRating} prev.newRating=${points[i - 1].newRating}`
+        );
+      }
+    }
+  }
+  const chartData = points.map((p) => {
+    const delta = typeof p.ratingChange === "number" ? p.ratingChange : 0;
+    running = Math.max(1, running + delta);
+    return {
+      name: fmtAxis(p.contestEndTime ?? p.createdAt) || p.contestName,
+      rating: running,
+      change: delta,
       rank: p.rank,
       contest: p.contestName,
-    })),
-  ];
+    };
+  });
 
   const allRatings = chartData.map((d) => d.rating);
   const minY = Math.min(...allRatings) - 40;
@@ -338,7 +352,7 @@ const RatingChart = ({ data }) => {
             tickLine={false}
             tick={{ fontSize: 10, fill: "var(--text-muted)", fontFamily: "var(--font-body)" }}
             tickMargin={8}
-            interval="preserveStartEnd"
+            interval={0}
           />
 
           <YAxis
@@ -436,6 +450,26 @@ const ProfilePage = () => {
   const [codeModal, setCodeModal] = useState(null);
   const [problemMap, setProblemMap] = useState({});     // { [problemId]: { title, slug } }
   const LANG_MAP = { PYTHON: "python", JAVA: "java", C: "c", CPP: "cpp" };
+
+  // Self-consistent rating chain: running fold over ratingChange in
+  // chronological order. Used by the Contests table so the displayed Rating
+  // column always equals (prior rating + Change), even if a stored newRating
+  // row drifts. Keyed by row id.
+  const ratingChain = useMemo(() => {
+    const asc = [...ratingHistory].sort((a, b) => {
+      const ta = new Date(a.contestEndTime ?? a.createdAt).getTime();
+      const tb = new Date(b.contestEndTime ?? b.createdAt).getTime();
+      return ta - tb;
+    });
+    let r = asc[0]?.oldRating ?? 1500;
+    const map = new Map();
+    for (const row of asc) {
+      const d = typeof row.ratingChange === "number" ? row.ratingChange : 0;
+      r = Math.max(1, r + d);
+      map.set(row.id, r);
+    }
+    return map;
+  }, [ratingHistory]);
 
   const openCode = async (s) => {
     setCodeModal({ submission: s, code: s.sourceCode || null, loading: !s.sourceCode });
@@ -963,7 +997,7 @@ const ProfilePage = () => {
                         >
                           <td style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{c.contestName}</td>
                           <td style={{ textAlign: "center", fontSize: 13, color: "var(--text-secondary)" }}>#{c.rank}</td>
-                          <td style={{ textAlign: "center", fontWeight: 700, color: "var(--primary)", fontSize: 13 }}>{c.newRating}</td>
+                          <td style={{ textAlign: "center", fontWeight: 700, color: "var(--primary)", fontSize: 13 }}>{ratingChain.get(c.id) ?? c.newRating}</td>
                           <td style={{ textAlign: "center" }}>
                             <span style={{
                               fontSize: 12, fontWeight: 700,

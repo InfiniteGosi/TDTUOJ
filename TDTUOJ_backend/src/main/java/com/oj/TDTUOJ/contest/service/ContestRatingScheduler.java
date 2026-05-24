@@ -10,6 +10,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -33,8 +35,15 @@ public class ContestRatingScheduler {
 
     @Scheduled(fixedDelay = 60_000)
     public void checkAndProcessRatings() {
-        List<Contest> candidates = contestRepository
-                .findUnprocessedRatedContests(LocalDateTime.now());
+        List<Contest> candidates = new ArrayList<>(contestRepository
+                .findUnprocessedRatedContests(LocalDateTime.now()));
+
+        // Defensive: guarantee chronological processing so chain rebuilds touch
+        // only forward rows, never backward.
+        candidates.sort(Comparator.comparing(
+                Contest::getEndTime,
+                Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(Contest::getId, Comparator.nullsLast(Comparator.naturalOrder())));
 
         if (candidates.isEmpty()) {
             log.debug("Rating scheduler tick — no unprocessed rated contests found");

@@ -97,7 +97,7 @@ const OrganizationPage = () => {
                 onChange={(v) => { setTab(v); setPage(0); }}
                 options={[
                   { value: "ALL", label: "All"     },
-                  { value: "MY",  label: "My Orgs" },
+                  { value: "MY",  label: "My Orgs", accent: "var(--primary)" },
                 ]}
               />
             )}

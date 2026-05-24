@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-@Table(name = "rating_history")
+@Table(name = "rating_history", uniqueConstraints = @UniqueConstraint(name = "uk_rating_history_user_contest", columnNames = {"user_id", "contest_id"}))
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -37,4 +37,6 @@ public class RatingHistory {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    private LocalDateTime contestEndTime;
 }

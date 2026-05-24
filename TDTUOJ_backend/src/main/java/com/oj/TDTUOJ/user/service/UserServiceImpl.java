@@ -304,7 +304,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new NotFoundException("User not found: " + username));
 
         List<RatingHistoryDTO> history = ratingHistoryRepository
-                .findByUserIdOrderByCreatedAtDescIdDesc(user.getId())
+                .findByUserIdOrderByContestEndTimeDescIdDesc(user.getId())
                 .stream()
                 .map(rh -> {
                     RatingHistoryDTO dto = new RatingHistoryDTO();
@@ -315,6 +315,7 @@ public class UserServiceImpl implements UserService {
                     dto.setRatingChange(rh.getRatingChange());
                     dto.setRank(rh.getRank());
                     dto.setCreatedAt(rh.getCreatedAt());
+                    dto.setContestEndTime(rh.getContestEndTime());
                     return dto;
                 })
                 .collect(Collectors.toList());

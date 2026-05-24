@@ -182,18 +182,67 @@ const VerdictBadge = ({ verdict }) => {
 };
 
 // ── StatCard ───────────────────────────────────────────────────────────────
-const StatCard = ({ label, value, sub, color = "var(--primary)" }) => (
-  <div style={{
-    background: "var(--bg-base)", borderRadius: 12, padding: "20px 24px",
-    border: "1px solid var(--border-default)",
-    borderTop: `3px solid ${color}`,
-    flex: 1, minWidth: 140,
-  }}>
-    <div style={{ fontSize: 32, fontWeight: 800, color, fontFamily: "var(--font-display)", lineHeight: 1.1 }}>{value ?? "—"}</div>
-    <div style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 500, marginTop: 6 }}>{label}</div>
-    {sub && <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>{sub}</div>}
-  </div>
-);
+// Terminal-style metric block: left rail, slug-style label, mono tabular numerals.
+const StatCard = ({ label, value, sub, color = "var(--primary)" }) => {
+  const display = value ?? "—";
+  return (
+    <div style={{
+      position: "relative",
+      background: "var(--bg-base)",
+      border: "1px solid var(--border-default)",
+      borderLeft: `2px solid ${color}`,
+      borderRadius: "0 6px 6px 0",
+      padding: "14px 18px 14px 16px",
+      flex: 1, minWidth: 160,
+      overflow: "hidden",
+    }}>
+      {/* faint accent tint that fades right */}
+      <div aria-hidden style={{
+        position: "absolute", inset: 0,
+        background: `linear-gradient(90deg, ${color}14 0%, transparent 65%)`,
+        pointerEvents: "none",
+      }} />
+
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{
+          fontFamily: "var(--font-code)",
+          fontSize: 10.5,
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: "var(--text-muted)",
+          display: "flex", alignItems: "center", gap: 6,
+        }}>
+          <span style={{ color, opacity: 0.7 }}>//</span>
+          <span>{label}</span>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <span style={{
+            fontFamily: "var(--font-code)",
+            fontSize: 28,
+            fontWeight: 700,
+            color: "var(--text-primary)",
+            fontVariantNumeric: "tabular-nums",
+            letterSpacing: "-0.01em",
+            lineHeight: 1,
+          }}>
+            {display}
+          </span>
+          {sub && (
+            <span style={{
+              fontFamily: "var(--font-code)",
+              fontSize: 10,
+              color: "var(--text-muted)",
+              letterSpacing: "0.04em",
+            }}>
+              {sub}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ── SubmissionRow ──────────────────────────────────────────────────────────
 const SubmissionRow = ({ s, problems }) => {
@@ -328,14 +377,15 @@ const AdminContestMonitorPage = () => {
   // initial load
   useEffect(() => { fetchMonitor(false); }, [fetchMonitor]);
 
-  // polling
+  // polling (auto-stop once contest ended)
   useEffect(() => {
     clearInterval(timerRef.current);
-    if (pollInterval > 0) {
+    const ended = monitor?.endTime ? new Date(monitor.endTime).getTime() <= Date.now() : false;
+    if (pollInterval > 0 && !ended) {
       timerRef.current = setInterval(() => fetchMonitor(true), pollInterval);
     }
     return () => clearInterval(timerRef.current);
-  }, [pollInterval, fetchMonitor]);
+  }, [pollInterval, fetchMonitor, monitor?.endTime]);
 
   // fetch participant submissions
   const openUserDrawer = async (participant) => {
@@ -392,6 +442,7 @@ const AdminContestMonitorPage = () => {
   }
 
   const m = monitor;
+  const contestEnded = m?.endTime ? new Date(m.endTime).getTime() <= Date.now() : false;
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-void)", fontFamily: "var(--font-body)" }}>
@@ -423,8 +474,16 @@ const AdminContestMonitorPage = () => {
           <span style={{ color: "var(--text-primary)", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20 }}>
             {m?.contestName ?? "Contest Monitor"}
           </span>
-          {/* live indicator */}
-          {pollInterval > 0 && (
+          {/* status indicator */}
+          {contestEnded ? (
+            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: "50%", background: "var(--text-muted)",
+                display: "inline-block",
+              }} />
+              <span style={{ color: "var(--text-muted)", fontSize: 11, fontWeight: 700, fontFamily: "var(--font-display)" }}>ENDED</span>
+            </span>
+          ) : pollInterval > 0 && (
             <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{
                 width: 8, height: 8, borderRadius: "50%", background: "var(--green-ac)",
@@ -461,11 +520,16 @@ const AdminContestMonitorPage = () => {
 
         {/* ── Summary cards ── */}
         {m && (
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 28 }}>
-            <StatCard label="Registered"         value={m.totalRegistered}         color="var(--primary)" />
-            <StatCard label="Active Participants" value={m.totalActiveParticipants}  color="var(--navy-bright)" />
-            <StatCard label="Total Submissions"   value={m.totalSubmissions}         color="var(--blue-ce)" />
-            <StatCard label="Pending / Running"   value={m.pendingSubmissions}       color={m.pendingSubmissions > 0 ? "var(--amber-tle)" : "var(--text-secondary)"} />
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 12,
+            marginBottom: 28,
+          }}>
+            <StatCard label="Registered"          value={m.totalRegistered}         color="var(--primary)" />
+            <StatCard label="Active"              value={m.totalActiveParticipants} sub={m.totalRegistered ? `of ${m.totalRegistered}` : undefined} color="var(--navy-bright)" />
+            <StatCard label="Submissions"         value={m.totalSubmissions}        color="var(--blue-ce)" />
+            <StatCard label="Pending / Running"   value={m.pendingSubmissions}      sub={m.pendingSubmissions > 0 ? "in queue" : "idle"} color={m.pendingSubmissions > 0 ? "var(--amber-tle)" : "var(--text-muted)"} />
           </div>
         )}
 

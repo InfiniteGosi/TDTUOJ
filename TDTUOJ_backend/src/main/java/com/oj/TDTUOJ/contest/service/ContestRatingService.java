@@ -14,7 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Computes rating changes after a rated contest's judging period ends.
@@ -25,24 +27,19 @@ import java.util.List;
  *   delta = round( K * (seed - rank) / N )
  * </pre>
  *
- * <ul>
- *   <li><b>seed</b> – your expected rank based on ratings (highest rated → seed 1)</li>
- *   <li><b>rank</b> – your actual finishing rank from the leaderboard</li>
- *   <li><b>K = 100</b> – scaling factor</li>
- *   <li><b>N</b> – total participants who have a participation row</li>
- *   <li>Cap: ±150 per contest</li>
- *   <li>Default rating for new users: 1500</li>
- * </ul>
- *
- * If you beat your expected rank → positive delta.
- * If you underperform → negative delta.
+ * <p><b>Chain consistency:</b> A user's {@code oldRating} for a contest is the
+ * {@code newRating} of their immediately-prior contest by {@code contestEndTime}
+ * (or {@link #DEFAULT_RATING} if none). After (re)processing a contest, every
+ * downstream row for each affected user is rewritten so that
+ * {@code row[n].oldRating == row[n-1].newRating}, and the user's
+ * {@link UserStatistics#getCurrentRating()} is set to the chain tail.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ContestRatingService {
 
-    private static final int DEFAULT_RATING = 1500;
+    public static final int DEFAULT_RATING = 1500;
     private static final int K              = 100;
     private static final int MAX_DELTA      = 150;
 
@@ -57,24 +54,16 @@ public class ContestRatingService {
      */
     @Transactional
     public void processRatings(Contest contest) {
-        // ── Step 0: Roll back any previous rating processing for this contest ──
+        // ── Step 0: Wipe any previous rating rows for this contest. We do NOT
+        // try to roll back UserStatistics here; the chain rebuild at the end
+        // will write the correct final value for every affected user.
         List<RatingHistory> oldHistory = ratingHistoryRepository.findByContestId(contest.getId());
         if (!oldHistory.isEmpty()) {
-            log.info("Rolling back {} previous rating entries for contestId={}",
+            log.info("Wiping {} previous rating entries for contestId={}",
                     oldHistory.size(), contest.getId());
-            for (RatingHistory rh : oldHistory) {
-                userStatisticsRepository.findByUserId(rh.getUser().getId()).ifPresent(stats -> {
-                    int rollbackRating = stats.getCurrentRating() - rh.getRatingChange();
-                    rollbackRating = Math.max(1, rollbackRating);
-                    stats.setCurrentRating(rollbackRating);
-                    userStatisticsRepository.save(stats);
-                    log.info("  Rolled back userId={} rating {} → {} (undid {})",
-                            rh.getUser().getId(), stats.getCurrentRating() + rh.getRatingChange(),
-                            rollbackRating, rh.getRatingChange());
-                });
-            }
             ratingHistoryRepository.deleteAll(oldHistory);
-            // Clear participation snapshots
+            ratingHistoryRepository.flush();
+            // Clear participation snapshots so they get repopulated below.
             participationRepository.findByContestIdOrderByRankAsc(contest.getId())
                     .forEach(cp -> {
                         cp.setRatingBefore(null);
@@ -109,27 +98,18 @@ public class ContestRatingService {
             return Integer.compare(penaltyA, penaltyB); // asc
         });
 
-        // 2. Resolve current ratings from user_statistics (null or 0 → default 1500)
+        // 2. Resolve oldRating from the chain: prior RatingHistory row by end-time,
+        //    or DEFAULT_RATING if user has none.
         int[] ratings = new int[n];
-        UserStatistics[] statsArr = new UserStatistics[n];
+        LocalDateTime endTime = contest.getEndTime();
         for (int i = 0; i < n; i++) {
             User user = participations.get(i).getUser();
-            UserStatistics stats = userStatisticsRepository.findByUserId(user.getId())
-                    .orElseGet(() -> {
-                        UserStatistics fresh = UserStatistics.builder()
-                                .userId(user.getId())
-                                .build();
-                        return userStatisticsRepository.save(fresh);
-                    });
-            statsArr[i] = stats;
-            int r = (stats.getCurrentRating() != null && stats.getCurrentRating() > 0)
-                    ? stats.getCurrentRating() : DEFAULT_RATING;
-            ratings[i] = r;
-            log.info("  rank={} participant: userId={} username={} solved={} penalty={} currentRating={} effectiveRating={}",
+            ratings[i] = priorRating(user.getId(), endTime);
+            log.info("  rank={} userId={} username={} solved={} penalty={} oldRating(chain)={}",
                     i + 1, user.getId(), user.getUsername(),
                     participations.get(i).getProblemsSolved(),
                     participations.get(i).getPenaltyTime(),
-                    stats.getCurrentRating(), ratings[i]);
+                    ratings[i]);
         }
 
         // 3. Compute seed and delta for each participant
@@ -175,19 +155,20 @@ public class ContestRatingService {
                     .newRating(newRating)
                     .ratingChange(delta)
                     .rank(rank)
+                    .contestEndTime(endTime)
                     .build();
             ratingHistoryRepository.save(history);
 
-            // 6. Update user_statistics (single source of truth for rating)
-            UserStatistics stats = statsArr[i];
-            stats.setCurrentRating(newRating);
-            if (newRating > (stats.getMaxRating() != null ? stats.getMaxRating() : 0)) {
-                stats.setMaxRating(newRating);
-            }
-            userStatisticsRepository.save(stats);
+            log.info("  Inserted: userId={} rank={} seed={} delta={} {} → {}",
+                    user.getId(), rank, seed, delta, oldRating, newRating);
+        }
 
-            log.info("  Rating: userId={} username={} rank={} seed={} delta={} {} → {}",
-                    user.getId(), user.getUsername(), rank, seed, delta, oldRating, newRating);
+        ratingHistoryRepository.flush();
+
+        // 6. Rebuild downstream chain per affected user. This also writes the
+        //    correct final UserStatistics.currentRating for each.
+        for (ContestParticipation cp : participations) {
+            rebuildChainFrom(cp.getUser().getId(), endTime);
         }
 
         // 7. Mark contest as processed
@@ -196,5 +177,71 @@ public class ContestRatingService {
 
         log.info("Rating processed for contestId={} '{}' — {} participants",
                 contest.getId(), contest.getName(), n);
+    }
+
+    /**
+     * Rebuild the rating chain for a user from {@code fromEndTime} onward.
+     * Assumes the row at {@code fromEndTime} (if any) is already correctly
+     * stored; rewrites every row strictly after to keep
+     * {@code row.oldRating == previousRow.newRating}. {@code ratingChange} is
+     * preserved (treated as the source of truth); {@code newRating} is
+     * recomputed as {@code max(1, oldRating + ratingChange)}.
+     *
+     * <p>After the walk completes, sets {@link UserStatistics#getCurrentRating()}
+     * to the chain tail and bumps {@code maxRating} if necessary.
+     */
+    @Transactional
+    public void rebuildChainFrom(Long userId, LocalDateTime fromEndTime) {
+        // Seed: use the row at fromEndTime if present, else the prior row, else DEFAULT_RATING.
+        Optional<RatingHistory> anchor = ratingHistoryRepository
+                .findTopByUserIdAndContestEndTimeLessThanOrderByContestEndTimeDescIdDesc(
+                        userId, fromEndTime.plusNanos(1));
+        int running = anchor.map(RatingHistory::getNewRating).orElse(DEFAULT_RATING);
+
+        List<RatingHistory> downstream = ratingHistoryRepository
+                .findByUserIdAndContestEndTimeGreaterThanOrderByContestEndTimeAscIdAsc(
+                        userId, fromEndTime);
+
+        for (RatingHistory row : downstream) {
+            int delta = row.getRatingChange() != null ? row.getRatingChange() : 0;
+            int oldRating = running;
+            int newRating = Math.max(1, oldRating + delta);
+            if (!Integer.valueOf(oldRating).equals(row.getOldRating())
+                    || !Integer.valueOf(newRating).equals(row.getNewRating())) {
+                row.setOldRating(oldRating);
+                row.setNewRating(newRating);
+                ratingHistoryRepository.save(row);
+            }
+            running = newRating;
+        }
+
+        // Tail → UserStatistics
+        UserStatistics stats = userStatisticsRepository.findByUserId(userId)
+                .orElseGet(() -> userStatisticsRepository.save(
+                        UserStatistics.builder().userId(userId).build()));
+        stats.setCurrentRating(running);
+        int currentMax = stats.getMaxRating() != null ? stats.getMaxRating() : 0;
+        int chainMax = chainMax(userId);
+        if (chainMax > currentMax) {
+            stats.setMaxRating(chainMax);
+        }
+        userStatisticsRepository.save(stats);
+    }
+
+    /** Lookup user's rating just before {@code endTime} via the chain. */
+    private int priorRating(Long userId, LocalDateTime endTime) {
+        return ratingHistoryRepository
+                .findTopByUserIdAndContestEndTimeLessThanOrderByContestEndTimeDescIdDesc(userId, endTime)
+                .map(RatingHistory::getNewRating)
+                .orElse(DEFAULT_RATING);
+    }
+
+    /** Highest newRating across user's full chain. */
+    private int chainMax(Long userId) {
+        int max = 0;
+        for (RatingHistory r : ratingHistoryRepository.findByUserIdOrderByContestEndTimeAscIdAsc(userId)) {
+            if (r.getNewRating() != null && r.getNewRating() > max) max = r.getNewRating();
+        }
+        return max;
     }
 }
