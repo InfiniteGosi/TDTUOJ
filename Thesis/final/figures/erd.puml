@@ -1,0 +1,328 @@
+@startuml erd
+' ER diagram — Crow's foot (Information Engineering) notation
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam linetype ortho
+skinparam roundCorner 0
+skinparam ArrowColor #000000
+skinparam EntityBorderColor #000000
+skinparam EntityBackgroundColor #FFFFFF
+skinparam EntityFontColor #000000
+hide circle
+
+' ────────── Người dùng & phân quyền ──────────
+entity "users" as users {
+  *id : bigint <<PK>>
+  --
+  username : varchar <<U>>
+  name : varchar
+  email : varchar <<U>>
+  password : varchar
+  auth_provider : varchar
+  provider_id : varchar
+  about : varchar
+  is_active : boolean
+  profile_url : varchar
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "roles" as roles {
+  *id : bigint <<PK>>
+  --
+  name : varchar <<U>>
+}
+
+entity "users_roles" as users_roles {
+  *user_id : bigint <<FK>>
+  *role_id : bigint <<FK>>
+}
+
+entity "user_statistics" as user_statistics {
+  *id : bigint <<PK>>
+  --
+  user_id : bigint <<FK,U>>
+  problems_solved : int
+  total_submissions : int
+  accepted_submissions : int
+  total_points : int
+  current_rating : int
+  max_rating : int
+  acceptance_rate : double
+}
+
+entity "user_daily_activity" as user_daily_activity {
+  *id : bigint <<PK>>
+  --
+  user_id : bigint <<FK>>
+  activity_date : date
+  submissions_count : int
+}
+
+' ────────── Bài toán ──────────
+entity "problems" as problems {
+  *id : bigint <<PK>>
+  --
+  title : varchar <<U>>
+  slug : varchar <<U>>
+  is_public : boolean
+  author_id : bigint <<FK>>
+  problem_difficulty : enum
+  statement_file_url : varchar
+  solution_file_url : varchar
+  solution_code : text
+  solution_language : varchar
+  point : int
+  time_limit : double
+  memory_limit : int
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "tags" as tags {
+  *id : bigint <<PK>>
+  --
+  name : varchar <<U>>
+  is_active : boolean
+}
+
+entity "problems_tags" as problems_tags {
+  *problem_id : bigint <<FK>>
+  *tag_id : bigint <<FK>>
+}
+
+entity "test_cases" as test_cases {
+  *id : bigint <<PK>>
+  --
+  problem_id : bigint <<FK>>
+  input_file_url : varchar
+  expected_output_file_url : varchar
+  is_sample : boolean
+  time_limit : double
+  memory_limit : int
+  points : int
+}
+
+entity "problem_favorites" as problem_favorites {
+  *id : bigint <<PK>>
+  --
+  user_id : bigint <<FK>>
+  problem_id : bigint <<FK>>
+  created_at : timestamp
+}
+
+entity "problem_comments" as problem_comments {
+  *id : bigint <<PK>>
+  --
+  problem_id : bigint <<FK>>
+  user_id : bigint <<FK>>
+  parent_id : bigint <<FK>>
+  content : text
+  is_deleted : boolean
+  upvote_count : int
+  downvote_count : int
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "comment_votes" as comment_votes {
+  *id : bigint <<PK>>
+  --
+  comment_id : bigint <<FK>>
+  user_id : bigint <<FK>>
+  vote_type : enum
+  created_at : timestamp
+}
+
+' ────────── Bài nộp ──────────
+entity "submissions" as submissions {
+  *id : bigint <<PK>>
+  --
+  problem_id : bigint <<FK>>
+  user_id : bigint <<FK>>
+  contest_id : bigint <<FK>>
+  lab_id : bigint <<FK>>
+  source_code : text
+  submission_language : enum
+  submission_status : enum
+  submission_verdict : enum
+  execution_time : int
+  memory_used : double
+  test_cases_passed : int
+  total_test_cases : int
+  error_message : text
+  is_public : boolean
+  submission_date : timestamp
+}
+
+' ────────── Cuộc thi ──────────
+entity "contests" as contests {
+  *id : bigint <<PK>>
+  --
+  name : varchar
+  description : text
+  slug : varchar <<U>>
+  creator_id : bigint <<FK>>
+  contest_style : enum
+  start_time : timestamp
+  end_time : timestamp
+  registration_start : timestamp
+  registration_end : timestamp
+  is_public : boolean
+  is_rated : boolean
+  rating_processed : boolean
+  max_participant : int
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "contests_problems" as contests_problems {
+  *id : bigint <<PK>>
+  --
+  contest_id : bigint <<FK>>
+  problem_id : bigint <<FK>>
+  problem_order : int
+  points : int
+}
+
+entity "contest_registration" as contest_registration {
+  *id : bigint <<PK>>
+  --
+  user_id : bigint <<FK>>
+  contest_id : bigint <<FK>>
+  status : enum
+  register_at : timestamp
+}
+
+entity "contest_participations" as contest_participations {
+  *id : bigint <<PK>>
+  --
+  contest_id : bigint <<FK>>
+  user_id : bigint <<FK>>
+  type : enum
+  rank : int
+  score : int
+  penalty_time : int
+  problems_solved : int
+  points_earned : int
+  rating_before : int
+  rating_after : int
+  updated_at : timestamp
+}
+
+entity "rating_history" as rating_history {
+  *id : bigint <<PK>>
+  --
+  user_id : bigint <<FK>>
+  contest_id : bigint <<FK>>
+  contest_name : varchar
+  old_rating : int
+  new_rating : int
+  rating_change : int
+  rank : int
+  contest_end_time : timestamp
+  created_at : timestamp
+}
+
+entity "leaderboard_cache" as leaderboard_cache {
+  *id : bigint <<PK>>
+  --
+  type : varchar <<U>>
+  rankings : text
+  total_users : int
+  last_updated : timestamp
+}
+
+' ────────── Tổ chức & bài thực hành ──────────
+entity "organizations" as organizations {
+  *id : bigint <<PK>>
+  --
+  name : varchar
+  code : varchar <<U>>
+  slug : varchar <<U>>
+  about : text
+  is_public : boolean
+  creator_id : bigint <<FK>>
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "organization_members" as organization_members {
+  *id : bigint <<PK>>
+  --
+  organization_id : bigint <<FK>>
+  user_id : bigint <<FK>>
+  role : enum
+  joined_at : timestamp
+}
+
+entity "labs" as labs {
+  *id : bigint <<PK>>
+  --
+  organization_id : bigint <<FK>>
+  creator_id : bigint <<FK>>
+  title : varchar
+  slug : varchar
+  description : text
+  deadline : timestamp
+  solutions_published : boolean
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "lab_exercises" as lab_exercises {
+  *id : bigint <<PK>>
+  --
+  lab_id : bigint <<FK>>
+  problem_id : bigint <<FK>>
+  exercise_order : int
+  points : int
+}
+
+' ────────── Quan hệ (Crow's foot) ──────────
+' Người dùng & phân quyền
+users           ||--o{ users_roles
+roles           ||--o{ users_roles
+users           ||--|| user_statistics
+users           ||--o{ user_daily_activity
+
+' Bài toán
+users           ||--o{ problems              : author
+problems        ||--o{ problems_tags
+tags            ||--o{ problems_tags
+problems        ||--o{ test_cases
+users           ||--o{ problem_favorites
+problems        ||--o{ problem_favorites
+users           ||--o{ problem_comments
+problems        ||--o{ problem_comments
+problem_comments ||--o{ problem_comments     : parent
+problem_comments ||--o{ comment_votes
+users           ||--o{ comment_votes
+
+' Bài nộp
+users           ||--o{ submissions
+problems        ||--o{ submissions
+contests        ||--o{ submissions
+labs            ||--o{ submissions
+
+' Cuộc thi
+users           ||--o{ contests              : creator
+contests        ||--o{ contests_problems
+problems        ||--o{ contests_problems
+users           ||--o{ contest_registration
+contests        ||--o{ contest_registration
+users           ||--o{ contest_participations
+contests        ||--o{ contest_participations
+users           ||--o{ rating_history
+contests        ||--o{ rating_history
+
+' Tổ chức & bài thực hành
+users           ||--o{ organizations         : creator
+organizations   ||--o{ organization_members
+users           ||--o{ organization_members
+organizations   ||--o{ labs
+users           ||--o{ labs                  : creator
+labs            ||--o{ lab_exercises
+problems        ||--o{ lab_exercises
+@enduml

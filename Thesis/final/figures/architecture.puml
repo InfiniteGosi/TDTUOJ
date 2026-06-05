@@ -1,0 +1,61 @@
+@startuml architecture
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam roundCorner 8
+skinparam ArrowColor #333333
+skinparam ArrowFontColor #333333
+skinparam rectangleBorderColor #000000
+skinparam packageBorderColor #555555
+skinparam packageFontStyle bold
+skinparam actorBorderColor #000000
+skinparam actorBackgroundColor #FFFFFF
+skinparam databaseBackgroundColor #FFF3E0
+skinparam databaseBorderColor #000000
+skinparam queueBackgroundColor #FFF3E0
+skinparam queueBorderColor #000000
+skinparam nodeBackgroundColor #FFF8E1
+skinparam nodeBorderColor #000000
+skinparam cloudBackgroundColor #F3E5F5
+skinparam cloudBorderColor #000000
+
+actor "Sinh viên" as student
+actor "Giảng viên /\nQuản trị viên" as creator
+
+package "Phía giao diện (Frontend)" #E3F2FD {
+  rectangle "Trình duyệt — React SPA (Vite)\nMonaco Editor, Chakra UI, Bootstrap" as spa #FFFFFF
+}
+
+package "Phía máy chủ (Backend) — Spring Boot :8090" #E8F5E9 {
+  rectangle "Bảo mật\nJWT · CORS" as sec #FFFFFF
+  rectangle "REST Controllers" as ctrl #FFFFFF
+  rectangle "Service layer\n(nghiệp vụ)" as svc #FFFFFF
+  rectangle "Submission Worker\n(chấm bài bất đồng bộ)" as worker #FFFFFF
+  rectangle "WebClient (WebFlux)" as webclient #FFFFFF
+}
+
+package "Lưu trữ & Bộ nhớ đệm" #FFF3E0 {
+  database "PostgreSQL\n:5431" as pg
+  queue "Redis\nhàng đợi + cache\n:6379" as redis
+}
+
+package "Dịch vụ bên ngoài" #F3E5F5 {
+  node "Judge0 (Docker)\n:2358" as judge0
+  cloud "AWS S3\nlưu trữ tập tin" as s3
+  cloud "Gemini LLM API" as gemini
+}
+
+student  --> spa : HTTPS
+creator  --> spa : HTTPS
+spa      --> sec : REST / JSON (HTTPS)
+sec      --> ctrl
+ctrl     --> svc
+svc      --> pg       : JPA / JDBC
+svc      --> redis    : cache + đẩy hàng đợi
+worker   --> redis    : lấy bài nộp
+worker   --> webclient
+svc      --> s3       : AWS SDK (đề bài, ảnh)
+webclient --> judge0  : HTTP (biên dịch & chấm)
+webclient --> gemini  : HTTPS (gợi ý, trích xuất PDF)
+
+@enduml

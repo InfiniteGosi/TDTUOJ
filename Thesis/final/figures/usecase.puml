@@ -1,0 +1,194 @@
+@startuml usecase
+!pragma layout smetana
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam usecase {
+  BackgroundColor #FDFDFD
+  BorderColor #555555
+  ArrowColor #333333
+}
+skinparam actor {
+  BackgroundColor #EAF2FB
+  BorderColor #2E5C8A
+}
+
+title Online Judging System / TDTUOJ
+
+' ===== Actors =====
+actor "User"            as User
+actor "Contest creator" as Creator
+actor "Admin"           as Admin
+actor "LLM"             as LLM
+actor "AI parser service" as AIParser
+actor "Judging service"   as Judge
+
+' Role generalizations (system: Creator is a logged-in User; Admin can do everything Creator can)
+Creator --|> User
+Admin   --|> Creator
+
+rectangle "TDTUOJ" {
+
+  ' ---------- Auth / account ----------
+  usecase "Login"                       as UC_Login
+  usecase "Register"                    as UC_Register
+  usecase "Edit profile"                as UC_EditProfile
+  usecase "Change password"             as UC_ChangePwd
+  usecase "Upload avatar"               as UC_Avatar
+
+  ' ---------- Browse ----------
+  usecase "View problems"               as UC_ViewProblems
+  usecase "View contests"               as UC_ViewContests
+  usecase "View leaderboard in contests" as UC_ViewContestLb
+  usecase "View users leaderboard"      as UC_ViewUsersLb
+  usecase "View user profile"           as UC_ViewProfile
+  usecase "Join organization"           as UC_JoinOrg
+
+  ' ---------- Solving / submission ----------
+  usecase "Submit solution"             as UC_Submit
+  usecase "View submission history"     as UC_ViewSubs
+  usecase "View submission detail"      as UC_SubDetail
+  usecase "Participate in contests"     as UC_Participate
+  usecase "Register for contest"        as UC_RegContest
+  usecase "Visualize and debug code"    as UC_Visualize
+
+  ' ---------- AI-assisted (User) ----------
+  usecase "Give problem hints"          as UC_Hints
+  usecase "Explain code and errors"     as UC_Explain
+  usecase "Analyze code complexity"     as UC_Complexity
+
+  ' ---------- Comments / favorites ----------
+  usecase "Add comment on problem"      as UC_AddComment
+  usecase "Reply to comment"            as UC_Reply
+  usecase "Edit comment on problem"     as UC_EditComment
+  usecase "Delete comment on problem"   as UC_DelComment
+  usecase "Upvote comment"              as UC_Upvote
+  usecase "Downvote comment"            as UC_Downvote
+  usecase "Add problem to favorite list"      as UC_AddFav
+  usecase "Remove problem from favorite list" as UC_RemFav
+
+  ' ---------- Problem authoring (Creator) ----------
+  usecase "Create problem"              as UC_CreateProblem
+  usecase "Update problem"              as UC_UpdateProblem
+  usecase "Delete problem"              as UC_DeleteProblem
+  usecase "Add problem tag"             as UC_AddTag
+  usecase "Manage test cases"           as UC_ManageTC
+  usecase "Upload problem from PDF"     as UC_PDF
+  usecase "Generate test cases"         as UC_GenTC
+  usecase "Evaluate submission"         as UC_Evaluate
+
+  ' ---------- Contest management (Creator) ----------
+  usecase "Create contest"              as UC_CreateContest
+  usecase "Update contest"              as UC_UpdateContest
+  usecase "Monitor contest"             as UC_MonitorContest
+  usecase "Publish contest result"      as UC_PublishContest
+  usecase "Approve contest registration" as UC_ApproveReg
+
+  ' ---------- Organization management (Creator) ----------
+  usecase "Create organization"         as UC_CreateOrg
+  usecase "Update organization"         as UC_UpdateOrg
+  usecase "Delete organization"         as UC_DeleteOrg
+  usecase "Add users to organization"   as UC_AddUsers
+  usecase "Promote user in organization"    as UC_Promote
+  usecase "De-promote user in organization" as UC_Demote
+
+  ' ---------- Lab / assignment (Creator + User) ----------
+  usecase "Create lab"                  as UC_CreateLab
+  usecase "Update lab"                  as UC_UpdateLab
+  usecase "Delete lab"                  as UC_DeleteLab
+  usecase "View lab progress"           as UC_LabProgress
+  usecase "View lab"                    as UC_ViewLab
+  usecase "Submit lab exercise"         as UC_SubmitLab
+
+  ' ---------- Admin ----------
+  usecase "Manage problem tags"         as UC_ManageTags
+  usecase "Disable user"                as UC_DisableUser
+  usecase "Update user information"     as UC_UpdateUser
+}
+
+' ===================== User associations =====================
+User --> UC_Login
+User --> UC_Register
+User --> UC_EditProfile
+User --> UC_ChangePwd
+User --> UC_Avatar
+User --> UC_ViewProblems
+User --> UC_ViewContests
+User --> UC_ViewContestLb
+User --> UC_ViewUsersLb
+User --> UC_ViewProfile
+User --> UC_JoinOrg
+User --> UC_Submit
+User --> UC_ViewSubs
+User --> UC_Participate
+User --> UC_RegContest
+User --> UC_Visualize
+User --> UC_AddComment
+User --> UC_EditComment
+User --> UC_DelComment
+User --> UC_Upvote
+User --> UC_Downvote
+User --> UC_AddFav
+User --> UC_RemFav
+User --> UC_ViewLab
+User --> UC_SubmitLab
+
+' ===================== Creator associations =====================
+Creator --> UC_CreateProblem
+Creator --> UC_UpdateProblem
+Creator --> UC_DeleteProblem
+Creator --> UC_ManageTC
+Creator --> UC_PDF
+Creator --> UC_GenTC
+Creator --> UC_CreateContest
+Creator --> UC_UpdateContest
+Creator --> UC_MonitorContest
+Creator --> UC_PublishContest
+Creator --> UC_ApproveReg
+Creator --> UC_CreateOrg
+Creator --> UC_UpdateOrg
+Creator --> UC_DeleteOrg
+Creator --> UC_AddUsers
+Creator --> UC_Promote
+Creator --> UC_Demote
+Creator --> UC_CreateLab
+Creator --> UC_UpdateLab
+Creator --> UC_DeleteLab
+Creator --> UC_LabProgress
+
+' ===================== Admin associations =====================
+Admin --> UC_ManageTags
+Admin --> UC_DisableUser
+Admin --> UC_UpdateUser
+
+' ===================== include / extend =====================
+UC_CreateProblem ..> UC_AddTag      : <<include>>
+UC_CreateProblem ..> UC_ManageTC    : <<include>>
+UC_PDF           ..> UC_CreateProblem : <<extend>>
+UC_GenTC         ..> UC_ManageTC    : <<extend>>
+UC_Participate   ..> UC_Submit      : <<include>>
+UC_Participate   ..> UC_RegContest  : <<include>>
+UC_RegContest    ..> UC_ApproveReg  : <<extend>>
+UC_SubmitLab     ..> UC_Submit      : <<include>>
+UC_ViewSubs      <.. UC_SubDetail   : <<extend>>
+UC_AddComment    <.. UC_Reply       : <<extend>>
+
+' ===================== Service / AI actors =====================
+UC_Hints      --> LLM
+UC_Explain    --> LLM
+UC_Complexity --> LLM
+UC_Visualize  ..> UC_Explain : <<extend>>
+User --> UC_Hints
+User --> UC_Explain
+User --> UC_Complexity
+
+UC_PDF   --> AIParser
+UC_GenTC --> AIParser
+
+UC_Submit    --> Judge
+UC_Evaluate  --> Judge
+UC_SubmitLab --> Judge
+
+@enduml

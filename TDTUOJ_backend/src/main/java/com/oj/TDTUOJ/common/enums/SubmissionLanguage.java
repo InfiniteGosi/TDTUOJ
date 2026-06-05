@@ -4,5 +4,7 @@ public enum SubmissionLanguage {
     C,
     CPP,
     JAVA,
-    PYTHON
+    PYTHON,
+    CSHARP,
+    JAVASCRIPT
 }

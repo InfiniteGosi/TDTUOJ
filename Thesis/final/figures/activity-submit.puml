@@ -1,0 +1,45 @@
+@startuml activity-submit
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam roundCorner 0
+skinparam ArrowColor #000000
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityBorderColor #000000
+skinparam ActivityFontColor #000000
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor #000000
+skinparam SwimlaneTitleFontStyle bold
+skinparam SwimlaneBorderColor #000000
+
+|User|
+start
+repeat
+  :Enter credentials;
+  |System|
+  :Validate credentials\ncheck username & password;
+repeat while (Valid?) is (No) not (Yes)
+:Create session / token\nauthenticate user;
+
+|User|
+:Access problem page;
+:Read problem & write solution\nin the IDE;
+:Select programming language;
+
+repeat
+  :Click "Submit";
+  |System|
+  :Save submission\nstatus = PENDING;
+  :Push to judging queue\njudging service picks up;
+  :Compile & run code\nagainst all test cases;
+  if (Verdict?) then (AC)
+    :Accepted result;
+  else (WA / TLE / CE / MLE / SF)
+    :Failed result;
+  endif
+  :Update submission in DB\nsend verdict to client;
+  |User|
+  :Display verdict result;
+repeat while (Retry?) is (Yes) not (No)
+stop
+@enduml

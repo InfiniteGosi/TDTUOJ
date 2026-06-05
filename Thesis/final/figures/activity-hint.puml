@@ -1,0 +1,36 @@
+@startuml activity-hint
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam roundCorner 0
+skinparam ArrowColor #000000
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityBorderColor #000000
+skinparam ActivityFontColor #000000
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor #000000
+skinparam SwimlaneTitleFontStyle bold
+skinparam SwimlaneBorderColor #000000
+
+|User|
+start
+:Open problem & hint panel;
+:Select LLM model\nGemini / Claude / GPT-4o;
+
+repeat
+  :Type question or pick preset\n(hint / explain / complexity);
+  |System|
+  :Resolve model service\nbuild guarded prompt\n(problem context only);
+  :Call LLM provider;
+  if (On-topic for\nthis problem?) then (Yes)
+    :Generate hint\n(no full solution);
+  else (No)
+    :Return refusal message;
+  endif
+  :Return response;
+  |User|
+  :Read hint in panel;
+repeat while (Ask follow-up?) is (Yes) not (No)
+:Apply hint to solution;
+stop
+@enduml

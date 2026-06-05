@@ -11,4 +11,7 @@ import java.util.Optional;
 public interface UserStatisticsRepository extends JpaRepository<UserStatistics, Long> {
     Optional<UserStatistics> findByUserId(Long userId);
     List<UserStatistics> findAllByUserIdIn(List<Long> userIds);
+
+    /** Top solvers leaderboard (admin dashboard). */
+    List<UserStatistics> findTop10ByOrderByProblemsSolvedDescAcceptedSubmissionsDesc();
 }

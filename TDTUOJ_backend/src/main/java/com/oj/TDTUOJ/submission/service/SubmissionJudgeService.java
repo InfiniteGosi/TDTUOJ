@@ -25,6 +25,8 @@ import com.oj.TDTUOJ.userDailyActivity.service.UserActivityService;
 import com.oj.TDTUOJ.user.entity.User;
 import com.oj.TDTUOJ.user.repository.UserRepository;
 import com.oj.TDTUOJ.userStatistics.service.UserStatisticsService;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -56,9 +58,11 @@ public class SubmissionJudgeService {
     private final ContestRegistrationRepository  contestRegistrationRepository;
     private final ContestLeaderboardService      leaderboardService;
     private final UserRepository                 userRepository;
+    private final MeterRegistry                  meterRegistry;
 
     @Transactional
     public void judge(SubmissionJobDTO job) {
+        Timer.Sample judgeSample = Timer.start(meterRegistry);
         Submission submission = submissionRepository.findById(job.getSubmissionId())
                 .orElseThrow(() -> new NotFoundException("Submission not found"));
 
@@ -119,6 +123,13 @@ public class SubmissionJudgeService {
 
         log.info("Judged submissionId={} verdict={} passed={}/{}",
                 submission.getId(), finalVerdict, passed, testCases.size());
+
+        // Metrics: count verdicts and record end-to-end judging latency
+        meterRegistry.counter("submissions.judged", "verdict", finalVerdict.name()).increment();
+        judgeSample.stop(Timer.builder("submissions.judge.duration")
+                .description("End-to-end judging time per submission")
+                .publishPercentileHistogram()
+                .register(meterRegistry));
 
         // 4. Record activity and statistics
         boolean isAccepted = finalVerdict == SubmissionVerdict.AC;

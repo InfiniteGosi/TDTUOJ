@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -23,4 +25,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "AND u.id NOT IN (SELECT m.user.id FROM OrganizationMember m WHERE m.organization.id = :orgId)")
     Page<User> findNonMembersByUsername(@Param("orgId") Long orgId, @Param("q") String query, Pageable pageable);
+
+    // ── Admin dashboard aggregates ────────────────────────────────────────── //
+
+    /** Registrations per month ("YYYY-MM") since a given time (admin dashboard). */
+    @Query("SELECT FUNCTION('to_char', u.createdAt, 'YYYY-MM'), COUNT(u) FROM User u " +
+           "WHERE u.createdAt >= :since " +
+           "GROUP BY FUNCTION('to_char', u.createdAt, 'YYYY-MM') " +
+           "ORDER BY FUNCTION('to_char', u.createdAt, 'YYYY-MM')")
+    List<Object[]> countRegistrationsByMonth(@Param("since") LocalDateTime since);
+
+    /** Users registered before a given time — seeds the cumulative curve (admin dashboard). */
+    long countByCreatedAtBefore(LocalDateTime time);
 }

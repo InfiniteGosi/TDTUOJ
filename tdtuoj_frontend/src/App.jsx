@@ -15,6 +15,7 @@ import AdminProblemFormPage from "./components/admin/AdminProblemFormPage";
 import EditProfilePage from "./components/profile/EditProfilePage";
 import ChangePasswordPage from "./components/profile/ChangePasswordPage";
 import AdminUserPage from "./components/admin/AdminUserPage";
+import AdminDashboardPage from "./components/admin/AdminDashboardPage";
 import AdminEditUserPage from "./components/admin/AdminEditUserPage";
 import AdminProblemTagPage from "./components/admin/AdminProblemTagPage";
 import ContestPage from "./components/contests/ContestPage";
@@ -82,6 +83,7 @@ function App() {
                 path="/admin"
                 element={<AdminOrCreatorRoute element={<AdminLayout />} />}
               >
+                <Route path="dashboard" element={<AdminRoute element={<AdminDashboardPage />} />} />
                 <Route path="problems" element={<AdminProblemPage />} />
                 <Route path="problems/new" element={<AdminProblemFormPage />} />
                 <Route path="problems/edit/:id" element={<AdminProblemFormPage />} />

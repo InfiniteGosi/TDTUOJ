@@ -1,0 +1,59 @@
+@startuml erd-lab
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam linetype ortho
+skinparam roundCorner 0
+skinparam ArrowColor #000000
+skinparam EntityBorderColor #000000
+skinparam EntityBackgroundColor #FFFFFF
+skinparam EntityFontColor #000000
+hide circle
+
+entity "users" as users {
+  *id : bigint <<PK>>
+  --
+  username : varchar <<U>>
+}
+
+entity "organizations" as organizations {
+  *id : bigint <<PK>>
+  --
+  name : varchar
+  slug : varchar <<U>>
+}
+
+entity "problems" as problems {
+  *id : bigint <<PK>>
+  --
+  title : varchar <<U>>
+}
+
+entity "labs" as labs {
+  *id : bigint <<PK>>
+  --
+  organization_id : bigint <<FK>>
+  creator_id : bigint <<FK>>
+  title : varchar
+  slug : varchar
+  description : text
+  deadline : timestamp
+  solutions_published : boolean
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "lab_exercises" as lab_exercises {
+  *id : bigint <<PK>>
+  --
+  lab_id : bigint <<FK>>
+  problem_id : bigint <<FK>>
+  exercise_order : int
+  points : int
+}
+
+organizations ||--o{ labs
+users         ||--o{ labs           : creator
+labs          ||--o{ lab_exercises
+problems      ||--o{ lab_exercises
+@enduml

@@ -15,20 +15,26 @@ import cpp from "highlight.js/lib/languages/cpp";
 import java from "highlight.js/lib/languages/java";
 import python from "highlight.js/lib/languages/python";
 import c from "highlight.js/lib/languages/c";
+import csharp from "highlight.js/lib/languages/csharp";
+import javascript from "highlight.js/lib/languages/javascript";
 import "highlight.js/styles/vs2015.css";
 
 hljs.registerLanguage("cpp", cpp);
 hljs.registerLanguage("java", java);
 hljs.registerLanguage("python", python);
 hljs.registerLanguage("c", c);
+hljs.registerLanguage("csharp", csharp);
+hljs.registerLanguage("javascript", javascript);
 
 const getHljsLanguage = (lang) => {
   switch (lang) {
     case "CPP":    return "cpp";
     case "JAVA":   return "java";
     case "PYTHON": return "python";
-    case "C":      return "c";
-    default:       return "cpp";
+    case "C":          return "c";
+    case "CSHARP":     return "csharp";
+    case "JAVASCRIPT": return "javascript";
+    default:           return "cpp";
   }
 };
 
@@ -57,8 +63,10 @@ const mapEditorLanguageToSubmissionLanguage = (lang) => {
     case "cpp":    return "CPP";
     case "java":   return "JAVA";
     case "python": return "PYTHON";
-    case "c":      return "C";
-    default:       return "CPP";
+    case "c":          return "C";
+    case "csharp":     return "CSHARP";
+    case "javascript": return "JAVASCRIPT";
+    default:           return "CPP";
   }
 };
 

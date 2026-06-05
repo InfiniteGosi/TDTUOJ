@@ -1,0 +1,76 @@
+@startuml seq-participate-contest
+mainframe sd Participate in contest
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam SequenceArrowColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam BoundaryBackgroundColor #FFFFFF
+skinparam BoundaryBorderColor #000000
+skinparam ControlBackgroundColor #FFFFFF
+skinparam ControlBorderColor #000000
+skinparam EntityBackgroundColor #FFFFFF
+skinparam EntityBorderColor #000000
+
+autonumber
+
+actor "User" as U
+boundary "Contest Page" as UI
+control "ContestController" as C
+control "ContestService" as S
+entity "RegistrationRepository" as R
+control "SubmissionService" as SUB
+
+U -> UI : Click "Register"
+activate UI
+UI -> C : POST /api/contests/{id}/register
+activate C
+C -> S : register(contestId, user)
+activate S
+S -> R : save(status = REGISTERED)
+activate R
+R --> S : registration
+deactivate R
+alt Private / organization contest
+  S --> C : pending approval
+  C --> UI : awaiting creator approval
+else Public contest
+  S --> C : registered
+  C --> UI : 200 registered
+end
+deactivate S
+deactivate C
+
+loop while contest running
+  U -> UI : Submit solution to problem
+  UI -> SUB : createSubmission(dto)
+  activate SUB
+  SUB -> SUB : Judge & score (ICPC / IOI)
+  SUB --> UI : verdict
+  deactivate SUB
+  UI -> C : GET /api/contests/{id}/leaderboard
+  activate C
+  C -> S : getLeaderboard(id)
+  activate S
+  S --> C : LeaderboardDTO
+  deactivate S
+  C --> UI : live scoreboard
+  deactivate C
+  UI --> U : Show verdict & rank
+end
+
+U -> UI : View final result
+UI -> C : getLeaderboard(id)
+activate C
+C --> UI : final leaderboard + rating
+deactivate C
+UI --> U : Display final standings
+deactivate UI
+@enduml

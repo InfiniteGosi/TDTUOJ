@@ -1,0 +1,102 @@
+@startuml erd-problem
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam linetype ortho
+skinparam roundCorner 0
+skinparam ArrowColor #000000
+skinparam EntityBorderColor #000000
+skinparam EntityBackgroundColor #FFFFFF
+skinparam EntityFontColor #000000
+hide circle
+
+entity "users" as users {
+  *id : bigint <<PK>>
+  --
+  username : varchar <<U>>
+  name : varchar
+}
+
+entity "problems" as problems {
+  *id : bigint <<PK>>
+  --
+  title : varchar <<U>>
+  slug : varchar <<U>>
+  is_public : boolean
+  author_id : bigint <<FK>>
+  problem_difficulty : enum
+  statement_file_url : varchar
+  solution_file_url : varchar
+  solution_code : text
+  solution_language : varchar
+  point : int
+  time_limit : double
+  memory_limit : int
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "tags" as tags {
+  *id : bigint <<PK>>
+  --
+  name : varchar <<U>>
+  is_active : boolean
+}
+
+entity "problems_tags" as problems_tags {
+  *problem_id : bigint <<FK>>
+  *tag_id : bigint <<FK>>
+}
+
+entity "test_cases" as test_cases {
+  *id : bigint <<PK>>
+  --
+  problem_id : bigint <<FK>>
+  input_file_url : varchar
+  expected_output_file_url : varchar
+  is_sample : boolean
+  time_limit : double
+  memory_limit : int
+  points : int
+}
+
+entity "problem_favorites" as problem_favorites {
+  *id : bigint <<PK>>
+  --
+  user_id : bigint <<FK>>
+  problem_id : bigint <<FK>>
+  created_at : timestamp
+}
+
+entity "problem_comments" as problem_comments {
+  *id : bigint <<PK>>
+  --
+  problem_id : bigint <<FK>>
+  user_id : bigint <<FK>>
+  parent_id : bigint <<FK>>
+  content : text
+  is_deleted : boolean
+  upvote_count : int
+  downvote_count : int
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "comment_votes" as comment_votes {
+  *id : bigint <<PK>>
+  --
+  comment_id : bigint <<FK>>
+  user_id : bigint <<FK>>
+  vote_type : enum
+  created_at : timestamp
+}
+
+users            ||--o{ problems            : author
+problems         ||--o{ test_cases
+problems         ||--o{ problems_tags
+tags             ||--o{ problems_tags
+problems         ||--o{ problem_favorites
+problems         ||--o{ problem_comments
+problem_comments ||--o{ problem_comments    : parent
+problem_comments ||--o{ comment_votes
+@enduml

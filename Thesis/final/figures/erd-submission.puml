@@ -1,0 +1,64 @@
+@startuml erd-submission
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam linetype ortho
+skinparam roundCorner 0
+skinparam ArrowColor #000000
+skinparam EntityBorderColor #000000
+skinparam EntityBackgroundColor #FFFFFF
+skinparam EntityFontColor #000000
+hide circle
+
+entity "users" as users {
+  *id : bigint <<PK>>
+  --
+  username : varchar <<U>>
+}
+
+entity "problems" as problems {
+  *id : bigint <<PK>>
+  --
+  title : varchar <<U>>
+  slug : varchar <<U>>
+}
+
+entity "contests" as contests {
+  *id : bigint <<PK>>
+  --
+  name : varchar
+  slug : varchar <<U>>
+}
+
+entity "labs" as labs {
+  *id : bigint <<PK>>
+  --
+  title : varchar
+  slug : varchar
+}
+
+entity "submissions" as submissions {
+  *id : bigint <<PK>>
+  --
+  problem_id : bigint <<FK>>
+  user_id : bigint <<FK>>
+  contest_id : bigint <<FK>>
+  lab_id : bigint <<FK>>
+  source_code : text
+  submission_language : enum
+  submission_status : enum
+  submission_verdict : enum
+  execution_time : int
+  memory_used : double
+  test_cases_passed : int
+  total_test_cases : int
+  error_message : text
+  is_public : boolean
+  submission_date : timestamp
+}
+
+users    ||--o{ submissions
+problems ||--o{ submissions
+contests ||--o{ submissions
+labs     ||--o{ submissions
+@enduml

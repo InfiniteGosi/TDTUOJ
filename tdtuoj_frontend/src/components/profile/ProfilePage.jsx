@@ -81,12 +81,14 @@ const fmtDate = (dateStr) =>
 // ─── Language Donut Chart (Recharts) ─────────────────────────────────────────
 
 const LANG_COLORS = {
-  CPP:    "#4f46e5",
-  C:      "#06b6d4",
-  JAVA:   "#f59e0b",
-  PYTHON: "#10b981",
+  CPP:        "#4f46e5",
+  C:          "#06b6d4",
+  JAVA:       "#f59e0b",
+  PYTHON:     "#10b981",
+  CSHARP:     "#9333ea",
+  JAVASCRIPT: "#eab308",
 };
-const LANG_LABELS = { CPP: "C++", C: "C", JAVA: "Java", PYTHON: "Python" };
+const LANG_LABELS = { CPP: "C++", C: "C", JAVA: "Java", PYTHON: "Python", CSHARP: "C#", JAVASCRIPT: "JavaScript" };
 
 const PieTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;

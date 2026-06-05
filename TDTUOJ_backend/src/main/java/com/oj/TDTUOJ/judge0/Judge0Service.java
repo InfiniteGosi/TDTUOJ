@@ -23,10 +23,12 @@ public class Judge0Service {
     private final WebClient.Builder webClientBuilder;
 
     private static final Map<SubmissionLanguage, Integer> LANGUAGE_MAP = Map.of(
-            SubmissionLanguage.C,      50,
-            SubmissionLanguage.CPP,    54,
-            SubmissionLanguage.JAVA,   62,
-            SubmissionLanguage.PYTHON, 71
+            SubmissionLanguage.C,          50,
+            SubmissionLanguage.CPP,        54,
+            SubmissionLanguage.JAVA,       62,
+            SubmissionLanguage.PYTHON,     71,
+            SubmissionLanguage.CSHARP,     51,
+            SubmissionLanguage.JAVASCRIPT, 63
     );
 
     public Judge0Result judge(String sourceCode,

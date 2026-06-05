@@ -1,0 +1,54 @@
+@startuml erd-organization
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam linetype ortho
+skinparam roundCorner 0
+skinparam ArrowColor #000000
+skinparam EntityBorderColor #000000
+skinparam EntityBackgroundColor #FFFFFF
+skinparam EntityFontColor #000000
+hide circle
+
+entity "users" as users {
+  *id : bigint <<PK>>
+  --
+  username : varchar <<U>>
+}
+
+entity "organizations" as organizations {
+  *id : bigint <<PK>>
+  --
+  name : varchar
+  code : varchar <<U>>
+  slug : varchar <<U>>
+  about : text
+  is_public : boolean
+  creator_id : bigint <<FK>>
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "organization_members" as organization_members {
+  *id : bigint <<PK>>
+  --
+  organization_id : bigint <<FK>>
+  user_id : bigint <<FK>>
+  role : enum
+  joined_at : timestamp
+}
+
+entity "labs" as labs {
+  *id : bigint <<PK>>
+  --
+  organization_id : bigint <<FK>>
+  creator_id : bigint <<FK>>
+  title : varchar
+  slug : varchar
+}
+
+users         ||--o{ organizations         : creator
+organizations ||--o{ organization_members
+users         ||--o{ organization_members
+organizations ||--o{ labs
+@enduml

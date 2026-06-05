@@ -1,0 +1,60 @@
+@startuml activity-create-problem
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam roundCorner 0
+skinparam ArrowColor #000000
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityBorderColor #000000
+skinparam ActivityFontColor #000000
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor #000000
+skinparam SwimlaneTitleFontStyle bold
+skinparam SwimlaneBorderColor #000000
+
+|User|
+start
+:Open "Create problem" form;
+
+if (Import from PDF?) then (Yes)
+  :Upload problem PDF;
+  |System|
+  :Send PDF to AI parser\nextract statement & samples;
+  :Return extracted fields;
+  |User|
+  :Review & edit prefilled fields;
+else (No)
+  :Write statement manually\ntitle, description, limits;
+endif
+
+:Add problem tags;
+:Set difficulty & visibility;
+
+repeat
+  if (Generate test cases\nwith AI?) then (Yes)
+    |System|
+    :Send problem to AI parser\ngenerate test cases;
+    :Return generated cases;
+    |User|
+    :Review generated cases;
+  else (No)
+    :Add test case manually\ninput / expected output;
+  endif
+  :Mark case sample or hidden;
+repeat while (Add more cases?) is (Yes) not (No)
+
+:Click "Save problem";
+|System|
+:Validate fields & test cases;
+if (Valid?) then (Yes)
+  :Generate slug\npersist problem + cases;
+  :Return created problem;
+  |User|
+  :Show problem page;
+else (No)
+  |User|
+  :Show validation errors;
+  stop
+endif
+stop
+@enduml

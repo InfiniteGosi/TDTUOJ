@@ -1,0 +1,91 @@
+@startuml seq-manage-lab
+mainframe sd Manage lab assignment
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam SequenceArrowColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam BoundaryBackgroundColor #FFFFFF
+skinparam BoundaryBorderColor #000000
+skinparam ControlBackgroundColor #FFFFFF
+skinparam ControlBorderColor #000000
+skinparam EntityBackgroundColor #FFFFFF
+skinparam EntityBorderColor #000000
+
+autonumber
+
+actor "Contest creator" as U
+boundary "Lab Page" as UI
+control "LabController" as C
+control "LabService" as S
+entity "LabRepository" as R
+
+U -> UI : Fill lab (problems, deadline), click "Save"
+activate UI
+UI -> C : POST /api/labs (createLab)
+activate C
+C -> S : createLab(dto)
+activate S
+S -> R : save(lab, linked problems)
+activate R
+R --> S : lab
+deactivate R
+S --> C : LabDTO
+deactivate S
+C --> UI : 200 Created
+deactivate C
+
+U -> UI : Open lab progress
+UI -> C : GET /api/labs/{id}/progress
+activate C
+C -> S : getProgress(id)
+activate S
+S -> R : query submissions per student
+activate R
+R --> S : solved counts
+deactivate R
+S --> C : List<LabProgressDTO>
+deactivate S
+C --> UI : progress table
+deactivate C
+UI --> U : Show progress
+
+opt Export progress
+  U -> UI : Click "Export"
+  UI -> C : GET /api/labs/{id}/progress/export
+  activate C
+  C -> S : exportProgress(id)
+  activate S
+  S -> S : Build Excel (Apache POI)
+  S --> C : xlsx bytes
+  deactivate S
+  C --> UI : .xlsx file
+  deactivate C
+  UI --> U : Download report
+end
+
+opt Deadline passed
+  U -> UI : Click "Publish solutions"
+  UI -> C : POST /api/labs/{id}/publish
+  activate C
+  C -> S : publishSolutions(id)
+  activate S
+  S -> R : update lab (solutions visible)
+  activate R
+  R --> S : ok
+  deactivate R
+  S --> C : LabDTO
+  deactivate S
+  C --> UI : 200 published
+  deactivate C
+  UI --> U : Solutions revealed to members
+end
+deactivate UI
+@enduml

@@ -3,6 +3,8 @@ export const LANGUAGE_IDS = {
   cpp: "54",
   python: "71",
   java: "62",
+  csharp: "51",
+  javascript: "63",
 };
 
 export const CODE_SNIPPETS = {
@@ -35,5 +37,21 @@ if __name__ == "__main__":
         System.out.println("Hello, World!");
     }
 }
+`,
+
+  csharp: `using System;
+
+class Program {
+    static void Main() {
+        Console.WriteLine("Hello, World!");
+    }
+}
+`,
+
+  javascript: `function greet() {
+    console.log("Hello, World!");
+}
+
+greet();
 `,
 };

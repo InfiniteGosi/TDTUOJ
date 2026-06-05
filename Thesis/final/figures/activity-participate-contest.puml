@@ -1,0 +1,52 @@
+@startuml activity-participate-contest
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam roundCorner 0
+skinparam ArrowColor #000000
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityBorderColor #000000
+skinparam ActivityFontColor #000000
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor #000000
+skinparam SwimlaneTitleFontStyle bold
+skinparam SwimlaneBorderColor #000000
+
+|User|
+start
+:Open contest detail page;
+:Click "Register";
+|System|
+:Create registration\nstatus = REGISTERED;
+if (Private / organization\ncontest?) then (Yes)
+  :Hold for creator approval;
+  if (Creator approves?) then (Yes)
+    :Confirm participant;
+  else (No)
+    |User|
+    :Show rejected notice;
+    stop
+  endif
+else (No)
+endif
+
+|User|
+:Wait for contest to start;
+:Open contest problem;
+
+repeat
+  :Write solution & submit;
+  |System|
+  :Judge submission\nscore by style (ICPC / IOI);
+  :Update scoreboard;
+  |User|
+  :View verdict & live rank;
+repeat while (Solve more / retry?) is (Yes) not (No)
+
+|System|
+:Contest ends\nfreeze scoreboard;
+:Creator publishes result\nupdate rating history;
+|User|
+:View final leaderboard & rating;
+stop
+@enduml

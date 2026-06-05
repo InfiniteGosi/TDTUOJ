@@ -1,0 +1,68 @@
+@startuml seq-create-problem
+mainframe sd Create problem
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam SequenceArrowColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam BoundaryBackgroundColor #FFFFFF
+skinparam BoundaryBorderColor #000000
+skinparam ControlBackgroundColor #FFFFFF
+skinparam ControlBorderColor #000000
+skinparam EntityBackgroundColor #FFFFFF
+skinparam EntityBorderColor #000000
+
+autonumber
+
+actor "Contest creator" as U
+boundary "Problem Form" as UI
+control "ProblemAIController" as AIC
+control "ProblemController" as C
+control "ProblemService" as S
+entity "ProblemRepository" as R
+
+U -> UI : Open "Create problem" form
+activate UI
+
+alt Import from PDF
+  UI -> AIC : POST /api/problem-ai/extract-pdf
+  activate AIC
+  AIC -> AIC : Send PDF to AI parser, extract fields
+  AIC --> UI : ProblemExtractionResult
+  deactivate AIC
+  U -> UI : Review & edit prefilled fields
+else Write manually
+  U -> UI : Enter statement, limits, tags
+end
+
+opt Generate test cases with AI
+  UI -> AIC : POST /api/problem-ai/generate-test-cases
+  activate AIC
+  AIC --> UI : generated test cases
+  deactivate AIC
+end
+
+U -> UI : Click "Save problem"
+UI -> C : POST /api/problems (createProblem)
+activate C
+C -> S : createProblem(dto, testCases)
+activate S
+S -> S : Validate & generate slug
+S -> R : save(problem + test cases)
+activate R
+R --> S : saved problem
+deactivate R
+S --> C : ProblemDTO
+deactivate S
+C --> UI : 200 Created
+deactivate C
+UI --> U : Show problem page
+deactivate UI
+@enduml

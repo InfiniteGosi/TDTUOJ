@@ -1,0 +1,55 @@
+@startuml seq-hint
+mainframe sd Get problem hint
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam SequenceArrowColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam BoundaryBackgroundColor #FFFFFF
+skinparam BoundaryBorderColor #000000
+skinparam ControlBackgroundColor #FFFFFF
+skinparam ControlBorderColor #000000
+skinparam EntityBackgroundColor #FFFFFF
+skinparam EntityBorderColor #000000
+
+autonumber
+
+actor "User" as U
+boundary "Hint Panel" as UI
+control "HintController" as C
+control "HintService" as S
+control "LLM Provider" as L
+
+U -> UI : Select model (Gemini / Claude / GPT-4o)
+activate UI
+loop ask follow-up
+  U -> UI : Type question or pick preset
+  UI -> C : POST /api/hints
+  activate C
+  C -> C : Resolve model service by key
+  C -> S : getHint(request)
+  activate S
+  S -> S : Build guarded prompt (problem context only)
+  S -> L : Call LLM provider
+  activate L
+  L --> S : completion
+  deactivate L
+  alt On-topic for this problem
+    S --> C : hint (no full solution)
+  else Off-topic
+    S --> C : refusal message
+  end
+  deactivate S
+  C --> UI : 200 response
+  deactivate C
+  UI --> U : Display hint in panel
+end
+deactivate UI
+@enduml

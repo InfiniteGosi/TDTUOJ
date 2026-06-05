@@ -1,0 +1,65 @@
+@startuml seq-visualize
+mainframe sd Visualize and debug code
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam SequenceArrowColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam BoundaryBackgroundColor #FFFFFF
+skinparam BoundaryBorderColor #000000
+skinparam ControlBackgroundColor #FFFFFF
+skinparam ControlBorderColor #000000
+skinparam EntityBackgroundColor #FFFFFF
+skinparam EntityBorderColor #000000
+
+autonumber
+
+actor "User" as U
+boundary "Visualizer Panel" as UI
+control "VisualizerController" as C
+control "VisualizerService" as S
+control "Instrumentor" as I
+control "Judge0Service" as J
+
+U -> UI : Write code, choose mode (AUTO/MANUAL)
+activate UI
+U -> UI : Click "Visualize"
+UI -> C : POST /api/visualize
+activate C
+C -> S : visualize(code, language, mode)
+activate S
+S -> I : instrument(code)
+activate I
+I -> I : Normalize braces, inject __TRACE__
+I --> S : instrumented code
+deactivate I
+S -> J : run instrumented code
+activate J
+J -> J : compile & execute (Judge0)
+J --> S : raw trace output
+deactivate J
+
+alt Compile / run OK
+  S -> S : Parse __TRACE__ into steps
+  S --> C : VisualizerResponse (steps)
+  deactivate S
+  C --> UI : 200 steps
+  deactivate C
+  loop for each step
+    U -> UI : Step / play animation
+    UI --> U : Render data structure
+  end
+else Error
+  S --> C : error message
+  C --> UI : 400 error
+  UI --> U : Show compile / runtime error
+end
+deactivate UI
+@enduml

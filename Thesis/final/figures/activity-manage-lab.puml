@@ -1,0 +1,56 @@
+@startuml activity-manage-lab
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam roundCorner 0
+skinparam ArrowColor #000000
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityBorderColor #000000
+skinparam ActivityFontColor #000000
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor #000000
+skinparam SwimlaneTitleFontStyle bold
+skinparam SwimlaneBorderColor #000000
+
+|User|
+start
+:Open organization\n"Create lab" form;
+:Set title, problems & deadline;
+:Click "Save lab";
+|System|
+:Validate & persist lab\nlink problems to org members;
+:Return created lab;
+
+|User|
+:Students submit lab exercises;
+|System|
+:Judge each submission\ntrack solved per student;
+
+|User|
+:Open lab progress page;
+|System|
+:Aggregate progress\nper student & problem;
+:Return progress table;
+|User|
+:Review progress;
+
+if (Export progress?) then (Yes)
+  :Click "Export";
+  |System|
+  :Build Excel (POI)\nreturn .xlsx file;
+  |User|
+  :Download report;
+else (No)
+endif
+
+if (Deadline passed?) then (Yes)
+  :Click "Publish solutions";
+  |System|
+  :Reveal solutions to members;
+  |User|
+  :Confirm solutions published;
+else (No)
+  :Keep solutions hidden;
+endif
+stop
+@enduml

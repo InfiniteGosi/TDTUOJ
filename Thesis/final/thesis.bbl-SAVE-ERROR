@@ -1,0 +1,315 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nyt/apasortcite//global/global/global}
+    \entry{IEEEexample:BSTcontrol}{ieeetranbstctl}{}{}
+      \field{sortinit}{}
+      \field{sortinithash}{495dc9894017a8b12cafa9c619d10c0c}
+      \field{labeldatesource}{nodate}
+      \true{nocite}
+    \endentry
+    \entry{espinoza2012inverse}{article}{}{}
+      \name{author}{5}{ul=2}{%
+        {{un=0,uniquepart=base,hash=f8aa998cdadfd60ea55e76970de2d784}{%
+           family={Espinoza},
+           familyi={E\bibinitperiod},
+           given={Mario\bibnamedelima Sáenz},
+           giveni={M\bibinitperiod\bibinitdelim S\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=09fd56b8325378977a6b9bd6c953ffbe}{%
+           family={Goncalves},
+           familyi={G\bibinitperiod},
+           given={Jose},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=c5e866cb52c4875216fd1a4c7377f91c}{%
+           family={Leitao},
+           familyi={L\bibinitperiod},
+           given={Paulo},
+           giveni={P\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=2bcd5bb74468576b9d71dc7d448c0a36}{%
+           family={Sanchez},
+           familyi={S\bibinitperiod},
+           given={Jose\bibnamedelimb Luis\bibnamedelima Gonzalez},
+           giveni={J\bibinitperiod\bibinitdelim L\bibinitperiod\bibinitdelim G\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=d861569e2544a9800958da5dc5e3f274}{%
+           family={Herreros},
+           familyi={H\bibinitperiod},
+           given={Alberto},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{organization}{1}{%
+        {IEEE}%
+      }
+      \strng{namehash}{809e47c8d64d55914d446c116e98dbde}
+      \strng{fullhash}{fd6b37f97b2f1b5d255ff1af4ae9935c}
+      \strng{fullhashraw}{fd6b37f97b2f1b5d255ff1af4ae9935c}
+      \strng{bibnamehash}{fd6b37f97b2f1b5d255ff1af4ae9935c}
+      \strng{authorbibnamehash}{fd6b37f97b2f1b5d255ff1af4ae9935c}
+      \strng{authornamehash}{809e47c8d64d55914d446c116e98dbde}
+      \strng{authorfullhash}{fd6b37f97b2f1b5d255ff1af4ae9935c}
+      \strng{authorfullhashraw}{fd6b37f97b2f1b5d255ff1af4ae9935c}
+      \field{sortinit}{E}
+      \field{sortinithash}{8da8a182d344d5b9047633dfc0cc9131}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Robotics Symposium and Latin American Robotics Symposium (SBR-LARS), 2012 Brazilian}
+      \field{title}{Inverse Kinematics of a 10 DOF modular hyper-redundant robot resorting to exhaustive and error-optimization methods: A comparative study}
+      \field{year}{2012}
+      \true{nocite}
+      \field{pages}{125\bibrangedash 130}
+      \range{pages}{6}
+    \endentry
+    \entry{espinoza2012optimization}{article}{}{}
+      \name{author}{3}{ul=2}{%
+        {{un=0,uniquepart=base,hash=f8aa998cdadfd60ea55e76970de2d784}{%
+           family={Espinoza},
+           familyi={E\bibinitperiod},
+           given={Mario\bibnamedelima Sáenz},
+           giveni={M\bibinitperiod\bibinitdelim S\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=f0613401304e7e8898c61386c9719040}{%
+           family={Pereira},
+           familyi={P\bibinitperiod},
+           given={Ana\bibnamedelima I},
+           giveni={A\bibinitperiod\bibinitdelim I\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=e8f0c40d5ccdd7207282f9c2be59da30}{%
+           family={Gonçalves},
+           familyi={G\bibinitperiod},
+           given={José},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{63510f728f67305340557643e2c1a46b}
+      \strng{fullhash}{63510f728f67305340557643e2c1a46b}
+      \strng{fullhashraw}{63510f728f67305340557643e2c1a46b}
+      \strng{bibnamehash}{63510f728f67305340557643e2c1a46b}
+      \strng{authorbibnamehash}{63510f728f67305340557643e2c1a46b}
+      \strng{authornamehash}{63510f728f67305340557643e2c1a46b}
+      \strng{authorfullhash}{63510f728f67305340557643e2c1a46b}
+      \strng{authorfullhashraw}{63510f728f67305340557643e2c1a46b}
+      \field{sortinit}{E}
+      \field{sortinithash}{8da8a182d344d5b9047633dfc0cc9131}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{AIP Conference Proceedings}
+      \field{title}{Optimization methods for hyper-redundant robots' inverse kinematics in biomedical applications}
+      \field{volume}{1479}
+      \field{year}{2012}
+      \true{nocite}
+      \field{pages}{818}
+      \range{pages}{1}
+    \endentry
+    \entry{kn:Tha01}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=184271442f932ccfab4a15f638277821}{%
+           family={Tham},
+           familyi={T\bibinitperiod},
+           given={Ming},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{184271442f932ccfab4a15f638277821}
+      \strng{fullhash}{184271442f932ccfab4a15f638277821}
+      \strng{fullhashraw}{184271442f932ccfab4a15f638277821}
+      \strng{bibnamehash}{184271442f932ccfab4a15f638277821}
+      \strng{authorbibnamehash}{184271442f932ccfab4a15f638277821}
+      \strng{authornamehash}{184271442f932ccfab4a15f638277821}
+      \strng{authorfullhash}{184271442f932ccfab4a15f638277821}
+      \strng{authorfullhashraw}{184271442f932ccfab4a15f638277821}
+      \field{sortinit}{T}
+      \field{sortinithash}{9af77f0292593c26bde9a56e688eaee9}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{month}{5}
+      \field{note}{University of Newcastle Upon Tyne}
+      \field{title}{Writing Research Theses or Dissertations}
+      \field{year}{2001}
+      \true{nocite}
+      \verb{urlraw}
+      \verb http://lorien.ncl.ac.uk/ming/dept/Tips/writing/thesis/thesis-intro.htm
+      \endverb
+      \verb{url}
+      \verb http://lorien.ncl.ac.uk/ming/dept/Tips/writing/thesis/thesis-intro.htm
+      \endverb
+    \endentry
+  \enddatalist
+  \datalist[entry]{nyt/global//global/global/global}
+    \entry{IEEEexample:BSTcontrol}{ieeetranbstctl}{}{}
+      \field{sortinit}{}
+      \field{sortinithash}{495dc9894017a8b12cafa9c619d10c0c}
+      \field{labeldatesource}{nodate}
+      \true{nocite}
+    \endentry
+    \entry{espinoza2012inverse}{article}{}{}
+      \name{author}{5}{ul=2}{%
+        {{un=0,uniquepart=base,hash=f8aa998cdadfd60ea55e76970de2d784}{%
+           family={Espinoza},
+           familyi={E\bibinitperiod},
+           given={Mario\bibnamedelima Sáenz},
+           giveni={M\bibinitperiod\bibinitdelim S\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=09fd56b8325378977a6b9bd6c953ffbe}{%
+           family={Goncalves},
+           familyi={G\bibinitperiod},
+           given={Jose},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=c5e866cb52c4875216fd1a4c7377f91c}{%
+           family={Leitao},
+           familyi={L\bibinitperiod},
+           given={Paulo},
+           giveni={P\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=2bcd5bb74468576b9d71dc7d448c0a36}{%
+           family={Sanchez},
+           familyi={S\bibinitperiod},
+           given={Jose\bibnamedelimb Luis\bibnamedelima Gonzalez},
+           giveni={J\bibinitperiod\bibinitdelim L\bibinitperiod\bibinitdelim G\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=d861569e2544a9800958da5dc5e3f274}{%
+           family={Herreros},
+           familyi={H\bibinitperiod},
+           given={Alberto},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+      }
+      \list{organization}{1}{%
+        {IEEE}%
+      }
+      \strng{namehash}{809e47c8d64d55914d446c116e98dbde}
+      \strng{fullhash}{fd6b37f97b2f1b5d255ff1af4ae9935c}
+      \strng{fullhashraw}{fd6b37f97b2f1b5d255ff1af4ae9935c}
+      \strng{bibnamehash}{fd6b37f97b2f1b5d255ff1af4ae9935c}
+      \strng{authorbibnamehash}{fd6b37f97b2f1b5d255ff1af4ae9935c}
+      \strng{authornamehash}{809e47c8d64d55914d446c116e98dbde}
+      \strng{authorfullhash}{fd6b37f97b2f1b5d255ff1af4ae9935c}
+      \strng{authorfullhashraw}{fd6b37f97b2f1b5d255ff1af4ae9935c}
+      \field{sortinit}{E}
+      \field{sortinithash}{8da8a182d344d5b9047633dfc0cc9131}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Robotics Symposium and Latin American Robotics Symposium (SBR-LARS), 2012 Brazilian}
+      \field{title}{Inverse Kinematics of a 10 DOF modular hyper-redundant robot resorting to exhaustive and error-optimization methods: A comparative study}
+      \field{year}{2012}
+      \true{nocite}
+      \field{pages}{125\bibrangedash 130}
+      \range{pages}{6}
+    \endentry
+    \entry{espinoza2012optimization}{article}{}{}
+      \name{author}{3}{ul=2}{%
+        {{un=0,uniquepart=base,hash=f8aa998cdadfd60ea55e76970de2d784}{%
+           family={Espinoza},
+           familyi={E\bibinitperiod},
+           given={Mario\bibnamedelima Sáenz},
+           giveni={M\bibinitperiod\bibinitdelim S\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=f0613401304e7e8898c61386c9719040}{%
+           family={Pereira},
+           familyi={P\bibinitperiod},
+           given={Ana\bibnamedelima I},
+           giveni={A\bibinitperiod\bibinitdelim I\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=e8f0c40d5ccdd7207282f9c2be59da30}{%
+           family={Gonçalves},
+           familyi={G\bibinitperiod},
+           given={José},
+           giveni={J\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{63510f728f67305340557643e2c1a46b}
+      \strng{fullhash}{63510f728f67305340557643e2c1a46b}
+      \strng{fullhashraw}{63510f728f67305340557643e2c1a46b}
+      \strng{bibnamehash}{63510f728f67305340557643e2c1a46b}
+      \strng{authorbibnamehash}{63510f728f67305340557643e2c1a46b}
+      \strng{authornamehash}{63510f728f67305340557643e2c1a46b}
+      \strng{authorfullhash}{63510f728f67305340557643e2c1a46b}
+      \strng{authorfullhashraw}{63510f728f67305340557643e2c1a46b}
+      \field{sortinit}{E}
+      \field{sortinithash}{8da8a182d344d5b9047633dfc0cc9131}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{AIP Conference Proceedings}
+      \field{title}{Optimization methods for hyper-redundant robots' inverse kinematics in biomedical applications}
+      \field{volume}{1479}
+      \field{year}{2012}
+      \true{nocite}
+      \field{pages}{818}
+      \range{pages}{1}
+    \endentry
+    \entry{kn:Tha01}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=184271442f932ccfab4a15f638277821}{%
+           family={Tham},
+           familyi={T\bibinitperiod},
+           given={Ming},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{184271442f932ccfab4a15f638277821}
+      \strng{fullhash}{184271442f932ccfab4a15f638277821}
+      \strng{fullhashraw}{184271442f932ccfab4a15f638277821}
+      \strng{bibnamehash}{184271442f932ccfab4a15f638277821}
+      \strng{authorbibnamehash}{184271442f932ccfab4a15f638277821}
+      \strng{authornamehash}{184271442f932ccfab4a15f638277821}
+      \strng{authorfullhash}{184271442f932ccfab4a15f638277821}
+      \strng{authorfullhashraw}{184271442f932ccfab4a15f638277821}
+      \field{sortinit}{T}
+      \field{sortinithash}{9af77f0292593c26bde9a56e688eaee9}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{month}{5}
+      \field{note}{University of Newcastle Upon Tyne}
+      \field{title}{Writing Research Theses or Dissertations}
+      \field{year}{2001}
+      \true{nocite}
+      \verb{urlraw}
+      \verb http://lorien.ncl.ac.uk/ming/dept/Tips/writing/thesis/thesis-intro.htm
+      \endverb
+      \verb{url}
+      \verb http://lorien.ncl.ac.uk/ming/dept/Tips/writing/thesis/thesis-intro.htm
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

@@ -4,6 +4,23 @@
 \addvspace {10\p@ }
 \contentsline {table}{\numberline {3.1}{\ignorespaces Các tác nhân của hệ thống TDTUOJ}}{14}{table.3.1}%
 \contentsline {table}{\numberline {3.2}{\ignorespaces Danh sách các Use Case của hệ thống TDTUOJ}}{17}{table.3.2}%
+\contentsline {table}{\numberline {3.3}{\ignorespaces Bảng đặc tả Use case Nộp bài giải}}{26}{table.3.3}%
+\contentsline {table}{\numberline {3.4}{\ignorespaces Bảng đặc tả Use case Tạo bài toán}}{29}{table.3.4}%
+\contentsline {table}{\numberline {3.5}{\ignorespaces Bảng đặc tả Use case Trực quan hóa và gỡ lỗi mã nguồn}}{33}{table.3.5}%
+\contentsline {table}{\numberline {3.6}{\ignorespaces Bảng đặc tả Use case Tham gia cuộc thi}}{37}{table.3.6}%
+\contentsline {table}{\numberline {3.7}{\ignorespaces Bảng đặc tả Use case Gợi ý học tập bằng \ac {LLM}}}{42}{table.3.7}%
+\contentsline {table}{\numberline {3.8}{\ignorespaces Bảng đặc tả Use case Quản lý bài thực hành}}{45}{table.3.8}%
 \addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces Mô tả chi tiết thực thể users}}{56}{table.4.1}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces Mô tả chi tiết thực thể problems}}{58}{table.4.2}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces Mô tả chi tiết thực thể submissions}}{60}{table.4.3}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces Mô tả chi tiết thực thể contests}}{62}{table.4.4}%
+\contentsline {table}{\numberline {4.5}{\ignorespaces Mô tả chi tiết thực thể organizations}}{64}{table.4.5}%
+\contentsline {table}{\numberline {4.6}{\ignorespaces Mô tả chi tiết thực thể labs}}{66}{table.4.6}%
 \addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Các thành phần trong môi trường cài đặt}}{74}{table.caption.61}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces Các tầng trong mã nguồn phía máy chủ}}{75}{table.caption.62}%
+\contentsline {table}{\numberline {5.3}{\ignorespaces Độ phủ dòng lệnh của các phân hệ dịch vụ cốt lõi}}{77}{table.caption.63}%
+\contentsline {table}{\numberline {5.4}{\ignorespaces Một số ca kiểm thử đơn vị tiêu biểu}}{77}{table.caption.64}%
+\contentsline {table}{\numberline {5.5}{\ignorespaces Các chỉ số giám sát chính}}{79}{table.caption.67}%
 \addvspace {10\p@ }

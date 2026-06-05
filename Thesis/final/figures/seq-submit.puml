@@ -1,0 +1,72 @@
+@startuml seq-submit
+mainframe sd Submit solution
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam SequenceArrowColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam BoundaryBackgroundColor #FFFFFF
+skinparam BoundaryBorderColor #000000
+skinparam ControlBackgroundColor #FFFFFF
+skinparam ControlBorderColor #000000
+skinparam EntityBackgroundColor #FFFFFF
+skinparam EntityBorderColor #000000
+
+autonumber
+
+actor "User" as U
+boundary "Problem Page" as UI
+control "SubmissionController" as C
+control "SubmissionService" as S
+entity "SubmissionRepository" as R
+control "Judge0Service" as J
+
+U -> UI : Select language, click "Submit"
+activate UI
+UI -> C : POST /api/submissions
+activate C
+C -> S : createSubmission(dto)
+activate S
+S -> R : save(status = PENDING)
+activate R
+R --> S : submission
+deactivate R
+S --> C : submissionId
+C --> UI : 200 PENDING
+deactivate C
+
+S -> J : run code against test cases
+activate J
+J -> J : compile & execute (Judge0)
+J --> S : verdict + time/memory
+deactivate J
+S -> R : update verdict & status = COMPLETED
+activate R
+R --> S : ok
+deactivate R
+deactivate S
+
+loop until status = COMPLETED
+  UI -> C : GET /api/submissions/{id}
+  activate C
+  C -> S : getSubmissionStatus(id)
+  activate S
+  S -> R : findById(id)
+  activate R
+  R --> S : submission
+  deactivate R
+  S --> C : SubmissionDTO
+  deactivate S
+  C --> UI : status + verdict
+  deactivate C
+end
+UI --> U : Display verdict result
+deactivate UI
+@enduml

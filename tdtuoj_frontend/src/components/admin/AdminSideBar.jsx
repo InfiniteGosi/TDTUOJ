@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { to: "/admin/organizations", label: "Organizations", Icon: Building2 },
 ];
 
+const ADMIN_DASHBOARD = { to: "/admin/dashboard", label: "Dashboard", Icon: LayoutDashboard };
 const ADMIN_ONLY = { to: "/admin/users", label: "Users", Icon: User };
 
 const AdminSidebar = () => {
@@ -21,7 +22,7 @@ const AdminSidebar = () => {
   const navigate  = useNavigate();
   const isAdmin   = ApiService.isAdmin();
 
-  const items = isAdmin ? [...NAV_ITEMS, ADMIN_ONLY] : NAV_ITEMS;
+  const items = isAdmin ? [ADMIN_DASHBOARD, ...NAV_ITEMS, ADMIN_ONLY] : NAV_ITEMS;
   const isActive = (to) => location.pathname.startsWith(to);
 
   return (

@@ -91,4 +91,24 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
         "GROUP BY s.submissionLanguage"
     )
     List<Object[]> countAcByLanguage(@org.springframework.data.repository.query.Param("userId") Long userId);
+
+    // ── Admin dashboard aggregates ───────────────────────────────────────── //
+
+    /** Submission counts grouped by verdict, platform-wide (admin dashboard). */
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT s.submissionVerdict, COUNT(s) FROM Submission s " +
+        "WHERE s.submissionVerdict IS NOT NULL " +
+        "GROUP BY s.submissionVerdict"
+    )
+    List<Object[]> countGroupedByVerdict();
+
+    /** Submissions per day ("YYYY-MM-DD") since a given time (admin dashboard). */
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT FUNCTION('to_char', s.submissionDate, 'YYYY-MM-DD'), COUNT(s) FROM Submission s " +
+        "WHERE s.submissionDate >= :since " +
+        "GROUP BY FUNCTION('to_char', s.submissionDate, 'YYYY-MM-DD') " +
+        "ORDER BY FUNCTION('to_char', s.submissionDate, 'YYYY-MM-DD')"
+    )
+    List<Object[]> countSubmissionsByDay(
+        @org.springframework.data.repository.query.Param("since") java.time.LocalDateTime since);
 }

@@ -2,6 +2,9 @@ package com.oj.TDTUOJ.submission.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oj.TDTUOJ.submission.dto.SubmissionJobDTO;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,6 +25,17 @@ public class SubmissionQueueService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper                  objectMapper;
+    private final MeterRegistry                 meterRegistry;
+
+    @PostConstruct
+    void registerQueueDepthGauge() {
+        Gauge.builder("submissions.queue.depth", redisTemplate, rt -> {
+                    Long size = rt.opsForList().size(QUEUE_KEY);
+                    return size != null ? size : 0;
+                })
+                .description("Number of submissions waiting in the Redis judging queue")
+                .register(meterRegistry);
+    }
 
     public void enqueue(SubmissionJobDTO job) {
         // 1. Push job to queue

@@ -161,6 +161,14 @@ export default class ApiService {
     return resp.data;
   }
 
+  /** Platform-wide analytics for the admin dashboard (ADMIN only). */
+  static async getAdminDashboardStats() {
+    const resp = await axios.get(`${this.BASE_URL}/admin/dashboard`, {
+      headers: this.getHeader(),
+    });
+    return resp.data;
+  }
+
   static async getUserActivity(username) {
     const resp = await axios.get(
       `${this.BASE_URL}/users/${username}/activity`,

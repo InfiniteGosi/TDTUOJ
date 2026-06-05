@@ -1,0 +1,111 @@
+@startuml erd-contest
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam linetype ortho
+skinparam roundCorner 0
+skinparam ArrowColor #000000
+skinparam EntityBorderColor #000000
+skinparam EntityBackgroundColor #FFFFFF
+skinparam EntityFontColor #000000
+hide circle
+
+entity "users" as users {
+  *id : bigint <<PK>>
+  --
+  username : varchar <<U>>
+}
+
+entity "problems" as problems {
+  *id : bigint <<PK>>
+  --
+  title : varchar <<U>>
+}
+
+entity "contests" as contests {
+  *id : bigint <<PK>>
+  --
+  name : varchar
+  description : text
+  slug : varchar <<U>>
+  creator_id : bigint <<FK>>
+  contest_style : enum
+  start_time : timestamp
+  end_time : timestamp
+  registration_start : timestamp
+  registration_end : timestamp
+  is_public : boolean
+  is_rated : boolean
+  rating_processed : boolean
+  max_participant : int
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "contests_problems" as contests_problems {
+  *id : bigint <<PK>>
+  --
+  contest_id : bigint <<FK>>
+  problem_id : bigint <<FK>>
+  problem_order : int
+  points : int
+}
+
+entity "contest_registration" as contest_registration {
+  *id : bigint <<PK>>
+  --
+  user_id : bigint <<FK>>
+  contest_id : bigint <<FK>>
+  status : enum
+  register_at : timestamp
+}
+
+entity "contest_participations" as contest_participations {
+  *id : bigint <<PK>>
+  --
+  contest_id : bigint <<FK>>
+  user_id : bigint <<FK>>
+  type : enum
+  rank : int
+  score : int
+  penalty_time : int
+  problems_solved : int
+  points_earned : int
+  rating_before : int
+  rating_after : int
+  updated_at : timestamp
+}
+
+entity "rating_history" as rating_history {
+  *id : bigint <<PK>>
+  --
+  user_id : bigint <<FK>>
+  contest_id : bigint <<FK>>
+  contest_name : varchar
+  old_rating : int
+  new_rating : int
+  rating_change : int
+  rank : int
+  contest_end_time : timestamp
+  created_at : timestamp
+}
+
+entity "leaderboard_cache" as leaderboard_cache {
+  *id : bigint <<PK>>
+  --
+  type : varchar <<U>>
+  rankings : text
+  total_users : int
+  last_updated : timestamp
+}
+
+users    ||--o{ contests              : creator
+contests ||--o{ contests_problems
+problems ||--o{ contests_problems
+users    ||--o{ contest_registration
+contests ||--o{ contest_registration
+users    ||--o{ contest_participations
+contests ||--o{ contest_participations
+users    ||--o{ rating_history
+contests ||--o{ rating_history
+@enduml

@@ -1,0 +1,65 @@
+@startuml erd-user
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam linetype ortho
+skinparam roundCorner 0
+skinparam ArrowColor #000000
+skinparam EntityBorderColor #000000
+skinparam EntityBackgroundColor #FFFFFF
+skinparam EntityFontColor #000000
+hide circle
+
+entity "users" as users {
+  *id : bigint <<PK>>
+  --
+  username : varchar <<U>>
+  name : varchar
+  email : varchar <<U>>
+  password : varchar
+  auth_provider : varchar
+  provider_id : varchar
+  about : varchar
+  is_active : boolean
+  profile_url : varchar
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "roles" as roles {
+  *id : bigint <<PK>>
+  --
+  name : varchar <<U>>
+}
+
+entity "users_roles" as users_roles {
+  *user_id : bigint <<FK>>
+  *role_id : bigint <<FK>>
+}
+
+entity "user_statistics" as user_statistics {
+  *id : bigint <<PK>>
+  --
+  user_id : bigint <<FK,U>>
+  problems_solved : int
+  total_submissions : int
+  accepted_submissions : int
+  total_points : int
+  current_rating : int
+  max_rating : int
+  acceptance_rate : double
+}
+
+entity "user_daily_activity" as user_daily_activity {
+  *id : bigint <<PK>>
+  --
+  user_id : bigint <<FK>>
+  activity_date : date
+  submissions_count : int
+}
+
+users ||--o{ users_roles
+roles ||--o{ users_roles
+users ||--|| user_statistics
+users ||--o{ user_daily_activity
+@enduml

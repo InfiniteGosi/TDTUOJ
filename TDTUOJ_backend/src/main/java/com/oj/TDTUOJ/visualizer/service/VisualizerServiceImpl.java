@@ -74,17 +74,19 @@ public class VisualizerServiceImpl implements VisualizerService {
     private String instrument(String code, SubmissionLanguage lang, VisualizerMode mode) {
         if (mode == VisualizerMode.AUTO) {
             return switch (lang) {
-                case PYTHON -> PythonInstrumentor.instrumentAuto(code);
-                case JAVA   -> JavaInstrumentor.instrumentAuto(code);
-                case C      -> CppInstrumentor.instrumentCAuto(code);
-                case CPP    -> CppInstrumentor.instrumentCppAuto(code);
+                case PYTHON      -> PythonInstrumentor.instrumentAuto(code);
+                case JAVA        -> JavaInstrumentor.instrumentAuto(code);
+                case C           -> CppInstrumentor.instrumentCAuto(code);
+                case CPP         -> CppInstrumentor.instrumentCppAuto(code);
+                case CSHARP, JAVASCRIPT -> throw new com.oj.TDTUOJ.common.exceptions.BadRequestException("Visualizer not supported for this language");
             };
         }
         return switch (lang) {
-            case PYTHON -> PythonInstrumentor.instrumentManual(code);
-            case JAVA   -> JavaInstrumentor.instrumentManual(code);
-            case C      -> CppInstrumentor.instrumentCManual(code);
-            case CPP    -> CppInstrumentor.instrumentCppManual(code);
+            case PYTHON      -> PythonInstrumentor.instrumentManual(code);
+            case JAVA        -> JavaInstrumentor.instrumentManual(code);
+            case C           -> CppInstrumentor.instrumentCManual(code);
+            case CPP         -> CppInstrumentor.instrumentCppManual(code);
+            case CSHARP, JAVASCRIPT -> throw new com.oj.TDTUOJ.common.exceptions.BadRequestException("Visualizer not supported for this language");
         };
     }
 

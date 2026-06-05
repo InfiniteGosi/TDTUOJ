@@ -118,4 +118,15 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
     Page<Problem> findByAuthorId(Long authorId, Pageable pageable);
 
     Page<Problem> findByAuthorIdAndTitleContainingIgnoreCase(Long authorId, String title, Pageable pageable);
+
+    // ── Admin dashboard aggregates ────────────────────────────────────────── //
+
+    /** Problem counts grouped by difficulty (admin dashboard). */
+    @Query("SELECT p.problemDifficulty, COUNT(p) FROM Problem p GROUP BY p.problemDifficulty")
+    List<Object[]> countGroupedByDifficulty();
+
+    /** Problem counts grouped by ACTIVE tag name, most-used first (admin dashboard). */
+    @Query("SELECT t.name, COUNT(p) FROM Problem p JOIN p.tags t WHERE t.isActive = true " +
+           "GROUP BY t.name ORDER BY COUNT(p) DESC")
+    List<Object[]> countGroupedByTag(Pageable pageable);
 }

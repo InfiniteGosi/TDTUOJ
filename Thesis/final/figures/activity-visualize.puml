@@ -1,0 +1,45 @@
+@startuml activity-visualize
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam roundCorner 0
+skinparam ArrowColor #000000
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityBorderColor #000000
+skinparam ActivityFontColor #000000
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor #000000
+skinparam SwimlaneTitleFontStyle bold
+skinparam SwimlaneBorderColor #000000
+
+|User|
+start
+:Open problem in the IDE;
+:Write code & select language;
+:Choose visualizer mode\nAUTO or MANUAL;
+:Click "Visualize";
+
+|System|
+:Pick language instrumentor\nPython / Java / C / C++;
+:Normalize braces\ninject __TRACE__ statements;
+:Send instrumented code\nto judging service;
+:Run code, capture trace output;
+
+if (Compile / run OK?) then (Yes)
+  :Parse __TRACE__ into steps\nvariable snapshots per step;
+  :Return step list;
+  |User|
+  repeat
+    :View step in renderer\narray / tree / graph / ...;
+    :Step forward / back\nor play animation;
+  repeat while (Inspect more steps?) is (Yes) not (No)
+  :Close visualizer;
+else (No)
+  :Return compile / runtime error;
+  |User|
+  :Show error message;
+  :Fix code;
+  stop
+endif
+stop
+@enduml
