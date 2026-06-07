@@ -15,11 +15,17 @@ skinparam SwimlaneBorderColor #000000
 |User|
 start
 :Open organization\n"Create lab" form;
-:Set title, problems & deadline;
+:Set title & deadline\npick own private problems;
 :Click "Save lab";
 |System|
-:Validate & persist lab\nlink problems to org members;
-:Return created lab;
+if (Problems private &\nowned by creator?) then (Yes)
+  :Persist lab\nlink problems to org members;
+  :Return created lab;
+else (No)
+  |User|
+  :Show validation error;
+  stop
+endif
 
 |User|
 :Students submit lab exercises;

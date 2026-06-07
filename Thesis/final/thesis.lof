@@ -2,36 +2,36 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {3.1}{\ignorespaces Sơ đồ Use Case tổng quan của hệ thống TDTUOJ}}{25}{figure.caption.28}%
-\contentsline {figure}{\numberline {3.2}{\ignorespaces Sơ đồ hoạt động cho Use Case Nộp bài giải}}{28}{figure.caption.29}%
-\contentsline {figure}{\numberline {3.3}{\ignorespaces Sơ đồ tuần tự cho Use Case Nộp bài giải}}{29}{figure.caption.30}%
-\contentsline {figure}{\numberline {3.4}{\ignorespaces Sơ đồ hoạt động cho Use Case Tạo bài toán}}{32}{figure.caption.31}%
-\contentsline {figure}{\numberline {3.5}{\ignorespaces Sơ đồ tuần tự cho Use Case Tạo bài toán}}{33}{figure.caption.32}%
-\contentsline {figure}{\numberline {3.6}{\ignorespaces Sơ đồ hoạt động cho Use Case Trực quan hóa và gỡ lỗi mã nguồn}}{36}{figure.caption.33}%
-\contentsline {figure}{\numberline {3.7}{\ignorespaces Sơ đồ tuần tự cho Use Case Trực quan hóa và gỡ lỗi mã nguồn}}{37}{figure.caption.34}%
-\contentsline {figure}{\numberline {3.8}{\ignorespaces Sơ đồ hoạt động cho Use Case Tham gia cuộc thi}}{40}{figure.caption.37}%
-\contentsline {figure}{\numberline {3.9}{\ignorespaces Sơ đồ tuần tự cho Use Case Tham gia cuộc thi}}{41}{figure.caption.38}%
-\contentsline {figure}{\numberline {3.10}{\ignorespaces Sơ đồ hoạt động cho Use Case Gợi ý học tập bằng \ac {LLM}}}{44}{figure.caption.39}%
-\contentsline {figure}{\numberline {3.11}{\ignorespaces Sơ đồ tuần tự cho Use Case Gợi ý học tập bằng \ac {LLM}}}{45}{figure.caption.40}%
-\contentsline {figure}{\numberline {3.12}{\ignorespaces Sơ đồ hoạt động cho Use Case Quản lý bài thực hành}}{48}{figure.caption.41}%
-\contentsline {figure}{\numberline {3.13}{\ignorespaces Sơ đồ tuần tự cho Use Case Quản lý bài thực hành}}{49}{figure.caption.42}%
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Sơ đồ Use Case tổng quan của hệ thống TDTUOJ}}{26}{figure.caption.29}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Sơ đồ hoạt động cho Use Case Nộp bài giải}}{29}{figure.caption.30}%
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Sơ đồ tuần tự cho Use Case Nộp bài giải}}{30}{figure.caption.31}%
+\contentsline {figure}{\numberline {3.4}{\ignorespaces Sơ đồ hoạt động cho Use Case Tạo bài toán}}{33}{figure.caption.32}%
+\contentsline {figure}{\numberline {3.5}{\ignorespaces Sơ đồ tuần tự cho Use Case Tạo bài toán}}{34}{figure.caption.33}%
+\contentsline {figure}{\numberline {3.6}{\ignorespaces Sơ đồ hoạt động cho Use Case Trực quan hóa và gỡ lỗi mã nguồn}}{37}{figure.caption.34}%
+\contentsline {figure}{\numberline {3.7}{\ignorespaces Sơ đồ tuần tự cho Use Case Trực quan hóa và gỡ lỗi mã nguồn}}{38}{figure.caption.35}%
+\contentsline {figure}{\numberline {3.8}{\ignorespaces Sơ đồ hoạt động cho Use Case Tham gia cuộc thi}}{41}{figure.caption.37}%
+\contentsline {figure}{\numberline {3.9}{\ignorespaces Sơ đồ tuần tự cho Use Case Tham gia cuộc thi}}{42}{figure.caption.38}%
+\contentsline {figure}{\numberline {3.10}{\ignorespaces Sơ đồ hoạt động cho Use Case Gợi ý học tập bằng \ac {LLM}}}{45}{figure.caption.39}%
+\contentsline {figure}{\numberline {3.11}{\ignorespaces Sơ đồ tuần tự cho Use Case Gợi ý học tập bằng \ac {LLM}}}{46}{figure.caption.40}%
+\contentsline {figure}{\numberline {3.12}{\ignorespaces Sơ đồ hoạt động cho Use Case Quản lý bài thực hành}}{49}{figure.caption.41}%
+\contentsline {figure}{\numberline {3.13}{\ignorespaces Sơ đồ tuần tự cho Use Case Quản lý bài thực hành}}{50}{figure.caption.42}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {4.1}{\ignorespaces Kiến trúc tổng quan của hệ thống TDTUOJ}}{53}{figure.caption.44}%
-\contentsline {figure}{\numberline {4.2}{\ignorespaces Sơ đồ thực thể -- quan hệ của hệ thống TDTUOJ}}{55}{figure.caption.48}%
-\contentsline {figure}{\numberline {4.3}{\ignorespaces Phân mảnh ERD -- Người dùng}}{56}{figure.caption.49}%
-\contentsline {figure}{\numberline {4.4}{\ignorespaces Phân mảnh ERD -- Bài toán}}{58}{figure.caption.50}%
-\contentsline {figure}{\numberline {4.5}{\ignorespaces Phân mảnh ERD -- Bài nộp}}{60}{figure.caption.51}%
-\contentsline {figure}{\numberline {4.6}{\ignorespaces Phân mảnh ERD -- Cuộc thi}}{62}{figure.caption.52}%
-\contentsline {figure}{\numberline {4.7}{\ignorespaces Phân mảnh ERD -- Tổ chức}}{64}{figure.caption.53}%
-\contentsline {figure}{\numberline {4.8}{\ignorespaces Phân mảnh ERD -- Bài thực hành}}{66}{figure.caption.54}%
-\contentsline {figure}{\numberline {4.9}{\ignorespaces Giao diện trang chủ của hệ thống TDTUOJ}}{68}{figure.caption.55}%
-\contentsline {figure}{\numberline {4.10}{\ignorespaces Giao diện trang danh sách bài toán}}{69}{figure.caption.56}%
-\contentsline {figure}{\numberline {4.11}{\ignorespaces Giao diện trang chi tiết bài toán và kết quả nộp bài}}{70}{figure.caption.57}%
-\contentsline {figure}{\numberline {4.12}{\ignorespaces Giao diện bảng gợi ý học tập bằng \ac {LLM}}}{71}{figure.caption.58}%
-\contentsline {figure}{\numberline {4.13}{\ignorespaces Giao diện trang cuộc thi và bảng xếp hạng}}{72}{figure.caption.59}%
-\contentsline {figure}{\numberline {4.14}{\ignorespaces Giao diện trang quản trị bài toán}}{73}{figure.caption.60}%
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Kiến trúc tổng quan của hệ thống TDTUOJ}}{54}{figure.caption.44}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Sơ đồ thực thể -- quan hệ của hệ thống TDTUOJ}}{56}{figure.caption.48}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Phân mảnh ERD -- Người dùng}}{57}{figure.caption.49}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Phân mảnh ERD -- Bài toán}}{59}{figure.caption.50}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Phân mảnh ERD -- Bài nộp}}{61}{figure.caption.51}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Phân mảnh ERD -- Cuộc thi}}{63}{figure.caption.52}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces Phân mảnh ERD -- Tổ chức}}{65}{figure.caption.53}%
+\contentsline {figure}{\numberline {4.8}{\ignorespaces Phân mảnh ERD -- Bài thực hành}}{67}{figure.caption.54}%
+\contentsline {figure}{\numberline {4.9}{\ignorespaces Giao diện trang chủ của hệ thống TDTUOJ}}{69}{figure.caption.55}%
+\contentsline {figure}{\numberline {4.10}{\ignorespaces Giao diện trang danh sách bài toán}}{70}{figure.caption.56}%
+\contentsline {figure}{\numberline {4.11}{\ignorespaces Giao diện trang chi tiết bài toán và kết quả nộp bài}}{71}{figure.caption.57}%
+\contentsline {figure}{\numberline {4.12}{\ignorespaces Giao diện bảng gợi ý học tập bằng \ac {LLM}}}{72}{figure.caption.58}%
+\contentsline {figure}{\numberline {4.13}{\ignorespaces Giao diện trang cuộc thi và bảng xếp hạng}}{73}{figure.caption.59}%
+\contentsline {figure}{\numberline {4.14}{\ignorespaces Giao diện trang quản trị bài toán}}{74}{figure.caption.60}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {5.1}{\ignorespaces Bảng điều khiển giám sát tổng quan trên Grafana}}{78}{figure.caption.65}%
-\contentsline {figure}{\numberline {5.2}{\ignorespaces Số lượt chấp nhận và từ chối theo tầng khi bị dồn tần suất}}{80}{figure.caption.68}%
-\contentsline {figure}{\numberline {5.3}{\ignorespaces Giám sát hệ thống trong kịch bản nộp bài}}{81}{figure.caption.69}%
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Bảng điều khiển giám sát tổng quan trên Grafana}}{79}{figure.caption.65}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Số lượt chấp nhận và từ chối theo tầng khi bị dồn tần suất}}{81}{figure.caption.68}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Giám sát hệ thống trong kịch bản nộp bài}}{82}{figure.caption.69}%
 \addvspace {10\p@ }

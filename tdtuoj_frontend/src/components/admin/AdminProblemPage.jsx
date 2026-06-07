@@ -23,7 +23,7 @@ const DiffBadge = ({ difficulty }) => {
   const s = DIFF_STYLE[difficulty];
   if (!s) return null;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: 9999, fontSize: 11, fontWeight: 700, background: s.bg, color: s.hex, border: `1px solid ${s.hex}33` }}>
+    <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: 9999, fontSize: "var(--text-xs)", fontWeight: 700, background: s.bg, color: s.hex, border: `1px solid ${s.hex}33` }}>
       {s.label}
     </span>
   );
@@ -59,9 +59,9 @@ const FilterPanel = ({ availableTags, selectedDifficulty, onDifficultyChange, se
       <div className="flex items-center justify-between" style={{ padding: "8px 16px", borderBottom: "1px solid var(--border-subtle)" }}>
         <div className="flex items-center gap-2">
           <SlidersHorizontal size={14} color="var(--text-muted)" />
-          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em" }}>FILTERS</span>
+          <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em" }}>FILTERS</span>
           {hasActiveFilters && (
-            <span style={{ display: "inline-block", padding: "1px 8px", borderRadius: 9999, fontSize: 10, fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
+            <span style={{ display: "inline-block", padding: "1px 8px", borderRadius: 9999, fontSize: "var(--text-xs)", fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
               {activeFilterCount} active
             </span>
           )}
@@ -75,7 +75,7 @@ const FilterPanel = ({ availableTags, selectedDifficulty, onDifficultyChange, se
 
       {/* Difficulty */}
       <div className="flex items-center" style={{ padding: "10px 16px", gap: 12, borderBottom: "1px solid var(--border-subtle)" }}>
-        <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-muted)", minWidth: 70, flexShrink: 0 }}>Difficulty</span>
+        <span style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--text-muted)", minWidth: 70, flexShrink: 0 }}>Difficulty</span>
         <FilterPills
           value={selectedDifficulty}
           onChange={(v) => onDifficultyChange(v)}
@@ -90,7 +90,7 @@ const FilterPanel = ({ availableTags, selectedDifficulty, onDifficultyChange, se
 
       {/* Topics */}
       <div className="flex" style={{ padding: "10px 16px", gap: 12, alignItems: "flex-start" }}>
-        <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-muted)", minWidth: 70, flexShrink: 0, marginTop: 2 }}>Topics</span>
+        <span style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--text-muted)", minWidth: 70, flexShrink: 0, marginTop: 2 }}>Topics</span>
         <div style={{ flex: 1 }}>
           {selectedTagNames.length > 0 && (
             <div className="flex flex-wrap gap-2" style={{ marginBottom: 10 }}>
@@ -102,7 +102,7 @@ const FilterPanel = ({ availableTags, selectedDifficulty, onDifficultyChange, se
                     display: "inline-flex", alignItems: "center", gap: 4,
                     padding: "3px 8px", borderRadius: 9999,
                     background: "var(--primary-subtle)", color: "var(--primary)",
-                    fontSize: 12, fontWeight: 500,
+                    fontSize: "var(--text-sm)", fontWeight: 500,
                     border: "1px solid var(--border-accent)", cursor: "pointer",
                   }}
                 >
@@ -121,7 +121,7 @@ const FilterPanel = ({ availableTags, selectedDifficulty, onDifficultyChange, se
                 border: `1.5px dashed ${tagDropdownOpen ? "var(--primary)" : "var(--border-default)"}`,
                 background: "transparent",
                 color: tagDropdownOpen ? "var(--primary)" : "var(--text-muted)",
-                fontSize: 12, fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
+                fontSize: "var(--text-sm)", fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
               }}
             >
               + Add topic
@@ -138,7 +138,7 @@ const FilterPanel = ({ availableTags, selectedDifficulty, onDifficultyChange, se
                 <div style={{ padding: 8, borderBottom: "1px solid var(--border-subtle)", position: "sticky", top: 0, background: "var(--bg-raised)" }}>
                   <input
                     className="input"
-                    style={{ fontSize: 13, padding: "4px 8px" }}
+                    style={{ fontSize: "var(--text-sm)", padding: "4px 8px" }}
                     placeholder="Search topics..."
                     value={tagSearch}
                     onChange={(e) => setTagSearch(e.target.value)}
@@ -147,13 +147,13 @@ const FilterPanel = ({ availableTags, selectedDifficulty, onDifficultyChange, se
                 </div>
                 {filteredTags.length === 0 ? (
                   <div style={{ padding: "12px 16px" }}>
-                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>No topics found</span>
+                    <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>No topics found</span>
                   </div>
                 ) : (
                   filteredTags.map((tag) => (
                     <div
                       key={tag.id}
-                      style={{ padding: "8px 12px", cursor: "pointer", fontSize: 13, color: "var(--text-secondary)", transition: "background 0.1s" }}
+                      style={{ padding: "8px 12px", cursor: "pointer", fontSize: "var(--text-sm)", color: "var(--text-secondary)", transition: "background 0.1s" }}
                       onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                       onClick={() => { toggleTag(tag.name); setTagSearch(""); setTagDropdownOpen(false); }}
@@ -265,7 +265,7 @@ const AdminProblemPage = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Manage Problems</h2>
-              <span style={{ display: "inline-block", padding: "3px 12px", borderRadius: 9999, fontSize: 13, fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
+              <span style={{ display: "inline-block", padding: "3px 12px", borderRadius: 9999, fontSize: "var(--text-sm)", fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
                 {pagination.totalElements} {pagination.totalElements === 1 ? "problem" : "problems"}
               </span>
             </div>
@@ -320,7 +320,7 @@ const AdminProblemPage = () => {
                   <span style={{
                     background: showFilters ? "var(--text-inverse)" : "var(--primary)",
                     color: showFilters ? "var(--primary)" : "var(--text-inverse)",
-                    borderRadius: 9999, width: 16, height: 16, fontSize: 10, fontWeight: 700,
+                    borderRadius: 9999, width: 16, height: 16, fontSize: "var(--text-xs)", fontWeight: 700,
                     display: "flex", alignItems: "center", justifyContent: "center", marginLeft: 2,
                   }}>
                     {activeFilterCount}
@@ -355,16 +355,16 @@ const AdminProblemPage = () => {
               </div>
             )}
 
-            <table className="table">
+            <table className="table admin-table">
               <thead>
-                <tr style={{ background: "var(--primary-subtle)" }}>
-                  <th style={{ textAlign: "center", width: "7%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
-                  <th style={{ width: "25%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Problem</th>
-                  <th style={{ width: "10%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Difficulty</th>
-                  <th style={{ width: "27%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Tags</th>
-                  <th style={{ textAlign: "center", width: "10%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Points</th>
-                  <th style={{ textAlign: "center", width: "10%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Time Limit</th>
-                  <th style={{ textAlign: "center", width: "11%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Actions</th>
+                <tr>
+                  <th style={{ textAlign: "center", width: "7%" }}>#</th>
+                  <th style={{ width: "25%" }}>Problem</th>
+                  <th style={{ width: "10%" }}>Difficulty</th>
+                  <th style={{ width: "27%" }}>Tags</th>
+                  <th style={{ textAlign: "center", width: "10%" }}>Points</th>
+                  <th style={{ textAlign: "center", width: "10%" }}>Time Limit</th>
+                  <th style={{ textAlign: "center", width: "11%" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -375,11 +375,11 @@ const AdminProblemPage = () => {
                     return (
                       <tr key={problem.id}>
                         <td style={{ textAlign: "center" }}>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{problem.id}</span>
+                          <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-muted)" }}>{problem.id}</span>
                         </td>
                         <td>
                           <div className="flex items-center gap-2">
-                            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{problem.title}</span>
+                            <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-primary)" }}>{problem.title}</span>
                             {hasInactiveTags && (
                               <span title={`${inactiveTags.length} disabled tag(s): ${inactiveTags.map((t) => t.name).join(", ")}. Edit this problem to remove them.`} style={{ color: "var(--amber-tle)", cursor: "help" }}>
                                 <AlertTriangle size={14} />
@@ -397,7 +397,7 @@ const AdminProblemPage = () => {
                                 <span
                                   key={tag.id}
                                   style={{
-                                    display: "inline-block", padding: "1px 8px", borderRadius: 9999, fontSize: 11, fontWeight: 500,
+                                    display: "inline-block", padding: "1px 8px", borderRadius: 9999, fontSize: "var(--text-xs)", fontWeight: 500,
                                     background: tag.isActive === false ? "var(--bg-raised)" : "var(--primary-subtle)",
                                     color: tag.isActive === false ? "var(--text-muted)" : "var(--primary)",
                                     opacity: tag.isActive === false ? 0.6 : 1,
@@ -410,18 +410,18 @@ const AdminProblemPage = () => {
                                 </span>
                               ))}
                             {(!problem.tags || problem.tags.length === 0) && (
-                              <span style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic" }}>No tags</span>
+                              <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", fontStyle: "italic" }}>No tags</span>
                             )}
                           </div>
                         </td>
                         <td style={{ textAlign: "center" }}>
                           <div className="flex items-center justify-center gap-1">
                             <Trophy size={14} color="var(--primary)" />
-                            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)" }}>{problem.point}</span>
+                            <span style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--primary)" }}>{problem.point}</span>
                           </div>
                         </td>
                         <td style={{ textAlign: "center" }}>
-                          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>{problem.timeLimit}ms</span>
+                          <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>{problem.timeLimit}ms</span>
                         </td>
                         <td style={{ textAlign: "center" }}>
                           <div className="flex items-center justify-center gap-1">

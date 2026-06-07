@@ -135,14 +135,14 @@ const OrganizationPage = () => {
                       onClick={() => navigate(`/organizations/${org.slug}`)}>
 
                       <td style={{ textAlign: "center" }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{page * size + idx + 1}</span>
+                        <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-muted)" }}>{page * size + idx + 1}</span>
                       </td>
 
                       <td>
                         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>{org.name}</span>
+                          <span style={{ fontSize: "var(--text-base)", fontWeight: 700, color: "var(--text-primary)" }}>{org.name}</span>
                           {org.about && (
-                            <span style={{ fontSize: 12, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 280 }}>
+                            <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 280 }}>
                               {org.about}
                             </span>
                           )}
@@ -184,10 +184,10 @@ const OrganizationPage = () => {
                     <td colSpan={7} style={{ textAlign: "center", padding: "48px 0" }}>
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
                         <Building2 size={40} color="var(--border-default)" />
-                        <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text-muted)" }}>
+                        <span style={{ fontSize: "var(--text-base)", fontWeight: 600, color: "var(--text-muted)" }}>
                           {tab === "MY" ? "You haven't joined any organizations yet" : "No organizations found"}
                         </span>
-                        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                        <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
                           {tab === "MY" ? "Browse organizations and join one" : "Try adjusting your search"}
                         </span>
                       </div>

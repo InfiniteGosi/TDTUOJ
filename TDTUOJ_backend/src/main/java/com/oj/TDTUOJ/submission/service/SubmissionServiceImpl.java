@@ -5,6 +5,7 @@ import com.oj.TDTUOJ.common.enums.ContestRegistrationStatus;
 import com.oj.TDTUOJ.common.enums.SubmissionStatus;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.common.response.Response;
+import com.oj.TDTUOJ.common.utils.ContestLockUtil;
 import com.oj.TDTUOJ.contest.entity.Contest;
 import com.oj.TDTUOJ.contest.repository.ContestRegistrationRepository;
 import com.oj.TDTUOJ.contest.repository.ContestRepository;
@@ -143,6 +144,17 @@ public class SubmissionServiceImpl implements SubmissionService {
         Submission submission = submissionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Submission not found"));
 
+        // Contest fairness: hide locked-contest submissions from non-owners.
+        // 404 (not 403) — don't confirm the submission exists.
+        if (submission.getContestId() != null) {
+            Contest contest = contestRepository.findById(submission.getContestId()).orElse(null);
+            if (contest != null
+                    && ContestLockUtil.isLocked(contest, LocalDateTime.now())
+                    && !canViewLockedSubmission(submission, contest)) {
+                throw new NotFoundException("Submission not found");
+            }
+        }
+
         // 1. Map base fields
         SubmissionDTO dto = modelMapper.map(submission, SubmissionDTO.class);
         dto.setProblemId(submission.getProblem() != null ? submission.getProblem().getId() : null);
@@ -157,6 +169,22 @@ public class SubmissionServiceImpl implements SubmissionService {
                 .message("Submission status retrieved successfully")
                 .data(dto)
                 .build();
+    }
+
+    /** Owner, ADMIN, or contest creator may view a locked-contest submission. */
+    private boolean canViewLockedSubmission(Submission submission, Contest contest) {
+        User viewer;
+        try {
+            viewer = userService.getCurrentLoggedInUser();
+        } catch (Exception e) {
+            return false; // anonymous
+        }
+        if (viewer.getId().equals(submission.getUserId())) return true;
+        boolean isAdmin = viewer.getRoles().stream()
+                .anyMatch(r -> r.getName().equalsIgnoreCase("ADMIN"));
+        boolean isCreator = contest.getCreator() != null
+                && contest.getCreator().getId().equals(viewer.getId());
+        return isAdmin || isCreator;
     }
 
     @Override

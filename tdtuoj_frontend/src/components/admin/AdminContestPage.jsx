@@ -33,7 +33,7 @@ const STATUS_STYLE = {
 const StatusBadge = ({ contest }) => {
   const s = STATUS_STYLE[statusOf(contest)];
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: 9999, fontSize: 11, fontWeight: 600, background: s.bg, color: s.color, border: `1px solid ${s.color}33` }}>
+    <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: 9999, fontSize: "var(--text-xs)", fontWeight: 600, background: s.bg, color: s.color, border: `1px solid ${s.color}33` }}>
       {s.label}
     </span>
   );
@@ -105,7 +105,7 @@ const AdminContestPage = () => {
                 <Trophy size={28} color="var(--primary)" />
                 <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Manage Contests</h2>
               </div>
-              <span style={{ display: "inline-block", padding: "3px 12px", borderRadius: 9999, fontSize: 13, fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
+              <span style={{ display: "inline-block", padding: "3px 12px", borderRadius: 9999, fontSize: "var(--text-sm)", fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
                 {totalElements} {totalElements === 1 ? "contest" : "contests"}
               </span>
             </div>
@@ -132,49 +132,49 @@ const AdminContestPage = () => {
               </div>
             )}
 
-            <table className="table">
+            <table className="table admin-table">
               <thead>
-                <tr style={{ background: "var(--primary-subtle)" }}>
-                  <th style={{ width: "5%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
-                  <th style={{ width: "27%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Contest</th>
-                  <th style={{ width: "11%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</th>
-                  <th style={{ width: "17%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Start</th>
-                  <th style={{ width: "17%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>End</th>
-                  <th style={{ textAlign: "center", width: "7%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Problems</th>
-                  <th style={{ textAlign: "center", width: "16%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Actions</th>
+                <tr>
+                  <th style={{ width: "5%" }}>#</th>
+                  <th style={{ width: "27%" }}>Contest</th>
+                  <th style={{ width: "11%" }}>Status</th>
+                  <th style={{ width: "17%" }}>Start</th>
+                  <th style={{ width: "17%" }}>End</th>
+                  <th style={{ textAlign: "center", width: "7%" }}>Problems</th>
+                  <th style={{ textAlign: "center", width: "16%" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length > 0 ? (
                   filtered.map((contest) => (
                     <tr key={contest.id}>
-                      <td><span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{contest.id}</span></td>
+                      <td><span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-muted)" }}>{contest.id}</span></td>
                       <td>
                         <div>
                           <div className="flex items-center gap-1">
                             {contest.isPublic ? <Globe size={12} color="var(--text-muted)" /> : <Lock size={12} color="var(--text-muted)" />}
-                            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>{contest.name}</span>
+                            <span style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--text-primary)" }}>{contest.name}</span>
                           </div>
-                          <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted)" }}>by {contest.creatorUsername ?? "—"}</p>
+                          <p style={{ margin: 0, fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>by {contest.creatorUsername ?? "—"}</p>
                         </div>
                       </td>
                       <td><StatusBadge contest={contest} /></td>
                       <td>
                         <div className="flex items-center gap-1">
                           <Calendar size={12} color="var(--text-muted)" />
-                          <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{fmt(contest.startTime)}</span>
+                          <span style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)" }}>{fmt(contest.startTime)}</span>
                         </div>
                       </td>
                       <td>
                         <div className="flex items-center gap-1">
                           <Calendar size={12} color="var(--text-muted)" />
-                          <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{fmt(contest.endTime)}</span>
+                          <span style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)" }}>{fmt(contest.endTime)}</span>
                         </div>
                       </td>
                       <td style={{ textAlign: "center" }}>
                         <div className="flex items-center justify-center gap-1">
                           <Users size={12} color="var(--text-muted)" />
-                          <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{contest.totalProblems ?? 0}</span>
+                          <span style={{ fontSize: "var(--text-sm)", color: "var(--text-secondary)" }}>{contest.totalProblems ?? 0}</span>
                         </div>
                       </td>
                       <td>

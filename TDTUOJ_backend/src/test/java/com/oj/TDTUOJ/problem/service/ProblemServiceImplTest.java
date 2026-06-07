@@ -50,6 +50,8 @@ class ProblemServiceImplTest {
     @Mock private TagRepository tagRepository;
     @Mock private SubmissionRepository submissionRepository;
     @Mock private UserService userService;
+    @Mock private com.oj.TDTUOJ.contest.repository.ContestProblemRepository contestProblemRepository;
+    @Mock private com.oj.TDTUOJ.lab.repository.LabExerciseRepository labExerciseRepository;
 
     @InjectMocks private ProblemServiceImpl problemService;
 
@@ -84,6 +86,64 @@ class ProblemServiceImplTest {
         assertEquals("hello", resp.getData().getSlug());
         assertEquals(false, resp.getData().getSolved());
         assertEquals(false, resp.getData().getAttempted());
+    }
+
+    // ── Private-problem slug guard ──────────────────────────────────────────
+
+    @Test
+    void getProblemBySlug_privateProblem_anonymous_noStartedContest_throws404() {
+        Problem p = problem(1L, "Secret", "secret");
+        p.setIsPublic(false);
+        when(problemRepository.findBySlug("secret")).thenReturn(Optional.of(p));
+        when(contestProblemRepository.existsStartedContestAttachment(eq(1L), any()))
+                .thenReturn(false);
+        when(userService.getCurrentLoggedInUser()).thenThrow(new RuntimeException("no auth"));
+
+        NotFoundException ex = assertThrows(NotFoundException.class,
+                () -> problemService.getProblemBySlug("secret"));
+        assertEquals("Problem not found", ex.getMessage());
+    }
+
+    @Test
+    void getProblemBySlug_privateProblem_inStartedContest_visible() {
+        Problem p = problem(1L, "Secret", "secret");
+        p.setIsPublic(false);
+        when(problemRepository.findBySlug("secret")).thenReturn(Optional.of(p));
+        when(contestProblemRepository.existsStartedContestAttachment(eq(1L), any()))
+                .thenReturn(true);
+        when(userService.getCurrentLoggedInUser()).thenThrow(new RuntimeException("no auth"));
+
+        Response<ProblemDTO> resp = problemService.getProblemBySlug("secret");
+        assertEquals(HttpStatus.OK.value(), resp.getStatusCode());
+    }
+
+    @Test
+    void getProblemBySlug_privateProblem_inLab_visible() {
+        Problem p = problem(1L, "Secret", "secret");
+        p.setIsPublic(false);
+        when(problemRepository.findBySlug("secret")).thenReturn(Optional.of(p));
+        when(contestProblemRepository.existsStartedContestAttachment(eq(1L), any()))
+                .thenReturn(false);
+        when(labExerciseRepository.existsByProblemId(1L)).thenReturn(true);
+        when(userService.getCurrentLoggedInUser()).thenThrow(new RuntimeException("no auth"));
+
+        Response<ProblemDTO> resp = problemService.getProblemBySlug("secret");
+        assertEquals(HttpStatus.OK.value(), resp.getStatusCode());
+    }
+
+    @Test
+    void getProblemBySlug_privateProblem_author_visible() {
+        User author = new User(); author.setId(7L); author.setRoles(java.util.Set.of());
+        Problem p = problem(1L, "Secret", "secret");
+        p.setIsPublic(false);
+        p.setAuthor(author);
+        when(problemRepository.findBySlug("secret")).thenReturn(Optional.of(p));
+        when(contestProblemRepository.existsStartedContestAttachment(eq(1L), any()))
+                .thenReturn(false);
+        when(userService.getCurrentLoggedInUser()).thenReturn(author);
+
+        Response<ProblemDTO> resp = problemService.getProblemBySlug("secret");
+        assertEquals(HttpStatus.OK.value(), resp.getStatusCode());
     }
 
     @Test

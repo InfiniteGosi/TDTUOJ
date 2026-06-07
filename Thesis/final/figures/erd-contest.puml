@@ -37,6 +37,8 @@ entity "contests" as contests {
   is_public : boolean
   is_rated : boolean
   rating_processed : boolean
+  freeze_duration_minutes : int
+  problems_published : boolean
   max_participant : int
   created_at : timestamp
   updated_at : timestamp

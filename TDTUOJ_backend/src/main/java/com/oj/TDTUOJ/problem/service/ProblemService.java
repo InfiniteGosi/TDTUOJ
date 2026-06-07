@@ -27,5 +27,8 @@ public interface ProblemService {
 
     /** Lecturer's problem repository — returns problems authored by current user. */
     Response<Page<ProblemDTO>> getMyProblems(int page, int size, String search);
+
+    /** Problems usable in a contest: private + zero non-author submissions. */
+    Response<Page<ProblemDTO>> getContestEligibleProblems(int page, int size, String search);
 }
 

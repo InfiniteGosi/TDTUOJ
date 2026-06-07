@@ -12,4 +12,7 @@ public interface LabExerciseRepository extends JpaRepository<LabExercise, Long> 
     List<LabExercise> findByLabIdOrderByExerciseOrderAsc(Long labId);
 
     void deleteByLabId(Long labId);
+
+    /** True if the problem is used as an exercise in any lab (students need the statement). */
+    boolean existsByProblemId(Long problemId);
 }

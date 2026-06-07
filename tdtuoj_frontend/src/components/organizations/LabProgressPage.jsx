@@ -335,7 +335,7 @@ const LabProgressPage = () => {
                         <span style={{
                           width: 18, height: 18, borderRadius: "var(--radius-sm)", flexShrink: 0,
                           background: "var(--primary-subtle)", color: "var(--primary)",
-                          fontSize: 10, fontWeight: 800,
+                          fontSize: "var(--text-xs)", fontWeight: 800,
                           display: "flex", alignItems: "center", justifyContent: "center",
                         }}>
                           {String.fromCharCode(65 + idx)}
@@ -346,7 +346,7 @@ const LabProgressPage = () => {
                             background: pctColor(pct), transition: "width 0.5s ease",
                           }} />
                         </div>
-                        <span style={{ width: 32, textAlign: "right", fontSize: 10, fontWeight: 700, color: pctColor(pct), flexShrink: 0 }}>
+                        <span style={{ width: 32, textAlign: "right", fontSize: "var(--text-xs)", fontWeight: 700, color: pctColor(pct), flexShrink: 0 }}>
                           {pct}%
                         </span>
                       </div>

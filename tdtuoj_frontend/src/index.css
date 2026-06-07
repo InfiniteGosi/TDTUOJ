@@ -105,13 +105,13 @@
   --font-body:    'Figtree', sans-serif;
   --font-code:    'JetBrains Mono', monospace;
 
-  --text-xs:   0.70rem;
-  --text-sm:   0.80rem;
-  --text-base: 0.9375rem;
-  --text-lg:   1.0625rem;
-  --text-xl:   1.25rem;
-  --text-2xl:  1.625rem;
-  --text-3xl:  2.125rem;
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.3125rem;
+  --text-2xl:  1.6875rem;
+  --text-3xl:  2.1875rem;
   --text-4xl:  3rem;
 
   --leading-tight:  1.2;
@@ -191,7 +191,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 17.5px;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
 }
@@ -641,6 +641,34 @@ button {
   color: var(--primary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+/* ── Admin table standard ────────────────────────────────────────
+   One look for every admin listing: primary header, uppercase th,
+   zebra rows, hover, --text-sm cells. Use with the base .table
+   class: <table className="table admin-table">. Keep only width /
+   textAlign inline on th. */
+.admin-table thead tr {
+  background: var(--primary-subtle);
+}
+.admin-table th {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.admin-table td {
+  font-size: var(--text-sm);
+}
+.admin-table tbody tr:nth-child(odd) {
+  background: var(--bg-base);
+}
+.admin-table tbody tr:nth-child(even) {
+  background: var(--bg-raised);
+}
+.admin-table tbody tr:hover {
+  background: var(--bg-hover);
 }
 
 /* ── 13. TABS (plain, for use before Radix wired up) ─────────── */

@@ -52,6 +52,17 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.getMyProblems(page, size, search));
     }
 
+    /** Problems usable in a contest: private + zero non-author submissions. */
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
+    @GetMapping("/contest-eligible")
+    public ResponseEntity<Response<Page<ProblemDTO>>> getContestEligibleProblems(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(defaultValue = "") String search
+    ) {
+        return ResponseEntity.ok(problemService.getContestEligibleProblems(page, size, search));
+    }
+
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Response<ProblemDTO>> createProblem(

@@ -209,7 +209,7 @@ const ContestPage = () => {
                       >
                         {/* # */}
                         <td style={{ textAlign: "center" }}>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>
+                          <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-muted)" }}>
                             {page * size + index + 1}
                           </span>
                         </td>
@@ -223,12 +223,12 @@ const ContestPage = () => {
                                 : <Lock  size={12} color="var(--text-muted)" />
                               }
                               {contest.isRated && <Star size={12} color="var(--amber-tle)" fill="var(--amber-tle)" />}
-                              <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>
+                              <span style={{ fontSize: "var(--text-base)", fontWeight: 700, color: "var(--text-primary)" }}>
                                 {contest.name}
                               </span>
                             </div>
                             {contest.creatorUsername && (
-                              <span style={{ fontSize: 12, color: "var(--text-muted)", paddingLeft: 18 }}>
+                              <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)", paddingLeft: 18 }}>
                                 by {contest.creatorUsername}
                               </span>
                             )}
@@ -240,7 +240,7 @@ const ContestPage = () => {
                           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                             <StatusBadge status={status} />
                             {countdown && (
-                              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, color: "var(--amber-tle)", fontWeight: 600 }}>
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: "var(--text-xs)", color: "var(--amber-tle)", fontWeight: 600 }}>
                                 <Clock size={10} />
                                 {countdown}
                               </span>
@@ -253,7 +253,7 @@ const ContestPage = () => {
                           {contest.contestStyle ? (
                             <span style={{
                               padding: "2px 8px", borderRadius: "var(--radius-pill)",
-                              fontSize: 11, fontWeight: 700,
+                              fontSize: "var(--text-xs)", fontWeight: 700,
                               background: "var(--bg-overlay)",
                               border: "1px solid var(--border-default)",
                               color: "var(--text-secondary)",
@@ -261,18 +261,18 @@ const ContestPage = () => {
                               {contest.contestStyle}
                             </span>
                           ) : (
-                            <span style={{ color: "var(--text-muted)", fontSize: 13 }}>—</span>
+                            <span style={{ color: "var(--text-muted)", fontSize: "var(--text-sm)" }}>—</span>
                           )}
                         </td>
 
                         {/* Schedule */}
                         <td>
                           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--text-secondary)" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "var(--text-sm)", color: "var(--text-secondary)" }}>
                               <Calendar size={11} color="var(--text-muted)" />
                               {fmt(contest.startTime)}
                             </span>
-                            <span style={{ fontSize: 12, color: "var(--text-muted)", paddingLeft: 15 }}>
+                            <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)", paddingLeft: 15 }}>
                               → {fmt(contest.endTime)}
                             </span>
                           </div>
@@ -280,7 +280,7 @@ const ContestPage = () => {
 
                         {/* Registered */}
                         <td style={{ textAlign: "center" }}>
-                          <div style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 13, color: "var(--text-secondary)", fontWeight: 600 }}>
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "var(--text-sm)", color: "var(--text-secondary)", fontWeight: 600 }}>
                             <Users size={13} color="var(--text-muted)" />
                             <span>
                               {contest.totalParticipants ?? 0}
@@ -291,7 +291,7 @@ const ContestPage = () => {
 
                         {/* Problems */}
                         <td style={{ textAlign: "center" }}>
-                          <div style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 13, color: "var(--cyan)", fontWeight: 700 }}>
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "var(--text-sm)", color: "var(--cyan)", fontWeight: 700 }}>
                             <Trophy size={13} color="var(--cyan)" />
                             {contest.totalProblems ?? 0}
                           </div>
@@ -309,8 +309,8 @@ const ContestPage = () => {
                     <td colSpan={8} style={{ textAlign: "center", padding: "48px 0" }}>
                       <div className="flex flex-col items-center gap-3">
                         <Trophy size={44} color="var(--border-default)" />
-                        <span style={{ fontSize: 16, fontWeight: 600, color: "var(--text-muted)" }}>No contests found</span>
-                        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Try adjusting search or filter</span>
+                        <span style={{ fontSize: "var(--text-base)", fontWeight: 600, color: "var(--text-muted)" }}>No contests found</span>
+                        <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>Try adjusting search or filter</span>
                       </div>
                     </td>
                   </tr>

@@ -28,6 +28,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -261,6 +262,88 @@ class SubmissionServiceImplTest {
         assertEquals(HttpStatus.OK.value(), resp.getStatusCode());
         assertEquals(7, resp.getData().getQueuePosition());
         assertEquals(2L, resp.getData().getProblemId());
+    }
+
+    // ── getSubmissionStatus: locked-contest guard ─────────────────────────
+
+    private Submission contestSubmission(Long ownerId, Long contestId) {
+        Submission s = new Submission();
+        s.setId(500L);
+        s.setUserId(ownerId);
+        s.setContestId(contestId);
+        s.setSubmissionStatus(SubmissionStatus.COMPLETED);
+        return s;
+    }
+
+    private Contest lockedContest(Long id) {
+        return Contest.builder()
+                .id(id)
+                .endTime(LocalDateTime.now().plusHours(1)) // running → locked
+                .isRated(true)
+                .ratingProcessed(false)
+                .build();
+    }
+
+    @Test
+    void getSubmissionStatus_lockedContest_anonymousViewer_throwsNotFound() {
+        when(submissionRepository.findById(500L))
+                .thenReturn(Optional.of(contestSubmission(1L, 9L)));
+        when(contestRepository.findById(9L)).thenReturn(Optional.of(lockedContest(9L)));
+        when(userService.getCurrentLoggedInUser()).thenThrow(new NotFoundException("User not found"));
+
+        assertThrows(NotFoundException.class, () -> submissionService.getSubmissionStatus(500L));
+    }
+
+    @Test
+    void getSubmissionStatus_lockedContest_otherParticipant_throwsNotFound() {
+        when(submissionRepository.findById(500L))
+                .thenReturn(Optional.of(contestSubmission(1L, 9L)));
+        when(contestRepository.findById(9L)).thenReturn(Optional.of(lockedContest(9L)));
+        when(userService.getCurrentLoggedInUser()).thenReturn(user(2L, "PARTICIPANT"));
+
+        assertThrows(NotFoundException.class, () -> submissionService.getSubmissionStatus(500L));
+    }
+
+    @Test
+    void getSubmissionStatus_lockedContest_owner_succeeds() {
+        Submission s = contestSubmission(1L, 9L);
+        when(submissionRepository.findById(500L)).thenReturn(Optional.of(s));
+        when(contestRepository.findById(9L)).thenReturn(Optional.of(lockedContest(9L)));
+        when(userService.getCurrentLoggedInUser()).thenReturn(user(1L, "PARTICIPANT"));
+        when(modelMapper.map(any(Submission.class), eq(SubmissionDTO.class))).thenReturn(new SubmissionDTO());
+
+        Response<SubmissionDTO> resp = submissionService.getSubmissionStatus(500L);
+        assertEquals(HttpStatus.OK.value(), resp.getStatusCode());
+    }
+
+    @Test
+    void getSubmissionStatus_lockedContest_admin_succeeds() {
+        Submission s = contestSubmission(1L, 9L);
+        when(submissionRepository.findById(500L)).thenReturn(Optional.of(s));
+        when(contestRepository.findById(9L)).thenReturn(Optional.of(lockedContest(9L)));
+        when(userService.getCurrentLoggedInUser()).thenReturn(user(99L, "ADMIN"));
+        when(modelMapper.map(any(Submission.class), eq(SubmissionDTO.class))).thenReturn(new SubmissionDTO());
+
+        Response<SubmissionDTO> resp = submissionService.getSubmissionStatus(500L);
+        assertEquals(HttpStatus.OK.value(), resp.getStatusCode());
+    }
+
+    @Test
+    void getSubmissionStatus_unlockedContest_otherViewer_succeeds() {
+        Submission s = contestSubmission(1L, 9L);
+        Contest finished = Contest.builder()
+                .id(9L)
+                .endTime(LocalDateTime.now().minusHours(2))
+                .isRated(true)
+                .ratingProcessed(true) // finalized → unlocked
+                .build();
+        when(submissionRepository.findById(500L)).thenReturn(Optional.of(s));
+        when(contestRepository.findById(9L)).thenReturn(Optional.of(finished));
+        when(modelMapper.map(any(Submission.class), eq(SubmissionDTO.class))).thenReturn(new SubmissionDTO());
+
+        // no userService stub on purpose — unlocked contest must not resolve the viewer
+        Response<SubmissionDTO> resp = submissionService.getSubmissionStatus(500L);
+        assertEquals(HttpStatus.OK.value(), resp.getStatusCode());
     }
 
     private static <T> T eq(T value) {

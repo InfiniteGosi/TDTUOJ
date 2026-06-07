@@ -707,6 +707,14 @@ và đề bài trước khi đưa vào sử dụng trong cuộc thi hoặc công
 Khi bài toán được công khai, sinh viên có thể tìm kiếm, xem chi tiết và nộp bài giải trực
 tiếp trên hệ thống.
 
+Để bảo đảm tính công bằng, vòng đời hiển thị của bài toán được kiểm soát chặt chẽ: chỉ
+những bài toán riêng tư, do chính người tạo sở hữu và chưa có lượt nộp từ người dùng khác
+mới được phép đưa vào cuộc thi; bài toán riêng tư đang thuộc một cuộc thi chưa kết thúc
+không thể được công khai thủ công. Khi cuộc thi kết thúc, hệ thống tự động chuyển các bài
+toán của cuộc thi sang trạng thái công khai để bổ sung vào kho luyện tập chung. Bài toán
+dùng trong bài thực hành (lab) cũng phải là bài riêng tư thuộc sở hữu của giảng viên,
+nhưng được giữ nguyên trạng thái riêng tư sau khi hết thời hạn.
+
 \subsubsection{Bài nộp (Submission)}
 
 Bài nộp được tạo ra khi sinh viên gửi lời giải cho một bài toán. Mỗi bài nộp ghi lại đầy
@@ -719,11 +727,17 @@ cũng như thống kê tiến độ học tập của từng sinh viên.
 \subsubsection{Cuộc thi (Contest)}
 
 Cuộc thi là đơn vị tổ chức thi cử trong hệ thống, được tạo và quản lý bởi người dùng có
-vai trò Contest Creator hoặc Admin. Một cuộc thi bao gồm tập hợp các bài toán được chọn
-lọc, thời gian bắt đầu và kết thúc xác định, cũng như danh sách người tham gia đã đăng ký.
-Trong suốt thời gian diễn ra cuộc thi, bảng xếp hạng được cập nhật theo thời gian thực dựa
-trên kết quả bài nộp của từng thí sinh. Sau khi cuộc thi kết thúc, kết quả được lưu lại và
-có thể được truy xuất để phục vụ mục đích thống kê và báo cáo.
+vai trò Contest Creator hoặc Admin. Một cuộc thi bao gồm tập hợp các bài toán riêng tư
+được chọn lọc từ kho đề của người tạo, thời gian bắt đầu và kết thúc xác định, cũng như
+danh sách người tham gia đã đăng ký. Trong suốt thời gian diễn ra cuộc thi, bảng xếp hạng
+được cập nhật theo thời gian thực dựa trên kết quả bài nộp của từng thí sinh; bài nộp của
+mỗi thí sinh được ẩn khỏi những người dùng khác nhằm ngăn việc tham khảo lời giải giữa
+chừng. Người tạo cuộc thi có thể cấu hình khoảng đóng băng bảng xếp hạng (scoreboard
+freeze) theo thể thức \ac{ICPC}: trong những phút cuối của cuộc thi, người xem thông
+thường chỉ thấy ảnh chụp bảng xếp hạng tại thời điểm bắt đầu đóng băng, trong khi người
+tạo cuộc thi và Admin vẫn theo dõi được diễn biến trực tiếp. Sau khi cuộc thi kết thúc,
+hệ thống tự động tính toán điểm xếp hạng, mở lại quyền xem bài nộp, công khai các bài
+toán của cuộc thi và lưu kết quả để phục vụ mục đích thống kê và báo cáo.
 
 \subsubsection{Kết quả chấm bài (Judge Result)}
 
@@ -876,7 +890,9 @@ Service). Sơ đồ Use Case tổng quan được thể hiện trong Hình~\ref{
   \hline
   UC09 & Chỉnh sửa bài toán &
     Contest Creator hoặc Admin cập nhật thông tin của một bài toán đã tồn tại bao gồm nội
-    dung đề bài, cấu hình và danh sách test case. \\
+    dung đề bài, cấu hình và danh sách test case. Việc công khai thủ công một bài toán
+    đang thuộc cuộc thi chưa kết thúc bị từ chối; bài toán sẽ được công khai tự động khi
+    cuộc thi kết thúc. \\
   \hline
   UC10 & Xóa bài toán &
     Contest Creator hoặc Admin xóa một bài toán khỏi hệ thống. Thao tác này chỉ được phép
@@ -904,7 +920,9 @@ Service). Sơ đồ Use Case tổng quan được thể hiện trong Hình~\ref{
   \hline
   UC14 & Tạo cuộc thi &
     Contest Creator hoặc Admin tạo một cuộc thi mới, cấu hình thông tin tổng quan, thời
-    gian bắt đầu -- kết thúc và danh sách bài toán. \\
+    gian bắt đầu -- kết thúc, khoảng đóng băng bảng xếp hạng và danh sách bài toán. Chỉ
+    các bài toán riêng tư thuộc sở hữu của người tạo và chưa có lượt nộp từ người dùng
+    khác mới được phép đưa vào cuộc thi. \\
   \hline
   UC15 & Chỉnh sửa cuộc thi &
     Contest Creator hoặc Admin cập nhật thông tin của một cuộc thi, bao gồm điều chỉnh cấu
@@ -924,7 +942,9 @@ Service). Sơ đồ Use Case tổng quan được thể hiện trong Hình~\ref{
   \hline
   UC19 & Xem bảng xếp hạng &
     Người dùng xem bảng xếp hạng của một cuộc thi được cập nhật theo thời gian thực. Dữ
-    liệu bảng xếp hạng được phục vụ từ cache Redis nhằm đảm bảo hiệu năng. \\
+    liệu bảng xếp hạng được phục vụ từ cache Redis nhằm đảm bảo hiệu năng. Trong khoảng
+    đóng băng cuối cuộc thi, người xem thông thường nhận ảnh chụp bảng xếp hạng tại thời
+    điểm đóng băng; người tạo cuộc thi và Admin vẫn xem được bảng trực tiếp. \\
   \hline
 
   % ── Nhóm LLM ──────────────────────────────────────────
@@ -1006,7 +1026,8 @@ Service). Sơ đồ Use Case tổng quan được thể hiện trong Hình~\ref{
   \multicolumn{3}{|l|}{\textbf{Nhóm 8: Quản lý bài thực hành (Lab)}} \\
   \hline
   UC37 & Tạo lab &
-    Contest Creator tạo một bài thực hành (lab) trong tổ chức, chọn danh sách bài toán và
+    Contest Creator tạo một bài thực hành (lab) trong tổ chức, chọn các bài toán riêng tư
+    thuộc sở hữu của mình và
     thiết lập thời hạn nộp bài. \\
   \hline
   UC38 & Chỉnh sửa lab &
@@ -1354,9 +1375,12 @@ chức, đăng ký cần được người tạo cuộc thi phê duyệt trướ
 
 Trong thời gian diễn ra, người dùng mở từng bài toán, viết lời giải và nộp bài; hệ thống chấm
 bài, tính điểm theo thể thức và cập nhật bảng xếp hạng theo thời gian thực để người dùng theo
-dõi thứ hạng. Khi cuộc thi kết thúc, bảng xếp hạng được đóng băng, người tạo cuộc thi công bố
-kết quả và hệ thống cập nhật lịch sử điểm xếp hạng (rating). Bảng~\ref{tab:uc04} trình bày đặc
-tả chi tiết của Use Case này.
+dõi thứ hạng. Nhằm bảo đảm tính công bằng, bài nộp trong cuộc thi được ẩn khỏi những người
+dùng khác cho đến khi cuộc thi kết thúc; nếu người tạo cuộc thi cấu hình khoảng đóng băng,
+bảng xếp hạng công khai ngừng cập nhật trong những phút cuối theo thể thức \ac{ICPC}. Khi
+cuộc thi kết thúc, hệ thống tự động tính toán và cập nhật lịch sử điểm xếp hạng (rating),
+mở lại quyền xem bài nộp và công khai các bài toán của cuộc thi vào kho luyện tập.
+Bảng~\ref{tab:uc04} trình bày đặc tả chi tiết của Use Case này.
 
 \begin{longtable}{|>{\bfseries}p{2.8cm}|p{5.7cm}|p{5.7cm}|}
   \caption{Bảng đặc tả Use case Tham gia cuộc thi}
@@ -1398,13 +1422,17 @@ tả chi tiết của Use Case này.
        thi phê duyệt. \\
    & 2. Người dùng chờ đến giờ thi, mở bài toán và nộp lời giải.
      & 2.1 Hệ thống chấm bài nộp và tính điểm theo thể thức (\ac{ICPC} hoặc \ac{IOI}).\newline
-       2.2 Hệ thống cập nhật bảng xếp hạng theo thời gian thực. \\
+       2.2 Hệ thống ẩn bài nộp khỏi những người dùng khác cho đến khi cuộc thi kết
+       thúc.\newline
+       2.3 Hệ thống cập nhật bảng xếp hạng theo thời gian thực; trong khoảng đóng băng,
+       người xem thông thường nhận ảnh chụp bảng xếp hạng tại thời điểm đóng băng. \\
    & 3. Người dùng xem kết quả chấm và thứ hạng trực tiếp. & 3.1 Hệ thống hiển thị kết quả
      chấm cùng thứ hạng hiện thời. \\
    & 4. Người dùng xem kết quả chung cuộc.
-     & 4.1 Khi cuộc thi kết thúc, hệ thống đóng băng bảng xếp hạng.\newline
-       4.2 Sau khi người tạo cuộc thi công bố kết quả, hệ thống cập nhật lịch sử rating và
-       hiển thị bảng xếp hạng cuối cùng. \\
+     & 4.1 Khi cuộc thi kết thúc, hệ thống tự động tính toán điểm xếp hạng và cập nhật lịch
+       sử rating.\newline
+       4.2 Hệ thống mở lại quyền xem bài nộp, công khai các bài toán của cuộc thi và hiển
+       thị bảng xếp hạng cuối cùng. \\
   \hline
   Ngoại lệ & \multicolumn{2}{p{11.9cm}|}{Người tạo cuộc thi từ chối đăng ký $\Rightarrow$ hệ
     thống thông báo người dùng không được tham gia.} \\
@@ -1515,9 +1543,12 @@ trong Hình~\ref{fig:seq-uc05}.
 \subsubsection{Use case Quản lý bài thực hành}
 
 Quản lý bài thực hành phục vụ hoạt động giảng dạy trong phạm vi một tổ chức. Giảng viên tạo
-một bài thực hành (lab), chọn danh sách bài toán cùng thời hạn nộp và giao cho các thành viên
-của tổ chức. Trong quá trình học, sinh viên nộp lời giải cho các bài toán trong bài thực hành
-và hệ thống chấm bài, theo dõi số bài đã giải của từng sinh viên.
+một bài thực hành (lab), chọn các bài toán riêng tư thuộc sở hữu của mình cùng thời hạn nộp
+và giao cho các thành viên của tổ chức; hệ thống từ chối các bài toán công khai hoặc không
+thuộc quyền sở hữu nhằm bảo đảm đề bài chưa bị lộ. Khác với cuộc thi, bài toán trong bài
+thực hành được giữ nguyên trạng thái riêng tư sau khi hết thời hạn và có thể được dùng lại
+cho các bài thực hành khác. Trong quá trình học, sinh viên nộp lời giải cho các bài toán
+trong bài thực hành và hệ thống chấm bài, theo dõi số bài đã giải của từng sinh viên.
 
 Giảng viên mở trang tiến độ để xem bảng tổng hợp kết quả theo từng sinh viên và từng bài
 toán, có thể kết xuất báo cáo ra tập tin Excel bằng thư viện Apache POI. Khi hết thời hạn,
@@ -1550,7 +1581,8 @@ giảng viên có thể công bố lời giải để các thành viên tham kh�
     hành''.} \\
   \hline
   Điều kiện tiên quyết & \multicolumn{2}{p{11.9cm}|}{+ Người dùng đã đăng nhập với vai trò
-    Contest Creator.\newline + Tổ chức và các bài toán cần dùng đã tồn tại.} \\
+    Contest Creator.\newline + Tổ chức đã tồn tại và các bài toán cần dùng là bài riêng tư
+    thuộc sở hữu của giảng viên.} \\
   \hline
   Kết quả & \multicolumn{2}{p{11.9cm}|}{Bài thực hành được tạo và giao cho thành viên; tiến độ
     được tổng hợp, có thể kết xuất báo cáo và công bố lời giải sau thời hạn.} \\
@@ -1558,9 +1590,11 @@ giảng viên có thể công bố lời giải để các thành viên tham kh�
   Luồng sự kiện & \multicolumn{1}{c|}{\textbf{Tác nhân}}
                 & \multicolumn{1}{c|}{\textbf{Hệ thống}} \\
   \cline{2-3}
-   & 1. Giảng viên nhập tiêu đề, danh sách bài toán và thời hạn rồi nhấn ``Lưu''.
-     & 1.1 Hệ thống kiểm tra và lưu bài thực hành, liên kết các bài toán với thành viên tổ
-       chức, sau đó trả về bài thực hành đã tạo. \\
+   & 1. Giảng viên nhập tiêu đề, chọn các bài toán riêng tư của mình và thời hạn rồi nhấn
+     ``Lưu''.
+     & 1.1 Hệ thống kiểm tra các bài toán phải ở trạng thái riêng tư và thuộc sở hữu của
+       giảng viên, sau đó lưu bài thực hành, liên kết các bài toán với thành viên tổ chức
+       và trả về bài thực hành đã tạo. \\
    & 2. Sinh viên nộp lời giải cho các bài toán trong bài thực hành.
      & 2.1 Hệ thống chấm từng bài nộp và cập nhật số bài đã giải của mỗi sinh viên. \\
    & 3. Giảng viên mở trang tiến độ.
@@ -1571,8 +1605,9 @@ giảng viên có thể công bố lời giải để các thành viên tham kh�
    & 5. (Tùy chọn) Sau thời hạn, giảng viên nhấn ``Công bố lời giải''.
      & 5.1 Hệ thống mở quyền xem lời giải cho các thành viên của tổ chức. \\
   \hline
-  Ngoại lệ & \multicolumn{2}{p{11.9cm}|}{Thiếu thông tin bắt buộc khi tạo bài thực hành
-    $\Rightarrow$ hệ thống hiển thị thông báo lỗi và không lưu.} \\
+  Ngoại lệ & \multicolumn{2}{p{11.9cm}|}{Thiếu thông tin bắt buộc, hoặc danh sách chứa bài
+    toán công khai / không thuộc sở hữu của giảng viên $\Rightarrow$ hệ thống hiển thị
+    thông báo lỗi và không lưu.} \\
   \hline
 \end{longtable}
 
@@ -1955,6 +1990,12 @@ này. Phân mảnh sơ đồ tương ứng được minh họa trong Hình~\ref{
     hạng hay không. \\
   \hline
   rating\_processed & Đánh dấu đã cập nhật điểm xếp hạng sau cuộc thi. \\
+  \hline
+  freeze\_duration\_minutes & Số phút đóng băng bảng xếp hạng trước khi kết thúc
+    (rỗng hoặc 0 nghĩa là không đóng băng). \\
+  \hline
+  problems\_published & Đánh dấu các bài toán của cuộc thi đã được tự động công khai
+    sau khi kết thúc. \\
   \hline
   max\_participant & Số lượng người tham gia tối đa. \\
   \hline

@@ -48,27 +48,69 @@ const HEAT_COLORS = [
   "var(--primary)",
 ];
 
+const HEAT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const HEAT_DAY_LABELS = ["", "Mon", "", "Wed", "", "Fri", ""];
+
+// Local-timezone YYYY-MM-DD (toISOString would shift the date in UTC+7)
+const localDateKey = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+/**
+ * GitHub-style contribution grid: rolling last 12 months, columns are
+ * calendar weeks (Sun..Sat) so weekdays line up across the graph.
+ * Returns { weeks: cell[7][], monthLabels: (string|null)[] } — one label
+ * per column, set where a new month begins.
+ */
 const buildHeatmapData = (activity) => {
   const map = {};
   (activity || []).forEach((a) => {
     map[a.activityDate] = a.submissionsCount;
   });
-  const cells = [];
+
   const today = new Date();
-  for (let week = 51; week >= 0; week--) {
-    for (let day = 0; day < 7; day++) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - (week * 7 + (6 - day)));
-      const key = d.toISOString().split("T")[0];
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(today);
+  start.setDate(start.getDate() - 364);
+  const firstSunday = new Date(start);
+  firstSunday.setDate(start.getDate() - start.getDay());
+
+  const weeks = [];
+  const monthLabels = [];
+  let prevMonth = -1;
+
+  for (let w = 0; ; w++) {
+    const weekStart = new Date(firstSunday);
+    weekStart.setDate(firstSunday.getDate() + w * 7);
+    if (weekStart > today) break;
+
+    const col = [];
+    for (let d = 0; d < 7; d++) {
+      const cur = new Date(weekStart);
+      cur.setDate(weekStart.getDate() + d);
+      if (cur < start || cur > today) {
+        col.push(null); // out-of-range padding cell
+        continue;
+      }
+      const key = localDateKey(cur);
       const count = map[key] || 0;
-      cells.push({
+      col.push({
         date: key,
         count,
         level: count === 0 ? 0 : count <= 2 ? 1 : count <= 5 ? 2 : count <= 8 ? 3 : 4,
       });
     }
+    weeks.push(col);
+
+    const m = weekStart.getMonth();
+    monthLabels.push(m !== prevMonth ? HEAT_MONTHS[m] : null);
+    prevMonth = m;
   }
-  return cells;
+
+  // First column often holds a sliver of an old month — drop its label when
+  // the next month starts within 2 columns (labels would collide).
+  if (monthLabels[0] && (monthLabels[1] || monthLabels[2])) monthLabels[0] = null;
+
+  return { weeks, monthLabels };
 };
 
 const fmtDate = (dateStr) =>
@@ -100,7 +142,7 @@ const PieTooltip = ({ active, payload }) => {
       borderRadius: "var(--radius-md)",
       padding: "8px 12px",
       boxShadow: "var(--shadow-md)",
-      fontSize: 12,
+      fontSize: "var(--text-sm)",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <div style={{ width: 10, height: 10, borderRadius: 2, background: d.payload.fill, flexShrink: 0 }} />
@@ -181,10 +223,10 @@ const LanguageDonutChart = ({ langStats }) => {
         {data.map((d) => (
           <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 7 }}>
             <div style={{ width: 9, height: 9, borderRadius: 2, background: d.fill, flexShrink: 0 }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", flex: 1 }}>
+            <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-secondary)", flex: 1 }}>
               {LANG_LABELS[d.name] || d.name}
             </span>
-            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+            <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>
               {Math.round(d.pct * 100)}%
             </span>
           </div>
@@ -255,29 +297,29 @@ const RatingTooltip = ({ active, payload }) => {
       minWidth: 160,
     }}>
       <div style={{ marginBottom: 6 }}>
-        <div style={{ fontFamily: "var(--font-code)", fontSize: 10, fontWeight: 700, color: "var(--primary)", letterSpacing: "0.06em" }}>
+        <div style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.06em" }}>
           {d.name}
         </div>
         {d.contest && (
-          <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 2 }}>
+          <div style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)", marginTop: 2 }}>
             {d.contest.length > 24 ? d.contest.slice(0, 24) + "…" : d.contest}
           </div>
         )}
       </div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Rating</span>
+        <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>Rating</span>
         <span className="font-display" style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--primary)" }}>
           {d.rating}
         </span>
       </div>
       {d.change !== undefined && (
         <div style={{
-          fontSize: 12, fontWeight: 700, marginTop: 4,
+          fontSize: "var(--text-sm)", fontWeight: 700, marginTop: 4,
           color: d.change >= 0 ? "var(--green-ac)" : "var(--red-wa)",
         }}>
           {d.change >= 0 ? "+" : ""}{d.change}
           {d.rank && (
-            <span style={{ fontSize: 10, fontWeight: 400, color: "var(--text-muted)", marginLeft: 6 }}>
+            <span style={{ fontSize: "var(--text-xs)", fontWeight: 400, color: "var(--text-muted)", marginLeft: 6 }}>
               Rank #{d.rank}
             </span>
           )}
@@ -352,7 +394,7 @@ const RatingChart = ({ data }) => {
             dataKey="name"
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 10, fill: "var(--text-muted)", fontFamily: "var(--font-body)" }}
+            tick={{ fontSize: "var(--text-xs)", fill: "var(--text-muted)", fontFamily: "var(--font-body)" }}
             tickMargin={8}
             interval={0}
           />
@@ -360,7 +402,7 @@ const RatingChart = ({ data }) => {
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 10, fill: "var(--text-muted)", fontFamily: "var(--font-body)" }}
+            tick={{ fontSize: "var(--text-xs)", fill: "var(--text-muted)", fontFamily: "var(--font-body)" }}
             tickMargin={8}
             domain={[minY, maxY]}
             width={40}
@@ -586,7 +628,7 @@ const ProfilePage = () => {
   const rating = stats?.currentRating ?? user.rating ?? 0;
   const maxRating = stats?.maxRating ?? 0;
   const heatmap = buildHeatmapData(activity);
-  const totalActivitySubmissions = heatmap.reduce((s, d) => s + d.count, 0);
+  const totalActivitySubmissions = heatmap.weeks.flat().reduce((s, d) => s + (d?.count ?? 0), 0);
   const activeDays = activity.filter((a) => a.submissionsCount > 0).length;
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -729,67 +771,20 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          {/* Compact stats — Rating · Points · Solved */}
-          <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-            {[
-              {
-                icon: Star,
-                label: "Rating",
-                value: rating,
-                sub: maxRating > 0 ? `Peak ${maxRating}` : null,
-                extra: ratingHistory.length > 0 ? (() => {
-                  const ch = ratingHistory[0].ratingChange;
-                  return (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: ch >= 0 ? "var(--green-ac)" : "var(--red-wa)" }}>
-                      {ch >= 0 ? "+" : ""}{ch} last
-                    </span>
-                  );
-                })() : null,
-                accent: "var(--primary)",
-              },
-              {
-                icon: Trophy,
-                label: "Total Points",
-                value: totalPts,
-                sub: `${solved} solved`,
-                accent: "var(--green-ac)",
-              },
-              {
-                icon: Target,
-                label: "Acceptance",
-                value: `${accRate}%`,
-                sub: `${accepted} / ${total} AC`,
-                accent: "var(--blue-ce)",
-              },
-            ].map(({ icon: Icon, label, value, sub, extra, accent }, i, arr) => (
-              <div
-                key={label}
-                style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  padding: "14px 16px",
-                  borderBottom: i < arr.length - 1 ? "1px solid var(--border-subtle)" : "none",
-                }}
-              >
-                <div style={{
-                  width: 34, height: 34, borderRadius: "var(--radius-md)",
-                  background: accent + "18",
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                }}>
-                  <Icon size={16} color={accent} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>
-                    {label}
-                  </div>
-                  <div className="font-display" style={{ fontSize: "1.35rem", fontWeight: 900, color: accent, lineHeight: 1 }}>
-                    {value}
-                  </div>
-                  {sub && <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>{sub}</div>}
-                  {extra && <div style={{ marginTop: 3 }}>{extra}</div>}
-                </div>
+          {/* Language pie */}
+          {Object.keys(langStats).length > 0 && (
+            <div className="card" style={{ padding: "16px" }}>
+              <div style={{
+                fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)",
+                textTransform: "uppercase", letterSpacing: "0.08em",
+                marginBottom: 4,
+                fontFamily: "var(--font-code)",
+              }}>
+                Languages
               </div>
-            ))}
-          </div>
+              <LanguageDonutChart langStats={langStats} />
+            </div>
+          )}
 
         </div>
 
@@ -803,41 +798,19 @@ const ProfilePage = () => {
             </SectionCard>
           )}
 
-          {/* Pie + stat tiles row */}
+          {/* Stat tiles */}
           <SectionCard>
-            <div style={{ display: "flex", gap: 20, alignItems: "stretch" }}>
-              {/* Language pie — left */}
-              {Object.keys(langStats).length > 0 && (
-                <div style={{
-                  width: 240, flexShrink: 0,
-                  borderRight: "1px solid var(--border-subtle)",
-                  paddingRight: 20,
-                }}>
-                  <div style={{
-                    fontSize: 10, fontWeight: 700, color: "var(--primary)",
-                    textTransform: "uppercase", letterSpacing: "0.08em",
-                    marginBottom: 4,
-                    fontFamily: "var(--font-code)",
-                  }}>
-                    Languages
-                  </div>
-                  <LanguageDonutChart langStats={langStats} />
-                </div>
-              )}
-
-              {/* 2×2 stat grid — right */}
-              <div style={{
-                flex: 1,
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 12,
-                alignContent: "center",
-              }}>
-                <StatTile icon={CheckCircle} iconColor="var(--green-ac)"  label="Problems Solved"    value={solved} />
-                <StatTile icon={Code2}       iconColor="var(--primary)"   label="Total Submissions"  value={total}      sub={`${accepted} accepted`} />
-                <StatTile icon={Award}       iconColor="var(--amber-tle)" label="Total Points"       value={totalPts} />
-                <StatTile icon={Zap}         iconColor="var(--blue-ce)"   label="Active Days"        value={activeDays} sub="last 12 months" />
-              </div>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr 1fr",
+              gap: 12,
+            }}>
+              <StatTile icon={CheckCircle} iconColor="var(--green-ac)"  label="Problems Solved"    value={solved} />
+              <StatTile icon={Code2}       iconColor="var(--primary)"   label="Total Submissions"  value={total}      sub={`${accepted} accepted`} />
+              <StatTile icon={Star}        iconColor="var(--primary)"   label="Rating"             value={rating}     sub={maxRating > 0 ? `Peak ${maxRating}` : null} />
+              <StatTile icon={Target}      iconColor="var(--blue-ce)"   label="Acceptance"         value={`${accRate}%`} sub={`${accepted} / ${total} AC`} />
+              <StatTile icon={Award}       iconColor="var(--amber-tle)" label="Total Points"       value={totalPts} />
+              <StatTile icon={Zap}         iconColor="var(--blue-ce)"   label="Active Days"        value={activeDays} sub="last 12 months" />
             </div>
           </SectionCard>
 
@@ -850,49 +823,73 @@ const ProfilePage = () => {
             />
 
             <div style={{ overflowX: "auto", paddingBottom: "4px" }}>
-              <div
-                style={{
-                  display: "inline-flex",
-                  gap: "3px",
-                  alignItems: "flex-start",
-                }}
-              >
-                {Array.from({ length: 52 }).map((_, wk) => (
-                  <div
-                    key={wk}
-                    style={{ display: "flex", flexDirection: "column", gap: "3px" }}
-                  >
-                    {Array.from({ length: 7 }).map((_, dy) => {
-                      const cell = heatmap[wk * 7 + dy];
-                      if (!cell)
-                        return (
-                          <div key={dy} style={{ width: "11px", height: "11px" }} />
-                        );
-                      return (
-                        <div
-                          key={dy}
-                          style={{
-                            width: "11px",
-                            height: "11px",
-                            borderRadius: "2px",
-                            background: HEAT_COLORS[cell.level],
-                            cursor: cell.count > 0 ? "pointer" : "default",
-                            transition: "opacity 0.15s",
-                          }}
-                          onMouseEnter={(e) => {
-                            if (cell.count > 0)
+              <div style={{ display: "inline-flex", flexDirection: "column", gap: 4 }}>
+
+                {/* Month labels */}
+                <div style={{ display: "flex", gap: 3, marginLeft: 34 }}>
+                  {heatmap.monthLabels.map((m, i) => (
+                    <div key={i} style={{ width: 12, height: 16, position: "relative", flexShrink: 0 }}>
+                      {m && (
+                        <span style={{
+                          position: "absolute", left: 0, top: 0,
+                          fontSize: 11, fontWeight: 600, color: "var(--text-muted)",
+                          whiteSpace: "nowrap",
+                        }}>
+                          {m}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: "flex", gap: 3 }}>
+                  {/* Day labels */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3, width: 31, flexShrink: 0 }}>
+                    {HEAT_DAY_LABELS.map((d, i) => (
+                      <div key={i} style={{
+                        height: 12, fontSize: 10, lineHeight: "12px",
+                        color: "var(--text-muted)", fontWeight: 600,
+                      }}>
+                        {d}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Week columns */}
+                  {heatmap.weeks.map((col, wi) => (
+                    <div key={wi} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                      {col.map((cell, di) =>
+                        cell ? (
+                          <div
+                            key={di}
+                            style={{
+                              width: 12, height: 12, borderRadius: 3,
+                              background: HEAT_COLORS[cell.level],
+                              cursor: "pointer",
+                              transition: "box-shadow 0.1s",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.boxShadow = "0 0 0 1.5px var(--text-secondary)";
                               setTooltip({
-                                text: `${cell.count} submission${cell.count !== 1 ? "s" : ""} · ${fmtDate(cell.date)}`,
+                                text: cell.count > 0
+                                  ? `${cell.count} submission${cell.count !== 1 ? "s" : ""} · ${fmtDate(cell.date)}`
+                                  : `No submissions · ${fmtDate(cell.date)}`,
                                 x: e.clientX,
                                 y: e.clientY,
                               });
-                          }}
-                          onMouseLeave={() => setTooltip(null)}
-                        />
-                      );
-                    })}
-                  </div>
-                ))}
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.boxShadow = "none";
+                              setTooltip(null);
+                            }}
+                          />
+                        ) : (
+                          <div key={di} style={{ width: 12, height: 12 }} />
+                        )
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -908,10 +905,10 @@ const ProfilePage = () => {
                 <div
                   key={i}
                   style={{
-                    width: "10px",
-                    height: "10px",
+                    width: 12,
+                    height: 12,
                     background: c,
-                    borderRadius: "2px",
+                    borderRadius: 3,
                     border: "1px solid var(--border-subtle)",
                   }}
                 />
@@ -954,7 +951,7 @@ const ProfilePage = () => {
                   >
                     {label}
                     <span style={{
-                      fontSize: 10, fontWeight: 700,
+                      fontSize: "var(--text-xs)", fontWeight: 700,
                       padding: "1px 6px", borderRadius: 9999,
                       background: active ? "var(--primary-subtle)" : "var(--bg-overlay)",
                       color: active ? "var(--primary)" : "var(--text-muted)",
@@ -983,7 +980,7 @@ const ProfilePage = () => {
                   </thead>
                   <tbody>
                     {[...ratingHistory].reverse().length === 0 ? (
-                      <tr><td colSpan={5} style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)", fontSize: 13 }}>No contests participated yet</td></tr>
+                      <tr><td colSpan={5} style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)", fontSize: "var(--text-sm)" }}>No contests participated yet</td></tr>
                     ) : (
                       [...ratingHistory].reverse().map((c, i) => (
                         <tr key={c.id}
@@ -997,18 +994,18 @@ const ProfilePage = () => {
                           onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = i % 2 === 0 ? "var(--bg-base)" : "var(--bg-raised)"; }}
                         >
-                          <td style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 13 }}>{c.contestName}</td>
-                          <td style={{ textAlign: "center", fontSize: 13, color: "var(--text-secondary)" }}>#{c.rank}</td>
-                          <td style={{ textAlign: "center", fontWeight: 700, color: "var(--primary)", fontSize: 13 }}>{ratingChain.get(c.id) ?? c.newRating}</td>
+                          <td style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: "var(--text-sm)" }}>{c.contestName}</td>
+                          <td style={{ textAlign: "center", fontSize: "var(--text-sm)", color: "var(--text-secondary)" }}>#{c.rank}</td>
+                          <td style={{ textAlign: "center", fontWeight: 700, color: "var(--primary)", fontSize: "var(--text-sm)" }}>{ratingChain.get(c.id) ?? c.newRating}</td>
                           <td style={{ textAlign: "center" }}>
                             <span style={{
-                              fontSize: 12, fontWeight: 700,
+                              fontSize: "var(--text-sm)", fontWeight: 700,
                               color: c.ratingChange >= 0 ? "var(--green-ac)" : "var(--red-wa)",
                             }}>
                               {c.ratingChange >= 0 ? "+" : ""}{c.ratingChange}
                             </span>
                           </td>
-                          <td style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                          <td style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
                             {c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                           </td>
                         </tr>
@@ -1035,7 +1032,7 @@ const ProfilePage = () => {
                   </thead>
                   <tbody>
                     {ownSubmissions.length === 0 ? (
-                      <tr><td colSpan={8} style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)", fontSize: 13 }}>
+                      <tr><td colSpan={8} style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)", fontSize: "var(--text-sm)" }}>
                         No submissions yet
                       </td></tr>
                     ) : (
@@ -1061,7 +1058,7 @@ const ProfilePage = () => {
                                   color: "var(--primary)",
                                   borderRadius: "var(--radius-sm)",
                                   padding: "2px 8px",
-                                  fontSize: 11, fontWeight: 700,
+                                  fontSize: "var(--text-xs)", fontWeight: 700,
                                   cursor: "pointer",
                                   fontFamily: "var(--font-code)",
                                   transition: "background var(--transition-fast)",
@@ -1078,7 +1075,7 @@ const ProfilePage = () => {
                                   onClick={() => navigate(`/problems/${prob.slug}`)}
                                   style={{
                                     background: "none", border: "none", cursor: "pointer",
-                                    fontSize: 13, fontWeight: 600, color: "var(--text-primary)",
+                                    fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-primary)",
                                     padding: 0, textAlign: "left",
                                     textDecoration: "underline", textDecorationColor: "transparent",
                                     transition: "color var(--transition-fast), text-decoration-color var(--transition-fast)",
@@ -1089,21 +1086,21 @@ const ProfilePage = () => {
                                   {prob.title}
                                 </button>
                               ) : (
-                                <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Problem #{s.problemId}</span>
+                                <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>Problem #{s.problemId}</span>
                               )}
                             </td>
                             <td style={{ textAlign: "center" }}>
-                              <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700, background: vs.bg, color: vs.color }}>
+                              <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 4, fontSize: "var(--text-xs)", fontWeight: 700, background: vs.bg, color: vs.color }}>
                                 {s.submissionVerdict ?? "—"}
                               </span>
                             </td>
-                            <td style={{ textAlign: "center", fontSize: 12, color: "var(--text-secondary)" }}>{s.submissionLanguage}</td>
-                            <td style={{ textAlign: "center", fontSize: 12, color: "var(--text-muted)" }}>{s.executionTime != null ? `${s.executionTime}ms` : "—"}</td>
-                            <td style={{ textAlign: "center", fontSize: 12, color: "var(--text-muted)" }}>{s.memoryUsed != null ? `${Math.round(s.memoryUsed)}KB` : "—"}</td>
-                            <td style={{ textAlign: "center", fontSize: 12, color: "var(--text-muted)" }}>
+                            <td style={{ textAlign: "center", fontSize: "var(--text-sm)", color: "var(--text-secondary)" }}>{s.submissionLanguage}</td>
+                            <td style={{ textAlign: "center", fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>{s.executionTime != null ? `${s.executionTime}ms` : "—"}</td>
+                            <td style={{ textAlign: "center", fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>{s.memoryUsed != null ? `${Math.round(s.memoryUsed)}KB` : "—"}</td>
+                            <td style={{ textAlign: "center", fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
                               {s.testCasesPassed != null ? `${s.testCasesPassed}/${s.totalTestCases}` : "—"}
                             </td>
-                            <td style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                            <td style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
                               {s.submissionDate ? new Date(s.submissionDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                             </td>
                           </tr>
@@ -1128,7 +1125,7 @@ const ProfilePage = () => {
                   </thead>
                   <tbody>
                     {ownOrgs.length === 0 ? (
-                      <tr><td colSpan={5} style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)", fontSize: 13 }}>
+                      <tr><td colSpan={5} style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)", fontSize: "var(--text-sm)" }}>
                         No organizations yet
                       </td></tr>
                     ) : (
@@ -1145,28 +1142,28 @@ const ProfilePage = () => {
                                 width: 30, height: 30, borderRadius: "var(--radius-md)",
                                 background: "var(--primary-subtle)", color: "var(--primary)",
                                 display: "flex", alignItems: "center", justifyContent: "center",
-                                fontSize: 12, fontWeight: 800, flexShrink: 0,
+                                fontSize: "var(--text-sm)", fontWeight: 800, flexShrink: 0,
                               }}>
                                 {org.name?.charAt(0).toUpperCase()}
                               </div>
                               <div>
-                                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{org.name}</div>
-                                {org.about && <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{org.about.slice(0, 40)}{org.about.length > 40 ? "…" : ""}</div>}
+                                <div style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-primary)" }}>{org.name}</div>
+                                {org.about && <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>{org.about.slice(0, 40)}{org.about.length > 40 ? "…" : ""}</div>}
                               </div>
                             </div>
                           </td>
                           <td style={{ textAlign: "center" }}>
                             <span style={{
-                              fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 4,
+                              fontSize: "var(--text-xs)", fontWeight: 600, padding: "2px 8px", borderRadius: 4,
                               background: org.myRole === "OWNER" ? "var(--amber-subtle)" : "var(--primary-subtle)",
                               color: org.myRole === "OWNER" ? "var(--amber-tle)" : "var(--primary)",
                             }}>
                               {org.myRole || "Member"}
                             </span>
                           </td>
-                          <td style={{ textAlign: "center", fontSize: 13, color: "var(--text-secondary)" }}>{org.totalMembers ?? "—"}</td>
-                          <td style={{ fontSize: 12, color: "var(--text-muted)" }}>{org.isPublic ? "Public" : "Private"}</td>
-                          <td style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                          <td style={{ textAlign: "center", fontSize: "var(--text-sm)", color: "var(--text-secondary)" }}>{org.totalMembers ?? "—"}</td>
+                          <td style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>{org.isPublic ? "Public" : "Private"}</td>
+                          <td style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
                             {org.createdAt ? new Date(org.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                           </td>
                         </tr>
@@ -1208,7 +1205,7 @@ const ProfilePage = () => {
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <Code2 size={16} color="var(--primary)" />
-                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>
+                <span style={{ fontSize: "var(--text-base)", fontWeight: 700, color: "var(--text-primary)" }}>
                   Submission #{codeModal.submission.id}
                 </span>
                 {(() => {
@@ -1221,12 +1218,12 @@ const ProfilePage = () => {
                   };
                   const vs = VERDICT[codeModal.submission.submissionVerdict] || { color: "var(--text-muted)", bg: "var(--bg-overlay)" };
                   return (
-                    <span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700, background: vs.bg, color: vs.color }}>
+                    <span style={{ padding: "2px 8px", borderRadius: 4, fontSize: "var(--text-xs)", fontWeight: 700, background: vs.bg, color: vs.color }}>
                       {codeModal.submission.submissionVerdict ?? "—"}
                     </span>
                   );
                 })()}
-                <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
                   {codeModal.submission.submissionLanguage}
                   {codeModal.submission.executionTime != null && ` · ${codeModal.submission.executionTime}ms`}
                   {codeModal.submission.memoryUsed != null && ` · ${Math.round(codeModal.submission.memoryUsed)}KB`}
@@ -1247,7 +1244,7 @@ const ProfilePage = () => {
                   <div className="spinner" />
                 </div>
               ) : codeModal.error ? (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 400, color: "var(--text-muted)", fontSize: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 400, color: "var(--text-muted)", fontSize: "var(--text-base)" }}>
                   Failed to load source code
                 </div>
               ) : (
@@ -1258,7 +1255,7 @@ const ProfilePage = () => {
                   theme="vs-dark"
                   options={{
                     readOnly: true,
-                    fontSize: 13,
+                    fontSize: "var(--text-sm)",
                     minimap: { enabled: false },
                     scrollBeyondLastLine: false,
                     lineNumbers: "on",

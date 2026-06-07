@@ -31,7 +31,7 @@ const ModalOverlay = ({ onClose, children }) => (
 const OrgForm = ({ name, setName, about, setAbout, code, setCode, isPublic, setIsPublic }) => {
   const visBtn = (active, label, Icon, val) => (
     <button
-      style={{ flex: 1, padding: 8, borderRadius: 8, border: `2px solid ${active ? "var(--primary)" : "var(--border-default)"}`, background: active ? "var(--primary-subtle)" : "var(--bg-base)", color: active ? "var(--primary)" : "var(--text-secondary)", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
+      style={{ flex: 1, padding: 8, borderRadius: 8, border: `2px solid ${active ? "var(--primary)" : "var(--border-default)"}`, background: active ? "var(--primary-subtle)" : "var(--bg-base)", color: active ? "var(--primary)" : "var(--text-secondary)", fontSize: "var(--text-sm)", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
       onClick={() => setIsPublic(val)}
     >
       <Icon size={14} /> {label}
@@ -51,7 +51,7 @@ const OrgForm = ({ name, setName, about, setAbout, code, setCode, isPublic, setI
       <div className="form-group">
         <label className="form-label">Join Code</label>
         <input className="input w-full" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Auto-generated if empty" maxLength={10} style={{ fontFamily: "monospace", letterSpacing: "0.1em" }} />
-        <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--text-muted)" }}>Leave blank to auto-generate a 6-character code</p>
+        <p style={{ margin: "4px 0 0", fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>Leave blank to auto-generate a 6-character code</p>
       </div>
       <div className="form-group">
         <label className="form-label">Visibility</label>
@@ -90,7 +90,7 @@ const CreateModal = ({ isOpen, onClose, onCreate }) => {
       <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
         <div className="flex items-center gap-2">
           <Building2 size={20} color="var(--primary)" />
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Create Organization</h3>
+          <h3 style={{ margin: 0, fontSize: "var(--text-base)", fontWeight: 700 }}>Create Organization</h3>
         </div>
         <button style={{ background: "none", border: "none", cursor: "pointer" }} onClick={onClose}><X size={18} color="var(--text-muted)" /></button>
       </div>
@@ -134,7 +134,7 @@ const EditModal = ({ isOpen, onClose, org, onSave }) => {
       <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
         <div className="flex items-center gap-2">
           <Edit size={20} color="var(--primary)" />
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Edit Organization</h3>
+          <h3 style={{ margin: 0, fontSize: "var(--text-base)", fontWeight: 700 }}>Edit Organization</h3>
         </div>
         <button style={{ background: "none", border: "none", cursor: "pointer" }} onClick={onClose}><X size={18} color="var(--text-muted)" /></button>
       </div>
@@ -244,7 +244,7 @@ const AdminOrganizationPage = () => {
                 <Building2 size={28} color="var(--primary)" />
                 <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Manage Organizations</h2>
               </div>
-              <span style={{ display: "inline-block", padding: "3px 12px", borderRadius: 9999, fontSize: 13, fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
+              <span style={{ display: "inline-block", padding: "3px 12px", borderRadius: 9999, fontSize: "var(--text-sm)", fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
                 {totalElements} {totalElements === 1 ? "organization" : "organizations"}
               </span>
             </div>
@@ -271,56 +271,56 @@ const AdminOrganizationPage = () => {
               </div>
             )}
 
-            <table className="table">
+            <table className="table admin-table">
               <thead>
-                <tr style={{ background: "var(--primary-subtle)" }}>
-                  <th style={{ width: "5%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
-                  <th style={{ width: "27%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Organization</th>
-                  <th style={{ width: "13%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Code</th>
-                  <th style={{ width: "10%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Visibility</th>
-                  <th style={{ textAlign: "center", width: "9%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Members</th>
-                  <th style={{ width: "13%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Created</th>
-                  <th style={{ textAlign: "center", width: "13%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Actions</th>
+                <tr>
+                  <th style={{ width: "5%" }}>#</th>
+                  <th style={{ width: "27%" }}>Organization</th>
+                  <th style={{ width: "13%" }}>Code</th>
+                  <th style={{ width: "10%" }}>Visibility</th>
+                  <th style={{ textAlign: "center", width: "9%" }}>Members</th>
+                  <th style={{ width: "13%" }}>Created</th>
+                  <th style={{ textAlign: "center", width: "13%" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length > 0 ? (
                   filtered.map((org) => (
                     <tr key={org.id}>
-                      <td><span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{org.id}</span></td>
+                      <td><span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-muted)" }}>{org.id}</span></td>
                       <td>
                         <div>
-                          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>{org.name}</p>
-                          <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted)" }}>by {org.creatorUsername ?? "—"}</p>
+                          <p style={{ margin: 0, fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--text-primary)" }}>{org.name}</p>
+                          <p style={{ margin: 0, fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>by {org.creatorUsername ?? "—"}</p>
                         </div>
                       </td>
                       <td>
                         {org.code ? (
                           <div className="flex items-center gap-1">
-                            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)", fontFamily: "monospace", letterSpacing: "0.05em" }}>{org.code}</span>
+                            <span style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--primary)", fontFamily: "monospace", letterSpacing: "0.05em" }}>{org.code}</span>
                             <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2, borderRadius: 4 }} onClick={() => handleCopyCode(org.code, org.id)}>
                               {copiedId === org.id ? <Check size={12} color="var(--green-ac)" /> : <Copy size={12} color="var(--text-muted)" />}
                             </button>
                           </div>
                         ) : (
-                          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>—</span>
+                          <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>—</span>
                         )}
                       </td>
                       <td>
                         <div className="flex items-center gap-1">
-                          {org.isPublic ? <><Globe size={12} color="var(--text-muted)" /><span style={{ fontSize: 11, color: "var(--text-muted)", border: "1px solid var(--text-muted)33", padding: "2px 8px", borderRadius: 4 }}>Public</span></> : <><Lock size={12} color="var(--text-muted)" /><span style={{ fontSize: 11, color: "var(--text-muted)", border: "1px solid var(--text-muted)33", padding: "2px 8px", borderRadius: 4 }}>Private</span></>}
+                          {org.isPublic ? <><Globe size={12} color="var(--text-muted)" /><span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", border: "1px solid var(--text-muted)33", padding: "2px 8px", borderRadius: 4 }}>Public</span></> : <><Lock size={12} color="var(--text-muted)" /><span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", border: "1px solid var(--text-muted)33", padding: "2px 8px", borderRadius: 4 }}>Private</span></>}
                         </div>
                       </td>
                       <td style={{ textAlign: "center" }}>
                         <div className="flex items-center justify-center gap-1">
                           <Users size={12} color="var(--text-muted)" />
-                          <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{org.totalMembers ?? 0}</span>
+                          <span style={{ fontSize: "var(--text-sm)", color: "var(--text-secondary)" }}>{org.totalMembers ?? 0}</span>
                         </div>
                       </td>
                       <td>
                         <div className="flex items-center gap-1">
                           <Calendar size={12} color="var(--text-muted)" />
-                          <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{fmt(org.createdAt)}</span>
+                          <span style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)" }}>{fmt(org.createdAt)}</span>
                         </div>
                       </td>
                       <td>

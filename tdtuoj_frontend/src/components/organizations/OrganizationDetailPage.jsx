@@ -204,12 +204,12 @@ const AddMemberModal = ({ isOpen, onClose, orgId, onAdd }) => {
             {results.map((user) => (
               <div key={user.userId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderRadius: "var(--radius-md)", background: "var(--bg-overlay)", border: "1px solid var(--border-subtle)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--primary-subtle)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "var(--primary)", overflow: "hidden", flexShrink: 0 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--primary-subtle)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--primary)", overflow: "hidden", flexShrink: 0 }}>
                     {user.profileUrl ? <img src={user.profileUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (user.username || "U").charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{user.name || user.username}</p>
-                    <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted)" }}>@{user.username}</p>
+                    <p style={{ margin: 0, fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-primary)" }}>{user.name || user.username}</p>
+                    <p style={{ margin: 0, fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>@{user.username}</p>
                   </div>
                 </div>
                 <button className="btn btn-primary btn-sm" onClick={() => handleAdd(user.userId)} disabled={addingId === user.userId}>
@@ -482,11 +482,11 @@ const OrganizationDetailPage = () => {
                   <table className="table" style={{ width: "100%" }}>
                     <thead>
                       <tr>
-                        <th style={{ width: "5%", textAlign: "center", fontSize: 13, fontWeight: 700 }}>#</th>
-                        <th style={{ width: "40%", fontSize: 13, fontWeight: 700 }}>User</th>
-                        <th style={{ width: "15%", fontSize: 13, fontWeight: 700 }}>Role</th>
-                        <th style={{ width: "22%", fontSize: 13, fontWeight: 700 }}>Joined</th>
-                        {canManage && <th style={{ width: "18%", textAlign: "center", fontSize: 13, fontWeight: 700 }}>Actions</th>}
+                        <th style={{ width: "5%", textAlign: "center", fontSize: "var(--text-sm)", fontWeight: 700 }}>#</th>
+                        <th style={{ width: "40%", fontSize: "var(--text-sm)", fontWeight: 700 }}>User</th>
+                        <th style={{ width: "15%", fontSize: "var(--text-sm)", fontWeight: 700 }}>Role</th>
+                        <th style={{ width: "22%", fontSize: "var(--text-sm)", fontWeight: 700 }}>Joined</th>
+                        {canManage && <th style={{ width: "18%", textAlign: "center", fontSize: "var(--text-sm)", fontWeight: 700 }}>Actions</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -498,19 +498,19 @@ const OrganizationDetailPage = () => {
                             onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; }}
                             onMouseLeave={(e) => { e.currentTarget.style.background = rowBg; }}>
                             <td style={{ textAlign: "center" }}>
-                              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{memberPage * 20 + idx + 1}</span>
+                              <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-muted)" }}>{memberPage * 20 + idx + 1}</span>
                             </td>
                             <td>
                               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--primary-subtle)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "var(--primary)", overflow: "hidden", flexShrink: 0 }}>
+                                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--primary-subtle)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--primary)", overflow: "hidden", flexShrink: 0 }}>
                                   {member.profileUrl ? <img src={member.profileUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (member.username || "U").charAt(0).toUpperCase()}
                                 </div>
                                 <div>
-                                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--text-primary)", cursor: "pointer" }}
+                                  <p style={{ margin: 0, fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--text-primary)", cursor: "pointer" }}
                                     onClick={() => navigate(`/users/${member.username}`)}>
                                     {member.name || member.username}
                                   </p>
-                                  <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted)" }}>@{member.username}</p>
+                                  <p style={{ margin: 0, fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>@{member.username}</p>
                                 </div>
                               </div>
                             </td>
@@ -523,7 +523,7 @@ const OrganizationDetailPage = () => {
                                     <>
                                       {isOwner && (
                                         <button
-                                          style={{ padding: "3px 9px", borderRadius: "var(--radius-sm)", fontSize: 11, fontWeight: 600, border: `1px solid ${member.role === "ADMIN" ? "var(--amber-tle)" : "var(--blue-ce)"}`, cursor: "pointer", background: "transparent", color: member.role === "ADMIN" ? "var(--amber-tle)" : "var(--blue-ce)", fontFamily: "var(--font-body)", transition: "all 0.12s" }}
+                                          style={{ padding: "3px 9px", borderRadius: "var(--radius-sm)", fontSize: "var(--text-xs)", fontWeight: 600, border: `1px solid ${member.role === "ADMIN" ? "var(--amber-tle)" : "var(--blue-ce)"}`, cursor: "pointer", background: "transparent", color: member.role === "ADMIN" ? "var(--amber-tle)" : "var(--blue-ce)", fontFamily: "var(--font-body)", transition: "all 0.12s" }}
                                           onClick={() => handleToggleRole(member)}>
                                           {member.role === "ADMIN" ? "Demote" : "Promote"}
                                         </button>

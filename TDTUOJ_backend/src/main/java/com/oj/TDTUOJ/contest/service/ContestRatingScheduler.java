@@ -26,9 +26,10 @@ import java.util.List;
 @Slf4j
 public class ContestRatingScheduler {
 
-    private final ContestRepository      contestRepository;
-    private final SubmissionRepository   submissionRepository;
-    private final ContestRatingService   ratingService;
+    private final ContestRepository             contestRepository;
+    private final SubmissionRepository          submissionRepository;
+    private final ContestRatingService          ratingService;
+    private final ContestProblemPublishService  publishService;
 
     private static final List<SubmissionStatus> UNJUDGED_STATUSES =
             List.of(SubmissionStatus.PENDING, SubmissionStatus.RUNNING);
@@ -68,6 +69,26 @@ public class ContestRatingScheduler {
                 ratingService.processRatings(contest);
             } catch (Exception e) {
                 log.error("Failed to process ratings for contestId={}", contest.getId(), e);
+            }
+        }
+    }
+
+    /**
+     * Contest-fairness: publish problems of ended contests (rated AND unrated)
+     * to the public archive. Each contest in its own transaction so one
+     * failure can't block the rest.
+     */
+    @Scheduled(fixedDelay = 60_000, initialDelay = 20_000)
+    public void publishEndedContestProblems() {
+        List<Contest> due = publishService.findDueContests(LocalDateTime.now());
+        if (due.isEmpty()) return;
+
+        log.info("Problem-publish scheduler found {} ended contest(s) to publish", due.size());
+        for (Contest contest : due) {
+            try {
+                publishService.publishContestProblems(contest.getId());
+            } catch (Exception e) {
+                log.error("Failed to publish problems for contestId={}", contest.getId(), e);
             }
         }
     }

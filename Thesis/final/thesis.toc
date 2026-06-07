@@ -30,47 +30,47 @@
 \contentsline {subsubsection}{\numberline {3.2.1.1}Bài toán (Problem)}{12}{subsubsection.3.2.1.1}%
 \contentsline {subsubsection}{\numberline {3.2.1.2}Bài nộp (Submission)}{13}{subsubsection.3.2.1.2}%
 \contentsline {subsubsection}{\numberline {3.2.1.3}Cuộc thi (Contest)}{13}{subsubsection.3.2.1.3}%
-\contentsline {subsubsection}{\numberline {3.2.1.4}Kết quả chấm bài (Judge Result)}{13}{subsubsection.3.2.1.4}%
-\contentsline {subsection}{\numberline {3.2.2}Các tác nhân hệ thống}{13}{subsection.3.2.2}%
-\contentsline {section}{\numberline {3.3}Yêu cầu chức năng (Functional Requirements)}{16}{section.3.3}%
-\contentsline {subsection}{\numberline {3.3.1}Tổng quan Use Case}{16}{subsection.3.3.1}%
-\contentsline {subsection}{\numberline {3.3.2}Các Use Case chính}{26}{subsection.3.3.2}%
-\contentsline {subsubsection}{\numberline {3.3.2.1}Use case Nộp bài giải}{26}{subsubsection.3.3.2.1}%
-\contentsline {subsubsection}{\numberline {3.3.2.2}Use case Tạo bài toán}{29}{subsubsection.3.3.2.2}%
-\contentsline {subsubsection}{\numberline {3.3.2.3}Use case Trực quan hóa và gỡ lỗi mã nguồn}{33}{subsubsection.3.3.2.3}%
-\contentsline {subsubsection}{\numberline {3.3.2.4}Use case Tham gia cuộc thi}{37}{subsubsection.3.3.2.4}%
-\contentsline {subsubsection}{\numberline {3.3.2.5}Use case Gợi ý học tập bằng LLM}{41}{subsubsection.3.3.2.5}%
-\contentsline {subsubsection}{\numberline {3.3.2.6}Use case Quản lý bài thực hành}{45}{subsubsection.3.3.2.6}%
-\contentsline {section}{\numberline {3.4}Yêu cầu phi chức năng (Non-functional Requirements)}{49}{section.3.4}%
-\contentsline {subsection}{\numberline {3.4.1}Hiệu năng và thời gian phản hồi}{50}{subsection.3.4.1}%
-\contentsline {subsection}{\numberline {3.4.2}Khả năng mở rộng}{50}{subsection.3.4.2}%
-\contentsline {subsection}{\numberline {3.4.3}Bảo mật}{50}{subsection.3.4.3}%
-\contentsline {subsection}{\numberline {3.4.4}Độ tin cậy và tính sẵn sàng}{51}{subsection.3.4.4}%
-\contentsline {subsection}{\numberline {3.4.5}Khả năng bảo trì và khả năng sử dụng}{51}{subsection.3.4.5}%
-\contentsline {chapter}{\numberline {4}Thiết kế hệ thống}{52}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Thiết kế kiến trúc}{52}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Thiết kế cơ sở dữ liệu / ERD}{53}{section.4.2}%
-\contentsline {subsection}{\numberline {4.2.1}Tổng quan}{53}{subsection.4.2.1}%
-\contentsline {subsection}{\numberline {4.2.2}Sơ đồ thực thể -- quan hệ (ERD)}{54}{subsection.4.2.2}%
-\contentsline {subsubsection}{\numberline {4.2.2.1}Thực thể Người dùng (User)}{56}{subsubsection.4.2.2.1}%
-\contentsline {subsubsection}{\numberline {4.2.2.2}Thực thể Bài toán (Problem)}{57}{subsubsection.4.2.2.2}%
-\contentsline {subsubsection}{\numberline {4.2.2.3}Thực thể Bài nộp (Submission)}{60}{subsubsection.4.2.2.3}%
-\contentsline {subsubsection}{\numberline {4.2.2.4}Thực thể Cuộc thi (Contest)}{61}{subsubsection.4.2.2.4}%
-\contentsline {subsubsection}{\numberline {4.2.2.5}Thực thể Tổ chức (Organization)}{63}{subsubsection.4.2.2.5}%
-\contentsline {subsubsection}{\numberline {4.2.2.6}Thực thể Bài thực hành (Lab)}{65}{subsubsection.4.2.2.6}%
-\contentsline {section}{\numberline {4.3}Thiết kế giao diện}{67}{section.4.3}%
-\contentsline {subsection}{\numberline {4.3.1}Trang chủ}{67}{subsection.4.3.1}%
-\contentsline {subsection}{\numberline {4.3.2}Trang danh sách bài toán}{68}{subsection.4.3.2}%
-\contentsline {subsection}{\numberline {4.3.3}Trang chi tiết bài toán và nộp bài}{69}{subsection.4.3.3}%
-\contentsline {subsection}{\numberline {4.3.4}Bảng gợi ý học tập bằng LLM}{70}{subsection.4.3.4}%
-\contentsline {subsection}{\numberline {4.3.5}Trang cuộc thi và bảng xếp hạng}{71}{subsection.4.3.5}%
-\contentsline {subsection}{\numberline {4.3.6}Trang quản trị}{72}{subsection.4.3.6}%
-\contentsline {chapter}{\numberline {5}Cài đặt và kiểm thử}{74}{chapter.5}%
-\contentsline {section}{\numberline {5.1}Môi trường và công cụ cài đặt}{74}{section.5.1}%
-\contentsline {section}{\numberline {5.2}Cài đặt hệ thống}{75}{section.5.2}%
-\contentsline {subsection}{\numberline {5.2.1}Tổ chức mã nguồn theo tầng}{75}{subsection.5.2.1}%
-\contentsline {subsection}{\numberline {5.2.2}Luồng nộp bài và chấm bài bất đồng bộ}{76}{subsection.5.2.2}%
-\contentsline {section}{\numberline {5.3}Kiểm thử đơn vị}{76}{section.5.3}%
-\contentsline {section}{\numberline {5.4}Kiểm thử tải và giám sát}{78}{section.5.4}%
-\contentsline {chapter}{\numberline {6}Kết luận}{82}{chapter.6}%
-\contentsline {chapter}{TÀI LIỆU THAM KHẢO}{83}{chapter*.70}%
+\contentsline {subsubsection}{\numberline {3.2.1.4}Kết quả chấm bài (Judge Result)}{14}{subsubsection.3.2.1.4}%
+\contentsline {subsection}{\numberline {3.2.2}Các tác nhân hệ thống}{14}{subsection.3.2.2}%
+\contentsline {section}{\numberline {3.3}Yêu cầu chức năng (Functional Requirements)}{17}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Tổng quan Use Case}{17}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Các Use Case chính}{27}{subsection.3.3.2}%
+\contentsline {subsubsection}{\numberline {3.3.2.1}Use case Nộp bài giải}{27}{subsubsection.3.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.3.2.2}Use case Tạo bài toán}{30}{subsubsection.3.3.2.2}%
+\contentsline {subsubsection}{\numberline {3.3.2.3}Use case Trực quan hóa và gỡ lỗi mã nguồn}{34}{subsubsection.3.3.2.3}%
+\contentsline {subsubsection}{\numberline {3.3.2.4}Use case Tham gia cuộc thi}{38}{subsubsection.3.3.2.4}%
+\contentsline {subsubsection}{\numberline {3.3.2.5}Use case Gợi ý học tập bằng LLM}{42}{subsubsection.3.3.2.5}%
+\contentsline {subsubsection}{\numberline {3.3.2.6}Use case Quản lý bài thực hành}{46}{subsubsection.3.3.2.6}%
+\contentsline {section}{\numberline {3.4}Yêu cầu phi chức năng (Non-functional Requirements)}{50}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}Hiệu năng và thời gian phản hồi}{51}{subsection.3.4.1}%
+\contentsline {subsection}{\numberline {3.4.2}Khả năng mở rộng}{51}{subsection.3.4.2}%
+\contentsline {subsection}{\numberline {3.4.3}Bảo mật}{51}{subsection.3.4.3}%
+\contentsline {subsection}{\numberline {3.4.4}Độ tin cậy và tính sẵn sàng}{52}{subsection.3.4.4}%
+\contentsline {subsection}{\numberline {3.4.5}Khả năng bảo trì và khả năng sử dụng}{52}{subsection.3.4.5}%
+\contentsline {chapter}{\numberline {4}Thiết kế hệ thống}{53}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Thiết kế kiến trúc}{53}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Thiết kế cơ sở dữ liệu / ERD}{54}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Tổng quan}{54}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}Sơ đồ thực thể -- quan hệ (ERD)}{55}{subsection.4.2.2}%
+\contentsline {subsubsection}{\numberline {4.2.2.1}Thực thể Người dùng (User)}{57}{subsubsection.4.2.2.1}%
+\contentsline {subsubsection}{\numberline {4.2.2.2}Thực thể Bài toán (Problem)}{58}{subsubsection.4.2.2.2}%
+\contentsline {subsubsection}{\numberline {4.2.2.3}Thực thể Bài nộp (Submission)}{61}{subsubsection.4.2.2.3}%
+\contentsline {subsubsection}{\numberline {4.2.2.4}Thực thể Cuộc thi (Contest)}{62}{subsubsection.4.2.2.4}%
+\contentsline {subsubsection}{\numberline {4.2.2.5}Thực thể Tổ chức (Organization)}{65}{subsubsection.4.2.2.5}%
+\contentsline {subsubsection}{\numberline {4.2.2.6}Thực thể Bài thực hành (Lab)}{66}{subsubsection.4.2.2.6}%
+\contentsline {section}{\numberline {4.3}Thiết kế giao diện}{68}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Trang chủ}{68}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Trang danh sách bài toán}{69}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Trang chi tiết bài toán và nộp bài}{70}{subsection.4.3.3}%
+\contentsline {subsection}{\numberline {4.3.4}Bảng gợi ý học tập bằng LLM}{71}{subsection.4.3.4}%
+\contentsline {subsection}{\numberline {4.3.5}Trang cuộc thi và bảng xếp hạng}{72}{subsection.4.3.5}%
+\contentsline {subsection}{\numberline {4.3.6}Trang quản trị}{73}{subsection.4.3.6}%
+\contentsline {chapter}{\numberline {5}Cài đặt và kiểm thử}{75}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Môi trường và công cụ cài đặt}{75}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Cài đặt hệ thống}{76}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}Tổ chức mã nguồn theo tầng}{76}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}Luồng nộp bài và chấm bài bất đồng bộ}{77}{subsection.5.2.2}%
+\contentsline {section}{\numberline {5.3}Kiểm thử đơn vị}{77}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Kiểm thử tải và giám sát}{79}{section.5.4}%
+\contentsline {chapter}{\numberline {6}Kết luận}{83}{chapter.6}%
+\contentsline {chapter}{TÀI LIỆU THAM KHẢO}{84}{chapter*.70}%

@@ -12,6 +12,7 @@ import com.oj.TDTUOJ.contest.repository.ContestProblemRepository;
 import com.oj.TDTUOJ.contest.repository.ContestRepository;
 import com.oj.TDTUOJ.contest.repository.LeaderboardCacheRepository;
 import com.oj.TDTUOJ.common.enums.ContestParticipationType;
+import com.oj.TDTUOJ.common.utils.ContestLockUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.HashOperations;
@@ -55,6 +56,7 @@ public class ContestLeaderboardService {
     private static final String META_HASH_KEY = "contest:meta:";
     private static final String PROB_HASH_KEY = "contest:prob:";
     private static final String CACHE_KEY     = "contest:lb:cache:";
+    private static final String FROZEN_KEY    = "contest:lb:frozen:"; // STRING, no TTL — frozen snapshot JSON
 
     // Cache TTL in seconds — clients should poll no faster than this
     private static final long CACHE_TTL_SECONDS = 30;
@@ -163,13 +165,30 @@ public class ContestLeaderboardService {
     }
 
     /**
-     * Returns the full leaderboard for a contest, using a 30-second Redis cache.
+     * Returns the leaderboard for a contest, using a 30-second Redis cache.
      *
-     * @param contestId contest to fetch
-     * @param page      0-based page index
-     * @param size      entries per page (0 = unlimited)
+     * <p>Freeze semantics: while the contest's freeze window is active
+     * ({@link ContestLockUtil#isFrozen}), non-privileged viewers receive the
+     * frozen snapshot (last board built before the window began). Privileged
+     * viewers (ADMIN / contest creator) always get the live board.
+     *
+     * @param contestId  contest to fetch
+     * @param page       0-based page index
+     * @param size       entries per page (0 = unlimited)
+     * @param privileged true for ADMIN / contest-creator viewers
      */
-    public LeaderboardDTO getLeaderboard(Long contestId, int page, int size) {
+    public LeaderboardDTO getLeaderboard(Long contestId, int page, int size, boolean privileged) {
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(() -> new com.oj.TDTUOJ.common.exceptions.NotFoundException(
+                        "Contest not found: " + contestId));
+        LocalDateTime now = LocalDateTime.now();
+
+        // ── Freeze window: public viewers get the snapshot ──────────────── //
+        if (!privileged && ContestLockUtil.isFrozen(contest, now)) {
+            return getFrozenSnapshot(contest, page, size);
+        }
+
+        // ── Live path (pre-freeze, unlocked, or privileged viewer) ──────── //
         // 1. Try the short-lived cached snapshot first
         String cacheKey = CACHE_KEY + contestId;
         Object cached = redisTemplate.opsForValue().get(cacheKey);
@@ -182,10 +201,6 @@ public class ContestLeaderboardService {
         }
 
         // 2. Build from ZSET
-        Contest contest = contestRepository.findById(contestId)
-                .orElseThrow(() -> new com.oj.TDTUOJ.common.exceptions.NotFoundException(
-                        "Contest not found: " + contestId));
-
         LeaderboardDTO leaderboard = buildLeaderboard(contest, page, size);
 
         // 3. Cache the full (unpaged) result for 30 s
@@ -197,6 +212,17 @@ public class ContestLeaderboardService {
             cacheHelper.persistSnapshot(contestId, json, leaderboard.getTotalParticipants());
         } catch (JsonProcessingException e) {
             log.warn("Failed to serialise leaderboard for caching contestId={}", contestId, e);
+        }
+
+        // 4. Maintain the frozen snapshot until the freeze window begins
+        LocalDateTime freezeStart = ContestLockUtil.freezeStart(contest);
+        if (freezeStart != null) {
+            if (now.isBefore(freezeStart)) {
+                storeFrozenSnapshot(contestId, buildLeaderboard(contest, 0, 0));
+            } else if (!ContestLockUtil.isLocked(contest, now)) {
+                // Contest unlocked — frozen snapshot no longer needed
+                redisTemplate.delete(FROZEN_KEY + contestId);
+            }
         }
 
         return leaderboard;
@@ -241,6 +267,53 @@ public class ContestLeaderboardService {
     }
 
     // ── Internal helpers ──────────────────────────────────────────────────── //
+
+    /** Serve the frozen snapshot; falls back to a one-time live snapshot if missing. */
+    private LeaderboardDTO getFrozenSnapshot(Contest contest, int page, int size) {
+        String key = FROZEN_KEY + contest.getId();
+        LeaderboardDTO full = null;
+
+        Object json = redisTemplate.opsForValue().get(key);
+        if (json != null) {
+            try {
+                full = objectMapper.readValue(json.toString(), LeaderboardDTO.class);
+            } catch (JsonProcessingException e) {
+                log.warn("Failed to deserialise frozen snapshot for contestId={}", contest.getId(), e);
+            }
+        }
+
+        if (full == null) {
+            // No pre-freeze snapshot (Redis restart, or board never viewed
+            // before the freeze). One-time live snapshot — small leak window.
+            log.warn("No frozen snapshot for contestId={}; snapshotting live board now", contest.getId());
+            full = buildLeaderboard(contest, 0, 0);
+            storeFrozenSnapshot(contest.getId(), full);
+        }
+
+        full.setFrozen(true);
+        full.setFrozenAt(ContestLockUtil.freezeStart(contest));
+        return slicePage(full, page, size);
+    }
+
+    private void storeFrozenSnapshot(Long contestId, LeaderboardDTO full) {
+        try {
+            redisTemplate.opsForValue().set(FROZEN_KEY + contestId, objectMapper.writeValueAsString(full));
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to serialise frozen snapshot for contestId={}", contestId, e);
+        }
+    }
+
+    /** In-memory pagination over the full frozen board. */
+    private static LeaderboardDTO slicePage(LeaderboardDTO full, int page, int size) {
+        if (size <= 0 || full.getEntries() == null) return full;
+        int from = page * size;
+        List<ScoreboardEntryDTO> entries = full.getEntries();
+        List<ScoreboardEntryDTO> slice = from >= entries.size()
+                ? Collections.emptyList()
+                : entries.subList(from, Math.min(from + size, entries.size()));
+        full.setEntries(new ArrayList<>(slice));
+        return full;
+    }
 
     private LeaderboardDTO buildLeaderboard(Contest contest, int page, int size) {
         String zsetKey = LB_ZSET_KEY + contest.getId();

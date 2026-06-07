@@ -57,7 +57,7 @@ const DonutTooltip = ({ active, payload, unit }) => {
       borderRadius: "var(--radius-md)",
       padding: "8px 12px",
       boxShadow: "var(--shadow-md)",
-      fontSize: 12,
+      fontSize: "var(--text-sm)",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <div style={{ width: 10, height: 10, borderRadius: 2, background: d.payload.fill, flexShrink: 0 }} />
@@ -86,17 +86,17 @@ const SeriesTooltip = ({ active, payload, label, valueLabel }) => {
       boxShadow: "var(--shadow-md)",
       minWidth: 140,
     }}>
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10, fontWeight: 700, color: "var(--primary)", letterSpacing: "0.06em", marginBottom: 6 }}>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.06em", marginBottom: 6 }}>
         {label}
       </div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{valueLabel}</span>
+        <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>{valueLabel}</span>
         <span className="font-display" style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--primary)" }}>
           {payload[0].value}
         </span>
       </div>
       {d.count !== undefined && d.cumulative !== undefined && d.cumulative !== null && (
-        <div style={{ fontSize: 12, fontWeight: 700, marginTop: 4, color: d.count > 0 ? "var(--green-ac)" : "var(--text-muted)" }}>
+        <div style={{ fontSize: "var(--text-sm)", fontWeight: 700, marginTop: 4, color: d.count > 0 ? "var(--green-ac)" : "var(--text-muted)" }}>
           +{d.count} new
         </div>
       )}
@@ -137,7 +137,7 @@ const SectionHeader = ({ icon: Icon, label, right }) => (
     <div className="flex items-center gap-2">
       {Icon && <Icon size={14} style={{ color: "var(--cyan)" }} />}
       <span style={{
-        fontFamily: "var(--font-code)", fontSize: 11, fontWeight: 700,
+        fontFamily: "var(--font-code)", fontSize: "var(--text-xs)", fontWeight: 700,
         letterSpacing: "0.10em", textTransform: "uppercase", color: "var(--text-muted)",
       }}>
         {label}
@@ -152,7 +152,7 @@ const BreakdownDonut = ({ data, total, centerValue, centerLabel, centerColor, un
   if (!data.length || total === 0) {
     return (
       <div style={{ height: 210, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>No data yet</span>
+        <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>No data yet</span>
       </div>
     );
   }
@@ -210,10 +210,10 @@ const BreakdownDonut = ({ data, total, centerValue, centerLabel, centerColor, un
         {data.map((d) => (
           <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 7 }}>
             <div style={{ width: 9, height: 9, borderRadius: 2, background: d.fill, flexShrink: 0 }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", flex: 1 }}>
+            <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-secondary)", flex: 1 }}>
               {legendLabels?.[d.name] || d.name}
             </span>
-            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+            <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>
               {Math.round(d.pct * 100)}%
             </span>
           </div>
@@ -228,7 +228,7 @@ const TimeSeriesChart = ({ data, dataKey, gradientId, valueLabel, tickInterval }
   if (!data.length) {
     return (
       <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>No data yet</span>
+        <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>No data yet</span>
       </div>
     );
   }
@@ -257,7 +257,7 @@ const TimeSeriesChart = ({ data, dataKey, gradientId, valueLabel, tickInterval }
             dataKey="name"
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 10, fill: "var(--text-muted)", fontFamily: "var(--font-body)" }}
+            tick={{ fontSize: "var(--text-xs)", fill: "var(--text-muted)", fontFamily: "var(--font-body)" }}
             tickMargin={8}
             interval={tickInterval ?? "preserveStartEnd"}
           />
@@ -265,7 +265,7 @@ const TimeSeriesChart = ({ data, dataKey, gradientId, valueLabel, tickInterval }
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 10, fill: "var(--text-muted)", fontFamily: "var(--font-body)" }}
+            tick={{ fontSize: "var(--text-xs)", fill: "var(--text-muted)", fontFamily: "var(--font-body)" }}
             tickMargin={8}
             domain={[0, Math.ceil(maxY * 1.15)]}
             allowDecimals={false}
@@ -314,7 +314,7 @@ const TagBars = ({ tags }) => {
   if (!tags.length) {
     return (
       <div style={{ padding: "32px 0", textAlign: "center" }}>
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>No tagged problems yet</span>
+        <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>No tagged problems yet</span>
       </div>
     );
   }
@@ -324,7 +324,7 @@ const TagBars = ({ tags }) => {
       {tags.map((t) => (
         <div key={t.name} style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{
-            width: 110, flexShrink: 0, fontSize: 12, fontWeight: 600,
+            width: 110, flexShrink: 0, fontSize: "var(--text-sm)", fontWeight: 600,
             color: "var(--text-secondary)", overflow: "hidden",
             textOverflow: "ellipsis", whiteSpace: "nowrap",
           }} title={t.name}>
@@ -339,7 +339,7 @@ const TagBars = ({ tags }) => {
               transition: "width 0.6s ease-out",
             }} />
           </div>
-          <span style={{ width: 32, flexShrink: 0, textAlign: "right", fontSize: 12, fontWeight: 700, color: "var(--text-primary)", fontFamily: "var(--font-code)" }}>
+          <span style={{ width: 32, flexShrink: 0, textAlign: "right", fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--text-primary)", fontFamily: "var(--font-code)" }}>
             {t.value}
           </span>
         </div>
@@ -355,18 +355,15 @@ const TopSolversTable = ({ solvers }) => {
   if (!solvers.length) {
     return (
       <div style={{ padding: "32px 0", textAlign: "center" }}>
-        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>No solvers yet</span>
+        <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>No solvers yet</span>
       </div>
     );
   }
-  const thStyle = {
-    fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)",
-    textTransform: "uppercase", letterSpacing: "0.06em",
-  };
+  const thStyle = {}; // header styling now comes from .admin-table
   return (
-    <table className="table">
+    <table className="table admin-table">
       <thead>
-        <tr style={{ background: "var(--primary-subtle)" }}>
+        <tr>
           <th style={{ ...thStyle, textAlign: "center", width: "10%" }}>#</th>
           <th style={{ ...thStyle, width: "44%" }}>User</th>
           <th style={{ ...thStyle, textAlign: "center", width: "16%" }}>Solved</th>
@@ -379,7 +376,7 @@ const TopSolversTable = ({ solvers }) => {
           <tr key={s.userId}>
             <td style={{ textAlign: "center" }}>
               <span style={{
-                fontSize: 13, fontWeight: 800, fontFamily: "var(--font-display)",
+                fontSize: "var(--text-sm)", fontWeight: 800, fontFamily: "var(--font-display)",
                 color: i < 3 ? RANK_COLORS[i] : "var(--text-muted)",
               }}>
                 {i + 1}
@@ -392,7 +389,7 @@ const TopSolversTable = ({ solvers }) => {
                     width: 30, height: 30, borderRadius: "50%",
                     background: "var(--primary-subtle)", color: "var(--primary)",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 12, fontWeight: 800, overflow: "hidden", flexShrink: 0,
+                    fontSize: "var(--text-sm)", fontWeight: 800, overflow: "hidden", flexShrink: 0,
                   }}>
                     {s.profileUrl
                       ? <img src={s.profileUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -407,17 +404,17 @@ const TopSolversTable = ({ solvers }) => {
               </Link>
             </td>
             <td style={{ textAlign: "center" }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--green-ac)", fontFamily: "var(--font-code)" }}>
+              <span style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--green-ac)", fontFamily: "var(--font-code)" }}>
                 {s.problemsSolved ?? 0}
               </span>
             </td>
             <td style={{ textAlign: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", fontFamily: "var(--font-code)" }}>
+              <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-secondary)", fontFamily: "var(--font-code)" }}>
                 {Math.round(s.acceptanceRate ?? 0)}%
               </span>
             </td>
             <td style={{ textAlign: "center" }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)", fontFamily: "var(--font-code)" }}>
+              <span style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--primary)", fontFamily: "var(--font-code)" }}>
                 {s.currentRating ?? 0}
               </span>
             </td>
@@ -522,7 +519,7 @@ const AdminDashboardPage = () => {
               </h2>
               <span style={{
                 display: "inline-block", padding: "3px 12px", borderRadius: 9999,
-                fontSize: 13, fontWeight: 600,
+                fontSize: "var(--text-sm)", fontWeight: 600,
                 background: "var(--primary-subtle)", color: "var(--primary)",
               }}>
                 platform-wide
@@ -571,7 +568,7 @@ const AdminDashboardPage = () => {
               <SectionHeader
                 icon={TrendingUp}
                 label="Users Over Time"
-                right={<span style={{ fontSize: 11, color: "var(--text-muted)" }}>last 12 months</span>}
+                right={<span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>last 12 months</span>}
               />
               <TimeSeriesChart
                 data={usersSeries}
@@ -585,7 +582,7 @@ const AdminDashboardPage = () => {
               <SectionHeader
                 icon={Activity}
                 label="Submissions Over Time"
-                right={<span style={{ fontSize: 11, color: "var(--text-muted)" }}>last 30 days</span>}
+                right={<span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>last 30 days</span>}
               />
               <TimeSeriesChart
                 data={submissionsSeries}
@@ -603,7 +600,7 @@ const AdminDashboardPage = () => {
               <SectionHeader
                 icon={Tag}
                 label="Problems by Tag"
-                right={<span style={{ fontSize: 11, color: "var(--text-muted)" }}>top 10</span>}
+                right={<span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>top 10</span>}
               />
               <TagBars tags={stats.problemsByTag ?? []} />
             </div>

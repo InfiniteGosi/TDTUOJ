@@ -22,6 +22,8 @@ import com.oj.TDTUOJ.testcase.repository.TestCaseRepository;
 import com.oj.TDTUOJ.user.repository.UserRepository;
 import com.oj.TDTUOJ.userDailyActivity.service.UserActivityService;
 import com.oj.TDTUOJ.userStatistics.service.UserStatisticsService;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -55,6 +57,9 @@ class SubmissionJudgeServiceTest {
     @Mock private ContestRegistrationRepository contestRegistrationRepository;
     @Mock private ContestLeaderboardService leaderboardService;
     @Mock private UserRepository userRepository;
+
+    // Real registry — Timer.start()/stop() need a working MeterRegistry, not a mock
+    @org.mockito.Spy private MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     @InjectMocks private SubmissionJudgeService judgeService;
 

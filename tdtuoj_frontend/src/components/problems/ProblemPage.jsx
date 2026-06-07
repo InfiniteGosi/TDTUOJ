@@ -240,7 +240,7 @@ const FilterPanel = ({
                   >
                     <input
                       className="input"
-                      style={{ fontSize: 13, padding: "4px 8px" }}
+                      style={{ fontSize: "var(--text-sm)", padding: "4px 8px" }}
                       placeholder="Search topics..."
                       value={tagSearch}
                       onChange={(e) => setTagSearch(e.target.value)}
@@ -260,7 +260,7 @@ const FilterPanel = ({
                         style={{
                           padding: "8px 12px",
                           cursor: "pointer",
-                          fontSize: 13,
+                          fontSize: "var(--text-sm)",
                           color: "var(--text-secondary)",
                           transition: "background 0.1s",
                         }}
@@ -438,7 +438,7 @@ const ProblemPage = () => {
       <div className="page-container" style={{ minHeight: "100vh", paddingTop: 32 }}>
         <div className="flex flex-col items-center justify-center" style={{ paddingTop: 80, paddingBottom: 80, gap: 16 }}>
           <div className="spinner spinner-lg" />
-          <span style={{ color: "var(--text-muted)", fontSize: 14 }}>Loading problems...</span>
+          <span style={{ color: "var(--text-muted)", fontSize: "var(--text-base)" }}>Loading problems...</span>
         </div>
       </div>
     );
@@ -472,7 +472,7 @@ const ProblemPage = () => {
                   transition: "all 0.15s",
                   outline: "none",
                   whiteSpace: "nowrap",
-                  fontSize: 14,
+                  fontSize: "var(--text-base)",
                   fontWeight: 500,
                 }}
               >
@@ -487,7 +487,7 @@ const ProblemPage = () => {
                         color: "#000",
                         borderRadius: "var(--radius-pill)",
                         padding: "1px 8px",
-                        fontSize: 12,
+                        fontSize: "var(--text-sm)",
                         fontWeight: 700,
                       }}
                     >
@@ -503,7 +503,7 @@ const ProblemPage = () => {
                 background: "var(--cyan-subtle)",
                 color: "var(--cyan)",
                 borderRadius: "var(--radius-pill)",
-                fontSize: 14,
+                fontSize: "var(--text-base)",
                 padding: "4px 12px",
               }}
             >
@@ -571,7 +571,7 @@ const ProblemPage = () => {
                     borderRadius: "var(--radius-pill)",
                     width: 16,
                     height: 16,
-                    fontSize: 10,
+                    fontSize: "var(--text-xs)",
                     fontWeight: 700,
                     display: "flex",
                     alignItems: "center",

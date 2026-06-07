@@ -33,6 +33,7 @@ UI -> C : POST /api/labs (createLab)
 activate C
 C -> S : createLab(dto)
 activate S
+S -> S : validate problems are\nprivate & owned by creator
 S -> R : save(lab, linked problems)
 activate R
 R --> S : lab

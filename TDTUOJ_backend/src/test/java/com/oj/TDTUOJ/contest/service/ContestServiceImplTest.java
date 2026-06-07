@@ -7,7 +7,10 @@ import com.oj.TDTUOJ.common.exceptions.UnauthorizedAccessException;
 import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.contest.dto.ContestDTO;
 import com.oj.TDTUOJ.contest.dto.ContestMonitorDTO;
+import com.oj.TDTUOJ.contest.dto.ContestProblemDTO;
 import com.oj.TDTUOJ.contest.entity.Contest;
+import com.oj.TDTUOJ.contest.entity.ContestProblem;
+import com.oj.TDTUOJ.problem.entity.Problem;
 import com.oj.TDTUOJ.contest.repository.ContestParticipationRepository;
 import com.oj.TDTUOJ.contest.repository.ContestProblemRepository;
 import com.oj.TDTUOJ.contest.repository.ContestRegistrationRepository;
@@ -281,6 +284,133 @@ class ContestServiceImplTest {
     void getContestBySlug_NotFound_Throws() {
         when(contestRepository.findBySlug("missing")).thenReturn(Optional.empty());
         assertThrows(NotFoundException.class, () -> contestService.getContestBySlug("missing"));
+    }
+
+    // ── Contest-problem eligibility validation ─────────────────────────────
+
+    private Problem problem(Long id, Long authorId, boolean isPublic) {
+        User author = null;
+        if (authorId != null) { author = new User(); author.setId(authorId); }
+        return Problem.builder().id(id).title("P" + id).isPublic(isPublic).author(author).point(100).build();
+    }
+
+    private ContestDTO dtoWithProblems(Long... problemIds) {
+        ContestDTO dto = new ContestDTO();
+        dto.setName("Spring Round");
+        dto.setContestStyle(ContestStyle.ICPC);
+        List<ContestProblemDTO> cps = new ArrayList<>();
+        int order = 1;
+        for (Long pid : problemIds) {
+            ContestProblemDTO cp = new ContestProblemDTO();
+            cp.setProblemId(pid);
+            cp.setProblemOrder(order++);
+            cp.setPoints(100);
+            cps.add(cp);
+        }
+        dto.setProblems(cps);
+        return dto;
+    }
+
+    @Test
+    void createContest_publicProblem_rejected() {
+        User creator = user(1L, "CREATOR");
+        when(userService.getCurrentLoggedInUser()).thenReturn(creator);
+        when(contestRepository.existsBySlug("spring-round")).thenReturn(false);
+        when(problemRepository.findById(10L)).thenReturn(Optional.of(problem(10L, 1L, true)));
+
+        BadRequestException ex = assertThrows(BadRequestException.class,
+                () -> contestService.createContest(dtoWithProblems(10L)));
+        assertTrue(ex.getMessage().contains("must be private"));
+        verify(contestRepository, never()).save(any());
+    }
+
+    @Test
+    void createContest_problemNotOwnedByCreator_rejected() {
+        User creator = user(1L, "CREATOR");
+        when(userService.getCurrentLoggedInUser()).thenReturn(creator);
+        when(contestRepository.existsBySlug("spring-round")).thenReturn(false);
+        when(problemRepository.findById(10L)).thenReturn(Optional.of(problem(10L, 2L, false)));
+
+        BadRequestException ex = assertThrows(BadRequestException.class,
+                () -> contestService.createContest(dtoWithProblems(10L)));
+        assertTrue(ex.getMessage().contains("problems you authored"));
+        verify(contestRepository, never()).save(any());
+    }
+
+    @Test
+    void createContest_problemWithForeignSubmissions_rejected() {
+        User creator = user(1L, "CREATOR");
+        when(userService.getCurrentLoggedInUser()).thenReturn(creator);
+        when(contestRepository.existsBySlug("spring-round")).thenReturn(false);
+        when(problemRepository.findById(10L)).thenReturn(Optional.of(problem(10L, 1L, false)));
+        when(submissionRepository.existsByProblemIdAndUserIdNot(10L, 1L)).thenReturn(true);
+
+        BadRequestException ex = assertThrows(BadRequestException.class,
+                () -> contestService.createContest(dtoWithProblems(10L)));
+        assertTrue(ex.getMessage().contains("already has submissions"));
+        verify(contestRepository, never()).save(any());
+    }
+
+    @Test
+    void createContest_adminAttachingOthersPrivateProblem_succeeds() {
+        User admin = user(1L, "ADMIN");
+        when(userService.getCurrentLoggedInUser()).thenReturn(admin);
+        when(contestRepository.existsBySlug("spring-round")).thenReturn(false);
+        when(problemRepository.findById(10L)).thenReturn(Optional.of(problem(10L, 2L, false)));
+        when(submissionRepository.existsByProblemIdAndUserIdNot(10L, 2L)).thenReturn(false);
+        when(contestRepository.save(any(Contest.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(modelMapper.map(any(Contest.class), eq(ContestDTO.class))).thenReturn(new ContestDTO());
+
+        Response<ContestDTO> resp = contestService.createContest(dtoWithProblems(10L));
+        assertEquals(HttpStatus.CREATED.value(), resp.getStatusCode());
+    }
+
+    @Test
+    void updateContest_existingAttachedProblem_skipsValidation() {
+        User creator = user(1L, "CREATOR");
+        Contest c = baseContest(1L, creator);
+        // Already-attached problem — now PUBLIC with foreign submissions; must be exempt
+        Problem attached = problem(5L, 1L, true);
+        c.getContestProblems().add(ContestProblem.builder()
+                .contest(c).problem(attached).problemOrder(1).points(100).build());
+
+        when(contestRepository.findById(1L)).thenReturn(Optional.of(c));
+        when(userService.getCurrentLoggedInUser()).thenReturn(creator);
+        when(problemRepository.findById(5L)).thenReturn(Optional.of(attached));
+        when(contestRepository.save(any(Contest.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(modelMapper.map(any(Contest.class), eq(ContestDTO.class))).thenReturn(new ContestDTO());
+
+        ContestDTO dto = new ContestDTO();
+        dto.setProblems(dtoWithProblems(5L).getProblems());
+
+        Response<ContestDTO> resp = contestService.updateContest(1L, dto);
+
+        assertEquals(HttpStatus.OK.value(), resp.getStatusCode());
+        verify(submissionRepository, never()).existsByProblemIdAndUserIdNot(anyLong(), anyLong());
+    }
+
+    @Test
+    void updateContest_newlyAddedSolvedProblem_rejected() {
+        User creator = user(1L, "CREATOR");
+        Contest c = baseContest(1L, creator);
+        Problem attached = problem(5L, 1L, false);
+        c.getContestProblems().add(ContestProblem.builder()
+                .contest(c).problem(attached).problemOrder(1).points(100).build());
+
+        when(contestRepository.findById(1L)).thenReturn(Optional.of(c));
+        when(userService.getCurrentLoggedInUser()).thenReturn(creator);
+        when(problemRepository.findById(5L)).thenReturn(Optional.of(attached));
+        Problem newcomer = problem(6L, 1L, false);
+        when(problemRepository.findById(6L)).thenReturn(Optional.of(newcomer));
+        when(submissionRepository.existsByProblemIdAndUserIdNot(6L, 1L)).thenReturn(true);
+
+        ContestDTO dto = new ContestDTO();
+        dto.setProblems(dtoWithProblems(5L, 6L).getProblems());
+
+        BadRequestException ex = assertThrows(BadRequestException.class,
+                () -> contestService.updateContest(1L, dto));
+        assertTrue(ex.getMessage().contains("already has submissions"));
+        verify(contestRepository, never()).save(any());
     }
 
 }

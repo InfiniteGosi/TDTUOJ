@@ -57,7 +57,7 @@ const StatusBadge = ({ status }) => {
       }}
     >
       <Icon size={13} color={s.color} />
-      <span style={{ fontSize: 11, fontWeight: 600, color: s.color }}>
+      <span style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: s.color }}>
         {s.label}
       </span>
     </div>
@@ -100,7 +100,7 @@ const DeadlineBanner = ({ deadline }) => {
         />
         <span
           style={{
-            fontSize: 13,
+            fontSize: "var(--text-sm)",
             fontWeight: 600,
             color: isPast ? "var(--red-wa)" : "var(--amber-tle)",
           }}
@@ -113,7 +113,7 @@ const DeadlineBanner = ({ deadline }) => {
               padding: "1px 8px",
               borderRadius: 6,
               background: "var(--amber-subtle)",
-              fontSize: 11,
+              fontSize: "var(--text-xs)",
               fontWeight: 700,
               color: "var(--amber-tle)",
             }}
@@ -286,7 +286,7 @@ const LabDetailPage = () => {
                       style={{
                         padding: "2px 8px",
                         borderRadius: 6,
-                        fontSize: 11,
+                        fontSize: "var(--text-xs)",
                         fontWeight: 600,
                         background: "var(--blue-subtle)",
                         color: "var(--blue-ce)",
@@ -404,7 +404,7 @@ const LabDetailPage = () => {
                         >
                           <span
                             style={{
-                              fontSize: 13,
+                              fontSize: "var(--text-sm)",
                               fontWeight: 700,
                               color: "var(--primary)",
                             }}
@@ -418,7 +418,7 @@ const LabDetailPage = () => {
                           style={{
                             fontWeight: 600,
                             color: "var(--text-primary)",
-                            fontSize: 13,
+                            fontSize: "var(--text-sm)",
                           }}
                         >
                           {ex.problemTitle}
@@ -430,7 +430,7 @@ const LabDetailPage = () => {
                             display: "inline-block",
                             padding: "2px 8px",
                             borderRadius: 6,
-                            fontSize: 11,
+                            fontSize: "var(--text-xs)",
                             fontWeight: 700,
                             background: dc.bg,
                             color: dc.color,
@@ -442,7 +442,7 @@ const LabDetailPage = () => {
                       <td>
                         <span
                           style={{
-                            fontSize: 13,
+                            fontSize: "var(--text-sm)",
                             fontWeight: 600,
                             color: "var(--text-secondary)",
                           }}
@@ -477,7 +477,7 @@ const LabDetailPage = () => {
                                 style={{ color: "var(--primary)" }}
                               >
                                 <Code size={14} />
-                                <span style={{ fontSize: 11, fontWeight: 500 }}>
+                                <span style={{ fontSize: "var(--text-xs)", fontWeight: 500 }}>
                                   View
                                 </span>
                               </div>
@@ -494,7 +494,7 @@ const LabDetailPage = () => {
                                 style={{ color: "var(--blue-ce)" }}
                               >
                                 <FileText size={14} />
-                                <span style={{ fontSize: 11, fontWeight: 500 }}>
+                                <span style={{ fontSize: "var(--text-xs)", fontWeight: 500 }}>
                                   File
                                 </span>
                               </div>
@@ -554,7 +554,7 @@ const LabDetailPage = () => {
                     margin: 0,
                     color: "var(--text-primary)",
                     fontWeight: 700,
-                    fontSize: 16,
+                    fontSize: "var(--text-base)",
                   }}
                 >
                   {viewingSolution.problemTitle}
@@ -563,7 +563,7 @@ const LabDetailPage = () => {
                   style={{
                     margin: 0,
                     color: "var(--text-muted)",
-                    fontSize: 11,
+                    fontSize: "var(--text-xs)",
                   }}
                 >
                   Solution ·{" "}
@@ -598,7 +598,7 @@ const LabDetailPage = () => {
                 options={{
                   readOnly: true,
                   minimap: { enabled: false },
-                  fontSize: 14,
+                  fontSize: "var(--text-base)",
                   lineNumbers: "on",
                   scrollBeyondLastLine: false,
                   domReadOnly: true,

@@ -119,6 +119,29 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
 
     Page<Problem> findByAuthorIdAndTitleContainingIgnoreCase(Long authorId, String title, Pageable pageable);
 
+    // ── Contest-eligible problems ─────────────────────────────────────────── //
+
+    /**
+     * Contest-eligible problems for a CREATOR: private, authored by them,
+     * and untouched by anyone else (author's own test submissions allowed).
+     * Mirrors ContestServiceImpl.validateProblemEligibleForContest — keep in sync.
+     */
+    @Query("SELECT p FROM Problem p WHERE p.author.id = :authorId AND p.isPublic = false " +
+           "AND NOT EXISTS (SELECT s FROM com.oj.TDTUOJ.submission.entity.Submission s " +
+           "                WHERE s.problem.id = p.id AND s.userId <> :authorId) " +
+           "AND LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<Problem> findContestEligibleByAuthor(@Param("authorId") Long authorId,
+                                              @Param("search") String search,
+                                              Pageable pageable);
+
+    /** Contest-eligible problems for an ADMIN: any private problem untouched by non-authors. */
+    @Query("SELECT p FROM Problem p WHERE p.isPublic = false " +
+           "AND NOT EXISTS (SELECT s FROM com.oj.TDTUOJ.submission.entity.Submission s " +
+           "                WHERE s.problem.id = p.id " +
+           "                AND (p.author IS NULL OR s.userId <> p.author.id)) " +
+           "AND LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<Problem> findContestEligibleAll(@Param("search") String search, Pageable pageable);
+
     // ── Admin dashboard aggregates ────────────────────────────────────────── //
 
     /** Problem counts grouped by difficulty (admin dashboard). */

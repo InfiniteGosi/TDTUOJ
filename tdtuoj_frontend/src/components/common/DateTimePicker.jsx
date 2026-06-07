@@ -148,7 +148,9 @@ const DateTimePicker = ({ value, onChange, placeholder = "Pick date & time", req
   }, []);
 
   const update = (patch) => {
-    const base = parsed ?? { year: now.getFullYear(), month: now.getMonth(), day: now.getDate(), hour: 0, minute: 0, second: 0 };
+    // Default time = now (not midnight) — picking only a date used to silently
+    // set 00:00:00, producing wildly wrong contest durations.
+    const base = parsed ?? { year: now.getFullYear(), month: now.getMonth(), day: now.getDate(), hour: now.getHours(), minute: now.getMinutes(), second: 0 };
     onChange(formatValue({ ...base, ...patch }));
   };
 

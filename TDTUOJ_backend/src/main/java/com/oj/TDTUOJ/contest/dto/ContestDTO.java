@@ -35,6 +35,8 @@ public class ContestDTO {
 
     private Boolean isRated;
 
+    private Integer freezeDurationMinutes;
+
     private Integer maxParticipant;
 
     private LocalDateTime registrationStart;

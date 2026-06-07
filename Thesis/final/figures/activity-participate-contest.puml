@@ -38,14 +38,20 @@ repeat
   :Write solution & submit;
   |System|
   :Judge submission\nscore by style (ICPC / IOI);
-  :Update scoreboard;
+  :Hide submission from\nother participants;
+  if (Inside freeze window?) then (Yes)
+    :Serve frozen scoreboard\nto public viewers;
+  else (No)
+    :Update live scoreboard;
+  endif
   |User|
   :View verdict & live rank;
 repeat while (Solve more / retry?) is (Yes) not (No)
 
 |System|
-:Contest ends\nfreeze scoreboard;
-:Creator publishes result\nupdate rating history;
+:Contest ends;
+:Process ratings\nupdate rating history;
+:Unlock submissions\nauto-publish contest problems;
 |User|
 :View final leaderboard & rating;
 stop

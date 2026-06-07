@@ -57,14 +57,20 @@ loop while contest running
   deactivate SUB
   UI -> C : GET /api/contests/{id}/leaderboard
   activate C
-  C -> S : getLeaderboard(id)
+  C -> S : getLeaderboard(id, privileged?)
   activate S
-  S --> C : LeaderboardDTO
+  alt Freeze window, public viewer
+    S --> C : frozen snapshot (Redis)
+  else Live board
+    S --> C : LeaderboardDTO
+  end
   deactivate S
-  C --> UI : live scoreboard
+  C --> UI : scoreboard
   deactivate C
   UI --> U : Show verdict & rank
 end
+
+note over S : Contest ends:\nratings processed, submissions unlocked,\ncontest problems auto-published
 
 U -> UI : View final result
 UI -> C : getLeaderboard(id)

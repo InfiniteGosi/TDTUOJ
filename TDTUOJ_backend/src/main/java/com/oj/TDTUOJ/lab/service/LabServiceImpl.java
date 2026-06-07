@@ -126,6 +126,7 @@ public class LabServiceImpl implements LabService {
             for (CreateLabRequest.ExerciseEntry entry : request.getExercises()) {
                 Problem problem = problemRepository.findById(entry.getProblemId())
                         .orElseThrow(() -> new NotFoundException("Problem not found: " + entry.getProblemId()));
+                validateProblemEligibleForLab(problem, currentUser);
 
                 LabExercise exercise = LabExercise.builder()
                         .lab(lab)
@@ -169,6 +170,11 @@ public class LabServiceImpl implements LabService {
 
         // Re-sync exercises
         if (request.getExercises() != null) {
+            // Problems already attached are exempt from eligibility checks
+            // (e.g. one later published manually must not break lab edits).
+            java.util.Set<Long> alreadyAttached = lab.getExercises().stream()
+                    .map(ex -> ex.getProblem().getId())
+                    .collect(Collectors.toSet());
             lab.getExercises().clear();
             labRepository.flush();
 
@@ -176,6 +182,9 @@ public class LabServiceImpl implements LabService {
             for (CreateLabRequest.ExerciseEntry entry : request.getExercises()) {
                 Problem problem = problemRepository.findById(entry.getProblemId())
                         .orElseThrow(() -> new NotFoundException("Problem not found: " + entry.getProblemId()));
+                if (!alreadyAttached.contains(problem.getId())) {
+                    validateProblemEligibleForLab(problem, currentUser);
+                }
 
                 LabExercise exercise = LabExercise.builder()
                         .lab(lab)
@@ -480,6 +489,26 @@ public class LabServiceImpl implements LabService {
 
     private boolean hasPlatformRole(User user, String roleName) {
         return user.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase(roleName));
+    }
+
+    /**
+     * Lab-fairness gate: a problem may enter a lab only if it is private and
+     * authored by the caller (platform ADMIN bypasses ownership). Unlike
+     * contests there is NO no-prior-submissions requirement and NO
+     * auto-publish — lab problems stay private and are reusable across labs.
+     */
+    private void validateProblemEligibleForLab(Problem problem, User caller) {
+        boolean isAdmin = hasPlatformRole(caller, "ADMIN");
+        Long authorId = problem.getAuthor() != null ? problem.getAuthor().getId() : null;
+
+        if (!isAdmin && (authorId == null || !authorId.equals(caller.getId()))) {
+            throw new BadRequestException(
+                    "You can only add problems you authored: '" + problem.getTitle() + "'");
+        }
+        if (Boolean.TRUE.equals(problem.getIsPublic())) {
+            throw new BadRequestException(
+                    "Lab problems must be private: '" + problem.getTitle() + "'");
+        }
     }
 
     private User tryGetCurrentUser() {

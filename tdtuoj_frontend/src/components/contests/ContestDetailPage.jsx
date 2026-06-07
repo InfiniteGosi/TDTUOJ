@@ -104,7 +104,7 @@ const ClockDigit = ({ val, unit }) => (
     }}>
       {String(val).padStart(2, "0")}
     </div>
-    <span style={{ fontSize: 9, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.07em", textTransform: "uppercase" }}>
+    <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.07em", textTransform: "uppercase" }}>
       {unit}
     </span>
   </div>
@@ -169,9 +169,24 @@ const LeaderboardTable = ({ contestId, problems }) => {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
+        <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: 10 }}>
           {data?.totalParticipants ?? 0} participants
-          <span style={{ marginLeft: 8, fontSize: "var(--text-xs)" }}>· auto-refresh 30s</span>
+          <span style={{ fontSize: "var(--text-xs)" }}>· auto-refresh 30s</span>
+          {data?.frozen && (
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: 4,
+              padding: "2px 10px", borderRadius: 6,
+              background: "rgba(34, 211, 238, 0.12)", color: "var(--cyan)",
+              fontSize: "var(--text-xs)", fontWeight: 700, letterSpacing: "0.05em",
+            }}>
+              ❄ FROZEN
+              {data.frozenAt && (
+                <span style={{ fontWeight: 500, color: "var(--text-muted)" }}>
+                  — standings as of {new Date(data.frozenAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
+            </span>
+          )}
         </span>
         <button className="btn btn-ghost btn-sm"
           style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
@@ -216,7 +231,7 @@ const LeaderboardTable = ({ contestId, problems }) => {
                     onMouseLeave={(e) => { e.currentTarget.style.background = rowBg; }}>
                     <td style={{ textAlign: "center", padding: "10px 8px" }}>
                       {entry.rank <= 3
-                        ? <span style={{ fontSize: 16 }}>{entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : "🥉"}</span>
+                        ? <span style={{ fontSize: "var(--text-base)" }}>{entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : "🥉"}</span>
                         : <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--text-muted)" }}>{entry.rank}</span>
                       }
                     </td>
@@ -237,7 +252,7 @@ const LeaderboardTable = ({ contestId, problems }) => {
                             ps.solved ? (
                               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
                                 <CheckCircle size={14} color="var(--green-ac)" />
-                                <span style={{ fontFamily: "var(--font-code)", fontSize: 10, color: "var(--text-muted)" }}>
+                                <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>
                                   {ps.attempts > 0 ? `+${ps.attempts} ` : ""}{fmtMins(ps.penaltyMinutes)}
                                 </span>
                               </div>
@@ -319,6 +334,19 @@ const ContestDetailPage = () => {
       if (resp.statusCode === 200) {
         setRegistered(true);
         showMessage("Successfully registered!", "success");
+        // Refetch — problems are hidden from unregistered viewers, so the
+        // current contest state has no problem list yet.
+        try {
+          const fresh = await ApiService.getContestBySlug(slug);
+          if (fresh.statusCode === 200) {
+            setContest(fresh.data);
+            const fp = fresh.data.problems?.[0];
+            if (statusOf(fresh.data) === "RUNNING" && fp) {
+              navigate(`/contests/${slug}/problems/${fp.problemSlug}`);
+            }
+            return;
+          }
+        } catch (_) {}
         setContest((c) => ({ ...c, totalParticipants: (c.totalParticipants ?? 0) + 1 }));
       }
     } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); }
@@ -726,7 +754,7 @@ const ContestDetailPage = () => {
                 {[
                   ["Style",      contest.contestStyle ?? "—",     false],
                   ["Duration",   contestDuration(contest.startTime, contest.endTime), true],
-                  ["Problems",   String(problems.length),          true],
+                  ["Problems",   String(contest.totalProblems ?? problems.length), true],
                   ["Max size",   contest.maxParticipant ? String(contest.maxParticipant) : "Unlimited", false],
                   ["Visibility", contest.isPublic ? "Public" : "Private", false],
                   ["Rated",      contest.isRated ? "Yes" : "No",  false],

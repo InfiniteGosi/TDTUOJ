@@ -49,6 +49,8 @@ public class ProblemServiceImpl implements ProblemService {
     private final TagRepository tagRepository;
     private final SubmissionRepository submissionRepository;
     private final UserService userService;
+    private final com.oj.TDTUOJ.contest.repository.ContestProblemRepository contestProblemRepository;
+    private final com.oj.TDTUOJ.lab.repository.LabExerciseRepository labExerciseRepository;
 
     @Override
     public Response<Page<ProblemDTO>> getAllProblems(Integer limit, Integer offset, String sortField,
@@ -119,11 +121,41 @@ public class ProblemServiceImpl implements ProblemService {
     public Response<ProblemDTO> getProblemBySlug(String slug) {
         Problem problem = problemRepository.findBySlug(slug)
                 .orElseThrow(() -> new NotFoundException("Problem not found"));
+
+        // Contest-fairness: a private problem's statement is visible only to
+        // its author / staff, once a contest containing it has started
+        // (participants need it mid-contest; it auto-publishes at contest end),
+        // or when it is a lab exercise (org students need it; labs never publish).
+        // 404 (not 403) — don't confirm the problem exists.
+        if (!Boolean.TRUE.equals(problem.getIsPublic())
+                && !contestProblemRepository.existsStartedContestAttachment(
+                        problem.getId(), java.time.LocalDateTime.now())
+                && !labExerciseRepository.existsByProblemId(problem.getId())
+                && !isAuthorOrStaff(problem)) {
+            throw new NotFoundException("Problem not found");
+        }
+
         return Response.<ProblemDTO>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Problem retrieved successfully")
                 .data(mapToResponseDTO(problem))
                 .build();
+    }
+
+    /** Author, ADMIN, or CREATOR may view a private problem. Anonymous → false. */
+    private boolean isAuthorOrStaff(Problem problem) {
+        User viewer;
+        try {
+            viewer = userService.getCurrentLoggedInUser();
+        } catch (Exception e) {
+            return false; // anonymous
+        }
+        if (problem.getAuthor() != null && problem.getAuthor().getId().equals(viewer.getId())) {
+            return true;
+        }
+        return viewer.getRoles().stream()
+                .anyMatch(r -> r.getName().equalsIgnoreCase("ADMIN")
+                            || r.getName().equalsIgnoreCase("CREATOR"));
     }
 
     @Override
@@ -370,6 +402,16 @@ public class ProblemServiceImpl implements ProblemService {
                 problem.setSolutionLanguage(problemDTO.getSolutionLanguage());
             }
             if (problemDTO.getIsPublic() != null) {
+                // Contest-fairness: a problem inside an upcoming/running contest
+                // must stay private — it auto-publishes when the contest ends.
+                if (Boolean.TRUE.equals(problemDTO.getIsPublic())
+                        && !Boolean.TRUE.equals(problem.getIsPublic())
+                        && contestProblemRepository.existsActiveContestAttachment(
+                                problem.getId(), java.time.LocalDateTime.now())) {
+                    throw new BadRequestException(
+                            "This problem is part of an upcoming or running contest and cannot be "
+                            + "published until the contest ends (it will be published automatically).");
+                }
                 problem.setIsPublic(problemDTO.getIsPublic());
             }
 
@@ -476,6 +518,32 @@ public class ProblemServiceImpl implements ProblemService {
         return Response.<Page<ProblemDTO>>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("My problems retrieved successfully")
+                .data(problems.map(p -> {
+                    ProblemDTO dto = mapToResponseDTO(p);
+                    // Usage badges: where is this problem attached?
+                    dto.setUsedInContest(contestProblemRepository.existsByProblemId(p.getId()));
+                    dto.setUsedInLab(labExerciseRepository.existsByProblemId(p.getId()));
+                    return dto;
+                }))
+                .build();
+    }
+
+    @Override
+    public Response<Page<ProblemDTO>> getContestEligibleProblems(int page, int size, String search) {
+        User currentUser = userService.getCurrentLoggedInUser();
+        if (size <= 0) size = 50;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        String term = search != null ? search.trim() : "";
+
+        boolean isAdmin = currentUser.getRoles().stream()
+                .anyMatch(r -> r.getName().equalsIgnoreCase("ADMIN"));
+        Page<Problem> problems = isAdmin
+                ? problemRepository.findContestEligibleAll(term, pageable)
+                : problemRepository.findContestEligibleByAuthor(currentUser.getId(), term, pageable);
+
+        return Response.<Page<ProblemDTO>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Contest-eligible problems retrieved successfully")
                 .data(problems.map(this::mapToResponseDTO))
                 .build();
     }

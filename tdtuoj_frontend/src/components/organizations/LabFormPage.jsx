@@ -4,8 +4,8 @@ import {
   Sparkles, AlertCircle, Minus,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
-import SuggestiveSearch from "../common/SuggestiveSearch";
 import ApiService from "../../services/ApiService";
+import ProblemPickerModal from "../common/ProblemPickerModal";
 import { useToast } from "../common/ToastMessage";
 import DateTimePicker from "../common/DateTimePicker";
 
@@ -157,9 +157,7 @@ const LabFormPage = () => {
   const [loading, setLoading]       = useState(true);
   const [saving, setSaving]         = useState(false);
 
-  const [searchQuery, setSearchQuery]   = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [searching, setSearching]       = useState(false);
+  const [pickerOpen, setPickerOpen]     = useState(false);
 
   const backTo = isEdit
     ? `/organizations/${orgSlug}/labs/${labSlug}`
@@ -199,39 +197,24 @@ const LabFormPage = () => {
     })();
   }, [orgSlug, labSlug]);
 
-  const searchProblems = useCallback(async () => {
-    if (!searchQuery.trim()) { setSearchResults([]); return; }
-    setSearching(true);
-    try {
-      const resp = await ApiService.getMyProblems({ page: 0, size: 20, search: searchQuery.trim() });
-      if (resp.statusCode === 200) {
-        const existing = new Set(exercises.map((e) => e.problemId));
-        setSearchResults((resp.data.content ?? []).filter((p) => !existing.has(p.id)));
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSearching(false);
-    }
-  }, [searchQuery, exercises]);
+  // Lab-fairness: only the creator's PRIVATE problems are eligible
+  const fetchLabEligible = useCallback(async ({ search }) => {
+    const resp = await ApiService.getMyProblems({ page: 0, size: 50, search });
+    if (resp.statusCode !== 200) return [];
+    return (resp.data.content ?? []).filter((p) => p.isPublic === false);
+  }, []);
 
-  useEffect(() => {
-    const t = setTimeout(searchProblems, 300);
-    return () => clearTimeout(t);
-  }, [searchProblems]);
-
-  const addExercise = (problem) => {
+  const addExercises = (problems) => {
     setExercises((prev) => [
       ...prev,
-      {
-        problemId: problem.id,
-        problemTitle: problem.title,
-        problemSlug: problem.slug,
-        problemDifficulty: problem.problemDifficulty,
-        points: problem.point || 100,
-      },
+      ...problems.map((p) => ({
+        problemId: p.id,
+        problemTitle: p.title,
+        problemSlug: p.slug,
+        problemDifficulty: p.problemDifficulty,
+        points: p.point || 100,
+      })),
     ]);
-    setSearchResults((prev) => prev.filter((p) => p.id !== problem.id));
   };
 
   const removeExercise = (idx) => setExercises((prev) => prev.filter((_, i) => i !== idx));
@@ -463,67 +446,37 @@ const LabFormPage = () => {
             {/* Divider */}
             <div style={{ borderTop: "1px solid var(--border-subtle)", marginBottom: 16 }} />
 
-            {/* Search to add */}
+            {/* Add problems (bulk picker) */}
             <div>
               <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 Add Problems
               </label>
-              <SuggestiveSearch
-                value={searchQuery}
-                onChange={(val) => setSearchQuery(val)}
-                suggestions={["Search by title...", "Find problems to add"]}
-                style={{ width: "100%" }}
-              />
-
-              {searching && (
-                <div style={{ padding: "14px 0", textAlign: "center" }}>
-                  <div className="spinner" style={{ width: 18, height: 18, margin: "0 auto" }} />
-                </div>
-              )}
-
-              {!searching && searchResults.length > 0 && (
-                <div style={{
-                  marginTop: 8, maxHeight: 260, overflowY: "auto",
-                  border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)",
-                  background: "var(--bg-raised)",
-                }}>
-                  {searchResults.map((p, i) => (
-                    <div
-                      key={p.id}
-                      onClick={() => addExercise(p)}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 10,
-                        padding: "9px 14px", cursor: "pointer",
-                        borderTop: i > 0 ? "1px solid var(--border-subtle)" : "none",
-                        transition: "background 0.1s",
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-overlay)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}
-                    >
-                      <div style={{
-                        width: 24, height: 24, borderRadius: "var(--radius-sm)", flexShrink: 0,
-                        background: "var(--primary-subtle)", display: "flex", alignItems: "center", justifyContent: "center",
-                      }}>
-                        <Plus size={13} color="var(--primary)" />
-                      </div>
-                      <span style={{ fontSize: "var(--text-sm)", fontWeight: 500, flex: 1, color: "var(--text-primary)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {p.title}
-                      </span>
-                      <DiffBadge diff={p.problemDifficulty} />
-                      <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", flexShrink: 0 }}>{p.point} pts</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {!searching && searchQuery.trim() && searchResults.length === 0 && (
-                <div style={{ marginTop: 8, padding: "12px 14px", borderRadius: "var(--radius-md)", background: "var(--bg-surface)", border: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", gap: 8 }}>
-                  <AlertCircle size={14} color="var(--text-muted)" />
-                  <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>No matching problems found.</span>
-                </div>
-              )}
+              <p style={{ margin: "0 0 8px 0", fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>
+                Only your private problems can be added. Note: once students submit to a lab problem, it becomes ineligible for contests.
+              </p>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setPickerOpen(true)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  border: "1.5px dashed var(--border-default)", borderRadius: "var(--radius-md)",
+                }}
+              >
+                <Plus size={14} /> Add Problems
+              </button>
             </div>
           </div>
+
+          <ProblemPickerModal
+            isOpen={pickerOpen}
+            onClose={() => setPickerOpen(false)}
+            title="Add lab problems"
+            hint="Only your private problems are listed. Once students submit to a lab problem, it becomes ineligible for contests."
+            fetchProblems={fetchLabEligible}
+            excludeIds={exercises.map((e) => e.problemId)}
+            onAdd={addExercises}
+          />
 
           {/* ── Actions ── */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}>

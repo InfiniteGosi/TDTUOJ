@@ -74,16 +74,20 @@ class ContestLeaderboardServiceTest {
 
     @Test
     void getLeaderboard_CacheHit_DeserializesAndReturns() throws Exception {
+        Contest c = new Contest();
+        c.setId(1L);
+        c.setEndTime(java.time.LocalDateTime.now().plusHours(1)); // running, no freeze
+
         String cachedJson = "{\"contestId\":1}";
         LeaderboardDTO cached = LeaderboardDTO.builder().contestId(1L).build();
+        when(contestRepository.findById(1L)).thenReturn(Optional.of(c));
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
         when(valueOps.get("contest:lb:cache:1")).thenReturn(cachedJson);
         when(objectMapper.readValue(cachedJson, LeaderboardDTO.class)).thenReturn(cached);
 
-        LeaderboardDTO result = service.getLeaderboard(1L, 0, 10);
+        LeaderboardDTO result = service.getLeaderboard(1L, 0, 10, false);
 
         assertSame(cached, result);
-        verify(contestRepository, never()).findById(any());
     }
 
     @Test
@@ -103,7 +107,7 @@ class ContestLeaderboardServiceTest {
         when(redisTemplate.opsForHash()).thenReturn(hashOps);
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
-        LeaderboardDTO result = service.getLeaderboard(1L, 0, 10);
+        LeaderboardDTO result = service.getLeaderboard(1L, 0, 10, false);
 
         assertEquals(1L, result.getContestId());
         assertEquals("Round X", result.getContestName());
@@ -114,11 +118,51 @@ class ContestLeaderboardServiceTest {
 
     @Test
     void getLeaderboard_ContestMissing_ThrowsNotFound() {
-        when(redisTemplate.opsForValue()).thenReturn(valueOps);
-        when(valueOps.get("contest:lb:cache:99")).thenReturn(null);
+        // Contest lookup now happens before the cache read
         when(contestRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> service.getLeaderboard(99L, 0, 10));
+        assertThrows(NotFoundException.class, () -> service.getLeaderboard(99L, 0, 10, false));
+    }
+
+    @Test
+    void getLeaderboard_Frozen_PublicViewer_GetsFrozenSnapshot() throws Exception {
+        Contest c = new Contest();
+        c.setId(1L);
+        c.setEndTime(java.time.LocalDateTime.now().plusMinutes(30));
+        c.setFreezeDurationMinutes(60); // freeze window started 30 min ago
+
+        String frozenJson = "{\"contestId\":1}";
+        LeaderboardDTO full = LeaderboardDTO.builder().contestId(1L).build();
+        when(contestRepository.findById(1L)).thenReturn(Optional.of(c));
+        when(redisTemplate.opsForValue()).thenReturn(valueOps);
+        when(valueOps.get("contest:lb:frozen:1")).thenReturn(frozenJson);
+        when(objectMapper.readValue(frozenJson, LeaderboardDTO.class)).thenReturn(full);
+
+        LeaderboardDTO result = service.getLeaderboard(1L, 0, 10, false);
+
+        assertEquals(Boolean.TRUE, result.getFrozen());
+        assertNotNull(result.getFrozenAt());
+        verify(valueOps, never()).get("contest:lb:cache:1"); // live cache untouched
+    }
+
+    @Test
+    void getLeaderboard_Frozen_PrivilegedViewer_GetsLiveBoard() throws Exception {
+        Contest c = new Contest();
+        c.setId(1L);
+        c.setEndTime(java.time.LocalDateTime.now().plusMinutes(30));
+        c.setFreezeDurationMinutes(60);
+
+        String cachedJson = "{\"contestId\":1}";
+        LeaderboardDTO cached = LeaderboardDTO.builder().contestId(1L).build();
+        when(contestRepository.findById(1L)).thenReturn(Optional.of(c));
+        when(redisTemplate.opsForValue()).thenReturn(valueOps);
+        when(valueOps.get("contest:lb:cache:1")).thenReturn(cachedJson);
+        when(objectMapper.readValue(cachedJson, LeaderboardDTO.class)).thenReturn(cached);
+
+        LeaderboardDTO result = service.getLeaderboard(1L, 0, 10, true);
+
+        assertSame(cached, result);
+        assertNotEquals(Boolean.TRUE, result.getFrozen());
     }
 
     @Test

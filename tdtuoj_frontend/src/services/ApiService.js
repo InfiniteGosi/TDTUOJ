@@ -744,6 +744,15 @@ export default class ApiService {
     return resp.data;
   }
 
+  /** Problems usable in a contest: private + never submitted to by others. */
+  static async getContestEligibleProblems({ page = 0, size = 100, search = "" } = {}) {
+    const resp = await axios.get(
+      `${this.BASE_URL}/problems/contest-eligible`,
+      { headers: this.getHeader(), params: { page, size, search } },
+    );
+    return resp.data;
+  }
+
   // ── Favorites ─────────────────────────────────────────────────────────── //
 
   static async getFavoriteProblems() {

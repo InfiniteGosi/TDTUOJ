@@ -32,4 +32,13 @@ public interface ContestRepository extends JpaRepository<Contest, Long> {
            "AND c.endTime < :now " +
            "ORDER BY c.endTime ASC, c.id ASC")
     List<Contest> findUnprocessedRatedContests(@Param("now") LocalDateTime now);
+
+    /**
+     * Ended contests whose problems haven't been auto-published yet.
+     * JPQL (not derived) so NULL rows from before the column existed match too.
+     */
+    @Query("SELECT c FROM Contest c WHERE c.endTime < :now " +
+           "AND (c.problemsPublished IS NULL OR c.problemsPublished = false) " +
+           "ORDER BY c.endTime ASC, c.id ASC")
+    List<Contest> findEndedWithUnpublishedProblems(@Param("now") LocalDateTime now);
 }

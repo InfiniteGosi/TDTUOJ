@@ -110,10 +110,31 @@ public class UserController {
         Long userId = userService.getUserByUsername(username).getData().getId();
         int page = (limit > 0) ? offset / limit : 0;
         Pageable pageable = PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "submissionDate"));
-        Page<SubmissionDTO> result = submissionRepository.findByUserId(userId, pageable)
-                .map(s -> modelMapper.map(s, SubmissionDTO.class));
+        // Contest fairness: locked-contest submissions are excluded from the public
+        // feed — except when the viewer is the profile owner or an ADMIN.
+        Page<com.oj.TDTUOJ.submission.entity.Submission> submissions =
+                canViewAllSubmissions(userId)
+                        ? submissionRepository.findByUserId(userId, pageable)
+                        : submissionRepository.findVisibleByUserId(userId, java.time.LocalDateTime.now(), pageable);
+        Page<SubmissionDTO> result = submissions.map(s -> modelMapper.map(s, SubmissionDTO.class));
         return ResponseEntity.ok(Response.<Page<SubmissionDTO>>builder()
                 .statusCode(200).message("ok").data(result).build());
+    }
+
+    /**
+     * Profile owner and ADMINs see the unfiltered submission feed (including
+     * locked-contest submissions). Everyone else — anonymous included — gets
+     * the visibility-filtered feed.
+     */
+    private boolean canViewAllSubmissions(Long profileUserId) {
+        try {
+            com.oj.TDTUOJ.user.entity.User viewer = userService.getCurrentLoggedInUser();
+            if (viewer.getId().equals(profileUserId)) return true;
+            return viewer.getRoles().stream()
+                    .anyMatch(r -> r.getName().equalsIgnoreCase("ADMIN"));
+        } catch (Exception e) {
+            return false; // anonymous
+        }
     }
 
     @GetMapping("/{username}/organizations")

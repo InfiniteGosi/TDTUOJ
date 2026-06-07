@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Trophy, ArrowLeft, Save, Plus, Trash2, Search, ChevronDown, AlertTriangle, Clock, CalendarClock, User,
@@ -8,69 +8,29 @@ import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
 import DateTimePicker from "../common/DateTimePicker";
 import SuggestiveSearch from "../common/SuggestiveSearch";
-
-// ─── Reusable field ────────────────────────────────────────────────────────────
-
-const Field = ({ label, required, children, hint }) => (
-  <div className="flex flex-col gap-1">
-    <div className="flex items-center gap-1">
-      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{label}</span>
-      {required && <span style={{ fontSize: 13, color: "var(--red-wa)" }}>*</span>}
-    </div>
-    {children}
-    {hint && <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{hint}</span>}
-  </div>
-);
-
-// ─── Section card ──────────────────────────────────────────────────────────────
-
-const SectionCard = ({ number, title, children, delay = 0 }) => (
-  <div style={{
-    background: "var(--bg-base)",
-    border: "1px solid var(--border-default)",
-    borderRadius: 12,
-    padding: "28px 28px 28px",
-    position: "relative",
-    marginTop: 32,
-    animation: `fadeUp 350ms cubic-bezier(0.16,1,0.3,1) ${delay}ms both`,
-    transition: "border-color 200ms ease",
-  }}>
-    <div style={{
-      position: "absolute", top: -14, left: 20,
-      width: 28, height: 28, borderRadius: "50%",
-      background: "var(--primary)", color: "var(--bg-void)",
-      fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 700,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      boxShadow: "0 0 0 3px var(--bg-void), 0 0 16px rgba(245,160,0,0.4)",
-    }}>{number}</div>
-    <div style={{
-      fontSize: 10, fontWeight: 700, color: "var(--primary)",
-      letterSpacing: "0.14em", marginBottom: 20,
-      fontFamily: "var(--font-display)",
-    }}>{title}</div>
-    {children}
-  </div>
-);
+import ProblemPickerModal from "../common/ProblemPickerModal";
+import { FormPageShell, StickyFormBar, SectionCard, Field, ButtonSpinner } from "../common/FormSection";
 
 // ─── Problem picker dropdown ───────────────────────────────────────────────────
 
 const ProblemPicker = ({ selectedProblems, onChange }) => {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [allProblems, setAllProblems] = useState([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
-  useEffect(() => {
-    ApiService.getAllProblems({ limit: 200, offset: 0 })
-      .then((r) => { if (r.statusCode === 200) setAllProblems(r.data.content ?? []); })
-      .catch(console.error);
+  // Contest-fairness: only private, never-submitted problems are eligible
+  const fetchEligible = useCallback(async ({ search }) => {
+    const r = await ApiService.getContestEligibleProblems({ size: 200, search });
+    return r.statusCode === 200 ? r.data.content ?? [] : [];
   }, []);
 
-  const selectedIds = selectedProblems.map((p) => p.problemId);
-  const available = allProblems.filter((p) => !selectedIds.includes(p.id) && p.title.toLowerCase().includes(search.toLowerCase()));
-
-  const add = (problem) => {
-    onChange([...selectedProblems, { problemId: problem.id, problemTitle: problem.title, problemOrder: selectedProblems.length + 1, points: problem.point ?? 100 }]);
-    setSearch(""); setOpen(false);
+  const addMany = (problems) => {
+    let order = selectedProblems.length;
+    onChange([
+      ...selectedProblems,
+      ...problems.map((p) => ({
+        problemId: p.id, problemTitle: p.title,
+        problemOrder: ++order, points: p.point ?? 100,
+      })),
+    ]);
   };
 
   const remove = (problemId) => onChange(selectedProblems.filter((p) => p.problemId !== problemId).map((p, i) => ({ ...p, problemOrder: i + 1 })));
@@ -80,7 +40,7 @@ const ProblemPicker = ({ selectedProblems, onChange }) => {
   return (
     <div className="flex flex-col gap-3">
       {selectedProblems.length === 0 ? (
-        <div style={{ border: "1.5px dashed var(--border-default)", borderRadius: 10, padding: "24px 16px", textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>
+        <div style={{ border: "1.5px dashed var(--border-default)", borderRadius: 10, padding: "24px 16px", textAlign: "center", color: "var(--text-muted)", fontSize: "var(--text-sm)" }}>
           No problems added yet. Use the button below to add problems to this contest.
         </div>
       ) : (
@@ -92,17 +52,17 @@ const ProblemPicker = ({ selectedProblems, onChange }) => {
               style={{ padding: "10px 16px", borderBottom: idx < selectedProblems.length - 1 ? "1px solid var(--border-subtle)" : 0, background: idx % 2 === 0 ? "var(--bg-base)" : "var(--bg-raised)" }}
             >
               <div className="flex items-center gap-3">
-                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--primary)", color: "var(--bg-void)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--primary)", color: "var(--bg-void)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: "var(--text-sm)", fontWeight: 700, flexShrink: 0 }}>
                   {String.fromCharCode(64 + p.problemOrder)}
                 </div>
-                <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{p.problemTitle}</span>
+                <span style={{ fontSize: "var(--text-base)", fontWeight: 600, color: "var(--text-primary)" }}>{p.problemTitle}</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1">
-                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>pts:</span>
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>pts:</span>
                   <input
                     type="number" className="input"
-                    style={{ width: 70, textAlign: "center", padding: "2px 6px", fontSize: 12 }}
+                    style={{ width: 70, textAlign: "center", padding: "2px 6px", fontSize: "var(--text-sm)" }}
                     value={p.points}
                     onChange={(e) => updatePoints(p.problemId, e.target.value)}
                     min={0}
@@ -121,54 +81,39 @@ const ProblemPicker = ({ selectedProblems, onChange }) => {
         </div>
       )}
 
-      <div style={{ position: "relative", display: "inline-block" }}>
+      <div>
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setPickerOpen(true)}
           style={{
             display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 10,
-            border: `1.5px dashed ${open ? "var(--primary)" : "var(--border-default)"}`,
-            background: "var(--bg-base)", color: open ? "var(--primary)" : "var(--text-secondary)", fontSize: 13, fontWeight: 500, cursor: "pointer",
+            border: "1.5px dashed var(--border-default)",
+            background: "var(--bg-base)", color: "var(--text-secondary)", fontSize: "var(--text-sm)", fontWeight: 500, cursor: "pointer",
             transition: "color 150ms ease, border-color 150ms ease",
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "var(--primary)"; e.currentTarget.style.borderColor = "var(--primary)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-secondary)"; e.currentTarget.style.borderColor = "var(--border-default)"; }}
         >
-          <Plus size={14} /> Add Problem
-          <ChevronDown size={14} style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s ease" }} />
+          <Plus size={14} /> Add Problems
         </button>
-
-        {open && (
-          <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 50, background: "var(--bg-base)", border: "1px solid var(--border-default)", borderRadius: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.25)", width: 320, maxHeight: 280, overflowY: "auto" }}>
-            <div style={{ borderBottom: "1px solid var(--border-default)", position: "sticky", top: 0, background: "var(--bg-base)" }}>
-              <SuggestiveSearch
-                value={search}
-                onChange={(val) => setSearch(val)}
-                suggestions={["Search problems...", "Find by title"]}
-                style={{ width: "100%" }}
-              />
-            </div>
-            {available.length === 0 ? (
-              <div style={{ padding: "10px 16px" }}><span style={{ fontSize: 11, color: "var(--text-muted)" }}>No problems available</span></div>
-            ) : (
-              available.slice(0, 30).map((problem) => (
-                <div key={problem.id} style={{ padding: "8px 16px", cursor: "pointer", transition: "background 120ms" }} onClick={() => add(problem)}
-                  onMouseEnter={e => e.currentTarget.style.background = "var(--bg-raised)"}
-                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                >
-                  <p style={{ margin: 0, fontSize: 13, color: "var(--text-primary)", fontWeight: 700 }}>{problem.title}</p>
-                  <p style={{ margin: 0, fontSize: 11, color: "var(--text-muted)" }}>{problem.point ?? 0} pts · {problem.problemDifficulty ?? "—"}</p>
-                </div>
-              ))
-            )}
-          </div>
-        )}
       </div>
+
+      <ProblemPickerModal
+        isOpen={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        title="Add contest problems"
+        hint="Only your private, never-submitted problems are listed. They are published automatically when the contest ends."
+        fetchProblems={fetchEligible}
+        excludeIds={selectedProblems.map((p) => p.problemId)}
+        onAdd={addMany}
+      />
     </div>
   );
 };
 
 // ─── Main form ─────────────────────────────────────────────────────────────────
 
-const EMPTY_FORM = { name: "", description: "", startTime: "", endTime: "", registrationStart: "", maxParticipant: "20", isPublic: true, isRated: true, contestStyle: "ICPC", problems: [] };
+const EMPTY_FORM = { name: "", description: "", startTime: "", endTime: "", registrationStart: "", maxParticipant: "20", isPublic: true, isRated: true, contestStyle: "ICPC", freezeDuration: "", problems: [] };
 
 const toPickerDate = (isoStr) => { if (!isoStr) return ""; const base = isoStr.slice(0, 19); return base.length === 16 ? base + ":00" : base; };
 const toIsoString = (val) => { if (!val) return null; return val.length === 16 ? val + ":00" : val; };
@@ -207,7 +152,7 @@ const ScheduleTimeline = ({ form }) => {
     return (
       <div style={{ background: "var(--bg-raised)", borderRadius: 10, border: "1px dashed var(--border-default)", padding: 16, textAlign: "center" }}>
         <CalendarClock size={24} color="var(--border-default)" style={{ margin: "0 auto 8px" }} />
-        <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>Set times to see the schedule</span>
+        <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", fontWeight: 500 }}>Set times to see the schedule</span>
       </div>
     );
   }
@@ -215,7 +160,7 @@ const ScheduleTimeline = ({ form }) => {
   return (
     <div className="flex flex-col gap-3">
       <div style={{ background: "var(--bg-raised)", borderRadius: 10, padding: 16, border: "1px solid var(--border-subtle)" }}>
-        <p style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.05em", margin: "0 0 12px" }}>SCHEDULE ORDER</p>
+        <p style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.05em", margin: "0 0 12px" }}>SCHEDULE ORDER</p>
         <div className="flex flex-col">
           {events.map((ev, i) => (
             <div key={ev.key} className="flex items-center gap-3" style={{ position: "relative" }}>
@@ -225,8 +170,8 @@ const ScheduleTimeline = ({ form }) => {
                 {i < events.length - 1 && <div style={{ width: 2, flex: 1, minHeight: 8, background: "var(--border-default)" }} />}
               </div>
               <div style={{ flex: 1, background: ev.bg, borderRadius: 6, padding: "6px 12px", marginBottom: 4 }}>
-                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: ev.color }}>{ev.label}</p>
-                <p style={{ margin: 0, fontSize: 10, color: "var(--text-secondary)" }}>{fmtShort(new Date(ev.time).toISOString())}</p>
+                <p style={{ margin: 0, fontSize: "var(--text-xs)", fontWeight: 700, color: ev.color }}>{ev.label}</p>
+                <p style={{ margin: 0, fontSize: "var(--text-xs)", color: "var(--text-secondary)" }}>{fmtShort(new Date(ev.time).toISOString())}</p>
               </div>
             </div>
           ))}
@@ -243,7 +188,7 @@ const ScheduleTimeline = ({ form }) => {
         return (
           <div className="flex items-center justify-center gap-1">
             <Clock size={12} color="var(--text-muted)" />
-            <span style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 600 }}>Duration: {h > 0 ? `${h}h ` : ""}{m}m</span>
+            <span style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)", fontWeight: 600 }}>Duration: {h > 0 ? `${h}h ` : ""}{m}m</span>
           </div>
         );
       })()}
@@ -257,7 +202,7 @@ const ScheduleTimeline = ({ form }) => {
               style={{ padding: "6px 12px", background: w.type === "error" ? "var(--red-subtle)" : "var(--amber-subtle)", borderRadius: 8, border: `1px solid ${w.type === "error" ? "var(--red-subtle)" : "var(--amber-subtle)"}` }}
             >
               <AlertTriangle size={14} color={w.type === "error" ? "var(--red-wa)" : "var(--amber-tle)"} />
-              <span style={{ fontSize: 11, fontWeight: 600, color: w.type === "error" ? "var(--red-wa)" : "var(--amber-tle)" }}>{w.msg}</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: w.type === "error" ? "var(--red-wa)" : "var(--amber-tle)" }}>{w.msg}</span>
             </div>
           ))}
         </div>
@@ -284,7 +229,7 @@ const AdminContestFormPage = () => {
       .then((resp) => {
         if (resp.statusCode === 200) {
           const c = resp.data;
-          setForm({ name: c.name ?? "", description: c.description ?? "", startTime: toPickerDate(c.startTime), endTime: toPickerDate(c.endTime), registrationStart: toPickerDate(c.registrationStart), maxParticipant: c.maxParticipant ?? "", isPublic: c.isPublic ?? true, isRated: c.isRated ?? false, contestStyle: c.contestStyle ?? "ICPC", problems: (c.problems ?? []).map((p) => ({ problemId: p.problemId, problemTitle: p.problemTitle, problemOrder: p.problemOrder, points: p.points ?? 100 })) });
+          setForm({ name: c.name ?? "", description: c.description ?? "", startTime: toPickerDate(c.startTime), endTime: toPickerDate(c.endTime), registrationStart: toPickerDate(c.registrationStart), maxParticipant: c.maxParticipant ?? "", isPublic: c.isPublic ?? true, isRated: c.isRated ?? false, contestStyle: c.contestStyle ?? "ICPC", freezeDuration: c.freezeDurationMinutes ? String(c.freezeDurationMinutes) : "", problems: (c.problems ?? []).map((p) => ({ problemId: p.problemId, problemTitle: p.problemTitle, problemOrder: p.problemOrder, points: p.points ?? 100 })) });
           setCreatorInfo({ id: c.creatorId || null, username: c.creatorUsername || null });
         }
       })
@@ -308,6 +253,7 @@ const AdminContestFormPage = () => {
       registrationStart: toIsoString(form.registrationStart), registrationEnd: toIsoString(form.startTime),
       maxParticipant: form.maxParticipant ? parseInt(form.maxParticipant) : null,
       isPublic: form.isPublic, isRated: form.isRated, contestStyle: "ICPC",
+      freezeDurationMinutes: form.freezeDuration === "" ? 0 : Math.max(0, parseInt(form.freezeDuration, 10) || 0),
       problems: form.problems.map((p) => ({ problemId: p.problemId, problemOrder: p.problemOrder, points: p.points })),
     };
     try {
@@ -333,75 +279,33 @@ const AdminContestFormPage = () => {
 
   return (
     <>
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-
-      <div style={{
-        minHeight: "100vh",
-        background: "var(--bg-void)",
-        backgroundImage: "radial-gradient(circle, rgba(245,160,0,0.04) 1px, transparent 1px)",
-        backgroundSize: "24px 24px",
-      }}>
+      <FormPageShell>
         {/* Sticky top bar */}
-        <div style={{
-          position: "sticky", top: 0, zIndex: 20,
-          height: 56,
-          background: "var(--bg-raised)",
-          borderBottom: "1px solid var(--border-subtle)",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.3)",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "0 24px",
-        }}>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              onClick={() => navigate("/admin/contests")}
-              style={{ padding: "6px 8px" }}
-            >
-              <ArrowLeft size={18} />
-            </button>
-            <Trophy size={20} color="var(--primary)" />
-            <span style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
-              {isEdit ? "Edit Contest" : "Create Contest"}
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span style={{
-              padding: "3px 12px", borderRadius: 9999,
-              background: "var(--primary-subtle)", color: "var(--primary)",
-              fontFamily: "var(--font-display)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em",
-            }}>
-              ICPC STYLE
-            </span>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={saving}
-              onClick={handleSubmit}
-              style={{ display: "flex", alignItems: "center", gap: 6 }}
-            >
-              {saving ? (
-                <>
-                  <div style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTop: "2px solid #fff", animation: "spin 0.8s linear infinite" }} />
-                  Saving...
-                </>
-              ) : (
-                <><Save size={14} /> Save</>
-              )}
-            </button>
-          </div>
-        </div>
+        <StickyFormBar
+          onBack={() => navigate("/admin/contests")}
+          icon={Trophy}
+          title={isEdit ? "Edit Contest" : "Create Contest"}
+        >
+          <span style={{
+            padding: "3px 12px", borderRadius: 9999,
+            background: "var(--primary-subtle)", color: "var(--primary)",
+            fontFamily: "var(--font-display)", fontSize: "var(--text-xs)", fontWeight: 700, letterSpacing: "0.1em",
+          }}>
+            ICPC STYLE
+          </span>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={saving}
+            onClick={handleSubmit}
+            style={{ display: "flex", alignItems: "center", gap: 6 }}
+          >
+            {saving ? <><ButtonSpinner /> Saving...</> : <><Save size={14} /> Save</>}
+          </button>
+        </StickyFormBar>
 
         {/* Content */}
-        <div style={{ maxWidth: 860, margin: "0 auto", padding: "32px 24px 64px" }}>
+        <div style={{ maxWidth: 940, margin: "0 auto", padding: "24px 24px 64px" }}>
 
           {/* Creator info (edit mode) */}
           {isEdit && creatorInfo.id && (
@@ -414,9 +318,9 @@ const AdminContestFormPage = () => {
               marginBottom: 4,
             }}>
               <User size={15} color="var(--primary)" />
-              <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>Creator:</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--primary)" }}>{creatorInfo.username}</span>
-              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>(ID: {creatorInfo.id})</span>
+              <span style={{ fontSize: "var(--text-sm)", color: "var(--text-secondary)" }}>Creator:</span>
+              <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--primary)" }}>{creatorInfo.username}</span>
+              <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>(ID: {creatorInfo.id})</span>
             </div>
           )}
 
@@ -470,6 +374,9 @@ const AdminContestFormPage = () => {
                 <Field label="Max Participants" hint="Leave blank for unlimited">
                   <input type="number" className="input" placeholder="e.g. 500" value={form.maxParticipant} onChange={(e) => set("maxParticipant", e.target.value)} min={1} style={{ width: 200 }} />
                 </Field>
+                <Field label="Scoreboard Freeze (minutes before end)" hint="ICPC style — public standings stop updating for the final N minutes. Admins still see the live board. 0 or blank = no freeze.">
+                  <input type="number" className="input" placeholder="e.g. 60" value={form.freezeDuration} onChange={(e) => set("freezeDuration", e.target.value)} min={0} style={{ width: 200 }} />
+                </Field>
                 <div className="flex gap-6">
                   <Toggle value={form.isPublic} onChange={(v) => set("isPublic", v)} label="Public contest" />
                   <Toggle value={form.isRated} onChange={(v) => set("isRated", v)} label="Rated contest" />
@@ -479,6 +386,9 @@ const AdminContestFormPage = () => {
 
             {/* Card 4 — Problems */}
             <SectionCard number={4} title={`PROBLEMS (${form.problems.length})`} delay={180}>
+              <p style={{ margin: "0 0 12px 0", fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
+                Only your private, never-submitted problems can be added. They are published to the public archive automatically when the contest ends.
+              </p>
               <ProblemPicker selectedProblems={form.problems} onChange={(p) => set("problems", p)} />
             </SectionCard>
 
@@ -487,10 +397,7 @@ const AdminContestFormPage = () => {
               <button type="button" className="btn btn-ghost" onClick={() => navigate("/admin/contests")}>Cancel</button>
               <button type="submit" className="btn btn-primary" disabled={saving} style={{ minWidth: 160, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                 {saving ? (
-                  <>
-                    <div style={{ width: 16, height: 16, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTop: "2px solid #fff", animation: "spin 0.8s linear infinite" }} />
-                    Saving...
-                  </>
+                  <><ButtonSpinner size={16} /> Saving...</>
                 ) : (
                   <><Save size={15} /> {isEdit ? "Save Changes" : "Create Contest"}</>
                 )}
@@ -499,7 +406,7 @@ const AdminContestFormPage = () => {
 
           </form>
         </div>
-      </div>
+      </FormPageShell>
     </>
   );
 };

@@ -8,6 +8,7 @@ import com.oj.TDTUOJ.common.exceptions.BadRequestException;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.common.exceptions.UnauthorizedAccessException;
 import com.oj.TDTUOJ.common.response.Response;
+import com.oj.TDTUOJ.common.utils.ContestLockUtil;
 import com.oj.TDTUOJ.contest.dto.*;
 import com.oj.TDTUOJ.contest.entity.Contest;
 import com.oj.TDTUOJ.contest.entity.ContestParticipation;
@@ -111,6 +112,7 @@ public class ContestServiceImpl implements ContestService {
                 .endTime(dto.getEndTime())
                 .isPublic(dto.getIsPublic() != null ? dto.getIsPublic() : Boolean.TRUE)
                 .isRated(dto.getIsRated()   != null ? dto.getIsRated()  : Boolean.FALSE)
+                .freezeDurationMinutes(dto.getFreezeDurationMinutes())
                 .maxParticipant(dto.getMaxParticipant())
                 .registrationStart(dto.getRegistrationStart())
                 .registrationEnd(dto.getRegistrationEnd())
@@ -125,6 +127,7 @@ public class ContestServiceImpl implements ContestService {
                 Problem problem = problemRepository.findById(cpDTO.getProblemId())
                         .orElseThrow(() -> new NotFoundException(
                                 "Problem not found: " + cpDTO.getProblemId()));
+                validateProblemEligibleForContest(problem, creator);
                 ContestProblem cp = ContestProblem.builder()
                         .contest(contest)
                         .problem(problem)
@@ -168,6 +171,7 @@ public class ContestServiceImpl implements ContestService {
             contest.setIsRated(dto.getIsRated());
             contest.setRatingProcessed(false); // re-trigger rating on rated change
         }
+        if (dto.getFreezeDurationMinutes() != null) contest.setFreezeDurationMinutes(dto.getFreezeDurationMinutes());
         if (dto.getMaxParticipant()    != null) contest.setMaxParticipant(dto.getMaxParticipant());
         if (dto.getRegistrationStart() != null) contest.setRegistrationStart(dto.getRegistrationStart());
         if (dto.getRegistrationEnd()   != null) contest.setRegistrationEnd(dto.getRegistrationEnd());
@@ -178,12 +182,20 @@ public class ContestServiceImpl implements ContestService {
 
         // ── Sync problems if the caller supplied a problems list ──────────── //
         if (dto.getProblems() != null) {
+            // Problems already attached are exempt from eligibility checks —
+            // they legitimately accumulate submissions while the contest runs.
+            Set<Long> alreadyAttached = contest.getContestProblems().stream()
+                    .map(cp -> cp.getProblem().getId())
+                    .collect(Collectors.toSet());
             // orphanRemoval=true will DELETE removed rows automatically
             contest.getContestProblems().clear();
             for (ContestProblemDTO cpDTO : dto.getProblems()) {
                 Problem problem = problemRepository.findById(cpDTO.getProblemId())
                         .orElseThrow(() -> new NotFoundException(
                                 "Problem not found: " + cpDTO.getProblemId()));
+                if (!alreadyAttached.contains(problem.getId())) {
+                    validateProblemEligibleForContest(problem, currentUser);
+                }
                 ContestProblem cp = ContestProblem.builder()
                         .contest(contest)
                         .problem(problem)
@@ -308,23 +320,46 @@ public class ContestServiceImpl implements ContestService {
 
     @Override
     public Response<LeaderboardDTO> getLeaderboard(Long contestId, int page, int size) {
-        // Verify contest exists before delegating
-        if (!contestRepository.existsById(contestId)) {
-            throw new NotFoundException("Contest not found: " + contestId);
-        }
-        LeaderboardDTO leaderboard = leaderboardService.getLeaderboard(contestId, page, size);
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(() -> new NotFoundException("Contest not found: " + contestId));
+        LeaderboardDTO leaderboard = leaderboardService
+                .getLeaderboard(contestId, page, size, isPrivilegedViewer(contest));
         return ok(leaderboard);
     }
 
     @Override
     public Response<List<ScoreboardEntryDTO>> getMyRank(Long contestId, int window) {
-        if (!contestRepository.existsById(contestId)) {
-            throw new NotFoundException("Contest not found: " + contestId);
-        }
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(() -> new NotFoundException("Contest not found: " + contestId));
         User user = userService.getCurrentLoggedInUser();
+
+        // During a scoreboard freeze the neighbours come from the LIVE ZSET —
+        // clamp to the caller's own row so others' frozen-window progress
+        // doesn't leak. Privileged viewers keep the full window.
+        if (ContestLockUtil.isFrozen(contest, LocalDateTime.now())
+                && !isPrivilegedViewer(contest)) {
+            window = 0;
+        }
         List<ScoreboardEntryDTO> neighbours =
                 leaderboardService.getNeighbours(contestId, user.getId(), window);
         return ok(neighbours);
+    }
+
+    /**
+     * ADMIN or contest creator — sees the live board during a scoreboard freeze.
+     * The leaderboard endpoint is public, so anonymous viewers resolve to false.
+     */
+    private boolean isPrivilegedViewer(Contest contest) {
+        try {
+            User viewer = userService.getCurrentLoggedInUser();
+            boolean isAdmin = viewer.getRoles().stream()
+                    .anyMatch(r -> r.getName().equalsIgnoreCase("ADMIN"));
+            boolean isCreator = contest.getCreator() != null
+                    && contest.getCreator().getId().equals(viewer.getId());
+            return isAdmin || isCreator;
+        } catch (Exception e) {
+            return false; // anonymous
+        }
     }
 
     // ── Internal helpers ──────────────────────────────────────────────────── //
@@ -388,6 +423,33 @@ public class ContestServiceImpl implements ContestService {
     private void validateContestStyle(ContestStyle style) {
         if (style != null && style != ContestStyle.ICPC) {
             throw new BadRequestException("Only ICPC style contests are supported");
+        }
+    }
+
+    /**
+     * Contest-fairness gate: a problem may enter a contest only if it is
+     * private, authored by the caller (ADMIN bypasses ownership), and has
+     * never been submitted to by anyone except its author.
+     * Mirrors ProblemRepository.findContestEligible* — keep in sync.
+     */
+    private void validateProblemEligibleForContest(Problem problem, User caller) {
+        boolean isAdmin = hasRole(caller, "ADMIN");
+        Long authorId = problem.getAuthor() != null ? problem.getAuthor().getId() : null;
+
+        if (!isAdmin && (authorId == null || !authorId.equals(caller.getId()))) {
+            throw new BadRequestException(
+                    "You can only add problems you authored: '" + problem.getTitle() + "'");
+        }
+        if (Boolean.TRUE.equals(problem.getIsPublic())) {
+            throw new BadRequestException(
+                    "Contest problems must be private: '" + problem.getTitle()
+                    + "'. Public problems may already have solvers.");
+        }
+        if (submissionRepository.existsByProblemIdAndUserIdNot(
+                problem.getId(), authorId != null ? authorId : -1L)) {
+            throw new BadRequestException(
+                    "Problem '" + problem.getTitle() + "' already has submissions from other users "
+                    + "and cannot be used in a contest.");
         }
     }
 

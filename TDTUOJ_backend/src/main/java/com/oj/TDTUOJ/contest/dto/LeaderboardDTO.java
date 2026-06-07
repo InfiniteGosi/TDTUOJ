@@ -31,4 +31,10 @@ public class LeaderboardDTO {
 
     /** Timestamp of the last score update — used by clients for polling. */
     private LocalDateTime lastUpdated;
+
+    /** True when the viewer is being served the frozen snapshot. */
+    private Boolean frozen;
+
+    /** Moment the freeze window began (endTime - freezeDurationMinutes). */
+    private LocalDateTime frozenAt;
 }

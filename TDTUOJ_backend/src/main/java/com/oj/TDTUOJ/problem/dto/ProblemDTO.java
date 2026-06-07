@@ -47,6 +47,11 @@ public class ProblemDTO {
 
     private Boolean attempted;
 
+    // Usage badges (populated only on the My Problems listing)
+    private Boolean usedInContest;
+
+    private Boolean usedInLab;
+
     private List<TestCaseDTO> testCases;
 
     private Set<TagDTO> tags;

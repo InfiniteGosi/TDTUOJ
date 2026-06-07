@@ -48,6 +48,19 @@ public class Contest {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private Boolean ratingProcessed = false;
 
+    /**
+     * Scoreboard freeze window: public standings stop updating this many
+     * minutes before endTime. Null or 0 = no freeze.
+     */
+    private Integer freezeDurationMinutes;
+
+    /**
+     * Contest-fairness: set true once the post-contest job has flipped all
+     * attached problems to isPublic = true. Null/false = not yet published.
+     */
+    @Builder.Default
+    private Boolean problemsPublished = false;
+
     private Integer maxParticipant;
 
     private LocalDateTime registrationStart;

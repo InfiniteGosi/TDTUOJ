@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Plus, Trash2, Edit, EyeOff, Globe, BookOpen,
+  Plus, Trash2, Edit, EyeOff, Globe, BookOpen, Trophy, FlaskConical,
 } from "lucide-react";
 import SuggestiveSearch from "../common/SuggestiveSearch";
 import Pagination from "../common/Pagination";
@@ -83,7 +83,7 @@ const MyProblemsPage = () => {
               {totalElements > 0 && (
                 <span style={{
                   display: "inline-block", padding: "3px 12px", borderRadius: 9999,
-                  fontSize: 13, fontWeight: 600,
+                  fontSize: "var(--text-sm)", fontWeight: 600,
                   background: "var(--primary-subtle)", color: "var(--primary)",
                 }}>
                   {totalElements} {totalElements === 1 ? "problem" : "problems"}
@@ -135,15 +135,15 @@ const MyProblemsPage = () => {
                     return (
                       <tr key={p.id} style={{ background: idx % 2 === 0 ? "var(--bg-base)" : "var(--bg-raised)" }}>
                         <td style={{ textAlign: "center" }}>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{p.id}</span>
+                          <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-muted)" }}>{p.id}</span>
                         </td>
                         <td>
                           <div>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{p.title}</span>
+                            <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-primary)" }}>{p.title}</span>
                             {p.solutionCode && (
                               <span style={{
                                 display: "inline-block", marginLeft: 6,
-                                padding: "1px 7px", borderRadius: 6, fontSize: 10, fontWeight: 600,
+                                padding: "1px 7px", borderRadius: 6, fontSize: "var(--text-xs)", fontWeight: 600,
                                 background: "var(--blue-subtle)", color: "var(--blue-ce)",
                               }}>
                                 Solution
@@ -155,30 +155,50 @@ const MyProblemsPage = () => {
                           {dc ? (
                             <span style={{
                               display: "inline-block", padding: "2px 8px", borderRadius: 9999,
-                              fontSize: 11, fontWeight: 600, background: dc.bg, color: dc.hex,
+                              fontSize: "var(--text-xs)", fontWeight: 600, background: dc.bg, color: dc.hex,
                             }}>
                               {dc.label}
                             </span>
                           ) : (
-                            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>—</span>
+                            <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>—</span>
                           )}
                         </td>
                         <td style={{ textAlign: "center" }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)" }}>{p.point}</span>
+                          <span style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--primary)" }}>{p.point}</span>
                         </td>
                         <td style={{ textAlign: "center" }}>
-                          <span style={{
-                            display: "inline-flex", alignItems: "center", gap: 4,
-                            padding: "2px 8px", borderRadius: 9999, fontSize: 11, fontWeight: 600,
-                            background: p.isPublic ? "var(--green-subtle)" : "var(--amber-subtle)",
-                            color: p.isPublic ? "var(--green-ac)" : "var(--amber-tle)",
-                          }}>
-                            {p.isPublic ? <Globe size={10} /> : <EyeOff size={10} />}
-                            {p.isPublic ? "Public" : "Private"}
-                          </span>
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
+                            <span style={{
+                              display: "inline-flex", alignItems: "center", gap: 4,
+                              padding: "2px 8px", borderRadius: 9999, fontSize: "var(--text-xs)", fontWeight: 600,
+                              background: p.isPublic ? "var(--green-subtle)" : "var(--amber-subtle)",
+                              color: p.isPublic ? "var(--green-ac)" : "var(--amber-tle)",
+                            }}>
+                              {p.isPublic ? <Globe size={10} /> : <EyeOff size={10} />}
+                              {p.isPublic ? "Public" : "Private"}
+                            </span>
+                            {p.usedInContest && (
+                              <span title="Attached to a contest — publishes automatically when it ends" style={{
+                                display: "inline-flex", alignItems: "center", gap: 3,
+                                padding: "2px 8px", borderRadius: 9999, fontSize: "var(--text-xs)", fontWeight: 700,
+                                background: "var(--cyan-subtle)", color: "var(--cyan)",
+                              }}>
+                                <Trophy size={9} /> CONTEST
+                              </span>
+                            )}
+                            {p.usedInLab && (
+                              <span title="Used as a lab exercise — stays private, not eligible for contests" style={{
+                                display: "inline-flex", alignItems: "center", gap: 3,
+                                padding: "2px 8px", borderRadius: 9999, fontSize: "var(--text-xs)", fontWeight: 700,
+                                background: "var(--blue-subtle)", color: "var(--blue-ce)",
+                              }}>
+                                <FlaskConical size={9} /> LAB
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td>
-                          <span style={{ fontSize: 13, color: "var(--text-muted)" }}>{p.timeLimit}ms</span>
+                          <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>{p.timeLimit}ms</span>
                         </td>
                         <td style={{ textAlign: "center" }}>
                           <div className="flex items-center justify-center gap-1">
@@ -215,10 +235,10 @@ const MyProblemsPage = () => {
                     <td colSpan={7} style={{ textAlign: "center", padding: "48px 0" }}>
                       <div className="flex flex-col items-center gap-3">
                         <BookOpen size={44} color="var(--text-muted)" />
-                        <p style={{ fontSize: 16, color: "var(--text-muted)", margin: 0, fontWeight: 500 }}>
+                        <p style={{ fontSize: "var(--text-base)", color: "var(--text-muted)", margin: 0, fontWeight: 500 }}>
                           {search ? "No problems match your search" : "No problems yet"}
                         </p>
-                        <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
+                        <p style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)", margin: 0 }}>
                           {search ? "Try adjusting your search" : "Click 'New Problem' to create your first one"}
                         </p>
                       </div>

@@ -91,7 +91,7 @@ const AdminProblemTagPage = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Manage Tags</h2>
-              <span style={{ display: "inline-block", padding: "3px 12px", borderRadius: 9999, fontSize: 13, fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
+              <span style={{ display: "inline-block", padding: "3px 12px", borderRadius: 9999, fontSize: "var(--text-sm)", fontWeight: 600, background: "var(--primary-subtle)", color: "var(--primary)" }}>
                 {pagination.totalElements} {pagination.totalElements === 1 ? "tag" : "tags"}
               </span>
             </div>
@@ -138,13 +138,13 @@ const AdminProblemTagPage = () => {
               </div>
             )}
 
-            <table className="table">
+            <table className="table admin-table">
               <thead>
-                <tr style={{ background: "var(--primary-subtle)" }}>
-                  <th style={{ textAlign: "center", width: "10%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>#</th>
-                  <th style={{ width: "50%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Tag Name</th>
-                  <th style={{ textAlign: "center", width: "20%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</th>
-                  <th style={{ textAlign: "center", width: "20%", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Actions</th>
+                <tr>
+                  <th style={{ textAlign: "center", width: "10%" }}>#</th>
+                  <th style={{ width: "50%" }}>Tag Name</th>
+                  <th style={{ textAlign: "center", width: "20%" }}>Status</th>
+                  <th style={{ textAlign: "center", width: "20%" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -152,7 +152,7 @@ const AdminProblemTagPage = () => {
                   tags.map((tag) => (
                     <tr key={tag.id}>
                       <td style={{ textAlign: "center" }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)" }}>{tag.id}</span>
+                        <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-muted)" }}>{tag.id}</span>
                       </td>
                       <td>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -171,7 +171,7 @@ const AdminProblemTagPage = () => {
                             disabled={togglingIds.has(tag.id)}
                             color="var(--green-ac)"
                           />
-                          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: tag.isActive ? "var(--green-ac)" : "var(--text-muted)", transition: "color var(--transition-base)" }}>
+                          <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: tag.isActive ? "var(--green-ac)" : "var(--text-muted)", transition: "color var(--transition-base)" }}>
                             {tag.isActive ? "ON" : "OFF"}
                           </span>
                         </div>

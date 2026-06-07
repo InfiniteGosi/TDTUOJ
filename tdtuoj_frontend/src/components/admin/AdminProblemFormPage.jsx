@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Plus, Trash2, FileText, Save,
-  ArrowLeft, User, Tag as TagIcon, X, AlertTriangle, Sparkles,
+  User, Tag as TagIcon, X, AlertTriangle, Sparkles,
   Terminal, CheckSquare,
 } from "lucide-react";
 import MDEditor from "@uiw/react-md-editor";
@@ -12,6 +12,7 @@ import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
 import SuggestiveSearch from "../common/SuggestiveSearch";
 import Editor from "@monaco-editor/react";
+import { FormPageShell, StickyFormBar, SectionCard, ButtonSpinner } from "../common/FormSection";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -34,7 +35,6 @@ const getPointRange = (d) => POINT_RANGES[d] || { min: 1, max: 300 };
 // ─── Shared label style ───────────────────────────────────────────────────────
 
 const LBL = { display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" };
-const SEC = { fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 18 };
 
 // ─── DifficultyPicker ─────────────────────────────────────────────────────────
 
@@ -136,7 +136,7 @@ const NumericStepper = ({ value, onChange, min = 0, max = Infinity, step = 1, pr
                 border: `1px solid ${Number(value) === p ? "var(--primary)" : "var(--border-subtle)"}`,
                 background: Number(value) === p ? "var(--primary-subtle)" : "none",
                 color: Number(value) === p ? "var(--primary)" : "var(--text-muted)",
-                fontSize: 10, fontWeight: 700, cursor: "pointer", transition: "all 0.1s",
+                fontSize: "var(--text-xs)", fontWeight: 700, cursor: "pointer", transition: "all 0.1s",
               }}>
               {p}{unit}
             </button>
@@ -401,70 +401,63 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
 
   if (loadingData) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ minHeight: "100vh", background: "var(--bg-void)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div className="spinner" />
       </div>
     );
   }
 
   return (
-    <div
-      style={{ minHeight: "100vh", background: "var(--bg-base)", padding: "32px 0 64px" }}
-      onClick={() => showTagDropdown && setShowTagDropdown(false)}
-    >
+    <FormPageShell>
       {(aiExtracting || aiGenerating) && <AILoadingOverlay mode={aiExtracting ? "pdf" : "gen"} />}
 
-      <div className="page-container" style={{ maxWidth: 1100 }}>
-        <div className="flex flex-col gap-6">
+      {/* Sticky top bar */}
+      <StickyFormBar
+        onBack={() => navigate(destPath)}
+        icon={FileText}
+        title={id ? "Edit Problem" : "Create Problem"}
+      >
+        <input type="file" accept=".pdf" ref={pdfInputRef} style={{ display: "none" }} onChange={handlePdfImport} />
+        <button
+          className="btn btn-ghost btn-sm"
+          style={{ border: "1px solid var(--border-accent)", color: "var(--primary)", gap: 6 }}
+          onClick={() => pdfInputRef.current?.click()}
+          disabled={aiExtracting}
+        >
+          <Sparkles size={14} /> Import from PDF
+        </button>
+        <button
+          className="btn btn-primary"
+          onClick={handleSubmit}
+          disabled={loading || hasInactiveTags}
+          style={{ display: "flex", alignItems: "center", gap: 6 }}
+        >
+          {loading ? <><ButtonSpinner /> Saving...</> : <><Save size={14} /> Save</>}
+        </button>
+      </StickyFormBar>
 
-          {/* ── Back ── */}
-          <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start", gap: 6 }} onClick={() => navigate(destPath)}>
-            <ArrowLeft size={16} /> Back to Problems
-          </button>
-
-          {/* ── Page header ── */}
-          <div style={{ borderLeft: "4px solid var(--primary)", paddingLeft: 16, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: "var(--text-muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                Admin / Problems
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <FileText size={20} color="var(--primary)" />
-                <h2 style={{ margin: 0, fontSize: "var(--text-lg)", fontWeight: 800, color: "var(--text-primary)" }}>
-                  {id ? "Edit Problem" : "Create Problem"}
-                </h2>
-              </div>
-            </div>
-
-            {/* PDF import */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              <input type="file" accept=".pdf" ref={pdfInputRef} style={{ display: "none" }} onChange={handlePdfImport} />
-              <button
-                className="btn btn-ghost btn-sm"
-                style={{ border: "1px solid var(--border-accent)", color: "var(--primary)", gap: 6 }}
-                onClick={() => pdfInputRef.current?.click()}
-                disabled={aiExtracting}
-              >
-                <Sparkles size={14} /> Import from PDF
-              </button>
-            </div>
-          </div>
+      {/* Content */}
+      <div
+        style={{ maxWidth: 940, margin: "0 auto", padding: "24px 24px 64px" }}
+        onClick={() => showTagDropdown && setShowTagDropdown(false)}
+      >
 
           {/* ── Problem details card ── */}
-          <div className="card" style={{ padding: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-              <div style={SEC}>Problem Details</div>
-              {id && authorInfo.id && (
-                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "var(--bg-overlay)", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)" }}>
-                  <User size={13} color="var(--primary)" />
-                  <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>Author</span>
-                  <span style={{ display: "inline-flex", padding: "1px 8px", borderRadius: "var(--radius-pill)", fontSize: "var(--text-xs)", fontWeight: 700, background: "var(--primary-subtle)", color: "var(--primary)" }}>
-                    {authorInfo.username}
-                  </span>
-                  <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>#{authorInfo.id}</span>
-                </div>
-              )}
-            </div>
+          <SectionCard
+            number={1}
+            title="PROBLEM DETAILS"
+            delay={0}
+            right={id && authorInfo.id ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 12px", background: "var(--bg-overlay)", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)" }}>
+                <User size={13} color="var(--primary)" />
+                <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>Author</span>
+                <span style={{ display: "inline-flex", padding: "1px 8px", borderRadius: "var(--radius-pill)", fontSize: "var(--text-xs)", fontWeight: 700, background: "var(--primary-subtle)", color: "var(--primary)" }}>
+                  {authorInfo.username}
+                </span>
+                <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>#{authorInfo.id}</span>
+              </div>
+            ) : null}
+          >
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {/* Title */}
@@ -481,7 +474,7 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
                   <label style={LBL}>Difficulty <span style={{ color: "var(--red-wa)" }}>*</span></label>
                   <DifficultyPicker value={problemData.problemDifficulty} onChange={(v) => handleProblemChange("problemDifficulty", v)} />
                   {!problemData.problemDifficulty && (
-                    <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 4 }}>Select difficulty to unlock points range.</div>
+                    <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: 4 }}>Select difficulty to unlock points range.</div>
                   )}
                 </div>
 
@@ -642,12 +635,11 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
                 </div>
               </div>
             </div>
-          </div>
+          </SectionCard>
 
           {/* ── Solution code card (my-problems mode) ── */}
           {mode === "my" && (
-            <div className="card" style={{ padding: 24 }}>
-              <div style={{ ...SEC, marginBottom: 4 }}>Solution Code (C++)</div>
+            <SectionCard number={2} title="SOLUTION CODE (C++)" delay={60}>
               <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginBottom: 14 }}>Optional — shown to students when you publish solutions in a lab.</div>
               <div style={{ border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", overflow: "hidden", height: 350 }}>
                 <Editor
@@ -657,19 +649,15 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
                   options={{ minimap: { enabled: false }, fontSize: 14, lineNumbers: "on", scrollBeyondLastLine: false, automaticLayout: true }}
                 />
               </div>
-            </div>
+            </SectionCard>
           )}
 
           {/* ── Test cases card ── */}
-          <div className="card" style={{ padding: 24 }}>
-
-            {/* Section header */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <div style={{ ...SEC, marginBottom: 0 }}>Test Cases</div>
-              <span style={{ display: "inline-flex", padding: "2px 9px", borderRadius: "var(--radius-pill)", fontSize: "var(--text-xs)", fontWeight: 700, background: "var(--primary-subtle)", color: "var(--primary)" }}>
-                {testCases.length}
-              </span>
-            </div>
+          <SectionCard
+            number={mode === "my" ? 3 : 2}
+            title={`TEST CASES (${testCases.length})`}
+            delay={mode === "my" ? 120 : 60}
+          >
 
             {/* AI generate toolbar */}
             <div style={{
@@ -684,7 +672,7 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
               </span>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                 <div>
-                  <div style={{ fontSize: 10, color: "var(--text-muted)", marginBottom: 4, textAlign: "center" }}>Count</div>
+                  <div style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginBottom: 4, textAlign: "center" }}>Count</div>
                   <NumericStepper
                     value={generateCount}
                     onChange={(n) => setGenerateCount(n)}
@@ -729,7 +717,7 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
                       width: 24, height: 24, borderRadius: 6,
                       background: "var(--primary)", color: "var(--bg-void)",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 11, fontWeight: 800,
+                      fontSize: "var(--text-xs)", fontWeight: 800,
                       fontFamily: "var(--font-display)", flexShrink: 0,
                     }}>
                       {i + 1}
@@ -748,7 +736,7 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
                       }}
                     >
                       <span style={{ width: 6, height: 6, borderRadius: "50%", background: tc.isSample ? "var(--green-ac)" : "var(--text-muted)", flexShrink: 0 }} />
-                      <span style={{ fontSize: 10, fontWeight: 700, color: tc.isSample ? "var(--green-ac)" : "var(--text-muted)", letterSpacing: "0.06em" }}>
+                      <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: tc.isSample ? "var(--green-ac)" : "var(--text-muted)", letterSpacing: "0.06em" }}>
                         {tc.isSample ? "SAMPLE" : "HIDDEN"}
                       </span>
                     </button>
@@ -780,10 +768,10 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
                         display: "flex", alignItems: "center", gap: 6,
                       }}>
                         <Terminal size={11} color="var(--blue-ce)" />
-                        <span style={{ fontSize: 10, fontWeight: 700, color: "var(--blue-ce)", letterSpacing: "0.08em" }}>INPUT</span>
-                        <span style={{ color: "var(--red-wa)", fontSize: 10 }}>*</span>
+                        <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--blue-ce)", letterSpacing: "0.08em" }}>INPUT</span>
+                        <span style={{ color: "var(--red-wa)", fontSize: "var(--text-xs)" }}>*</span>
                         {tc.input && (
-                          <span style={{ marginLeft: "auto", fontSize: 9, color: "var(--text-muted)" }}>
+                          <span style={{ marginLeft: "auto", fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>
                             {tc.input.split("\n").length} lines
                           </span>
                         )}
@@ -796,7 +784,7 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
                           display: "block", width: "100%", minHeight: 120,
                           padding: "12px 14px", boxSizing: "border-box",
                           background: "transparent", border: "none", outline: "none",
-                          fontFamily: "var(--font-code)", fontSize: 13,
+                          fontFamily: "var(--font-code)", fontSize: "var(--text-sm)",
                           color: "var(--text-primary)", resize: "vertical",
                           lineHeight: 1.65,
                         }}
@@ -812,10 +800,10 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
                         display: "flex", alignItems: "center", gap: 6,
                       }}>
                         <CheckSquare size={11} color="var(--green-ac)" />
-                        <span style={{ fontSize: 10, fontWeight: 700, color: "var(--green-ac)", letterSpacing: "0.08em" }}>EXPECTED OUTPUT</span>
-                        <span style={{ color: "var(--red-wa)", fontSize: 10 }}>*</span>
+                        <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--green-ac)", letterSpacing: "0.08em" }}>EXPECTED OUTPUT</span>
+                        <span style={{ color: "var(--red-wa)", fontSize: "var(--text-xs)" }}>*</span>
                         {tc.expectedOutput && (
-                          <span style={{ marginLeft: "auto", fontSize: 9, color: "var(--text-muted)" }}>
+                          <span style={{ marginLeft: "auto", fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>
                             {tc.expectedOutput.split("\n").length} lines
                           </span>
                         )}
@@ -828,7 +816,7 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
                           display: "block", width: "100%", minHeight: 120,
                           padding: "12px 14px", boxSizing: "border-box",
                           background: "transparent", border: "none", outline: "none",
-                          fontFamily: "var(--font-code)", fontSize: 13,
+                          fontFamily: "var(--font-code)", fontSize: "var(--text-sm)",
                           color: "var(--text-primary)", resize: "vertical",
                           lineHeight: 1.65,
                         }}
@@ -846,10 +834,10 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
                 <Plus size={14} /> Add Test Case
               </button>
             </div>
-          </div>
+          </SectionCard>
 
-          {/* ── Submit ── */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10, paddingTop: 8 }}>
+          {/* ── Bottom actions ── */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12, marginTop: 32, paddingBottom: 16 }}>
             {hasInactiveTags && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "var(--text-xs)", fontWeight: 600, color: "var(--amber-tle)" }}>
                 <AlertTriangle size={13} /> Remove disabled tags before saving
@@ -860,18 +848,17 @@ const AdminProblemFormPage = ({ mode = "admin", backPath }) => {
               className="btn btn-primary"
               onClick={handleSubmit}
               disabled={loading || hasInactiveTags}
-              style={{ gap: 8, minWidth: 150 }}
+              style={{ gap: 8, minWidth: 160, display: "flex", alignItems: "center", justifyContent: "center" }}
             >
               {loading
-                ? <><div className="spinner" style={{ width: 14, height: 14 }} /> {id ? "Updating…" : "Creating…"}</>
-                : <><Save size={14} /> {id ? "Update Problem" : "Create Problem"}</>
+                ? <><ButtonSpinner size={16} /> {id ? "Updating…" : "Creating…"}</>
+                : <><Save size={15} /> {id ? "Update Problem" : "Create Problem"}</>
               }
             </button>
           </div>
 
-        </div>
       </div>
-    </div>
+    </FormPageShell>
   );
 };
 

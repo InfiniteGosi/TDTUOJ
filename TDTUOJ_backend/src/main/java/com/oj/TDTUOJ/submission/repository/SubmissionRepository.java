@@ -18,6 +18,24 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     boolean existsByContestIdAndSubmissionStatusIn(Long contestId, Collection<SubmissionStatus> statuses);
     Page<Submission> findByUserId(Long userId, Pageable pageable);
 
+    /**
+     * Public-profile feed: a user's submissions EXCLUDING those that belong to
+     * a locked contest (running/upcoming, or ended-rated with rating not yet
+     * processed). Mirrors ContestLockUtil.isLocked — keep in sync.
+     * NOT EXISTS (rather than IN) so submissions whose contest was deleted
+     * stay visible.
+     */
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT s FROM Submission s WHERE s.userId = :userId " +
+        "AND (s.contestId IS NULL OR NOT EXISTS (" +
+        "  SELECT c FROM com.oj.TDTUOJ.contest.entity.Contest c WHERE c.id = s.contestId " +
+        "  AND (c.endTime >= :now OR (c.isRated = true AND c.ratingProcessed = false))))"
+    )
+    Page<Submission> findVisibleByUserId(
+        @org.springframework.data.repository.query.Param("userId") Long userId,
+        @org.springframework.data.repository.query.Param("now") java.time.LocalDateTime now,
+        Pageable pageable);
+
     Page<Submission> findByUserIdAndProblemId(Long userId, Long problemId, Pageable pageable);
 
     boolean existsByUserIdAndProblemIdAndSubmissionVerdict(
@@ -25,6 +43,12 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     );
 
     boolean existsByUserIdAndProblemId(Long userId, Long problemId);
+
+    /**
+     * True if anyone OTHER than the given user has submitted to this problem.
+     * Contest-fairness: a problem with foreign submissions is not contest-eligible.
+     */
+    boolean existsByProblemIdAndUserIdNot(Long problemId, Long userId);
 
     // Global count (used by practice / statistics paths — no contest filter)
     long countByUserIdAndProblemIdAndSubmissionVerdictAndIdNot(
