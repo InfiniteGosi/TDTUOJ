@@ -1,8 +1,10 @@
 # TDTUOJ — Deployment Strategy (for thesis defense)
 
 > Goal: deploy live system + write a "Triển khai" section in thesis. Defense in ~2 months
-> (from 2026-06-02, so target ~early Aug 2026). Status: **deploy artifacts written + backend
-> compiles; VM account not signed up yet, nothing deployed.**
+> (from 2026-06-02, so target ~early Aug 2026). Status (2026-06-16): **LIVE.** Backend stack
+> running on Azure VM behind HTTPS (`https://api.tdtuoj.me`), Judge0 judging works, frontend
+> on Vercel (`https://tdtuoj.vercel.app`). Remaining: seed content, CI secrets, custom apex
+> domain, thesis "Triển khai" section.
 
 ## TL;DR decision
 - **Deploy: YES.** Live demo strengthens thesis; adds Deployment section + screenshots.
@@ -91,15 +93,40 @@
   Azure VM public IP, Caddy issues HTTPS. (Reserve a static public IP on the VM so the A record
   survives a stop/deallocate.)
 
-## NOT done yet (on user — provisioning)
-- Azure for Students signed up; VM config CHOSEN in create-wizard (`B2as_v2`, Malaysia West,
-  ~$62.42/mo if 24/7) but **not yet created** — user paused mid-wizard, resuming later. Nothing deployed.
-- When resuming wizard: SSH-key auth (save key), static public IP, Standard SSD, NSG 22/80/443.
-- Free `.me` domain not claimed/pointed yet.
-- GitHub repo secrets (`VM_HOST`, `VM_USER`, `VM_SSH_KEY`) not set → CI deploy job no-ops/fails.
-- On VM (later): `cp .env.example .env` + `cp judge0.conf.example judge0.conf`, fill secrets.
-- Vercel project: import repo (root `tdtuoj_frontend/`), set the two `VITE_` env vars.
-- Rotate the AWS/LLM keys currently in `TDTUOJ_backend/.env` before going public.
+## DONE (provisioned + deployed, 2026-06-16)
+- **Azure VM created:** `vm-tdtuoj`, `Standard_B2as_v2` (2 vCPU/8 GiB, x64), Malaysia West,
+  Ubuntu 24.04, resource group `tdtuoj`. User `gosi`. SSH key at `D:\VM-keys\vm-tdtuoj_key.pem`.
+  **Static public IP `172.197.160.31`.** NSG 22/80/443 open.
+- **Docker stack up:** all 8 containers via `docker compose` (backend, app-db, app-redis,
+  caddy, judge0-server/workers/db/redis). HTTPS issued by Caddy (Let's Encrypt) for `api.tdtuoj.me`.
+- **Domain:** `tdtuoj.me` on **Namecheap** (BasicDNS). A record `api` → `172.197.160.31`.
+  Apex `tdtuoj.me` still pointed at GitHub Pages (not yet moved to Vercel).
+- **Judge0 cgroup/kernel fix (the hard part):** isolate 1.8.1 needs cgroup v1 `memory` controller.
+  24.04's `linux-azure` 6.17 ships `CONFIG_MEMCG_V1=n` → had to install + GRUB-pin GA kernel
+  `linux-image-6.8.0-1059-azure` (+ `systemd.unified_cgroup_hierarchy=0 cgroup_enable=memory`,
+  + `GRUB_FORCE_PARTUUID=` to defeat Azure's initrdless boot). Judging now returns Accepted.
+  Full runbook in `deploy/README.md` "Judge0 gotchas". **Do not `apt autoremove` the 6.8 kernel.**
+- **Secrets filled** on VM in `deploy/.env` + `deploy/judge0.conf` (gitignored). **Keys NOT rotated**
+  — reused the existing AWS/LLM keys from `TDTUOJ_backend/.env` (`.env` was never committed, so
+  no git exposure; rotation still good hygiene, deferred).
+- **Frontend on Vercel:** `https://tdtuoj.vercel.app`, root `tdtuoj_frontend/`, env vars
+  `VITE_API_BASE_URL=https://api.tdtuoj.me/api` + `VITE_GOOGLE_CLIENT_ID` set. Auto-deploys on push.
+- **Google OAuth:** added `https://tdtuoj.vercel.app` to Authorized JavaScript origins.
+- **Frontend fix:** `LanguageSelector` no longer calls Judge0 at `localhost:2358` from the browser
+  (CORS-failed + hung dropdown on the live site) — now uses a static `LANGUAGE_NAMES` map
+  (`constants.js`). Committed + pushed.
+- **Admin seeded:** fresh DB chosen (start-from-empty). User `KhangHo` registered, promoted to
+  ADMIN via `INSERT INTO users_roles` (role names: ADMIN/CREATOR/PARTICIPANT, no prefix;
+  join table `users_roles(user_id, role_id)`, DB `tdtuoj`, db-user `admin`).
+
+## NOT done yet
+- **Content:** DB is empty (fresh start) — problems/contests to be created via the admin UI.
+- **GitHub repo secrets** (`VM_HOST=172.197.160.31`, `VM_USER=gosi`, `VM_SSH_KEY`) not set →
+  CI auto-deploy (`.github/workflows/deploy.yml`) won't run until added. (VM must be running for CI.)
+- **Custom apex domain:** `tdtuoj.me` / `www` not yet pointed at Vercel (still GitHub Pages records).
+  When moved, also add `https://tdtuoj.me` to Google OAuth origins.
+- **Key rotation** (optional) — reused existing keys; rotate AWS/LLM before any wider exposure.
+- **Thesis "Triển khai" section** — not written yet.
 
 ## Feasibility (2 months)
 - Actual deploy work ≈ 1–3 days, not weeks:
@@ -135,19 +162,22 @@ Push to `main` → both tiers update automatically. No manual SSH.
 - Whole thing is `docker compose` → if it dies morning of defense, respin on any VM in ~15 min.
 - **Local laptop fallback:** `docker compose up` on laptop = plan B, no network dependency.
 
-## Next steps (when resuming)
-1. Sign up Azure for Students (.edu email) → create `Standard_B2as_v2` VM (2 vCPU / 8 GiB, AMD x86,
-   Ubuntu 22.04+) in **Malaysia West**. **Not** an ARM `Bpsv2` size. SSH-key auth (save private key
-   — CI needs it). Assign a **static public IP**. Standard SSD disk. Open ports 22/80/443 in the NSG.
-   **Deallocate (Portal Stop / `az vm deallocate`) when not demoing** to stop compute billing.
-2. Follow `deploy/README.md`: install Docker, (optional 2–4 GB swap), clone repo, fill `deploy/.env` +
-   `deploy/judge0.conf`, `docker compose up -d --build`.
-3. Wire domain DNS A record → static IP + let Caddy issue HTTPS. Verify Judge0 (`/about`) + cgroup-v2 gotcha.
-4. Deploy frontend on Vercel pointing at backend; add Vercel origin to backend CORS.
-5. Set GitHub repo secrets (`VM_HOST`, `VM_USER`, `VM_SSH_KEY`) → CI auto-deploy live.
-6. (Optional) Move file storage to R2/S3; rotate exposed keys.
-7. Write thesis "Triển khai hệ thống" section: deployment diagram (extend architecture.png
-   with actual hosts), Docker Compose topology, CI/CD pipeline, HTTPS/domain, free-tier limitations.
+## Next steps (remaining)
+1. **Seed content** — log in as `KhangHo` (ADMIN) on the live site, create problems/contests
+   via the admin UI (or migrate from local DB later if a fuller catalog is wanted).
+2. **CI auto-deploy** — add GitHub repo secrets `VM_HOST=172.197.160.31`, `VM_USER=gosi`,
+   `VM_SSH_KEY` (contents of `vm-tdtuoj_key.pem`). Then push to `main` auto-redeploys (VM must be up).
+3. **(Optional) Custom apex domain** — point `tdtuoj.me`/`www` at Vercel (replace GitHub Pages
+   records on Namecheap), add `https://tdtuoj.me` to Google OAuth origins.
+4. **(Optional)** rotate AWS/LLM keys; move file storage to R2/S3.
+5. **Thesis "Triển khai hệ thống" section** — deployment diagram (extend architecture.png with
+   actual hosts: Vercel ↔ Azure VM ↔ containers), Docker Compose topology, CI/CD pipeline,
+   HTTPS/domain, the cgroup/kernel gotcha, free-tier limitations.
 
-> Deploy artifacts written (Dockerfile, deploy/*, workflow) + backend compiles. Still offered:
-> draft thesis "Triển khai" section. Pending user go-ahead.
+## VM lifecycle (cost control)
+- **Stop:** Portal → `vm-tdtuoj` → Stop → must reach **"Stopped (deallocated)"** (compute $0).
+  NOT `sudo shutdown` (stays allocated, still billed). Idle cost ~$5–9/mo (disk + static IP).
+- **Start:** Portal → Start → SSH `gosi@172.197.160.31` → containers auto-restart
+  (`docker compose ps`; `docker compose up -d` if any down). Same IP, all config/data persists.
+
+> Backend + Judge0 + frontend LIVE as of 2026-06-16. Remaining work is content + CI + thesis writeup.

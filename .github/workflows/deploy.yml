@@ -30,7 +30,9 @@ jobs:
       # needs Postgres/Redis, which CI doesn't provide. The Mockito unit tests still run.
       - name: Compile + unit tests
         working-directory: TDTUOJ_backend
-        run: ./mvnw -B clean package -Dtest='!TdtuojApplicationTests' -DfailIfNoTests=false
+        run: |
+          chmod +x ./mvnw
+          ./mvnw -B clean package -Dtest='!TdtuojApplicationTests' -DfailIfNoTests=false
 
   deploy:
     name: Redeploy on VM
