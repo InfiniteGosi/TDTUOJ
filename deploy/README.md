@@ -73,7 +73,31 @@ cd ~/TDTUOJ && git pull --ff-only && cd deploy && docker compose up -d --build
 ## Judge0 gotchas on the VM
 
 - Needs `privileged: true` (already set) for the isolate sandbox.
-- On hosts with cgroup v2 only, Judge0 1.13.1 may misbehave. If judging hangs, boot the
-  kernel with `systemd.unified_cgroup_hierarchy=0` (GRUB) to fall back to cgroup v1, then reboot.
-- Verify: `curl http://localhost:2358/about` from inside the `backend` container's network,
-  or `docker compose exec backend wget -qO- http://judge0-server:2358/about`.
+- Judge0 1.13.1 bundles **isolate 1.8.1, which requires the cgroup v1 `memory`
+  controller**. On a modern host this is a two-part problem:
+  1. **cgroup v2 → v1.** Boot with `systemd.unified_cgroup_hierarchy=0`. On Azure
+     Ubuntu images this param must go in a drop-in that loads *after* Azure's
+     `/etc/default/grub.d/50-cloudimg-settings.cfg` (which otherwise clobbers it) —
+     put it in `/etc/default/grub.d/99-cgroupv1.cfg`, then `sudo update-grub`.
+  2. **v1 `memory` controller missing.** New kernels (e.g. Ubuntu 24.04's
+     `linux-azure` 6.17) ship `CONFIG_MEMCG_V1=n` — the v1 memory controller is
+     compiled out, so `/proc/cgroups` has **no `memory` row** and `cgroup_enable=memory`
+     can't bring it back. Fix: install + boot an **older GA kernel that still has it**
+     (e.g. `linux-image-6.8.0-1059-azure`) and pin GRUB to it. Because Azure's
+     `40-force-partuuid.cfg` does an initrdless boot that ignores both the `/boot/vmlinuz`
+     symlink and the menu default, the pin must also disable it:
+     ```sh
+     # /etc/default/grub.d/99-cgroupv1.cfg
+     GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX systemd.unified_cgroup_hierarchy=0 cgroup_enable=memory swapaccount=1"
+     GRUB_DEFAULT="gnulinux-advanced-<UUID>>gnulinux-6.8.0-1059-azure-advanced-<UUID>"  # IDs from grep menuentry /boot/grub/grub.cfg
+     GRUB_FORCE_PARTUUID=
+     ```
+     `sudo update-grub && sudo reboot`. Verify: `uname -r` = `6.8...`, and
+     `cat /proc/cgroups | grep memory` shows a row with `enabled=1`.
+- Verify judging end-to-end:
+  ```sh
+  docker compose exec judge0-workers isolate --cg --init   # prints box path, no error
+  docker compose exec backend sh -c 'curl -s -X POST "http://judge0-server:2358/submissions?wait=true" -H "Content-Type: application/json" -d "{\"language_id\":71,\"source_code\":\"print(42)\"}"'
+  # want: "stdout":"42\n", status "Accepted"
+  ```
+- Verify Judge0 up: `docker compose exec backend wget -qO- http://judge0-server:2358/about`.

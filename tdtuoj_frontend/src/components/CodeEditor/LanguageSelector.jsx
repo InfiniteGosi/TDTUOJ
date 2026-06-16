@@ -1,30 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { LANGUAGE_IDS } from "./constants";
-import ApiService from "../../services/ApiService";
+import { LANGUAGE_IDS, LANGUAGE_NAMES } from "./constants";
 import { ChevronDown } from "lucide-react";
 
 const languages = Object.entries(LANGUAGE_IDS);
+const names = LANGUAGE_NAMES;
 
 const LanguageSelector = ({ language, onSelect }) => {
-  const [names, setNames] = useState({});
-  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-
-  useEffect(() => {
-    const fetchAll = async () => {
-      const fetched = {};
-      for (const [lang, id] of languages) {
-        try {
-          const res = await ApiService.getLanguage(id);
-          fetched[lang] = res.name || lang;
-        } catch { fetched[lang] = lang; }
-      }
-      setNames(fetched);
-      setLoading(false);
-    };
-    fetchAll();
-  }, []);
 
   useEffect(() => {
     const handler = (e) => {
@@ -40,7 +23,6 @@ const LanguageSelector = ({ language, onSelect }) => {
         Language:
       </span>
       <button
-        disabled={loading}
         onClick={() => setOpen((v) => !v)}
         style={{
           display: "flex", alignItems: "center", gap: "var(--space-1)",
@@ -51,12 +33,12 @@ const LanguageSelector = ({ language, onSelect }) => {
           color: "var(--text-primary)",
           fontSize: "var(--text-sm)",
           fontFamily: "var(--font-code)",
-          cursor: loading ? "not-allowed" : "pointer",
+          cursor: "pointer",
           transition: "border-color var(--transition-fast)",
           minWidth: 120,
         }}
       >
-        <span style={{ flex: 1 }}>{loading ? "Loading…" : (names[language] || language)}</span>
+        <span style={{ flex: 1 }}>{names[language] || language}</span>
         <ChevronDown size={12} color="var(--text-muted)"
           style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform var(--transition-fast)", flexShrink: 0 }} />
       </button>
