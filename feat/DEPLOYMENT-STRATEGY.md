@@ -119,12 +119,17 @@
   ADMIN via `INSERT INTO users_roles` (role names: ADMIN/CREATOR/PARTICIPANT, no prefix;
   join table `users_roles(user_id, role_id)`, DB `tdtuoj`, db-user `admin`).
 
+## DONE (continued)
+- **CI auto-deploy WORKING:** GH repo secrets set (`VM_HOST=172.197.160.31`, `VM_USER=gosi`,
+  `VM_SSH_KEY`). Push to `main` touching `TDTUOJ_backend/**` or `deploy/**` → build gate +
+  SSH redeploy on VM. Fixed `mvnw` not-executable (exit 126): set git exec bit (`100755`) +
+  `chmod +x ./mvnw` in workflow. VM must be running for the deploy job.
+- **Custom apex domain LIVE:** `https://tdtuoj.me` → Vercel (A `@` → `216.198.79.1` on Namecheap;
+  apex-primary, www-redirect off; GitHub Pages records removed + Pages custom-domain cleared).
+  `api` A record unchanged. Google OAuth origin `https://tdtuoj.me` added — Google login works.
+
 ## NOT done yet
 - **Content:** DB is empty (fresh start) — problems/contests to be created via the admin UI.
-- **GitHub repo secrets** (`VM_HOST=172.197.160.31`, `VM_USER=gosi`, `VM_SSH_KEY`) not set →
-  CI auto-deploy (`.github/workflows/deploy.yml`) won't run until added. (VM must be running for CI.)
-- **Custom apex domain:** `tdtuoj.me` / `www` not yet pointed at Vercel (still GitHub Pages records).
-  When moved, also add `https://tdtuoj.me` to Google OAuth origins.
 - **Key rotation** (optional) — reused existing keys; rotate AWS/LLM before any wider exposure.
 - **Thesis "Triển khai" section** — not written yet.
 

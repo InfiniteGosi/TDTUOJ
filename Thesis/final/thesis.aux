@@ -32,17 +32,20 @@
 \acronymused{JWT}
 \@writefile{toc}{\contentsline {chapter}{DANH MỤC HÌNH VẼ}{vi}{chapter*.8}\protected@file@percent }
 \acronymused{LLM}
-\@writefile{toc}{\contentsline {chapter}{DANH MỤC BẢNG BIỂU}{vii}{chapter*.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {chapter}{DANH MỤC CÁC CHỮ VIẾT TẮT}{viii}{chapter*.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{DANH MỤC BẢNG BIỂU}{viii}{chapter*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{DANH MỤC CÁC CHỮ VIẾT TẮT}{ix}{chapter*.11}\protected@file@percent }
 \newacro{AC}[\AC@hyperlink{AC}{AC}]{Accepted}
 \newacro{AI}[\AC@hyperlink{AI}{AI}]{Artificial Intelligence -- Trí tuệ nhân tạo}
 \newacro{API}[\AC@hyperlink{API}{API}]{Application Programming Interface}
 \newacro{CE}[\AC@hyperlink{CE}{CE}]{Compilation Error}
+\newacro{CI/CD}[\AC@hyperlink{CI/CD}{CI/CD}]{Continuous Integration/Continuous Deployment -- Tích hợp và triển khai liên tục}
 \newacro{CNTT}[\AC@hyperlink{CNTT}{CNTT}]{Công nghệ Thông tin}
 \newacro{CORS}[\AC@hyperlink{CORS}{CORS}]{Cross-Origin Resource Sharing}
 \newacro{CSS}[\AC@hyperlink{CSS}{CSS}]{Cascading Style Sheets}
+\newacro{DNS}[\AC@hyperlink{DNS}{DNS}]{Domain Name System -- Hệ thống phân giải tên miền}
 \newacro{ERD}[\AC@hyperlink{ERD}{ERD}]{Entity-Relationship Diagram -- Sơ đồ thực thể quan hệ}
 \newacro{HTTP}[\AC@hyperlink{HTTP}{HTTP}]{Hypertext Transfer Protocol}
+\newacro{HTTPS}[\AC@hyperlink{HTTPS}{HTTPS}]{Hypertext Transfer Protocol Secure}
 \newacro{ICPC}[\AC@hyperlink{ICPC}{ICPC}]{International Collegiate Programming Contest}
 \newacro{IOI}[\AC@hyperlink{IOI}{IOI}]{International Olympiad in Informatics}
 \newacro{JPA}[\AC@hyperlink{JPA}{JPA}]{Java Persistence API}
@@ -58,10 +61,13 @@
 \newacro{FK}[\AC@hyperlink{FK}{FK}]{Foreign Key -- Khóa ngoại}
 \newacro{RE}[\AC@hyperlink{RE}{RE}]{Runtime Error}
 \newacro{REST}[\AC@hyperlink{REST}{REST}]{Representational State Transfer}
+\newacro{SSH}[\AC@hyperlink{SSH}{SSH}]{Secure Shell}
 \newacro{TDTU}[\AC@hyperlink{TDTU}{TDTU}]{Trường Đại học Tôn Đức Thắng}
 \newacro{TLE}[\AC@hyperlink{TLE}{TLE}]{Time Limit Exceeded}
+\newacro{TLS}[\AC@hyperlink{TLS}{TLS}]{Transport Layer Security}
 \newacro{UI}[\AC@hyperlink{UI}{UI}]{User Interface}
 \newacro{UX}[\AC@hyperlink{UX}{UX}]{User Experience}
+\newacro{VM}[\AC@hyperlink{VM}{VM}]{Virtual Machine -- Máy ảo}
 \newacro{WA}[\AC@hyperlink{WA}{WA}]{Wrong Answer}
 \@writefile{toc}{\contentsline {chapter}{\numberline {1}Mở đầu và tổng quan đề tài}{1}{chapter.1}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
@@ -532,27 +538,66 @@
 \acronymused{JVM}
 \@writefile{lof}{\contentsline {figure}{\numberline {5.3}{\ignorespaces Giám sát hệ thống trong kịch bản nộp bài}}{91}{figure.caption.71}\protected@file@percent }
 \newlabel{fig:grafana-submit}{{5.3}{91}{Giám sát hệ thống trong kịch bản nộp bài}{figure.caption.71}{}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {6}Kết luận}{92}{chapter.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {6}Triển khai hệ thống}{92}{chapter.6}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\@writefile{toc}{\contentsline {section}{\numberline {6.1}Kết quả đạt được}{92}{section.6.1}\protected@file@percent }
+\AC@undonewlabel{acro:CI/CD}
+\newlabel{acro:CI/CD}{{6}{92}{Triển khai hệ thống}{section*.72}{}}
+\acronymused{CI/CD}
+\@writefile{toc}{\contentsline {section}{\numberline {6.1}Hạ tầng và công cụ triển khai}{92}{section.6.1}\protected@file@percent }
+\AC@undonewlabel{acro:VM}
+\newlabel{acro:VM}{{6.1}{92}{Hạ tầng và công cụ triển khai}{section*.73}{}}
+\acronymused{VM}
+\AC@undonewlabel{acro:HTTPS}
+\newlabel{acro:HTTPS}{{6.1}{92}{Hạ tầng và công cụ triển khai}{section*.74}{}}
+\acronymused{HTTPS}
+\AC@undonewlabel{acro:TLS}
+\newlabel{acro:TLS}{{6.1}{92}{Hạ tầng và công cụ triển khai}{section*.75}{}}
+\acronymused{TLS}
+\AC@undonewlabel{acro:DNS}
+\newlabel{acro:DNS}{{6.1}{93}{Hạ tầng và công cụ triển khai}{section*.76}{}}
+\acronymused{DNS}
+\acronymused{HTTPS}
+\acronymused{HTTPS}
+\acronymused{TLS}
+\acronymused{DNS}
+\@writefile{lot}{\contentsline {table}{\numberline {6.1}{\ignorespaces Các thành phần hạ tầng triển khai chính}}{93}{table.caption.77}\protected@file@percent }
+\newlabel{tab:deploy-stack}{{6.1}{93}{Các thành phần hạ tầng triển khai chính}{table.caption.77}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.2}Quy trình triển khai và tích hợp liên tục}{94}{section.6.2}\protected@file@percent }
+\acronymused{DNS}
+\acronymused{HTTPS}
+\acronymused{CI/CD}
+\AC@undonewlabel{acro:SSH}
+\newlabel{acro:SSH}{{6.2}{94}{Quy trình triển khai và tích hợp liên tục}{section*.78}{}}
+\acronymused{SSH}
+\@writefile{toc}{\contentsline {section}{\numberline {6.3}Kết quả triển khai và chi phí vận hành}{94}{section.6.3}\protected@file@percent }
+\acronymused{HTTPS}
+\acronymused{CI/CD}
+\@writefile{lot}{\contentsline {table}{\numberline {6.2}{\ignorespaces Chi phí vận hành các thành phần triển khai}}{95}{table.caption.79}\protected@file@percent }
+\newlabel{tab:deploy-cost}{{6.2}{95}{Chi phí vận hành các thành phần triển khai}{table.caption.79}{}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {7}Kết luận}{96}{chapter.7}\protected@file@percent }
+\@writefile{lof}{\addvspace {10\p@ }}
+\@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{toc}{\contentsline {section}{\numberline {7.1}Kết quả đạt được}{96}{section.7.1}\protected@file@percent }
 \acronymused{ICPC}
 \acronymused{IOI}
 \acronymused{LLM}
 \acronymused{PDF}
 \acronymused{JWT}
-\@writefile{toc}{\contentsline {section}{\numberline {6.2}Hạn chế}{92}{section.6.2}\protected@file@percent }
+\acronymused{HTTPS}
+\acronymused{CI/CD}
+\@writefile{toc}{\contentsline {section}{\numberline {7.2}Hạn chế}{97}{section.7.2}\protected@file@percent }
 \acronymused{LLM}
-\@writefile{toc}{\contentsline {section}{\numberline {6.3}Hướng phát triển}{93}{section.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7.3}Hướng phát triển}{97}{section.7.3}\protected@file@percent }
 \abx@aux@nociteall
-\@writefile{toc}{\contentsline {chapter}{TÀI LIỆU THAM KHẢO}{94}{chapter*.72}\protected@file@percent }
-\abx@aux@page{1}{94}
-\abx@aux@page{2}{94}
-\abx@aux@page{3}{94}
-\abx@aux@page{4}{94}
+\@writefile{toc}{\contentsline {chapter}{TÀI LIỆU THAM KHẢO}{98}{chapter*.80}\protected@file@percent }
+\abx@aux@page{1}{98}
+\abx@aux@page{2}{98}
+\abx@aux@page{3}{98}
+\abx@aux@page{4}{98}
 \abx@aux@read@bbl@mdfivesum{B5D2F68281D05B96E91B7E9D77F324C3}
 \abx@aux@defaultrefcontext{0}{IEEEexample:BSTcontrol}{nyt/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{espinoza2012inverse}{nyt/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{espinoza2012optimization}{nyt/global//global/global/global}
 \abx@aux@defaultrefcontext{0}{kn:Tha01}{nyt/global//global/global/global}
-\gdef \@abspage@last{110}
+\gdef \@abspage@last{115}
