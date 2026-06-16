@@ -216,7 +216,7 @@ const ProblemSidebar = ({ problems, currentSlug, contestSlug, onNavigate, onClos
             style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", background: isActive ? T.accentDim : "transparent", borderLeft: isActive ? `3px solid ${T.accent}` : "3px solid transparent", border: "none", borderRight: "none", borderTop: "none", borderBottom: "none", cursor: "pointer", outline: "none", textAlign: "left", transition: "background 0.1s" }}
             onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = T.surfaceHover; }}
             onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}>
-            <span style={{ width: 26, height: 26, borderRadius: "var(--radius-sm)", background: isActive ? T.accent : T.bg, color: isActive ? "#000" : T.textMuted, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "var(--text-xs)", fontFamily: "var(--font-code)", flexShrink: 0 }}>
+            <span style={{ width: 26, height: 26, borderRadius: "var(--radius-sm)", background: isActive ? T.accent : T.bg, color: isActive ? "var(--text-inverse)" : T.textMuted, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "var(--text-xs)", fontFamily: "var(--font-code)", flexShrink: 0 }}>
               {letter}
             </span>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -734,7 +734,7 @@ const ContestProblemPage = () => {
                     <button
                       onClick={handleSubmit}
                       disabled={submitting || contestEnded}
-                      style={{ padding: "5px 18px", background: contestEnded ? T.borderBright : T.accent, color: contestEnded ? T.textMuted : "#000", fontWeight: 700, fontSize: "var(--text-sm)", borderRadius: "var(--radius-sm)", border: "none", cursor: contestEnded ? "not-allowed" : "pointer", outline: "none", transition: "all 0.15s", opacity: submitting ? 0.7 : 1, fontFamily: "var(--font-body)" }}
+                      style={{ padding: "5px 18px", background: contestEnded ? T.borderBright : T.accent, color: contestEnded ? T.textMuted : "var(--text-inverse)", fontWeight: 700, fontSize: "var(--text-sm)", borderRadius: "var(--radius-sm)", border: "none", cursor: contestEnded ? "not-allowed" : "pointer", outline: "none", transition: "all 0.15s", opacity: submitting ? 0.7 : 1, fontFamily: "var(--font-body)" }}
                       onMouseEnter={(e) => { if (!contestEnded && !submitting) { e.currentTarget.style.background = "var(--primary-bright)"; e.currentTarget.style.transform = "translateY(-1px)"; } }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = contestEnded ? T.borderBright : T.accent; e.currentTarget.style.transform = "translateY(0)"; }}>
                       {submitting ? "Running…" : contestEnded ? "Contest Ended" : "Run & Submit"}

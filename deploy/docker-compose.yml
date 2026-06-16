@@ -1,0 +1,128 @@
+# TDTUOJ full-stack deploy — run on an x86_64 VM (Azure for Students B-series; NOT ARM).
+# Judge0 CE is x86-only; platform pins below enforce that.
+#
+#   cp .env.example .env   # then fill in secrets
+#   docker compose up -d --build
+#
+# Frontend is NOT here — it lives on Vercel and points at this host's /api.
+
+name: tdtuoj
+
+services:
+  # ---- Application backend (Spring Boot) ----
+  backend:
+    build:
+      context: ../TDTUOJ_backend
+      dockerfile: Dockerfile
+    image: tdtuoj-backend:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://app-db:5432/tdtuoj
+      SPRING_DATASOURCE_USERNAME: ${APP_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${APP_DB_PASSWORD}
+      REDIS_HOST: app-redis
+      REDIS_PORT: 6379
+      JUDGE0_API_URL: http://judge0-server:2358
+    depends_on:
+      app-db:
+        condition: service_healthy
+      app-redis:
+        condition: service_started
+    networks: [tdtuoj]
+    expose:
+      - "8090"
+
+  # ---- Application Postgres ----
+  app-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tdtuoj
+      POSTGRES_USER: ${APP_DB_USER}
+      POSTGRES_PASSWORD: ${APP_DB_PASSWORD}
+    volumes:
+      - app_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${APP_DB_USER} -d tdtuoj"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [tdtuoj]
+
+  # ---- Application Redis (cache + rate limiting) ----
+  app-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks: [tdtuoj]
+
+  # ---- Caddy reverse proxy: auto HTTPS + domain ----
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+    networks: [tdtuoj]
+
+  # ================= Judge0 CE stack (x86_64 only) =================
+  judge0-server:
+    image: judge0/judge0:1.13.1
+    platform: linux/amd64
+    restart: unless-stopped
+    privileged: true
+    command: ["./scripts/server"]
+    env_file: judge0.conf
+    depends_on:
+      - judge0-db
+      - judge0-redis
+    networks: [tdtuoj]
+    expose:
+      - "2358"
+
+  judge0-workers:
+    image: judge0/judge0:1.13.1
+    platform: linux/amd64
+    restart: unless-stopped
+    privileged: true
+    command: ["./scripts/workers"]
+    env_file: judge0.conf
+    depends_on:
+      - judge0-db
+      - judge0-redis
+    networks: [tdtuoj]
+
+  judge0-db:
+    image: postgres:16-alpine
+    platform: linux/amd64
+    restart: unless-stopped
+    env_file: judge0.conf
+    volumes:
+      - judge0_db_data:/var/lib/postgresql/data
+    networks: [tdtuoj]
+
+  judge0-redis:
+    image: redis:7-alpine
+    platform: linux/amd64
+    restart: unless-stopped
+    env_file: judge0.conf
+    command: ["sh", "-c", "exec redis-server --appendonly no --requirepass \"$$REDIS_PASSWORD\""]
+    networks: [tdtuoj]
+
+networks:
+  tdtuoj:
+    driver: bridge
+
+volumes:
+  app_db_data:
+  judge0_db_data:
+  caddy_data:
+  caddy_config:

@@ -26,7 +26,7 @@ package "Phía giao diện (Frontend)" #E3F2FD {
   rectangle "Trình duyệt — React SPA (Vite)\nMonaco Editor, Chakra UI, Bootstrap" as spa #FFFFFF
 }
 
-package "Phía máy chủ (Backend) — Spring Boot :8090" #E8F5E9 {
+package "Phía máy chủ (Backend) — Spring Boot" #E8F5E9 {
   rectangle "Bảo mật\nJWT · CORS" as sec #FFFFFF
   rectangle "REST Controllers" as ctrl #FFFFFF
   rectangle "Service layer\n(nghiệp vụ)" as svc #FFFFFF
@@ -35,12 +35,12 @@ package "Phía máy chủ (Backend) — Spring Boot :8090" #E8F5E9 {
 }
 
 package "Lưu trữ & Bộ nhớ đệm" #FFF3E0 {
-  database "PostgreSQL\n:5431" as pg
-  queue "Redis\nhàng đợi + cache\n:6379" as redis
+  database "PostgreSQL" as pg
+  queue "Redis\nhàng đợi + cache" as redis
 }
 
 package "Dịch vụ bên ngoài" #F3E5F5 {
-  node "Judge0 (Docker)\n:2358" as judge0
+  node "Judge0 (Docker)" as judge0
   cloud "AWS S3\nlưu trữ tập tin" as s3
   cloud "Gemini LLM API" as gemini
 }

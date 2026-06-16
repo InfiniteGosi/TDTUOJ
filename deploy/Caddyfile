@@ -1,0 +1,15 @@
+# Reverse proxy for the TDTUOJ backend. Caddy auto-provisions HTTPS (Let's Encrypt)
+# for {$DOMAIN}. Make sure the domain's DNS A record points at the VM's public IP,
+# and ports 80 + 443 are open in the VM firewall.
+
+{$DOMAIN} {
+	encode gzip zstd
+
+	# All API + actuator + swagger traffic goes to the Spring Boot backend.
+	reverse_proxy backend:8090
+
+	# Larger uploads (PDF problem extraction, avatars).
+	request_body {
+		max_size 25MB
+	}
+}

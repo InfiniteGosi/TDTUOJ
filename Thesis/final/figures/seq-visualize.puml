@@ -25,32 +25,42 @@ actor "User" as U
 boundary "Visualizer Panel" as UI
 control "VisualizerController" as C
 control "VisualizerService" as S
-control "Instrumentor" as I
-control "Judge0Service" as J
+control "Tracer" as T
+control "VariableClassifier" as VC
+control "Judge0" as J
 
-U -> UI : Write code, choose mode (AUTO/MANUAL)
+U -> UI : Write code, select language
 activate UI
 U -> UI : Click "Visualize"
 UI -> C : POST /api/visualize
 activate C
-C -> S : visualize(code, language, mode)
+C -> S : visualize(code, language)
 activate S
-S -> I : instrument(code)
-activate I
-I -> I : Normalize braces, inject __TRACE__
-I --> S : instrumented code
-deactivate I
-S -> J : run instrumented code
-activate J
-J -> J : compile & execute (Judge0)
-J --> S : raw trace output
-deactivate J
+S -> T : instrument(code)
+activate T
+T -> T : Rewrite source to emit\nframe stream on stderr
+T --> S : transformed code
+deactivate T
+
+par
+  S -> J : run transformed code
+  activate J
+  J -> J : compile & execute in sandbox
+  J --> S : stdout + stderr (frames)
+  deactivate J
+else
+  S -> VC : classify(code) async
+  activate VC
+  VC -> VC : Gemini labels variable roles\n(Redis-cached, 3s budget)
+  VC --> S : classifications (or empty)
+  deactivate VC
+end
 
 alt Compile / run OK
-  S -> S : Parse __TRACE__ into steps
-  S --> C : VisualizerResponse (steps)
+  S -> S : Parse frames JSON from stderr\ninto step list
+  S --> C : VisualizerResponse\n(frames + classifications)
   deactivate S
-  C --> UI : 200 steps
+  C --> UI : 200 frames
   deactivate C
   loop for each step
     U -> UI : Step / play animation
@@ -58,7 +68,7 @@ alt Compile / run OK
   end
 else Error
   S --> C : error message
-  C --> UI : 400 error
+  C --> UI : error response
   UI --> U : Show compile / runtime error
 end
 deactivate UI

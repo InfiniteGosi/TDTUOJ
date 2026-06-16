@@ -2,9 +2,13 @@
 ' ER diagram — Crow's foot (Information Engineering) notation
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 12
+skinparam defaultFontSize 17
+skinparam dpi 170
+skinparam nodesep 45
+skinparam ranksep 55
 skinparam linetype ortho
 skinparam roundCorner 0
+skinparam padding 3
 skinparam ArrowColor #000000
 skinparam EntityBorderColor #000000
 skinparam EntityBackgroundColor #FFFFFF

@@ -1,0 +1,3 @@
+# Secrets — live only on the VM, never in git.
+.env
+judge0.conf

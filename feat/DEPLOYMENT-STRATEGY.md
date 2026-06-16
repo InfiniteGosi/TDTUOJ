@@ -1,77 +1,153 @@
 # TDTUOJ — Deployment Strategy (for thesis defense)
 
 > Goal: deploy live system + write a "Triển khai" section in thesis. Defense in ~2 months
-> (from 2026-06-02, so target ~early Aug 2026). Status: **planned, not started.**
+> (from 2026-06-02, so target ~early Aug 2026). Status: **deploy artifacts written + backend
+> compiles; VM account not signed up yet, nothing deployed.**
 
 ## TL;DR decision
 - **Deploy: YES.** Live demo strengthens thesis; adds Deployment section + screenshots.
 - **Host whole backend stack on ONE VM** via `docker compose` (backend + Judge0 + Postgres + Redis).
+- **VM: Azure for Students $100 credit** (.edu email, no credit card) — **PRIMARY**. Pick an
+  **x86 size** (B-series Intel/AMD, e.g. `Standard_B2s` 2 vCPU/4GB) because **Judge0 CE official
+  images are x86_64 only**. Do NOT pick an Ampere ARM size (`Bpsv2`) → Judge0 won't run there
+  without building isolate from source. DigitalOcean $200 / Oracle = fallback only.
 - **Frontend on Vercel** (auto-deploy on git push).
-- **Recommended VM: Oracle Cloud Always Free** (no expiry, no credit card). Fallback:
-  DigitalOcean $200 (GitHub Student Pack) or Azure for Students $100 (no card, .edu email).
+- **CI/CD: GitHub Actions** — push to `main` → frontend auto-deploys on Vercel, backend
+  auto-redeploys via SSH-into-VM action.
 
-## The one hard constraint: Judge0
-- Judge0 needs **Docker with `--privileged`** (isolate/cgroups sandbox).
-- Most free PaaS (Render, Railway, Vercel, Heroku-likes) **block privileged containers** →
-  Judge0 will NOT run there.
-- => Must use a **real VM**, not a PaaS, for judging. This drives the whole architecture.
+## The hard constraints: Judge0
+1. Judge0 needs **Docker with `--privileged`** (isolate/cgroups sandbox).
+   - Most free PaaS (Render, Railway, Vercel, Heroku-likes) **block privileged containers** →
+     Judge0 will NOT run there. => Must use a **real VM**, not a PaaS, for judging.
+2. Judge0 CE official images are **x86_64 only**. => VM must be **x86**, not ARM.
+   - Rules out Oracle's ARM box AND Azure's Ampere `Bpsv2` ARM sizes. Pick an Azure x86 B-series
+     (Intel/AMD) size → primary.
 
 ## Free hosting options
 
 | Component | Tool | Note |
 |---|---|---|
-| Whole stack (1 VM) | **Oracle Cloud Always Free** | 4 ARM cores / 24GB, forever-free, no card. Judge0 runs on ARM fine. Best. |
-| VM alt | Azure for Students | $100 credit, no credit card, .edu email. Credit expires. |
-| VM alt | DigitalOcean ($200/yr) | Via GitHub Student Developer Pack. 1-year window. |
+| Whole stack (1 VM) | **Azure for Students** | $100 credit, no card, .edu email. PICK x86 B-series (Judge0 x86-only). Credit + student status expire (~12 mo). PRIMARY. |
+| VM alt | DigitalOcean ($200/yr) | Via GitHub Student Developer Pack. 1-year window. x86. Fallback. |
+| VM alt | Oracle Cloud Always Free | ARM Always Free box = Judge0 won't run (x86-only). Only the AMD x86 micro (1GB) usable but tight. Fallback. |
 | Frontend | Vercel / Netlify / Cloudflare Pages | Free, auto-deploy on push. |
 | Postgres (managed) | Neon / Supabase | Only if not self-hosting on the VM. |
 | Redis (managed) | Upstash | Free serverless; only if not self-hosting. |
 | File storage | Cloudflare R2 (10GB, no egress) / AWS S3 free 5GB | R2 preferred. |
 | Judge0 (no VM) | Judge0 on RapidAPI | Free tier ~50 req/day. Demo only, not real load. |
 
-## Recommended setup (cheapest + complete, $0, no expiry)
-- **Oracle Always Free ARM VM** → Docker Compose: backend + Judge0 + Postgres + Redis.
+## Chosen setup
+- **Azure for Students x86 VM** (PICKED) — `Standard_B2as_v2` (2 vCPU / 8 GiB, AMD x86),
+  region **Malaysia West** (KL — low latency from Vietnam, ~$62.42/mo; cheaper than Southeast
+  Asia/Singapore, same latency), Ubuntu 22.04+ → Docker Compose: backend + Judge0
+  (+ its db/redis) + Postgres + Redis + Caddy. Fallback region if any size/quota missing
+  (Malaysia West is new): Southeast Asia (Singapore).
+- **8 GiB RAM** comfortably fits all 7 containers (Judge0 isolate compilation wants headroom).
+  Optional 2–4 GB swap as a safety margin, no longer load-bearing.
 - **Vercel** → React frontend, points at backend URL.
 - **Cloudflare R2** → file/avatar storage.
 - **Caddy** reverse proxy on VM → auto HTTPS (Let's Encrypt) + domain.
-- Caveat: Oracle ARM free sometimes "out of capacity" at signup → retry / quieter region.
-  If blocked → DigitalOcean $200 (Student Pack) easily covers 2 months.
+- Cost: **Azure PAYG bills compute per-hour ONLY while the VM is running.** $62.42/mo is the
+  rate if left on 24/7 — NOT a flat charge. At ~$0.086/hr, a defense demo of ~20 test hours
+  burns ≈ $2 compute. **Deallocate (Stop) the VM from the Azure Portal / `az vm deallocate`
+  when not demoing** → compute billing → $0. Idle cost = only disk (Std SSD ~$2–5/mo) + static
+  IP (~$3–4/mo) ≈ $5–9/mo regardless. $100 student credit stretches far past defense.
+  - **Gotcha:** OS-level `shutdown` keeps the VM *allocated* → still billed. Must **deallocate**
+    (Portal Stop button or `az vm deallocate`) to actually stop compute charges.
+- Fallback: DigitalOcean $200 x86 droplet (GitHub Student Pack) or Oracle AMD x86 micro (1GB = tight).
+  Oracle ARM big box + Azure ARM `Bpsv2` NOT usable (Judge0 x86-only).
+
+## Deployment artifacts (DONE — written + committed-ready, backend compiles clean)
+- `TDTUOJ_backend/Dockerfile` — multi-stage Maven build → JRE 21 runtime, non-root user.
+- `TDTUOJ_backend/.dockerignore` — keeps target/.env/git out of build context.
+- `deploy/docker-compose.yml` — backend + app Postgres + app Redis + Judge0 (server, workers,
+  its own db + redis) + Caddy. Pinned `platform: linux/amd64`. Only Caddy publishes 80/443.
+- `deploy/Caddyfile` — reverse proxy → backend:8090 + auto HTTPS.
+- `deploy/.env.example` — app secrets template (real `deploy/.env` gitignored).
+- `deploy/judge0.conf.example` — Judge0 internal db/redis config template (real one gitignored).
+- `deploy/.gitignore` — blocks `.env` + `judge0.conf`.
+- `deploy/README.md` — VM setup runbook + Judge0 cgroup-v2 gotcha.
+- `.github/workflows/deploy.yml` — CI build gate (unit tests, skips `@SpringBootTest`) + SSH redeploy.
+- **Code change:** `application.yml` → `judge0.api.url: ${JUDGE0_API_URL:http://localhost:2358}`
+  so backend finds Judge0 over the compose network. **Local dev unaffected** — default stays
+  `localhost:2358`, var unset locally, so `./mvnw spring-boot:run` works as before.
+
+## Frontend made deploy-ready (DONE 2026-06-11)
+- `tdtuoj_frontend/src/services/ApiService.js` — `BASE_URL` + `JUDGE0_BASE_URL` now read
+  `import.meta.env.VITE_API_BASE_URL` / `VITE_JUDGE0_BASE_URL` with localhost fallback.
+  Local dev unaffected (vars unset → localhost). Frontend build verified clean.
+- Vercel env vars needed: `VITE_API_BASE_URL=https://<domain>/api`,
+  `VITE_GOOGLE_CLIENT_ID=<id>` (already env-driven in Login/RegisterPage). Leave
+  `VITE_JUDGE0_BASE_URL` unset — only `getLanguage` (dropdown names) hits Judge0 directly
+  and it falls back to the raw lang key on failure; `executeCode` is dead code.
+- CORS is already `allowedOrigins("*")` in `common/security/CorsConfig` → Vercel origin NOT
+  blocked. (App uses JWT-in-header, not cookies, so wildcard is fine. Non-issue.)
+
+## Decisions (updated 2026-06-12 — switched to Azure; VM size bumped to `B2as_v2` 8 GiB)
+- **VM: Azure for Students $100 credit** (PRIMARY — Judge0 CE x86-only, so pick x86 B-series, NOT
+  ARM `Bpsv2`). Switched from DigitalOcean (now fallback) per available student credit.
+- **Domain: free `.me` from GitHub Student Pack's Namecheap offer** (real TLD, Google-OAuth-accepted,
+  free 1 yr — most cost-effective; Student Pack still usable independent of VM host). DNS A record →
+  Azure VM public IP, Caddy issues HTTPS. (Reserve a static public IP on the VM so the A record
+  survives a stop/deallocate.)
+
+## NOT done yet (on user — provisioning)
+- Azure for Students signed up; VM config CHOSEN in create-wizard (`B2as_v2`, Malaysia West,
+  ~$62.42/mo if 24/7) but **not yet created** — user paused mid-wizard, resuming later. Nothing deployed.
+- When resuming wizard: SSH-key auth (save key), static public IP, Standard SSD, NSG 22/80/443.
+- Free `.me` domain not claimed/pointed yet.
+- GitHub repo secrets (`VM_HOST`, `VM_USER`, `VM_SSH_KEY`) not set → CI deploy job no-ops/fails.
+- On VM (later): `cp .env.example .env` + `cp judge0.conf.example judge0.conf`, fill secrets.
+- Vercel project: import repo (root `tdtuoj_frontend/`), set the two `VITE_` env vars.
+- Rotate the AWS/LLM keys currently in `TDTUOJ_backend/.env` before going public.
 
 ## Feasibility (2 months)
 - Actual deploy work ≈ 1–3 days, not weeks:
-  - Day 1: provision VM, install Docker, `docker compose up` (backend+Judge0+PG+Redis).
+  - Day 1: provision Azure VM, install Docker, `docker compose up` (backend+Judge0+PG+Redis).
   - Day 2: frontend on Vercel, domain + HTTPS (Caddy), smoke test.
   - Day 3: buffer (env vars / CORS / Judge0 quirks).
 - Real risk = leaving it to the last week. **Deploy early, keep running, iterate.**
 
-## Redeploy on code change (normal dev loop)
-- Backend (VM):
-  ```bash
-  git pull
-  docker compose up -d --build backend   # rebuild only changed service, ~2-5 min
-  ```
-  Optional: GitHub Actions to auto-run on `git push`.
-- Frontend (Vercel): auto-deploys on every `git push`. Zero manual step.
+## CI/CD on code change (CHOSEN: GitHub Actions)
+Push to `main` → both tiers update automatically. No manual SSH.
+
+- **Frontend (Vercel):** auto-deploys on every `git push`. Built-in, zero config beyond linking repo.
+- **Backend (VM):** `.github/workflows/deploy.yml` (as written) — on push to `main` touching
+  `TDTUOJ_backend/**`, `deploy/**`, or the workflow:
+  1. **build gate:** `./mvnw -B clean package -Dtest='!TdtuojApplicationTests'` — compiles +
+     runs Mockito unit tests, skips the full-context `@SpringBootTest` (needs PG/Redis CI lacks).
+  2. **deploy:** `appleboy/ssh-action` → on VM: `cd ~/TDTUOJ && git pull --ff-only &&
+     cd deploy && docker compose up -d --build && docker image prune -f`.
+- **Secrets:** GitHub repo secrets `VM_HOST`, `VM_USER`, `VM_SSH_KEY`. App/Judge0 secrets live
+  in `deploy/.env` + `deploy/judge0.conf` ON THE VM (gitignored) — never in git.
+- Manual fallback (if Actions down): SSH in, run
+  `cd ~/TDTUOJ && git pull --ff-only && cd deploy && docker compose up -d --build`.
 - Keep `docker-compose.yml` in repo → deploy is reproducible, rebuild from scratch anytime.
 
 ## Credits running out before defense?
-- **Oracle Always Free = never expires.** Removes the worry entirely → preferred.
-- Credit math: small VM (2 vCPU / 4GB) ≈ $8–15/mo → 2 months = $16–30.
-  - vs Azure $100 or DigitalOcean $200 → nowhere near exhausted in 2 months.
-- Credits won't run out unless a huge instance is provisioned.
+- Azure for Students $100: `B2as_v2` (2 vCPU / 8GB) ≈ $62.42/mo IF running 24/7. But Azure
+  bills compute per-hour only while running — **deallocate between demo sessions** and real
+  burn is a few $ total (idle = only disk + IP, ~$5–9/mo). Credit stretches well past defense.
+- Watch the **12-month student-credit/status expiry**, not just the dollar amount.
+- If credit gets tight: fall back to DigitalOcean $200 (Student Pack) — same `docker compose`, ~15 min respin.
 
 ## Safety nets for live demo
 - Whole thing is `docker compose` → if it dies morning of defense, respin on any VM in ~15 min.
 - **Local laptop fallback:** `docker compose up` on laptop = plan B, no network dependency.
 
 ## Next steps (when resuming)
-1. Pick VM (try Oracle first; fallback DigitalOcean/Azure).
-2. Write `docker-compose.yml` (backend + Judge0 + Postgres + Redis + Caddy reverse proxy).
-3. Provision VM, deploy, wire domain + HTTPS.
-4. Deploy frontend on Vercel pointing at backend.
-5. Move file storage to R2/S3.
-6. Write thesis "Triển khai hệ thống" section: deployment diagram (extend architecture.png
-   with actual hosts), Docker Compose topology, HTTPS/domain, free-tier limitations.
+1. Sign up Azure for Students (.edu email) → create `Standard_B2as_v2` VM (2 vCPU / 8 GiB, AMD x86,
+   Ubuntu 22.04+) in **Malaysia West**. **Not** an ARM `Bpsv2` size. SSH-key auth (save private key
+   — CI needs it). Assign a **static public IP**. Standard SSD disk. Open ports 22/80/443 in the NSG.
+   **Deallocate (Portal Stop / `az vm deallocate`) when not demoing** to stop compute billing.
+2. Follow `deploy/README.md`: install Docker, (optional 2–4 GB swap), clone repo, fill `deploy/.env` +
+   `deploy/judge0.conf`, `docker compose up -d --build`.
+3. Wire domain DNS A record → static IP + let Caddy issue HTTPS. Verify Judge0 (`/about`) + cgroup-v2 gotcha.
+4. Deploy frontend on Vercel pointing at backend; add Vercel origin to backend CORS.
+5. Set GitHub repo secrets (`VM_HOST`, `VM_USER`, `VM_SSH_KEY`) → CI auto-deploy live.
+6. (Optional) Move file storage to R2/S3; rotate exposed keys.
+7. Write thesis "Triển khai hệ thống" section: deployment diagram (extend architecture.png
+   with actual hosts), Docker Compose topology, CI/CD pipeline, HTTPS/domain, free-tier limitations.
 
-> Claude offered to: (1) draft thesis "Triển khai" section, (2) write the docker-compose.yml
-> + Caddy config. Both pending user go-ahead.
+> Deploy artifacts written (Dockerfile, deploy/*, workflow) + backend compiles. Still offered:
+> draft thesis "Triển khai" section. Pending user go-ahead.

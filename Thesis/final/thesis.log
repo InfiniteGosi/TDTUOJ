@@ -1,10 +1,9 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.3.14)  7 JUN 2026 17:07
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.3.14)  11 JUN 2026 21:38
 entering extended mode
  restricted \write18 enabled.
- file:line:error style messages enabled.
  %&-line parsing enabled.
-**d:/OJ/Thesis/final/thesis.tex
-(d:/OJ/Thesis/final/thesis.tex
+**./thesis.tex
+(thesis.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
 (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/base\report.cls
@@ -24,17 +23,21 @@ File: size12.clo 2025/01/22 v1.4n Standard LaTeX file (size option)
 \abovecaptionskip=\skip49
 \belowcaptionskip=\skip50
 \bibindent=\dimen148
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/base\inputenc.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/base\inputenc.sty
 Package: inputenc 2024/02/08 v1.3d Input encoding file
 \inpenc@prehook=\toks17
 \inpenc@posthook=\toks18
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/base\fontenc.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/base\fontenc.sty
 Package: fontenc 2025/07/18 v2.1d Standard LaTeX package
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/vntex\t5enc.def
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/vntex\t5enc.def
 File: t5enc.def 2006/11/21 v1.4 Vietnamese T5 encoding
 Now handling font encoding T5 ...
 ... processing UTF-8 mapping file for font encoding T5
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/vntex\t5enc.dfu
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/vntex\t5enc.dfu
 File: t5enc.dfu 2006/08/19 v1.1 UTF8 support for Vietnamese
    defining Unicode char U+00AB (decimal 171)
    defining Unicode char U+00BB (decimal 187)
@@ -188,22 +191,34 @@ File: t5enc.dfu 2006/08/19 v1.1 UTF8 support for Vietnamese
    defining Unicode char U+203A (decimal 8250)
    defining Unicode char U+2423 (decimal 9251)
 ))
-LaTeX Font Info:    Trying to load font information for T5+cmr on input line 116.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/vntex\t5cmr.fd
+LaTeX Font Info:    Trying to load font information for T5+cmr on input line 11
+6.
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/vntex\t5cmr.fd
 File: t5cmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
-)) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/babel\babel.sty
-Package: babel 2026/02/14 v26.3 The multilingual framework for LuaLaTeX, pdfLaTeX and XeLaTeX
+))
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/babel\babel.sty
+Package: babel 2026/02/14 v26.3 The multilingual framework for LuaLaTeX, pdfLaT
+eX and XeLaTeX
 \babel@savecnt=\count284
-LaTeX Encoding Info:    Redeclaring text command \ij (encoding OT1) on input line 2078.
-LaTeX Encoding Info:    Redeclaring text command \IJ (encoding OT1) on input line 2080.
-LaTeX Encoding Info:    Redeclaring text command \ij (encoding T1) on input line 2082.
-LaTeX Encoding Info:    Redeclaring text command \IJ (encoding T1) on input line 2083.
-LaTeX Encoding Info:    Ignoring declaration for text command \ij (encoding ?) on input line 2084.
-LaTeX Encoding Info:    Ignoring declaration for text command \IJ (encoding ?) on input line 2086.
-LaTeX Encoding Info:    Ignoring declaration for text command \SS (encoding ?) on input line 2111.
+LaTeX Encoding Info:    Redeclaring text command \ij (encoding OT1) on input li
+ne 2078.
+LaTeX Encoding Info:    Redeclaring text command \IJ (encoding OT1) on input li
+ne 2080.
+LaTeX Encoding Info:    Redeclaring text command \ij (encoding T1) on input lin
+e 2082.
+LaTeX Encoding Info:    Redeclaring text command \IJ (encoding T1) on input lin
+e 2083.
+LaTeX Encoding Info:    Ignoring declaration for text command \ij (encoding ?) 
+on input line 2084.
+LaTeX Encoding Info:    Ignoring declaration for text command \IJ (encoding ?) 
+on input line 2086.
+LaTeX Encoding Info:    Ignoring declaration for text command \SS (encoding ?) 
+on input line 2111.
 \U@D=\dimen149
 \l@unhyphenated=\language79
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/babel\txtbabel.def)
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/babel\txtbabel.def)
 \bbl@readstream=\read2
 \bbl@dirlevel=\count285
 Package babel Info: Configuration files are deprecated, as
@@ -214,11 +229,18 @@ Package babel Info: Configuration files are deprecated, as
 * Local config file bblopts.cfg used
 *
 (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/arabi\bblopts.cfg
-File: bblopts.cfg 2005/09/08 v0.1 add Arabic and Farsi to "declared" options of babel
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/babel/locale/vi\babel-vietnamese.tex) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/babel/locale/en\babel-english.tex)
+File: bblopts.cfg 2005/09/08 v0.1 add Arabic and Farsi to "declared" options of
+ babel
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/babel/locale/vi\babel
+-vietnamese.tex)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/babel/locale/en\babel
+-english.tex)
 Package babel Info: Importing font and identification data for vietnamese
 (babel)             from babel-vi.ini. Reported on input line 4330.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/babel-vietnamese\vietnamese.ldf
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/babel-vietnamese\vietna
+mese.ldf
 Language: vietnamese 
 
 
@@ -232,78 +254,144 @@ Package babel Info: Hyphen rules for 'vietnamese' set to \l@english
 (babel)             (\language0). Reported on input line 37.
 Package babel Info: Hyphen rules for 'vietnam' set to \l@english
 (babel)             (\language0). Reported on input line 38.
-Loading definitions for the Vietnamese font encoding (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/vntex\t5enc.def
+Loading definitions for the Vietnamese font encoding
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/vntex\t5enc.def
 File: t5enc.def 2006/11/21 v1.4 Vietnamese T5 encoding
 LaTeX Font Info:    Redeclaring font encoding T5 on input line 75.
-LaTeX Encoding Info:    Redeclaring text command \` (encoding T5) on input line 79.
-LaTeX Encoding Info:    Redeclaring text command \' (encoding T5) on input line 80.
-LaTeX Encoding Info:    Redeclaring text command \^ (encoding T5) on input line 81.
-LaTeX Encoding Info:    Redeclaring text command \~ (encoding T5) on input line 82.
-LaTeX Encoding Info:    Redeclaring text command \" (encoding T5) on input line 83.
-LaTeX Encoding Info:    Redeclaring text command \r (encoding T5) on input line 84.
-LaTeX Encoding Info:    Redeclaring text command \v (encoding T5) on input line 85.
-LaTeX Encoding Info:    Redeclaring text command \u (encoding T5) on input line 86.
-LaTeX Encoding Info:    Redeclaring text command \= (encoding T5) on input line 87.
-LaTeX Encoding Info:    Redeclaring text command \. (encoding T5) on input line 88.
-LaTeX Encoding Info:    Redeclaring text command \b (encoding T5) on input line 90.
-LaTeX Encoding Info:    Redeclaring text command \c (encoding T5) on input line 94.
-LaTeX Encoding Info:    Redeclaring text command \d (encoding T5) on input line 98.
-LaTeX Encoding Info:    Redeclaring text command \h (encoding T5) on input line 103.
-LaTeX Encoding Info:    Redeclaring text symbol \quotesinglbase (encoding T5) on input line 105.
-LaTeX Encoding Info:    Redeclaring text symbol \guilsinglleft (encoding T5) on input line 106.
-LaTeX Encoding Info:    Redeclaring text symbol \guilsinglright (encoding T5) on input line 107.
-LaTeX Encoding Info:    Redeclaring text symbol \textquotedblleft (encoding T5) on input line 108.
-LaTeX Encoding Info:    Redeclaring text symbol \textquotedblright (encoding T5) on input line 109.
-LaTeX Encoding Info:    Redeclaring text symbol \quotedblbase (encoding T5) on input line 110.
-LaTeX Encoding Info:    Redeclaring text symbol \guillemotleft (encoding T5) on input line 111.
-LaTeX Encoding Info:    Redeclaring text symbol \guillemotright (encoding T5) on input line 112.
-LaTeX Encoding Info:    Redeclaring text symbol \textendash (encoding T5) on input line 113.
-LaTeX Encoding Info:    Redeclaring text symbol \textemdash (encoding T5) on input line 114.
-LaTeX Encoding Info:    Redeclaring text symbol \textcompwordmark (encoding T5) on input line 115.
-LaTeX Encoding Info:    Redeclaring text command \textperthousand (encoding T5) on input line 117.
-LaTeX Encoding Info:    Redeclaring text command \textpertenthousand (encoding T5) on input line 118.
-LaTeX Encoding Info:    Redeclaring text symbol \i (encoding T5) on input line 119.
-LaTeX Encoding Info:    Redeclaring text symbol \textvisiblespace (encoding T5) on input line 121.
-LaTeX Encoding Info:    Redeclaring text symbol \textquotedbl (encoding T5) on input line 122.
-LaTeX Encoding Info:    Redeclaring text symbol \textdollar (encoding T5) on input line 123.
-LaTeX Encoding Info:    Redeclaring text symbol \textquoteright (encoding T5) on input line 124.
-LaTeX Encoding Info:    Redeclaring text symbol \textless (encoding T5) on input line 125.
-LaTeX Encoding Info:    Redeclaring text symbol \textgreater (encoding T5) on input line 126.
-LaTeX Encoding Info:    Redeclaring text symbol \textbackslash (encoding T5) on input line 127.
-LaTeX Encoding Info:    Redeclaring text symbol \textasciicircum (encoding T5) on input line 128.
-LaTeX Encoding Info:    Redeclaring text symbol \textunderscore (encoding T5) on input line 129.
-LaTeX Encoding Info:    Redeclaring text symbol \textquoteleft (encoding T5) on input line 130.
-LaTeX Encoding Info:    Redeclaring text symbol \textbraceleft (encoding T5) on input line 131.
-LaTeX Encoding Info:    Redeclaring text symbol \textbar (encoding T5) on input line 132.
-LaTeX Encoding Info:    Redeclaring text symbol \textbraceright (encoding T5) on input line 133.
-LaTeX Encoding Info:    Redeclaring text symbol \textasciitilde (encoding T5) on input line 134.
-LaTeX Encoding Info:    Redeclaring text command \horn (encoding T5) on input line 137.
-LaTeX Encoding Info:    Redeclaring text symbol \DJ (encoding T5) on input line 306.
-LaTeX Encoding Info:    Redeclaring text symbol \dj (encoding T5) on input line 307.
-LaTeX Encoding Info:    Redeclaring text symbol \Acircumflex (encoding T5) on input line 312.
-LaTeX Encoding Info:    Redeclaring text symbol \Abreve (encoding T5) on input line 319.
-LaTeX Encoding Info:    Redeclaring text symbol \Ecircumflex (encoding T5) on input line 326.
-LaTeX Encoding Info:    Redeclaring text symbol \Ocircumflex (encoding T5) on input line 333.
-LaTeX Encoding Info:    Redeclaring text symbol \Ohorn (encoding T5) on input line 340.
-LaTeX Encoding Info:    Redeclaring text symbol \Uhorn (encoding T5) on input line 347.
-LaTeX Encoding Info:    Redeclaring text symbol \acircumflex (encoding T5) on input line 354.
-LaTeX Encoding Info:    Redeclaring text symbol \abreve (encoding T5) on input line 361.
-LaTeX Encoding Info:    Redeclaring text symbol \ecircumflex (encoding T5) on input line 368.
-LaTeX Encoding Info:    Redeclaring text symbol \ocircumflex (encoding T5) on input line 375.
-LaTeX Encoding Info:    Redeclaring text symbol \ohorn (encoding T5) on input line 382.
-LaTeX Encoding Info:    Redeclaring text symbol \uhorn (encoding T5) on input line 389.
-LaTeX Encoding Info:    Redeclaring text symbol \ACIRCUMFLEX (encoding T5) on input line 397.
-LaTeX Encoding Info:    Redeclaring text symbol \ABREVE (encoding T5) on input line 404.
-LaTeX Encoding Info:    Redeclaring text symbol \ECIRCUMFLEX (encoding T5) on input line 411.
-LaTeX Encoding Info:    Redeclaring text symbol \OCIRCUMFLEX (encoding T5) on input line 418.
-LaTeX Encoding Info:    Redeclaring text symbol \OHORN (encoding T5) on input line 425.
-LaTeX Encoding Info:    Redeclaring text symbol \UHORN (encoding T5) on input line 432.
+LaTeX Encoding Info:    Redeclaring text command \` (encoding T5) on input line
+ 79.
+LaTeX Encoding Info:    Redeclaring text command \' (encoding T5) on input line
+ 80.
+LaTeX Encoding Info:    Redeclaring text command \^ (encoding T5) on input line
+ 81.
+LaTeX Encoding Info:    Redeclaring text command \~ (encoding T5) on input line
+ 82.
+LaTeX Encoding Info:    Redeclaring text command \" (encoding T5) on input line
+ 83.
+LaTeX Encoding Info:    Redeclaring text command \r (encoding T5) on input line
+ 84.
+LaTeX Encoding Info:    Redeclaring text command \v (encoding T5) on input line
+ 85.
+LaTeX Encoding Info:    Redeclaring text command \u (encoding T5) on input line
+ 86.
+LaTeX Encoding Info:    Redeclaring text command \= (encoding T5) on input line
+ 87.
+LaTeX Encoding Info:    Redeclaring text command \. (encoding T5) on input line
+ 88.
+LaTeX Encoding Info:    Redeclaring text command \b (encoding T5) on input line
+ 90.
+LaTeX Encoding Info:    Redeclaring text command \c (encoding T5) on input line
+ 94.
+LaTeX Encoding Info:    Redeclaring text command \d (encoding T5) on input line
+ 98.
+LaTeX Encoding Info:    Redeclaring text command \h (encoding T5) on input line
+ 103.
+LaTeX Encoding Info:    Redeclaring text symbol \quotesinglbase (encoding T5) o
+n input line 105.
+LaTeX Encoding Info:    Redeclaring text symbol \guilsinglleft (encoding T5) on
+ input line 106.
+LaTeX Encoding Info:    Redeclaring text symbol \guilsinglright (encoding T5) o
+n input line 107.
+LaTeX Encoding Info:    Redeclaring text symbol \textquotedblleft (encoding T5)
+ on input line 108.
+LaTeX Encoding Info:    Redeclaring text symbol \textquotedblright (encoding T5
+) on input line 109.
+LaTeX Encoding Info:    Redeclaring text symbol \quotedblbase (encoding T5) on 
+input line 110.
+LaTeX Encoding Info:    Redeclaring text symbol \guillemotleft (encoding T5) on
+ input line 111.
+LaTeX Encoding Info:    Redeclaring text symbol \guillemotright (encoding T5) o
+n input line 112.
+LaTeX Encoding Info:    Redeclaring text symbol \textendash (encoding T5) on in
+put line 113.
+LaTeX Encoding Info:    Redeclaring text symbol \textemdash (encoding T5) on in
+put line 114.
+LaTeX Encoding Info:    Redeclaring text symbol \textcompwordmark (encoding T5)
+ on input line 115.
+LaTeX Encoding Info:    Redeclaring text command \textperthousand (encoding T5)
+ on input line 117.
+LaTeX Encoding Info:    Redeclaring text command \textpertenthousand (encoding 
+T5) on input line 118.
+LaTeX Encoding Info:    Redeclaring text symbol \i (encoding T5) on input line 
+119.
+LaTeX Encoding Info:    Redeclaring text symbol \textvisiblespace (encoding T5)
+ on input line 121.
+LaTeX Encoding Info:    Redeclaring text symbol \textquotedbl (encoding T5) on 
+input line 122.
+LaTeX Encoding Info:    Redeclaring text symbol \textdollar (encoding T5) on in
+put line 123.
+LaTeX Encoding Info:    Redeclaring text symbol \textquoteright (encoding T5) o
+n input line 124.
+LaTeX Encoding Info:    Redeclaring text symbol \textless (encoding T5) on inpu
+t line 125.
+LaTeX Encoding Info:    Redeclaring text symbol \textgreater (encoding T5) on i
+nput line 126.
+LaTeX Encoding Info:    Redeclaring text symbol \textbackslash (encoding T5) on
+ input line 127.
+LaTeX Encoding Info:    Redeclaring text symbol \textasciicircum (encoding T5) 
+on input line 128.
+LaTeX Encoding Info:    Redeclaring text symbol \textunderscore (encoding T5) o
+n input line 129.
+LaTeX Encoding Info:    Redeclaring text symbol \textquoteleft (encoding T5) on
+ input line 130.
+LaTeX Encoding Info:    Redeclaring text symbol \textbraceleft (encoding T5) on
+ input line 131.
+LaTeX Encoding Info:    Redeclaring text symbol \textbar (encoding T5) on input
+ line 132.
+LaTeX Encoding Info:    Redeclaring text symbol \textbraceright (encoding T5) o
+n input line 133.
+LaTeX Encoding Info:    Redeclaring text symbol \textasciitilde (encoding T5) o
+n input line 134.
+LaTeX Encoding Info:    Redeclaring text command \horn (encoding T5) on input l
+ine 137.
+LaTeX Encoding Info:    Redeclaring text symbol \DJ (encoding T5) on input line
+ 306.
+LaTeX Encoding Info:    Redeclaring text symbol \dj (encoding T5) on input line
+ 307.
+LaTeX Encoding Info:    Redeclaring text symbol \Acircumflex (encoding T5) on i
+nput line 312.
+LaTeX Encoding Info:    Redeclaring text symbol \Abreve (encoding T5) on input 
+line 319.
+LaTeX Encoding Info:    Redeclaring text symbol \Ecircumflex (encoding T5) on i
+nput line 326.
+LaTeX Encoding Info:    Redeclaring text symbol \Ocircumflex (encoding T5) on i
+nput line 333.
+LaTeX Encoding Info:    Redeclaring text symbol \Ohorn (encoding T5) on input l
+ine 340.
+LaTeX Encoding Info:    Redeclaring text symbol \Uhorn (encoding T5) on input l
+ine 347.
+LaTeX Encoding Info:    Redeclaring text symbol \acircumflex (encoding T5) on i
+nput line 354.
+LaTeX Encoding Info:    Redeclaring text symbol \abreve (encoding T5) on input 
+line 361.
+LaTeX Encoding Info:    Redeclaring text symbol \ecircumflex (encoding T5) on i
+nput line 368.
+LaTeX Encoding Info:    Redeclaring text symbol \ocircumflex (encoding T5) on i
+nput line 375.
+LaTeX Encoding Info:    Redeclaring text symbol \ohorn (encoding T5) on input l
+ine 382.
+LaTeX Encoding Info:    Redeclaring text symbol \uhorn (encoding T5) on input l
+ine 389.
+LaTeX Encoding Info:    Redeclaring text symbol \ACIRCUMFLEX (encoding T5) on i
+nput line 397.
+LaTeX Encoding Info:    Redeclaring text symbol \ABREVE (encoding T5) on input 
+line 404.
+LaTeX Encoding Info:    Redeclaring text symbol \ECIRCUMFLEX (encoding T5) on i
+nput line 411.
+LaTeX Encoding Info:    Redeclaring text symbol \OCIRCUMFLEX (encoding T5) on i
+nput line 418.
+LaTeX Encoding Info:    Redeclaring text symbol \OHORN (encoding T5) on input l
+ine 425.
+LaTeX Encoding Info:    Redeclaring text symbol \UHORN (encoding T5) on input l
+ine 432.
 )
 Package babel Info: Making " an active character on input line 147.
 )
 Package babel Info: Importing font and identification data for english
 (babel)             from babel-en.ini. Reported on input line 4330.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/babel-english\english.ldf
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/babel-english\english.l
+df
 Language: english 2017/06/06 v3.3r English support from the babel system
 Package babel Info: Hyphen rules for 'canadian' set to \l@english
 (babel)             (\language0). Reported on input line 102.
@@ -311,12 +399,15 @@ Package babel Info: Hyphen rules for 'australian' set to \l@ukenglish
 (babel)             (\language73). Reported on input line 105.
 Package babel Info: Hyphen rules for 'newzealand' set to \l@ukenglish
 (babel)             (\language73). Reported on input line 108.
-)) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.sty
+))
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.sty
 Package: csquotes 2024-04-04 v5.2o context-sensitive quotations (JAW)
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty
 Package: etoolbox 2025/10/02 v2.5m e-TeX tools for LaTeX (JAW)
 \etb@tempcnta=\count286
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty
 Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
 \KV@toks@=\toks19
 )
@@ -327,12 +418,14 @@ Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
 \csq@maxlvl=\count291
 \csq@tshold=\count292
 \csq@ltx@everypar=\toks20
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.def
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.def
 File: csquotes.def 2024-04-04 v5.2o csquotes generic definitions (JAW)
 )
 Package csquotes Info: Trying to load configuration file 'csquotes.cfg'...
 Package csquotes Info: ... configuration file loaded successfully.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.cfg
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.cfg
 File: csquotes.cfg 
 )) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\mathptmx.sty
 Package: mathptmx 2020/03/25 PSNFSS-v9.3 Times w/ Math, improved (SPQR, WaS) 
@@ -369,7 +462,8 @@ LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
 (Font)                  OT1/cmr/bx/it --> OT1/ptm/m/it on input line 35.
 LaTeX Info: Redefining \hbar on input line 50.
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hyphenat\hyphenat.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hyphenat\hyphenat.sty
 Package: hyphenat 2009/09/02 v2.3c hyphenation utilities
 
 
@@ -383,9 +477,10 @@ Package hyphenat Warning: *******************************
 LaTeX Info: Redefining \_ on input line 43.
 ) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.sty
 Package: geometry 2020/01/02 v5.9 Page Geometry
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/iftex\ifvtex.sty
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/iftex\ifvtex.sty
 Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
 Package: iftex 2024/12/12 v1.0g TeX engine tests
 ))
 \Gm@cnth=\count293
@@ -400,10 +495,14 @@ Package: iftex 2024/12/12 v1.0g TeX engine tests
 \Gm@layouthoffset=\dimen156
 \Gm@layoutvoffset=\dimen157
 \Gm@dimlist=\toks21
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.cfg)) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/setspace\setspace.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.cfg))
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/setspace\setspace.sty
 Package: setspace 2022/12/04 v6.7b set line spacing
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/fancyhdr\fancyhdr.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/fancyhdr\fancyhdr.sty
 Package: fancyhdr 2025/02/07 v5.2 Extensive control of page headers and footers
+
 \f@nch@headwidth=\skip51
 \f@nch@offset@elh=\skip52
 \f@nch@offset@erh=\skip53
@@ -419,19 +518,26 @@ Package: fancyhdr 2025/02/07 v5.2 Extensive control of page headers and footers
 \f@nch@widthC=\skip63
 \f@nch@widthR=\skip64
 \@temptokenb=\toks22
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/tools\indentfirst.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/tools\indentfirst.sty
 Package: indentfirst 2023/07/02 v1.03 Indent first paragraph (DPC)
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
 Package: graphicx 2024/12/31 v1.2e Enhanced LaTeX Graphics (DPC,SPQR)
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
 Package: graphics 2024/08/06 v1.4g Standard LaTeX Graphics (DPC,SPQR)
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty
 Package: trig 2023/12/02 v1.11 sin cos tan (DPC)
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\graphics.cfg
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\graphics.c
+fg
 File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
 )
 Package graphics Info: Driver file: pdftex.def on input line 106.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\pdftex.def
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\pdftex.def
 File: pdftex.def 2025/09/29 v1.2d Graphics/color driver for pdftex
 ))
 \Gin@req@height=\dimen158
@@ -443,9 +549,23 @@ Package: float 2001/11/08 v1.3d Float enhancements (AL)
 \float@box=\box53
 \@float@everytoks=\toks24
 \@floatcapt=\box54
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\rotating.sty
+Package: rotating 2025/01/14 v2.16e rotated objects in LaTeX
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty
+Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
+)
+\c@r@tfl@t=\count297
+\rotFPtop=\skip65
+\rotFPbot=\skip66
+\rot@float@box=\box55
+\rot@mess@toks=\toks25
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption.sty
 Package: caption 2023/08/05 v3.6o Customizing captions (AR)
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption3.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption3.sty
 Package: caption3 2023/07/31 v2.4d caption3 kernel (AR)
 \caption@tempdima=\dimen160
 \captionmargin=\dimen161
@@ -457,10 +577,12 @@ Package: caption3 2023/07/31 v2.4d caption3 kernel (AR)
 \caption@hangindent=\dimen167
 Package caption Info: Standard document class detected.
 )
-\c@caption@flags=\count297
-\c@continuedfloat=\count298
+\c@caption@flags=\count298
+\c@continuedfloat=\count299
 Package caption Info: float package is loaded.
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/booktabs\booktabs.sty
+Package caption Info: rotating package is loaded.
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/booktabs\booktabs.sty
 Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
 \heavyrulewidth=\dimen168
 \lightrulewidth=\dimen169
@@ -472,76 +594,87 @@ Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
 \cmidrulesep=\dimen175
 \cmidrulekern=\dimen176
 \defaultaddspace=\dimen177
-\@cmidla=\count299
-\@cmidlb=\count300
+\@cmidla=\count300
+\@cmidlb=\count301
 \@aboverulesep=\dimen178
 \@belowrulesep=\dimen179
-\@thisruleclass=\count301
-\@lastruleclass=\count302
+\@thisruleclass=\count302
+\@lastruleclass=\count303
 \@thisrulewidth=\dimen180
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/tools\longtable.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/tools\longtable.sty
 Package: longtable 2025-10-13 v4.24 Multi-page Table package (DPC)
-\LTleft=\skip65
-\LTright=\skip66
-\LTpre=\skip67
-\LTpost=\skip68
-\LTchunksize=\count303
+\LTleft=\skip67
+\LTright=\skip68
+\LTpre=\skip69
+\LTpost=\skip70
+\LTchunksize=\count304
 \LTcapwidth=\dimen181
-\LT@head=\box55
-\LT@firsthead=\box56
-\LT@foot=\box57
-\LT@lastfoot=\box58
-\LT@gbox=\box59
-\LT@cols=\count304
-\LT@rows=\count305
-\c@LT@tables=\count306
-\c@LT@chunks=\count307
-\LT@p@ftn=\toks25
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/multirow\multirow.sty
+\LT@head=\box56
+\LT@firsthead=\box57
+\LT@foot=\box58
+\LT@lastfoot=\box59
+\LT@gbox=\box60
+\LT@cols=\count305
+\LT@rows=\count306
+\c@LT@tables=\count307
+\c@LT@chunks=\count308
+\LT@p@ftn=\toks26
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/multirow\multirow.sty
 Package: multirow 2024/11/12 v2.9 Span multiple rows of a table
-\multirow@colwidth=\skip69
-\multirow@cntb=\count308
-\multirow@dima=\skip70
+\multirow@colwidth=\skip71
+\multirow@cntb=\count309
+\multirow@dima=\skip72
 \bigstrutjot=\dimen182
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty
 Package: array 2025/09/25 v2.6n Tabular extension package (FMi)
 \col@sep=\dimen183
-\ar@mcellbox=\box60
+\ar@mcellbox=\box61
 \extrarowheight=\dimen184
-\NC@list=\toks26
-\extratabsurround=\skip71
-\backup@length=\skip72
-\ar@cellbox=\box61
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+\NC@list=\toks27
+\extratabsurround=\skip73
+\backup@length=\skip74
+\ar@cellbox=\box62
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
+\Urlmuskip=\muskip17
+Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
 Package: amsmath 2025/07/09 v2.17z AMS math features
-\@mathmargin=\skip73
+\@mathmargin=\skip75
 
 For additional information on amsmath, use the `?' option.
 (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amstext.sty
 Package: amstext 2024/11/17 v2.01 AMS text
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty
 File: amsgen.sty 1999/11/30 v2.0 generic functions
-\@emptytoks=\toks27
+\@emptytoks=\toks28
 \ex@=\dimen185
-)) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty
+))
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty
 Package: amsbsy 1999/11/29 v1.2d Bold Symbols
 \pmbraise@=\dimen186
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty
 Package: amsopn 2022/04/08 v2.04 operator names
 )
-\inf@bad=\count309
+\inf@bad=\count310
 LaTeX Info: Redefining \frac on input line 233.
-\uproot@=\count310
-\leftroot@=\count311
+\uproot@=\count311
+\leftroot@=\count312
 LaTeX Info: Redefining \overline on input line 398.
 LaTeX Info: Redefining \colon on input line 409.
-\classnum@=\count312
-\DOTSCASE@=\count313
+\classnum@=\count313
+\DOTSCASE@=\count314
 LaTeX Info: Redefining \ldots on input line 495.
 LaTeX Info: Redefining \dots on input line 498.
 LaTeX Info: Redefining \cdots on input line 619.
-\Mathstrutbox@=\box62
-\strutbox@=\box63
+\Mathstrutbox@=\box63
+\strutbox@=\box64
 LaTeX Info: Redefining \big on input line 721.
 LaTeX Info: Redefining \Big on input line 722.
 LaTeX Info: Redefining \bigg on input line 723.
@@ -549,48 +682,52 @@ LaTeX Info: Redefining \Bigg on input line 724.
 \big@size=\dimen187
 LaTeX Font Info:    Redeclaring font encoding OML on input line 742.
 LaTeX Font Info:    Redeclaring font encoding OMS on input line 743.
-\macc@depth=\count314
+\macc@depth=\count315
 LaTeX Info: Redefining \bmod on input line 904.
 LaTeX Info: Redefining \pmod on input line 909.
 LaTeX Info: Redefining \smash on input line 939.
 LaTeX Info: Redefining \relbar on input line 969.
 LaTeX Info: Redefining \Relbar on input line 970.
-\c@MaxMatrixCols=\count315
-\dotsspace@=\muskip17
-\c@parentequation=\count316
-\dspbrk@lvl=\count317
-\tag@help=\toks28
-\row@=\count318
-\column@=\count319
-\maxfields@=\count320
-\andhelp@=\toks29
+\c@MaxMatrixCols=\count316
+\dotsspace@=\muskip18
+\c@parentequation=\count317
+\dspbrk@lvl=\count318
+\tag@help=\toks29
+\row@=\count319
+\column@=\count320
+\maxfields@=\count321
+\andhelp@=\toks30
 \eqnshift@=\dimen188
 \alignsep@=\dimen189
 \tagshift@=\dimen190
 \tagwidth@=\dimen191
 \totwidth@=\dimen192
 \lineht@=\dimen193
-\@envbody=\toks30
-\multlinegap=\skip74
-\multlinetaggap=\skip75
-\mathdisplay@stack=\toks31
+\@envbody=\toks31
+\multlinegap=\skip76
+\multlinetaggap=\skip77
+\mathdisplay@stack=\toks32
 LaTeX Info: Redefining \[ on input line 2950.
 LaTeX Info: Redefining \] on input line 2951.
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amsfonts.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amsfonts.sty
 Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
 \symAMSa=\mathgroup6
 \symAMSb=\mathgroup7
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amssymb.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amssymb.sty
 Package: amssymb 2013/01/14 v3.01 AMS font symbols
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
 Package: xcolor 2024/09/29 v3.02 LaTeX color extensions (UK)
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg
 File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
 Package xcolor Info: Driver file: pdftex.def on input line 274.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.ltx)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.ltx)
 Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1349.
 Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1353.
 Package xcolor Info: Model `RGB' extended on input line 1365.
@@ -602,45 +739,65 @@ Package xcolor Info: Model `Gray' substituted by `gray' on input line 1371.
 Package xcolor Info: Model `wave' substituted by `hsb' on input line 1372.
 ) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/colortbl\colortbl.sty
 Package: colortbl 2024/10/29 v1.0k Color table columns (DPC)
-\everycr=\toks32
-\minrowclearance=\skip76
-\rownum=\count321
+\everycr=\toks33
+\minrowclearance=\skip78
+\rownum=\count322
 ) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.sty
 Package: hyperref 2026-01-29 v7.01p Hypertext links for LaTeX
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.sty
 Package: kvsetkeys 2022-10-05 v1.19 Key value parser (HO)
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefinekeys.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefine
+keys.sty
 Package: kvdefinekeys 2019-12-19 v1.6 Define keys (HO)
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescape.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescape.s
+ty
 Package: pdfescape 2019/12/09 v1.15 Implements pdfTeX's escape features (HO)
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty
 Package: ltxcmds 2023-12-04 v1.26 LaTeX kernel commands for general use (HO)
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmds.sty
-Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO)
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmds
+.sty
+Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO
+)
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.s
+ty
 Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
 )
 Package pdftexcmds Info: \pdf@primitive is available.
 Package pdftexcmds Info: \pdf@ifprimitive is available.
 Package pdftexcmds Info: \pdfdraftmode found.
-)) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hycolor\hycolor.sty
+))
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hycolor\hycolor.sty
 Package: hycolor 2020-01-27 v1.10 Color options for hyperref/bookmark (HO)
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
 Package: nameref 2026-01-29 v2.58 Cross-referencing by name of section
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.sty
 Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/gettitlestring\gettitlestring.sty
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/gettitlestring\gettit
+lestring.sty
 Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.sty
 Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
 ))
-\c@section@level=\count322
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.sty
-Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO)
+\c@section@level=\count323
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.s
+ty
+Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO
+)
 )
 \@linkdim=\dimen194
-\Hy@linkcounter=\count323
-\Hy@pagecounter=\count324
+\Hy@linkcounter=\count324
+\Hy@pagecounter=\count325
  (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def
 File: pd1enc.def 2026-01-29 v7.01p Hyperref: PDFDocEncoding definition (HO)
 Now handling font encoding PD1 ...
@@ -648,7 +805,7 @@ Now handling font encoding PD1 ...
 ) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty
 Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
 )
-\Hy@SavedSpaceFactor=\count325
+\Hy@SavedSpaceFactor=\count326
  (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def
 File: puenc.def 2026-01-29 v7.01p Hyperref: PDF Unicode definition (HO)
 Now handling font encoding PU ...
@@ -662,19 +819,19 @@ Package hyperref Info: Plain pages OFF on input line 4216.
 Package hyperref Info: Backreferencing OFF on input line 4221.
 Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
 Package hyperref Info: Bookmarks ON on input line 4468.
-\c@Hy@tempcnt=\count326
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
-\Urlmuskip=\muskip18
-Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
-)
+\c@Hy@tempcnt=\count327
 LaTeX Info: Redefining \url on input line 4807.
 \XeTeXLinkMargin=\dimen195
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
 Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/bigintcalc\bigintcalc.sty
-Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO)
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/bigintcalc\bigintcalc
+.sty
+Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
+)
 ))
-\Fld@menulength=\count327
+\Fld@menulength=\count328
 \Field@Width=\dimen196
 \Fld@charsize=\dimen197
 Package hyperref Info: Hyper figures OFF on input line 6084.
@@ -684,216 +841,226 @@ Package hyperref Info: backreferencing OFF on input line 6099.
 Package hyperref Info: Link coloring ON on input line 6102.
 Package hyperref Info: Link coloring with OCG OFF on input line 6109.
 Package hyperref Info: PDF/A mode OFF on input line 6114.
-\Hy@abspage=\count328
-\c@Item=\count329
-\c@Hfootnote=\count330
+\Hy@abspage=\count329
+\c@Item=\count330
+\c@Hfootnote=\count331
 )
 Package hyperref Info: Driver (autodetected): hpdftex.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hpdftex.def
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hpdftex.def
 File: hpdftex.def 2026-01-29 v7.01p Hyperref driver for pdfTeX
-\Fld@listcount=\count331
-\c@bookmark@seq@number=\count332
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfilecheck.sty
+\Fld@listcount=\count332
+\c@bookmark@seq@number=\count333
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfil
+echeck.sty
 Package: rerunfilecheck 2025-06-21 v1.11 Rerun checks for auxiliary files (HO)
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/uniquecounter\uniquecounter.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/uniquecounter\uniquec
+ounter.sty
 Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
 )
-Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 284.
+Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
+84.
 )
-\Hy@SectionHShift=\skip77
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\biblatex.sty
+\Hy@SectionHShift=\skip79
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\biblatex.sty
 Package: biblatex 2025/07/10 v3.21 programmable bibliographies (PK/MW)
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/logreq\logreq.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/logreq\logreq.sty
 Package: logreq 2010/08/04 v1.0 xml request logger
-\lrq@indent=\count333
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/logreq\logreq.def
+\lrq@indent=\count334
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/logreq\logreq.def
 File: logreq.def 2010/08/04 v1.0 logreq spec v1.0
-)) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty
-Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
-)
-\c@tabx@nest=\count334
-\c@listtotal=\count335
-\c@listcount=\count336
-\c@liststart=\count337
-\c@liststop=\count338
-\c@citecount=\count339
-\c@citetotal=\count340
-\c@multicitecount=\count341
-\c@multicitetotal=\count342
-\c@instcount=\count343
-\c@maxnames=\count344
-\c@minnames=\count345
-\c@maxitems=\count346
-\c@minitems=\count347
-\c@citecounter=\count348
-\c@maxcitecounter=\count349
-\c@savedcitecounter=\count350
-\c@uniquelist=\count351
-\c@uniquename=\count352
-\c@refsection=\count353
-\c@refsegment=\count354
-\c@maxextratitle=\count355
-\c@maxextratitleyear=\count356
-\c@maxextraname=\count357
-\c@maxextradate=\count358
-\c@maxextraalpha=\count359
-\c@abbrvpenalty=\count360
-\c@highnamepenalty=\count361
-\c@lownamepenalty=\count362
-\c@maxparens=\count363
-\c@parenlevel=\count364
-\blx@tempcnta=\count365
-\blx@tempcntb=\count366
-\blx@tempcntc=\count367
-\c@blx@maxsection=\count368
-\blx@maxsegment@0=\count369
-\blx@notetype=\count370
-\blx@parenlevel@text=\count371
-\blx@parenlevel@foot=\count372
-\blx@sectionciteorder@0=\count373
-\blx@sectionciteorderinternal@0=\count374
-\blx@entrysetcounter=\count375
-\blx@biblioinstance=\count376
-\labelnumberwidth=\skip78
-\labelalphawidth=\skip79
-\biblabelsep=\skip80
-\bibitemsep=\skip81
-\bibnamesep=\skip82
-\bibinitsep=\skip83
-\bibparsep=\skip84
-\bibhang=\skip85
+))
+\c@tabx@nest=\count335
+\c@listtotal=\count336
+\c@listcount=\count337
+\c@liststart=\count338
+\c@liststop=\count339
+\c@citecount=\count340
+\c@citetotal=\count341
+\c@multicitecount=\count342
+\c@multicitetotal=\count343
+\c@instcount=\count344
+\c@maxnames=\count345
+\c@minnames=\count346
+\c@maxitems=\count347
+\c@minitems=\count348
+\c@citecounter=\count349
+\c@maxcitecounter=\count350
+\c@savedcitecounter=\count351
+\c@uniquelist=\count352
+\c@uniquename=\count353
+\c@refsection=\count354
+\c@refsegment=\count355
+\c@maxextratitle=\count356
+\c@maxextratitleyear=\count357
+\c@maxextraname=\count358
+\c@maxextradate=\count359
+\c@maxextraalpha=\count360
+\c@abbrvpenalty=\count361
+\c@highnamepenalty=\count362
+\c@lownamepenalty=\count363
+\c@maxparens=\count364
+\c@parenlevel=\count365
+\blx@tempcnta=\count366
+\blx@tempcntb=\count367
+\blx@tempcntc=\count368
+\c@blx@maxsection=\count369
+\blx@maxsegment@0=\count370
+\blx@notetype=\count371
+\blx@parenlevel@text=\count372
+\blx@parenlevel@foot=\count373
+\blx@sectionciteorder@0=\count374
+\blx@sectionciteorderinternal@0=\count375
+\blx@entrysetcounter=\count376
+\blx@biblioinstance=\count377
+\labelnumberwidth=\skip80
+\labelalphawidth=\skip81
+\biblabelsep=\skip82
+\bibitemsep=\skip83
+\bibnamesep=\skip84
+\bibinitsep=\skip85
+\bibparsep=\skip86
+\bibhang=\skip87
 \blx@bcfin=\read3
 \blx@bcfout=\write3
 \blx@langwohyphens=\language81
-\c@mincomprange=\count377
-\c@maxcomprange=\count378
-\c@mincompwidth=\count379
+\c@mincomprange=\count378
+\c@maxcomprange=\count379
+\c@mincompwidth=\count380
 Package biblatex Info: Trying to load biblatex default data model...
 Package biblatex Info: ... file 'blx-dm.def' found.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-dm.def
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-dm.def
 File: blx-dm.def 2025/07/10 v3.21 biblatex datamodel (PK/MW)
 )
 Package biblatex Info: Trying to load biblatex style data model...
 Package biblatex Info: ... file 'apa.dbx' found.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex-apa\apa.dbx
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex-apa\apa.dbx
 File: apa.dbx 2025/08/27 v9.20 APA biblatex style data model
 )
 Package biblatex Info: Trying to load biblatex custom data model...
 Package biblatex Info: ... file 'biblatex-dm.cfg' not found.
-\c@afterword=\count380
-\c@savedafterword=\count381
-\c@annotator=\count382
-\c@savedannotator=\count383
-\c@author=\count384
-\c@savedauthor=\count385
-\c@bookauthor=\count386
-\c@savedbookauthor=\count387
-\c@commentator=\count388
-\c@savedcommentator=\count389
-\c@editor=\count390
-\c@savededitor=\count391
-\c@editora=\count392
-\c@savededitora=\count393
-\c@editorb=\count394
-\c@savededitorb=\count395
-\c@editorc=\count396
-\c@savededitorc=\count397
-\c@foreword=\count398
-\c@savedforeword=\count399
-\c@holder=\count400
-\c@savedholder=\count401
-\c@introduction=\count402
-\c@savedintroduction=\count403
-\c@namea=\count404
-\c@savednamea=\count405
-\c@nameb=\count406
-\c@savednameb=\count407
-\c@namec=\count408
-\c@savednamec=\count409
-\c@translator=\count410
-\c@savedtranslator=\count411
-\c@shortauthor=\count412
-\c@savedshortauthor=\count413
-\c@shorteditor=\count414
-\c@savedshorteditor=\count415
-\c@narrator=\count416
-\c@savednarrator=\count417
-\c@execproducer=\count418
-\c@savedexecproducer=\count419
-\c@execdirector=\count420
-\c@savedexecdirector=\count421
-\c@with=\count422
-\c@savedwith=\count423
-\c@labelname=\count424
-\c@savedlabelname=\count425
-\c@institution=\count426
-\c@savedinstitution=\count427
-\c@lista=\count428
-\c@savedlista=\count429
-\c@listb=\count430
-\c@savedlistb=\count431
-\c@listc=\count432
-\c@savedlistc=\count433
-\c@listd=\count434
-\c@savedlistd=\count435
-\c@liste=\count436
-\c@savedliste=\count437
-\c@listf=\count438
-\c@savedlistf=\count439
-\c@location=\count440
-\c@savedlocation=\count441
-\c@organization=\count442
-\c@savedorganization=\count443
-\c@origlocation=\count444
-\c@savedoriglocation=\count445
-\c@origpublisher=\count446
-\c@savedorigpublisher=\count447
-\c@publisher=\count448
-\c@savedpublisher=\count449
-\c@language=\count450
-\c@savedlanguage=\count451
-\c@origlanguage=\count452
-\c@savedoriglanguage=\count453
-\c@citation=\count454
-\c@savedcitation=\count455
-\c@pageref=\count456
-\c@savedpageref=\count457
-\shorthandwidth=\skip86
-\shortjournalwidth=\skip87
-\shortserieswidth=\skip88
-\shorttitlewidth=\skip89
-\shortauthorwidth=\skip90
-\shorteditorwidth=\skip91
-\locallabelnumberwidth=\skip92
-\locallabelalphawidth=\skip93
-\localshorthandwidth=\skip94
-\localshortjournalwidth=\skip95
-\localshortserieswidth=\skip96
-\localshorttitlewidth=\skip97
-\localshortauthorwidth=\skip98
-\localshorteditorwidth=\skip99
+\c@afterword=\count381
+\c@savedafterword=\count382
+\c@annotator=\count383
+\c@savedannotator=\count384
+\c@author=\count385
+\c@savedauthor=\count386
+\c@bookauthor=\count387
+\c@savedbookauthor=\count388
+\c@commentator=\count389
+\c@savedcommentator=\count390
+\c@editor=\count391
+\c@savededitor=\count392
+\c@editora=\count393
+\c@savededitora=\count394
+\c@editorb=\count395
+\c@savededitorb=\count396
+\c@editorc=\count397
+\c@savededitorc=\count398
+\c@foreword=\count399
+\c@savedforeword=\count400
+\c@holder=\count401
+\c@savedholder=\count402
+\c@introduction=\count403
+\c@savedintroduction=\count404
+\c@namea=\count405
+\c@savednamea=\count406
+\c@nameb=\count407
+\c@savednameb=\count408
+\c@namec=\count409
+\c@savednamec=\count410
+\c@translator=\count411
+\c@savedtranslator=\count412
+\c@shortauthor=\count413
+\c@savedshortauthor=\count414
+\c@shorteditor=\count415
+\c@savedshorteditor=\count416
+\c@narrator=\count417
+\c@savednarrator=\count418
+\c@execproducer=\count419
+\c@savedexecproducer=\count420
+\c@execdirector=\count421
+\c@savedexecdirector=\count422
+\c@with=\count423
+\c@savedwith=\count424
+\c@labelname=\count425
+\c@savedlabelname=\count426
+\c@institution=\count427
+\c@savedinstitution=\count428
+\c@lista=\count429
+\c@savedlista=\count430
+\c@listb=\count431
+\c@savedlistb=\count432
+\c@listc=\count433
+\c@savedlistc=\count434
+\c@listd=\count435
+\c@savedlistd=\count436
+\c@liste=\count437
+\c@savedliste=\count438
+\c@listf=\count439
+\c@savedlistf=\count440
+\c@location=\count441
+\c@savedlocation=\count442
+\c@organization=\count443
+\c@savedorganization=\count444
+\c@origlocation=\count445
+\c@savedoriglocation=\count446
+\c@origpublisher=\count447
+\c@savedorigpublisher=\count448
+\c@publisher=\count449
+\c@savedpublisher=\count450
+\c@language=\count451
+\c@savedlanguage=\count452
+\c@origlanguage=\count453
+\c@savedoriglanguage=\count454
+\c@citation=\count455
+\c@savedcitation=\count456
+\c@pageref=\count457
+\c@savedpageref=\count458
+\shorthandwidth=\skip88
+\shortjournalwidth=\skip89
+\shortserieswidth=\skip90
+\shorttitlewidth=\skip91
+\shortauthorwidth=\skip92
+\shorteditorwidth=\skip93
+\locallabelnumberwidth=\skip94
+\locallabelalphawidth=\skip95
+\localshorthandwidth=\skip96
+\localshortjournalwidth=\skip97
+\localshortserieswidth=\skip98
+\localshorttitlewidth=\skip99
+\localshortauthorwidth=\skip100
+\localshorteditorwidth=\skip101
 Package biblatex Info: Trying to load compatibility code...
 Package biblatex Info: ... file 'blx-compat.def' found.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-compat.def
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-compat.def
 File: blx-compat.def 2025/07/10 v3.21 biblatex compatibility (PK/MW)
 )
 Package biblatex Info: Trying to load generic definitions...
 Package biblatex Info: ... file 'biblatex.def' found.
  (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\biblatex.def
 File: biblatex.def 2025/07/10 v3.21 biblatex compatibility (PK/MW)
-\c@textcitecount=\count458
-\c@textcitetotal=\count459
-\c@textcitemaxnames=\count460
-\c@biburlbigbreakpenalty=\count461
-\c@biburlbreakpenalty=\count462
-\c@biburlnumpenalty=\count463
-\c@biburlucpenalty=\count464
-\c@biburllcpenalty=\count465
+\c@textcitecount=\count459
+\c@textcitetotal=\count460
+\c@textcitemaxnames=\count461
+\c@biburlbigbreakpenalty=\count462
+\c@biburlbreakpenalty=\count463
+\c@biburlnumpenalty=\count464
+\c@biburlucpenalty=\count465
+\c@biburllcpenalty=\count466
 \biburlbigskip=\muskip19
 \biburlnumskip=\muskip20
 \biburlucskip=\muskip21
 \biburllcskip=\muskip22
-\c@smartand=\count466
+\c@smartand=\count467
 )
 Package biblatex Info: Trying to load bibliography style 'apa'...
 Package biblatex Info: ... file 'apa.bbx' found.
@@ -901,22 +1068,31 @@ Package biblatex Info: ... file 'apa.bbx' found.
 File: apa.bbx 2025/08/27 v9.20 APA biblatex references style
 Package biblatex Info: Trying to load bibliography style 'standard'...
 Package biblatex Info: ... file 'standard.bbx' found.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/bbx\standard.bbx
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/bbx\standard.b
+bx
 File: standard.bbx 2025/07/10 v3.21 biblatex bibliography style (PK/MW)
-\c@bbx:relatedcount=\count467
-\c@bbx:relatedtotal=\count468
+\c@bbx:relatedcount=\count468
+\c@bbx:relatedtotal=\count469
 )
-Package biblatex Info: Delimiter 'nameyeardelim' in context 'bib' already defined, overwriting.
-Package biblatex Info: Delimiter 'nameyeardelim' in context 'biblist' already defined, overwriting.
-Package biblatex Info: Delimiter 'nonameyeardelim' in context 'bib' already defined, overwriting.
-Package biblatex Info: Delimiter 'nonameyeardelim' in context 'biblist' already defined, overwriting.
+Package biblatex Info: Delimiter 'nameyeardelim' in context 'bib' already defin
+ed, overwriting.
+Package biblatex Info: Delimiter 'nameyeardelim' in context 'biblist' already d
+efined, overwriting.
+Package biblatex Info: Delimiter 'nonameyeardelim' in context 'bib' already def
+ined, overwriting.
+Package biblatex Info: Delimiter 'nonameyeardelim' in context 'biblist' already
+ defined, overwriting.
 )
 Package biblatex Info: Trying to load citation style 'apa'...
 Package biblatex Info: ... file 'apa.cbx' found.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex-apa\apa.cbx
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex-apa\apa.cbx
 File: apa.cbx 2025/08/27 v9.20 APA biblatex citation style
-Package biblatex Info: Delimiter 'nameyeardelim' in context '' already defined, overwriting.
-Package biblatex Info: Delimiter 'andothersdelim' in context '' already defined, overwriting.
+Package biblatex Info: Delimiter 'nameyeardelim' in context '' already defined,
+ overwriting.
+Package biblatex Info: Delimiter 'andothersdelim' in context '' already defined
+, overwriting.
 Package biblatex Info: Redefining '\fullcite'.
 Package biblatex Info: Redefining '\citeauthor'.
 Package biblatex Info: Redefining '\citeyear'.
@@ -935,49 +1111,61 @@ Package biblatex Info: Redefining '\textcites'.
 )
 Package biblatex Info: Trying to load configuration file...
 Package biblatex Info: ... file 'biblatex.cfg' found.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\biblatex.cfg
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\biblatex.cfg
 File: biblatex.cfg 
 )
 Package biblatex Info: Input encoding 'utf8' detected.
 Package biblatex Info: Document encoding is UTF8 ....
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/l3kernel\expl3.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/l3kernel\expl3.sty
 Package: expl3 2026-01-19 L3 programming layer (loader) 
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pdftex.def
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pdf
+tex.def
 File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count469
+\l__color_backend_stack_int=\count470
 ))
 Package biblatex Info: ... and expl3
 (biblatex)             2026-01-19 L3 programming layer (loader) 
 (biblatex)             is new enough (at least 2020/04/06),
 (biblatex)             setting 'casechanger=expl3'.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-case-expl3.sty (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/l3packages/xparse\xparse.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-case-expl3
+.sty
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/l3packages/xparse\xpars
+e.sty
 Package: xparse 2025-10-09 L3 Experimental document command parser
 )
 Package: blx-case-expl3 2025/07/10 v3.21 expl3 case changing code for biblatex
-)) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/acronym\acronym.sty
+))
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/acronym\acronym.sty
 Package: acronym 2025/01/17 v1.50 Support for acronyms (Tobias Oetiker)
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/bigfoot\suffix.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/bigfoot\suffix.sty
 Package: suffix 2006/07/15 1.5a Variant command support
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/xstring\xstring.sty (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/xstring\xstring.tex
-\xs_counta=\count470
-\xs_countb=\count471
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/xstring\xstring.sty
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/generic/xstring\xstring.tex
+\xs_counta=\count471
+\xs_countb=\count472
 )
 Package: xstring 2023/08/22 v1.86 String manipulations (CT)
 )
-\AC@clearlist=\toks33
+\AC@clearlist=\toks34
 ) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/appendix\appendix.sty
 Package: appendix 2020/02/08 v1.2c extra appendix facilities
-\c@@pps=\count472
-\c@@ppsavesec=\count473
-\c@@ppsaveapp=\count474
+\c@@pps=\count473
+\c@@ppsavesec=\count474
+\c@@ppsaveapp=\count475
 ) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/titlesec\titlesec.sty
 Package: titlesec 2025/01/04 v2.17 Sectioning titles
-\ttl@box=\box64
-\beforetitleunit=\skip100
-\aftertitleunit=\skip101
+\ttl@box=\box65
+\beforetitleunit=\skip102
+\aftertitleunit=\skip103
 \ttl@plus=\dimen198
 \ttl@minus=\dimen199
-\ttl@toksa=\toks34
+\ttl@toksa=\toks35
 \titlewidth=\dimen256
 \titlewidthlast=\dimen257
 \titlewidthfirst=\dimen258
@@ -990,157 +1178,161 @@ Package csquotes Info: Checking for multilingual support...
 Package csquotes Info: ... found 'babel' package.
 Package csquotes Info: Adjusting default style.
 Package csquotes Info: Redefining alias 'default' -> 'english'.
-LaTeX Font Info:    Trying to load font information for T5+ptm on input line 137.
+LaTeX Font Info:    Trying to load font information for T5+ptm on input line 14
+0.
  (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/vntex\t5ptm.fd
 File: t5utm.fd 2005/08/24 Fontinst v1.929 font definitions for T5/ptm.
-) (thesis.aux)
+)
+(thesis.aux)
 \openout1 = `thesis.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 137.
-LaTeX Font Info:    ... okay on input line 137.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 137.
-LaTeX Font Info:    ... okay on input line 137.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 137.
-LaTeX Font Info:    ... okay on input line 137.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 137.
-LaTeX Font Info:    ... okay on input line 137.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 137.
-LaTeX Font Info:    ... okay on input line 137.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 137.
-LaTeX Font Info:    ... okay on input line 137.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 137.
-LaTeX Font Info:    ... okay on input line 137.
-LaTeX Font Info:    Checking defaults for T5/cmr/m/n on input line 137.
-LaTeX Font Info:    ... okay on input line 137.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 137.
-LaTeX Font Info:    ... okay on input line 137.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 137.
-LaTeX Font Info:    ... okay on input line 137.
-LaTeX Font Info:    Trying to load font information for T5+cmtt on input line 137.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/vntex\t5cmtt.fd
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 140.
+LaTeX Font Info:    ... okay on input line 140.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 140.
+LaTeX Font Info:    ... okay on input line 140.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 140.
+LaTeX Font Info:    ... okay on input line 140.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 140.
+LaTeX Font Info:    ... okay on input line 140.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 140.
+LaTeX Font Info:    ... okay on input line 140.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 140.
+LaTeX Font Info:    ... okay on input line 140.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 140.
+LaTeX Font Info:    ... okay on input line 140.
+LaTeX Font Info:    Checking defaults for T5/cmr/m/n on input line 140.
+LaTeX Font Info:    ... okay on input line 140.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 140.
+LaTeX Font Info:    ... okay on input line 140.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 140.
+LaTeX Font Info:    ... okay on input line 140.
+LaTeX Font Info:    Trying to load font information for T5+cmtt on input line 1
+40.
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/vntex\t5cmtt.fd
 File: t5cmtt.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 )
 
 LaTeX Font Warning: Font shape `T5/cmtt/m/scsl' undefined
-(Font)              using `T5/cmtt/m/sc' instead on input line 137.
+(Font)              using `T5/cmtt/m/sc' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/b/n' undefined
-(Font)              using `T5/cmtt/m/n' instead on input line 137.
+(Font)              using `T5/cmtt/m/n' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/b/it' undefined
-(Font)              using `T5/cmtt/b/n' instead on input line 137.
+(Font)              using `T5/cmtt/b/n' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/b/sl' undefined
-(Font)              using `T5/cmtt/b/it' instead on input line 137.
+(Font)              using `T5/cmtt/b/it' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/b/scit' undefined
-(Font)              using `T5/cmtt/b/sc' instead on input line 137.
+(Font)              using `T5/cmtt/b/sc' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/b/sc' undefined
-(Font)              using `T5/cmtt/b/n' instead on input line 137.
+(Font)              using `T5/cmtt/b/n' instead on input line 140.
 
 LaTeX Font Info:    Font shape `T5/cmtt/bx/n' in size <12> not available
-(Font)              Font shape `T5/cmtt/m/n' tried instead on input line 137.
+(Font)              Font shape `T5/cmtt/m/n' tried instead on input line 140.
 LaTeX Font Info:    Font shape `T5/cmtt/bx/it' in size <12> not available
-(Font)              Font shape `T5/cmtt/m/it' tried instead on input line 137.
+(Font)              Font shape `T5/cmtt/m/it' tried instead on input line 140.
 
 LaTeX Font Warning: Font shape `T5/cmtt/bx/sl' undefined
-(Font)              using `T5/cmtt/bx/it' instead on input line 137.
+(Font)              using `T5/cmtt/bx/it' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/bx/scit' undefined
-(Font)              using `T5/cmtt/bx/sc' instead on input line 137.
+(Font)              using `T5/cmtt/bx/sc' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/bx/sc' undefined
-(Font)              using `T5/cmtt/bx/n' instead on input line 137.
+(Font)              using `T5/cmtt/bx/n' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/sbx/sc' undefined
-(Font)              using `T5/cmtt/bx/sc' instead on input line 137.
+(Font)              using `T5/cmtt/bx/sc' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/sbx/n' undefined
-(Font)              using `T5/cmtt/bx/n' instead on input line 137.
+(Font)              using `T5/cmtt/bx/n' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/sbx/it' undefined
-(Font)              using `T5/cmtt/bx/it' instead on input line 137.
+(Font)              using `T5/cmtt/bx/it' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/bx/sl' undefined
-(Font)              using `T5/cmtt/bx/it' instead on input line 137.
+(Font)              using `T5/cmtt/bx/it' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/sbx/it' undefined
-(Font)              using `T5/cmtt/bx/it' instead on input line 137.
+(Font)              using `T5/cmtt/bx/it' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/bx/scit' undefined
-(Font)              using `T5/cmtt/bx/sc' instead on input line 137.
+(Font)              using `T5/cmtt/bx/sc' instead on input line 140.
 
 LaTeX Font Info:    Font shape `T5/cmtt/bx/sc' in size <12> not available
-(Font)              Font shape `T5/cmtt/m/n' tried instead on input line 137.
+(Font)              Font shape `T5/cmtt/m/n' tried instead on input line 140.
 
 LaTeX Font Warning: Font shape `T5/cmtt/bc/sc' undefined
-(Font)              using `T5/cmtt/c/sc' instead on input line 137.
+(Font)              using `T5/cmtt/c/sc' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/c/n' undefined
-(Font)              using `T5/cmtt/m/n' instead on input line 137.
+(Font)              using `T5/cmtt/m/n' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/c/it' undefined
-(Font)              using `T5/cmtt/c/n' instead on input line 137.
+(Font)              using `T5/cmtt/c/n' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/c/sl' undefined
-(Font)              using `T5/cmtt/c/it' instead on input line 137.
+(Font)              using `T5/cmtt/c/it' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/c/scit' undefined
-(Font)              using `T5/cmtt/c/sc' instead on input line 137.
+(Font)              using `T5/cmtt/c/sc' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/c/sc' undefined
-(Font)              using `T5/cmtt/c/n' instead on input line 137.
+(Font)              using `T5/cmtt/c/n' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/lc/sc' undefined
-(Font)              using `T5/cmtt/c/sc' instead on input line 137.
+(Font)              using `T5/cmtt/c/sc' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/lc/n' undefined
-(Font)              using `T5/cmtt/c/n' instead on input line 137.
+(Font)              using `T5/cmtt/c/n' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/lc/it' undefined
-(Font)              using `T5/cmtt/c/it' instead on input line 137.
+(Font)              using `T5/cmtt/c/it' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/c/sl' undefined
-(Font)              using `T5/cmtt/c/it' instead on input line 137.
+(Font)              using `T5/cmtt/c/it' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/lc/it' undefined
-(Font)              using `T5/cmtt/c/it' instead on input line 137.
+(Font)              using `T5/cmtt/c/it' instead on input line 140.
 
 
 LaTeX Font Warning: Font shape `T5/cmtt/c/scit' undefined
-(Font)              using `T5/cmtt/c/sc' instead on input line 137.
+(Font)              using `T5/cmtt/c/sc' instead on input line 140.
 
 LaTeX Font Info:    Font shape `T5/cmtt/m/ui' in size <12> not available
-(Font)              Font shape `T5/cmtt/m/it' tried instead on input line 137.
+(Font)              Font shape `T5/cmtt/m/it' tried instead on input line 140.
 LaTeX Font Info:    Font shape `T5/cmtt/bx/ui' in size <12> not available
-(Font)              Font shape `T5/cmtt/m/it' tried instead on input line 137.
+(Font)              Font shape `T5/cmtt/m/it' tried instead on input line 140.
 
 LaTeX Font Warning: Font shape `T5/cmtt/m/In' undefined
-(Font)              using `T5/cmtt/m/n' instead on input line 137.
+(Font)              using `T5/cmtt/m/n' instead on input line 140.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -1176,57 +1368,76 @@ LaTeX Font Warning: Font shape `T5/cmtt/m/In' undefined
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mkii
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mk
+ii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count475
+\scratchcounter=\count476
 \scratchdimen=\dimen259
-\scratchbox=\box65
-\nofMPsegments=\count476
-\nofMParguments=\count477
-\everyMPshowfont=\toks35
-\MPscratchCnt=\count478
+\scratchbox=\box66
+\nofMPsegments=\count477
+\nofMParguments=\count478
+\everyMPshowfont=\toks36
+\MPscratchCnt=\count479
 \MPscratchDim=\dimen260
-\MPnumerator=\count479
-\makeMPintoPDFobject=\count480
-\everyMPtoPDFconversion=\toks36
-) (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-base.sty
+\MPnumerator=\count480
+\makeMPintoPDFobject=\count481
+\everyMPtoPDFconversion=\toks37
+)
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-b
+ase.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
-Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 485.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/00miktex\epstopdf-sys.cfg
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
+85.
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/00miktex\epstopdf-sys.c
+fg
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: hyperref package is loaded.
 Package caption Info: longtable package is loaded.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/caption\ltcaption.sty
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/caption\ltcaption.sty
 Package: ltcaption 2021/01/08 v1.4c longtable captions (AR)
 )
 Package caption Info: End \AtBeginDocument code.
-Package hyperref Info: Link coloring ON on input line 137.
- (thesis.out) (thesis.out)
+Package hyperref Info: Link coloring ON on input line 140.
+
+(thesis.out) (thesis.out)
 \@outlinefile=\write4
 \openout4 = `thesis.out'.
 
 Package biblatex Info: Trying to load language 'english' -> 'english-apa'...
 Package biblatex Info: ... file 'english-apa.lbx' found.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex-apa\english-apa.lbx
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex-apa\english-ap
+a.lbx
 File: english-apa.lbx 2025/08/27 v9.20 APA biblatex localisation
 Package biblatex Info: Trying to load language 'english'...
 Package biblatex Info: ... file 'english.lbx' found.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\english.lbx
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\english.lb
+x
 File: english.lbx 2025/07/10 v3.21 biblatex localization (PK/MW)
 )
 Package biblatex Info: Trying to load language 'american' -> 'american-apa'...
 Package biblatex Info: ... file 'american-apa.lbx' found.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex-apa\american-apa.lbx
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex-apa\american-a
+pa.lbx
 File: american-apa.lbx 2025/08/27 v9.20 APA biblatex localisation
 Package biblatex Info: Trying to load language 'american'...
 Package biblatex Info: ... file 'american.lbx' found.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\american.lbx
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\american.l
+bx
 File: american.lbx 2025/07/10 v3.21 biblatex localization (PK/MW)
 Package biblatex Info: Trying to load language 'english'...
 Package biblatex Info: ... file 'english.lbx' found.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\english.lbx
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\english.lb
+x
 File: english.lbx 2025/07/10 v3.21 biblatex localization (PK/MW)
 ))))
 
@@ -1237,7 +1448,7 @@ Package biblatex Info: Trying to load language 'vietnamese'...
 Package biblatex Info: ... file 'vietnamese.lbx' not found.
 
 Package biblatex Warning: Language 'vietnamese' not supported.
-(biblatex)                Using dummy definitions on input line 137.
+(biblatex)                Using dummy definitions on input line 140.
 
 Package biblatex Info: Input encoding 'utf8' detected.
 Package biblatex Info: Automatic encoding selection.
@@ -1247,804 +1458,940 @@ Package biblatex Info: Automatic encoding selection.
 Package biblatex Info: Trying to load bibliographic data...
 Package biblatex Info: ... file 'thesis.bbl' found.
 (thesis.bbl)
-Package biblatex Info: Reference section=0 on input line 137.
-Package biblatex Info: Reference segment=0 on input line 137.
-<figures/logo.png, id=239, 1204.5pt x 665.48625pt>
+Package biblatex Info: Reference section=0 on input line 140.
+Package biblatex Info: Reference segment=0 on input line 140.
+<figures/logo.png, id=331, 1204.5pt x 665.48625pt>
 File: figures/logo.png Graphic file (type png)
 <use figures/logo.png>
-Package pdftex.def Info: figures/logo.png  used on input line 151.
-(pdftex.def)             Requested size: 110.25443pt x 60.90662pt.
+Package pdftex.def Info: figures/logo.png  used on input line 154.
+(pdftex.def)             Requested size: 123.48442pt x 68.21785pt.
  [1
 
-{C:/Users/Admin/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/vntex/t5.enc} <./figures/logo.png>]
+{C:/Users/Admin/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/Admi
+n/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/vntex/t5.enc} <./figures/logo.p
+ng>]
 File: figures/logo.png Graphic file (type png)
 <use figures/logo.png>
-Package pdftex.def Info: figures/logo.png  used on input line 169.
-(pdftex.def)             Requested size: 110.25443pt x 60.90662pt.
+Package pdftex.def Info: figures/logo.png  used on input line 174.
+(pdftex.def)             Requested size: 123.48442pt x 68.21785pt.
 
-pdfTeX warning (ext4): destination with the same identifier (name{page.}) has been already used, duplicate ignored
+pdfTeX warning (ext4): destination with the same identifier (name{page.}) has b
+een already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.179 \end{titlepage}
+l.187 \end{titlepage}
                       [1]
-LaTeX Font Info:    Calculating math sizes for size <13> on input line 201.
-LaTeX Font Info:    Trying to load font information for OT1+ztmcm on input line 201.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1ztmcm.fd
+pdfTeX warning (ext4): destination with the same identifier (name{page.}) has b
+een already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.223 \end{titlepage}
+                      [1]
+LaTeX Font Info:    Calculating math sizes for size <13> on input line 245.
+LaTeX Font Info:    Trying to load font information for OT1+ztmcm on input line
+ 245.
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1ztmcm.fd
 File: ot1ztmcm.fd 2000/01/03 Fontinst v1.801 font definitions for OT1/ztmcm.
 )
-LaTeX Font Info:    Trying to load font information for OML+ztmcm on input line 201.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omlztmcm.fd
+LaTeX Font Info:    Trying to load font information for OML+ztmcm on input line
+ 245.
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omlztmcm.fd
 File: omlztmcm.fd 2000/01/03 Fontinst v1.801 font definitions for OML/ztmcm.
 )
-LaTeX Font Info:    Trying to load font information for OMS+ztmcm on input line 201.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omsztmcm.fd
+LaTeX Font Info:    Trying to load font information for OMS+ztmcm on input line
+ 245.
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omsztmcm.fd
 File: omsztmcm.fd 2000/01/03 Fontinst v1.801 font definitions for OMS/ztmcm.
 )
-LaTeX Font Info:    Trying to load font information for OMX+ztmcm on input line 201.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omxztmcm.fd
+LaTeX Font Info:    Trying to load font information for OMX+ztmcm on input line
+ 245.
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omxztmcm.fd
 File: omxztmcm.fd 2000/01/03 Fontinst v1.801 font definitions for OMX/ztmcm.
 )
-LaTeX Font Info:    Trying to load font information for OT1+ptm on input line 201.
- (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1ptm.fd
+LaTeX Font Info:    Trying to load font information for OT1+ptm on input line 2
+45.
+
+(C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1ptm.fd
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 )
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <13> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 201.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 245.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <9.62007> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 201.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 245.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <7.80008> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 201.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 245.
 
-pdfTeX warning (ext4): destination with the same identifier (name{page.}) has been already used, duplicate ignored
+pdfTeX warning (ext4): destination with the same identifier (name{page.}) has b
+een already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.203 \newpage
+l.247 \newpage
                [1
 
 ]
-pdfTeX warning (ext4): destination with the same identifier (name{page.}) has been already used, duplicate ignored
+pdfTeX warning (ext4): destination with the same identifier (name{page.}) has b
+een already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.238 \newpage
+l.282 \newpage
                [2
 
 ]
 Package acronym Info: Label `acro:LLM' newly defined as it shall be overridden
-although it is yet undefined on input line 255.
+although it is yet undefined on input line 299.
 Package acronym Info: Label `acro:API' newly defined as it shall be overridden
-although it is yet undefined on input line 261.
+although it is yet undefined on input line 305.
 
-pdfTeX warning (ext4): destination with the same identifier (name{page.}) has been already used, duplicate ignored
+pdfTeX warning (ext4): destination with the same identifier (name{page.}) has b
+een already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.265 \newpage
+l.309 \newpage
                [3
 
 ]
-pdfTeX warning (ext4): destination with the same identifier (name{page.}) has been already used, duplicate ignored
+pdfTeX warning (ext4): destination with the same identifier (name{page.}) has b
+een already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.292 \newpage
+l.336 \newpage
                [4
 
 ] (thesis.toc [1
 
-] [2])
+] [2] [3])
 \tf@toc=\write5
 \openout5 = `thesis.toc'.
 
- [3] (thesis.lof [4
+ [4] (thesis.lof [5
 
-])
+]
+Package acronym Info: Label `acro:JWT' newly defined as it shall be overridden
+although it is yet undefined on input line 32.
+)
 \tf@lof=\write6
 \openout6 = `thesis.lof'.
 
- [5] (thesis.lot)
+ [6]
+(thesis.lot)
 \tf@lot=\write7
 \openout7 = `thesis.lot'.
 
- [6
+ [7
 
 ]
 
-LaTeX Warning: Hyper reference `acro:CSS' on page vii undefined on input line 322.
+LaTeX Warning: Hyper reference `acro:CNTT' on page viii undefined on input line
+ 364.
 
 
-LaTeX Warning: Hyper reference `acro:CSS' on page vii undefined on input line 322.
+LaTeX Warning: Hyper reference `acro:CNTT' on page viii undefined on input line
+ 364.
 
-[7
+
+LaTeX Warning: Hyper reference `acro:CSS' on page viii undefined on input line 
+366.
+
+
+LaTeX Warning: Hyper reference `acro:CSS' on page viii undefined on input line 
+366.
+
+[8
 
 ]
 
-LaTeX Warning: Hyper reference `acro:UI' on page viii undefined on input line 342.
+LaTeX Warning: Hyper reference `acro:UI' on page ix undefined on input line 386
+.
 
 
-LaTeX Warning: Hyper reference `acro:UI' on page viii undefined on input line 342.
+LaTeX Warning: Hyper reference `acro:UI' on page ix undefined on input line 386
+.
 
 
-LaTeX Warning: Hyper reference `acro:UX' on page viii undefined on input line 343.
+LaTeX Warning: Hyper reference `acro:UX' on page ix undefined on input line 387
+.
 
 
-LaTeX Warning: Hyper reference `acro:UX' on page viii undefined on input line 343.
+LaTeX Warning: Hyper reference `acro:UX' on page ix undefined on input line 387
+.
 
-[8]
+[9]
 CHÆ¯Æ NG 1.
 Package acronym Info: Label `acro:OJ' newly defined as it shall be overridden
-although it is yet undefined on input line 372.
+although it is yet undefined on input line 416.
 Package acronym Info: Label `acro:PDF' newly defined as it shall be overridden
-although it is yet undefined on input line 389.
+although it is yet undefined on input line 433.
 [1
 
 ]
 Package acronym Info: Label `acro:AI' newly defined as it shall be overridden
-although it is yet undefined on input line 394.
+although it is yet undefined on input line 438.
 Package acronym Info: Label `acro:REST' newly defined as it shall be overridden
-although it is yet undefined on input line 420.
+
+although it is yet undefined on input line 464.
  [2]
 Package acronym Info: Label `acro:TDTU' newly defined as it shall be overridden
-although it is yet undefined on input line 445.
-Package acronym Info: Label `acro:CNTT' newly defined as it shall be overridden
-although it is yet undefined on input line 446.
+
+although it is yet undefined on input line 485.
  [3]
 CHÆ¯Æ NG 2.
-Package acronym Info: Label `acro:JWT' newly defined as it shall be overridden
-although it is yet undefined on input line 480.
 [4
 
 ]
 Package acronym Info: Label `acro:JPA' newly defined as it shall be overridden
-although it is yet undefined on input line 505.
+although it is yet undefined on input line 537.
 Package acronym Info: Label `acro:MVC' newly defined as it shall be overridden
-although it is yet undefined on input line 507.
+although it is yet undefined on input line 539.
 Package acronym Info: Label `acro:HTTP' newly defined as it shall be overridden
-although it is yet undefined on input line 508.
- [5] [6] [7]
-Package acronym Info: Label `acro:AC' newly defined as it shall be overridden
-although it is yet undefined on input line 581.
-Package acronym Info: Label `acro:WA' newly defined as it shall be overridden
-although it is yet undefined on input line 581.
-Package acronym Info: Label `acro:TLE' newly defined as it shall be overridden
-although it is yet undefined on input line 581.
-Package acronym Info: Label `acro:MLE' newly defined as it shall be overridden
-although it is yet undefined on input line 581.
-Package acronym Info: Label `acro:RE' newly defined as it shall be overridden
-although it is yet undefined on input line 582.
-Package acronym Info: Label `acro:CE' newly defined as it shall be overridden
-although it is yet undefined on input line 582.
-Package acronym Info: Label `acro:JSON' newly defined as it shall be overridden
-although it is yet undefined on input line 596.
- [8] [9] [10]
-CHÆ¯Æ NG 3.
-[11
 
-] [12]
+although it is yet undefined on input line 540.
+ [5] [6]
+Package acronym Info: Label `acro:AC' newly defined as it shall be overridden
+although it is yet undefined on input line 613.
+Package acronym Info: Label `acro:WA' newly defined as it shall be overridden
+although it is yet undefined on input line 613.
+Package acronym Info: Label `acro:TLE' newly defined as it shall be overridden
+although it is yet undefined on input line 613.
+Package acronym Info: Label `acro:MLE' newly defined as it shall be overridden
+although it is yet undefined on input line 613.
+Package acronym Info: Label `acro:RE' newly defined as it shall be overridden
+although it is yet undefined on input line 614.
+Package acronym Info: Label `acro:CE' newly defined as it shall be overridden
+although it is yet undefined on input line 614.
+ [7]
+Package acronym Info: Label `acro:JSON' newly defined as it shall be overridden
+
+although it is yet undefined on input line 628.
+ [8] [9]
+CHÆ¯Æ NG 3.
+[10
+
+] [11]
 Package acronym Info: Label `acro:ICPC' newly defined as it shall be overridden
-although it is yet undefined on input line 736.
- [13]
-Underfull \hbox (badness 10000) in paragraph at lines 786--786
+
+although it is yet undefined on input line 759.
+ [12]
+Underfull \hbox (badness 10000) in paragraph at lines 809--809
 []|\T5/ptm/m/n/13 Contest Cre-ator
  []
 
 
-ignored: Infinite glue shrinkage found in box being split [14]
-ignored: Infinite glue shrinkage found in box being split [15]
-ignored: Infinite glue shrinkage found in box being split [16]
-Underfull \hbox (badness 4467) in paragraph at lines 879--879
+ignored: Infinite glue shrinkage found in box being split [13]
+ignored: Infinite glue shrinkage fo
+und in box being split [14]
+ignored: Infinite glue shrinkage found in box being split [15
+]
+Underfull \hbox (badness 4467) in paragraph at lines 902--902
 []|\T5/ptm/m/n/13 Xem danh s¡ch b i
  []
 
 
-Underfull \hbox (badness 1990) in paragraph at lines 892--896
+Underfull \hbox (badness 1990) in paragraph at lines 915--919
 []|\T5/ptm/m/n/13 Contest Cre-ator ho°c Ad-min cªp nhªt
  []
 
 
-Underfull \hbox (badness 1990) in paragraph at lines 928--930
+Underfull \hbox (badness 1990) in paragraph at lines 951--953
 []|\T5/ptm/m/n/13 Contest Cre-ator ho°c Ad-min cªp nhªt
  []
 
 
-Underfull \hbox (badness 1281) in paragraph at lines 1003--1003
+Underfull \hbox (badness 1281) in paragraph at lines 1026--1026
 []|\T5/ptm/m/n/13 Th¶m b¼nh luªn tr¶n
  []
 
 
-Underfull \hbox (badness 5817) in paragraph at lines 1018--1018
+Underfull \hbox (badness 5817) in paragraph at lines 1041--1041
 []|\T5/ptm/m/n/13 Th¶m b i to¡n v o
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1067--1067
+Underfull \hbox (badness 10000) in paragraph at lines 1090--1090
 []|\T5/ptm/m/n/13 Th«ng quy·n th nh
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1070--1070
+Underfull \hbox (badness 10000) in paragraph at lines 1093--1093
 []|\T5/ptm/m/n/13 Gi¡ng quy·n th nh
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1095--1095
+Underfull \hbox (badness 10000) in paragraph at lines 1118--1118
 []|\T5/ptm/m/n/13 ^^^«ng nhªp b¬ng
  []
 
 
-ignored: Infinite glue shrinkage found in box being split [17]
-ignored: Infinite glue shrinkage found in box being split [18]
+ignored: Infinite glue shrinkage found in box being split [16]
+ignored: Infinite glue shrinkage fo
+und in box being split [17]
+ignored: Infinite glue shrinkage found in box being split [18
+]
 ignored: Infinite glue shrinkage found in box being split [19]
-ignored: Infinite glue shrinkage found in box being split [20]
-ignored: Infinite glue shrinkage found in box being split [21]
+ignored: Infinite glue shrinkage f
+ound in box being split [20]
+ignored: Infinite glue shrinkage found in box being split [2
+1]
 ignored: Infinite glue shrinkage found in box being split [22]
-ignored: Infinite glue shrinkage found in box being split [23]
-ignored: Infinite glue shrinkage found in box being split [24]
-<figures/usecase.png, id=761, 1426.32875pt x 1898.09125pt>
+ignored: Infinite glue shrinkage 
+found in box being split [23]
+<figures/usecase.png, id=885, 1426.32875pt x 1898.09125pt>
 File: figures/usecase.png Graphic file (type png)
 <use figures/usecase.png>
-Package pdftex.def Info: figures/usecase.png  used on input line 1109.
+Package pdftex.def Info: figures/usecase.png  used on input line 1132.
 (pdftex.def)             Requested size: 405.7355pt x 539.91899pt.
- [25] [26 <./figures/usecase.png>]
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1129--1133
+ [24] [25 <./figures/usecase.png>]
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1152--1156
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1133--1135
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1156--1158
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1135--1137
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1158--1160
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1137--1138
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1160--1161
  [] [] [] 
  []
 
 
-Underfull \hbox (badness 2027) in paragraph at lines 1149--1149
+Underfull \hbox (badness 2027) in paragraph at lines 1172--1172
 []|\T5/ptm/b/n/13 Sü ki»n k½ch
  []
 
 
-Underfull \hbox (badness 1762) in paragraph at lines 1165--1170
+Underfull \hbox (badness 1762) in paragraph at lines 1188--1193
 \T5/ptm/m/n/13 2.3 H» thèng nhªn k¸t qu£
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1138--1178
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1161--1201
  [] [] [] 
  []
 
 
-ignored: Infinite glue shrinkage found in box being split [27]
-<figures/activity-submit.png, id=786, 578.16pt x 1240.635pt>
+ignored: Infinite glue shrinkage found in box being split [26]
+<figures/activity-submit.png, id=910, 578.16pt x 1240.635pt>
 File: figures/activity-submit.png Graphic file (type png)
 <use figures/activity-submit.png>
-Package pdftex.def Info: figures/activity-submit.png  used on input line 1184.
+Package pdftex.def Info: figures/activity-submit.png  used on input line 1207.
 (pdftex.def)             Requested size: 252.24744pt x 541.28098pt.
- [28]
-<figures/seq-submit.png, id=793, 1240.635pt x 755.82375pt>
+ [27]
+<figures/seq-submit.png, id=918, 1240.635pt x 755.82375pt>
 File: figures/seq-submit.png Graphic file (type png)
 <use figures/seq-submit.png>
-Package pdftex.def Info: figures/seq-submit.png  used on input line 1194.
+Package pdftex.def Info: figures/seq-submit.png  used on input line 1217.
 (pdftex.def)             Requested size: 441.01773pt x 268.67105pt.
- [29 <./figures/activity-submit.png (PNG copy)>]
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1213--1217
+ [28 <./figures/activity-submit.png (PNG copy)>]
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1236--1240
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1217--1219
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1240--1242
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1219--1221
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1242--1244
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1221--1222
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1244--1245
  [] [] [] 
  []
 
 
-Underfull \hbox (badness 2027) in paragraph at lines 1234--1234
+Underfull \hbox (badness 2027) in paragraph at lines 1257--1257
 []|\T5/ptm/b/n/13 Sü ki»n k½ch
  []
 
 
-Underfull \hbox (badness 2334) in paragraph at lines 1248--1250
+Underfull \hbox (badness 2334) in paragraph at lines 1271--1273
 \T5/ptm/m/n/13 2.2 H» thèng ^^_i·n s®n c¡c
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1222--1265
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1245--1288
  [] [] [] 
  []
 
 
-ignored: Infinite glue shrinkage found in box being split [30 <./figures/seq-submit.png (PNG copy)>]
-ignored: Infinite glue shrinkage found in box being split [31]
-<figures/activity-create-problem.png, id=819, 727.71875pt x 1418.29875pt>
+ignored: Infinite glue shrinkage found in box being split [29 <./figures/seq-submit.png 
+(PNG copy)>]
+ignored: Infinite glue shrinkage found in box being split [30]
+<figures/activity-create-problem.png, id=943, 727.71875pt x 1418.29875pt>
 File: figures/activity-create-problem.png Graphic file (type png)
 <use figures/activity-create-problem.png>
-Package pdftex.def Info: figures/activity-create-problem.png  used on input line 1271.
+Package pdftex.def Info: figures/activity-create-problem.png  used on input lin
+e 1294.
 (pdftex.def)             Requested size: 277.73523pt x 541.29642pt.
- [32]
-<figures/seq-create-problem.png, id=825, 1326.9575pt x 758.835pt>
+ [31]
+<figures/seq-create-problem.png, id=949, 1326.9575pt x 758.835pt>
 File: figures/seq-create-problem.png Graphic file (type png)
 <use figures/seq-create-problem.png>
-Package pdftex.def Info: figures/seq-create-problem.png  used on input line 1281.
+Package pdftex.def Info: figures/seq-create-problem.png  used on input line 130
+4.
 (pdftex.def)             Requested size: 441.01773pt x 252.19948pt.
- [33 <./figures/activity-create-problem.png (PNG copy)>]
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1301--1305
+ [32 <./figures/activity-create-problem.png (PNG copy)>]
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1325--1329
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1305--1307
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1329--1331
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1307--1309
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1331--1333
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1309--1310
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1333--1334
  [] [] [] 
  []
 
 
-Underfull \hbox (badness 2027) in paragraph at lines 1322--1322
+Underfull \hbox (badness 2027) in paragraph at lines 1346--1346
 []|\T5/ptm/b/n/13 Sü ki»n k½ch
  []
 
 
-Underfull \hbox (badness 1406) in paragraph at lines 1342--1343
+Underfull \hbox (badness 1406) in paragraph at lines 1366--1367
 []|\T5/ptm/m/n/13 3. Ng÷íi dòng duy»t tøng
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1310--1348
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1334--1372
  [] [] [] 
  []
 
-
-ignored: Infinite glue shrinkage found in box being split [34 <./figures/seq-create-problem.png (PNG copy)>]
-ignored: Infinite glue shrinkage found in box being split [35]
-<figures/activity-visualize.png, id=842, 743.77875pt x 1163.34625pt>
+[33 <./figures/seq-create-problem.png (PNG copy)>]
+ignored: Infinite glue shrinkage found
+ in box being split [34]
+<figures/activity-visualize.png, id=966, 853.1875pt x 1175.39125pt>
 File: figures/activity-visualize.png Graphic file (type png)
 <use figures/activity-visualize.png>
-Package pdftex.def Info: figures/activity-visualize.png  used on input line 1354.
-(pdftex.def)             Requested size: 308.71918pt x 482.86845pt.
- [36]
-<figures/seq-visualize.png, id=848, 1362.08875pt x 800.9925pt>
+Package pdftex.def Info: figures/activity-visualize.png  used on input line 137
+8.
+(pdftex.def)             Requested size: 308.70949pt x 425.29274pt.
+ [35]
+<figures/seq-visualize.png, id=972, 1488.56125pt x 993.7125pt>
 File: figures/seq-visualize.png Graphic file (type png)
 <use figures/seq-visualize.png>
-Package pdftex.def Info: figures/seq-visualize.png  used on input line 1364.
-(pdftex.def)             Requested size: 441.01773pt x 259.3417pt.
- [37 <./figures/activity-visualize.png (PNG copy)>]
+Package pdftex.def Info: figures/seq-visualize.png  used on input line 1388.
+(pdftex.def)             Requested size: 441.01773pt x 294.40115pt.
+ [36 <./figures/activity-visualize.png (PNG copy)>]
 Package acronym Info: Label `acro:IOI' newly defined as it shall be overridden
-although it is yet undefined on input line 1373.
+although it is yet undefined on input line 1397.
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1385--1389
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1409--1413
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1389--1391
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1413--1415
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1391--1393
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1415--1417
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1393--1394
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1417--1418
  [] [] [] 
  []
 
 
-Underfull \hbox (badness 2027) in paragraph at lines 1407--1407
+Underfull \hbox (badness 2027) in paragraph at lines 1431--1431
 []|\T5/ptm/b/n/13 Sü ki»n k½ch
  []
 
 
-Underfull \hbox (badness 4096) in paragraph at lines 1420--1423
+Underfull \hbox (badness 4096) in paragraph at lines 1444--1447
 []|\T5/ptm/m/n/13 1.1 H» thèng t¤o b£n ghi
  []
 
 
-Underfull \hbox (badness 1147) in paragraph at lines 1424--1429
+Underfull \hbox (badness 1147) in paragraph at lines 1448--1453
 \T5/ptm/m/n/13 nhúng ng÷íi dòng kh¡c cho
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1394--1440
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1418--1464
  [] [] [] 
  []
 
-[38 <./figures/seq-visualize.png (PNG copy)>]
-ignored: Infinite glue shrinkage found in box being split [39]
-<figures/activity-participate-contest.png, id=869, 683.55376pt x 1480.53125pt>
+[37 <./figures/seq-visualize.png (PNG copy)>]
+ignored: Infinite glue shrinkage found in b
+ox being split [38]
+<figures/activity-participate-contest.png, id=993, 683.55376pt x 1480.53125pt>
 File: figures/activity-participate-contest.png Graphic file (type png)
 <use figures/activity-participate-contest.png>
-Package pdftex.def Info: figures/activity-participate-contest.png  used on input line 1446.
+Package pdftex.def Info: figures/activity-participate-contest.png  used on inpu
+t line 1470.
 (pdftex.def)             Requested size: 249.90704pt x 541.28177pt.
- [40]
-<figures/seq-participate-contest.png, id=875, 1301.86375pt x 1032.85875pt>
+ [39]
+<figures/seq-participate-contest.png, id=1000, 1301.86375pt x 1032.85875pt>
 File: figures/seq-participate-contest.png Graphic file (type png)
 <use figures/seq-participate-contest.png>
-Package pdftex.def Info: figures/seq-participate-contest.png  used on input line 1456.
+Package pdftex.def Info: figures/seq-participate-contest.png  used on input lin
+e 1480.
 (pdftex.def)             Requested size: 441.01773pt x 349.89076pt.
- [41 <./figures/activity-participate-contest.png (PNG copy)>]
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1474--1478
+ [40 <./figures/activity-participate-contest.png (PNG copy)>]
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1498--1502
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1478--1480
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1502--1504
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1480--1482
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1504--1506
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1482--1483
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1506--1507
  [] [] [] 
  []
 
 
-Underfull \hbox (badness 2027) in paragraph at lines 1496--1496
+Underfull \hbox (badness 2027) in paragraph at lines 1520--1520
 []|\T5/ptm/b/n/13 Sü ki»n k½ch
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1483--1521
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1507--1545
  [] [] [] 
  []
 
-[42 <./figures/seq-participate-contest.png (PNG copy)>]
-ignored: Infinite glue shrinkage found in box being split [43]
-<figures/activity-hint.png, id=899, 556.0775pt x 884.30376pt>
+[41 <./figures/seq-participate-contest.png (PNG copy)>]
+ignored: Infinite glue shrinkage 
+found in box being split [42]
+<figures/activity-hint.png, id=1023, 556.0775pt x 884.30376pt>
 File: figures/activity-hint.png Graphic file (type png)
 <use figures/activity-hint.png>
-Package pdftex.def Info: figures/activity-hint.png  used on input line 1527.
+Package pdftex.def Info: figures/activity-hint.png  used on input line 1551.
 (pdftex.def)             Requested size: 308.71152pt x 490.92934pt.
- [44]
-<figures/seq-hint.png, id=907, 1044.90375pt x 613.29124pt>
+ [43]
+<figures/seq-hint.png, id=1031, 1044.90375pt x 613.29124pt>
 File: figures/seq-hint.png Graphic file (type png)
 <use figures/seq-hint.png>
-Package pdftex.def Info: figures/seq-hint.png  used on input line 1537.
+Package pdftex.def Info: figures/seq-hint.png  used on input line 1561.
 (pdftex.def)             Requested size: 441.01773pt x 258.85326pt.
- [45 <./figures/activity-hint.png (PNG copy)>]
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1558--1562
+ [44 <./figures/activity-hint.png (PNG copy)>]
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1582--1586
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1562--1564
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1586--1588
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1564--1566
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1588--1590
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1566--1567
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1590--1591
  [] [] [] 
  []
 
 
-Underfull \hbox (badness 2027) in paragraph at lines 1580--1580
+Underfull \hbox (badness 2027) in paragraph at lines 1604--1604
 []|\T5/ptm/b/n/13 Sü ki»n k½ch
  []
 
 
-Underfull \hbox (badness 2368) in paragraph at lines 1593--1595
+Underfull \hbox (badness 2368) in paragraph at lines 1617--1619
 \T5/ptm/m/n/13 chån c¡c b i to¡n ri¶ng t÷
  []
 
 
-Underfull \hbox (badness 1577) in paragraph at lines 1598--1599
+Underfull \hbox (badness 1577) in paragraph at lines 1622--1623
 \T5/ptm/m/n/13 c¡c b i to¡n trong b i thüc
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1567--1612
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1591--1636
  [] [] [] 
  []
 
-[46 <./figures/seq-hint.png (PNG copy)>]
-ignored: Infinite glue shrinkage found in box being split [47]
-<figures/activity-manage-lab.png, id=926, 681.54625pt x 1405.25pt>
+[45 <./figures/seq-hint.png (PNG copy)>]
+ignored: Infinite glue shrinkage found in box be
+ing split [46]
+<figures/activity-manage-lab.png, id=1050, 681.54625pt x 1405.25pt>
 File: figures/activity-manage-lab.png Graphic file (type png)
 <use figures/activity-manage-lab.png>
-Package pdftex.def Info: figures/activity-manage-lab.png  used on input line 1618.
+Package pdftex.def Info: figures/activity-manage-lab.png  used on input line 16
+42.
 (pdftex.def)             Requested size: 262.53651pt x 541.3124pt.
- [48]
-<figures/seq-manage-lab.png, id=932, 1082.0425pt x 1163.34625pt>
+ [47]
+<figures/seq-manage-lab.png, id=1056, 1082.0425pt x 1163.34625pt>
 File: figures/seq-manage-lab.png Graphic file (type png)
 <use figures/seq-manage-lab.png>
-Package pdftex.def Info: figures/seq-manage-lab.png  used on input line 1628.
+Package pdftex.def Info: figures/seq-manage-lab.png  used on input line 1652.
 (pdftex.def)             Requested size: 441.01773pt x 474.15262pt.
- [49 <./figures/activity-manage-lab.png (PNG copy)>] [50 <./figures/seq-manage-lab.png (PNG copy)>]
+ [48 <./figures/activity-manage-lab.png (PNG copy)>] [49 <./figures/seq-manage-
+lab.png (PNG copy)>]
 Package acronym Info: Label `acro:CORS' newly defined as it shall be overridden
-although it is yet undefined on input line 1667.
- [51] [52]
+
+although it is yet undefined on input line 1691.
+ [50]
+[51]
 CHÆ¯Æ NG 4.
-<figures/architecture.png, id=964, 800.9925pt x 790.955pt>
+<figures/architecture.png, id=1089, 801.99625pt x 790.955pt>
 File: figures/architecture.png Graphic file (type png)
 <use figures/architecture.png>
-Package pdftex.def Info: figures/architecture.png  used on input line 1716.
-(pdftex.def)             Requested size: 418.97514pt x 413.72484pt.
-[53
+Package pdftex.def Info: figures/architecture.png  used on input line 1740.
+(pdftex.def)             Requested size: 418.97397pt x 413.20587pt.
+[52
 
-] [54 <./figures/architecture.png (PNG copy)>]
+]
 Package acronym Info: Label `acro:ERD' newly defined as it shall be overridden
-although it is yet undefined on input line 1734.
+although it is yet undefined on input line 1757.
+ [53 <./figures/architecture.png (PNG copy)>]
 Package acronym Info: Label `acro:PK' newly defined as it shall be overridden
-although it is yet undefined on input line 1742.
+although it is yet undefined on input line 1765.
 Package acronym Info: Label `acro:FK' newly defined as it shall be overridden
-although it is yet undefined on input line 1742.
-<figures/erd.png, id=979, 2532.46124pt x 1128.215pt>
+although it is yet undefined on input line 1765.
+<figures/erd.png, id=1103, 6101.79625pt x 3224.045pt>
 File: figures/erd.png Graphic file (type png)
 <use figures/erd.png>
-Package pdftex.def Info: figures/erd.png  used on input line 1751.
-(pdftex.def)             Requested size: 2532.45508pt x 1128.21225pt.
- [55] [56 <./figures/erd.png (PNG copy)>]
-<figures/erd-user.png, id=991, 512.91624pt x 442.65375pt>
+Package pdftex.def Info: figures/erd.png  used on input line 1774.
+(pdftex.def)             Requested size: 660.02698pt x 348.74266pt.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1777.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <9> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1777.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <7> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1777.
+<figures/erd-user.png, id=1106, 512.91624pt x 442.65375pt>
 File: figures/erd-user.png Graphic file (type png)
 <use figures/erd-user.png>
-Package pdftex.def Info: figures/erd-user.png  used on input line 1766.
+Package pdftex.def Info: figures/erd-user.png  used on input line 1789.
 (pdftex.def)             Requested size: 418.96614pt x 361.5735pt.
-
-Underfull \hbox (badness 10000) in paragraph at lines 1793--1793
+ [54] [55 <./figures/erd.png (PNG copy)>]
+Underfull \hbox (badness 10000) in paragraph at lines 1816--1816
 []|\T5/ptm/m/n/13 auth_-provider,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1800--1800
+Underfull \hbox (badness 10000) in paragraph at lines 1823--1823
 []|\T5/ptm/m/n/13 created_-at, up-
  []
 
 
-Underfull \hbox (badness 2096) in paragraph at lines 1808--1810
+Underfull \hbox (badness 2096) in paragraph at lines 1831--1833
 \T5/ptm/m/n/13 k¶ têng hñp (sè b i ^^_¢ gi£i, ^^_iºm x¸p
  []
 
 
-Underfull \hbox (badness 1303) in paragraph at lines 1814--1817
+Underfull \hbox (badness 1303) in paragraph at lines 1837--1840
 []|\T5/ptm/m/n/13 Mët -- nhi·u tîi c¡c b£ng prob-lems (t¡c
  []
 
 
-ignored: Infinite glue shrinkage found in box being split [57 <./figures/erd-user.png (PNG copy)>] [58]
-<figures/erd-problem.png, id=1003, 755.82375pt x 810.02625pt>
+ignored: Infinite glue shrinkage found in box being split [56 <./figures/erd-user.png (P
+NG copy)>]
+<figures/erd-problem.png, id=1122, 755.82375pt x 810.02625pt>
 File: figures/erd-problem.png Graphic file (type png)
 <use figures/erd-problem.png>
-Package pdftex.def Info: figures/erd-problem.png  used on input line 1828.
+Package pdftex.def Info: figures/erd-problem.png  used on input line 1851.
 (pdftex.def)             Requested size: 369.57263pt x 396.07585pt.
-
-Underfull \hbox (badness 10000) in paragraph at lines 1856--1856
+ [57]
+Underfull \hbox (badness 10000) in paragraph at lines 1879--1879
 []|\T5/ptm/m/n/13 statement_-file_-url,
  []
 
 
-Underfull \hbox (badness 2469) in paragraph at lines 1859--1859
+Underfull \hbox (badness 2469) in paragraph at lines 1882--1882
 []|\T5/ptm/m/n/13 solution_-code, so-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1864--1864
+Underfull \hbox (badness 10000) in paragraph at lines 1887--1887
 []|\T5/ptm/m/n/13 time_-limit, mem-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1866--1866
+Underfull \hbox (badness 10000) in paragraph at lines 1889--1889
 []|\T5/ptm/m/n/13 created_-at, up-
  []
 
 
-Underfull \hbox (badness 8094) in paragraph at lines 1883--1883
+Underfull \hbox (badness 8094) in paragraph at lines 1906--1906
 []|\T5/ptm/m/n/13 T÷ìng t¡c ng÷íi
  []
 
 
-ignored: Infinite glue shrinkage found in box being split [59 <./figures/erd-problem.png (PNG copy)>] [60]
-<figures/erd-submission.png, id=1016, 585.18625pt x 415.5525pt>
+ignored: Infinite glue shrinkage found in box being split [58 <./figures/erd-problem.png
+ (PNG copy)>] [59]
+<figures/erd-submission.png, id=1140, 585.18625pt x 415.5525pt>
 File: figures/erd-submission.png Graphic file (type png)
 <use figures/erd-submission.png>
-Package pdftex.def Info: figures/erd-submission.png  used on input line 1897.
+Package pdftex.def Info: figures/erd-submission.png  used on input line 1920.
 (pdftex.def)             Requested size: 418.9854pt x 297.52994pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 1918--1918
+Underfull \hbox (badness 10000) in paragraph at lines 1941--1941
 []|\T5/ptm/m/n/13 submission_-lan-
  []
 
 
-Underfull \hbox (badness 1371) in paragraph at lines 1920--1921
+Underfull \hbox (badness 1371) in paragraph at lines 1943--1944
 []|\T5/ptm/m/n/13 Tr¤ng th¡i xû lþ (PEND-ING, JUDG-ING,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1924--1924
+Underfull \hbox (badness 10000) in paragraph at lines 1947--1947
 []|\T5/ptm/m/n/13 execution_-time,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1926--1926
+Underfull \hbox (badness 10000) in paragraph at lines 1949--1949
 []|\T5/ptm/m/n/13 test_-cases_-passed,
  []
 
 
-ignored: Infinite glue shrinkage found in box being split [61 <./figures/erd-submission.png (PNG copy)>]
-<figures/erd-contest.png, id=1025, 721.69624pt x 737.75626pt>
+ignored: Infinite glue shrinkage found in box being split [60 <./figures/erd-submission.
+png (PNG copy)>]
+<figures/erd-contest.png, id=1149, 721.69624pt x 737.75626pt>
 File: figures/erd-contest.png Graphic file (type png)
 <use figures/erd-contest.png>
-Package pdftex.def Info: figures/erd-contest.png  used on input line 1958.
+Package pdftex.def Info: figures/erd-contest.png  used on input line 1981.
 (pdftex.def)             Requested size: 387.44167pt x 396.06346pt.
- [62]
-Underfull \hbox (badness 10000) in paragraph at lines 1985--1985
+ [61]
+Underfull \hbox (badness 10000) in paragraph at lines 2008--2008
 []|\T5/ptm/m/n/13 start_-time, end_-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1987--1987
+Underfull \hbox (badness 10000) in paragraph at lines 2010--2010
 []|\T5/ptm/m/n/13 registration_-start,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1994--1994
+Underfull \hbox (badness 10000) in paragraph at lines 2017--2017
 []|\T5/ptm/m/n/13 freeze_-du-ra-tion_-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1997--1997
+Underfull \hbox (badness 10000) in paragraph at lines 2020--2020
 []|\T5/ptm/m/n/13 problems_-pub-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2002--2002
+Underfull \hbox (badness 10000) in paragraph at lines 2025--2025
 []|\T5/ptm/m/n/13 created_-at, up-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2014--2014
+Underfull \hbox (badness 10000) in paragraph at lines 2037--2037
 []|\T5/ptm/m/n/13 contest_-par-tic-i-pa-
  []
 
 
-ignored: Infinite glue shrinkage found in box being split [63 <./figures/erd-contest.png (PNG copy)>]
-ignored: Infinite glue shrinkage found in box being split [64]
-<figures/erd-organization.png, id=1043, 377.41pt x 473.77pt>
+ignored: Infinite glue shrinkage found in box being split [62 <./figures/erd-contest.png
+ (PNG copy)>]
+ignored: Infinite glue shrinkage found in box being split [63]
+<figures/erd-organization.png, id=1168, 377.41pt x 473.77pt>
 File: figures/erd-organization.png Graphic file (type png)
 <use figures/erd-organization.png>
-Package pdftex.def Info: figures/erd-organization.png  used on input line 2031.
+Package pdftex.def Info: figures/erd-organization.png  used on input line 2054.
+
 (pdftex.def)             Requested size: 315.51918pt x 396.07729pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 2060--2060
+Underfull \hbox (badness 10000) in paragraph at lines 2083--2083
 []|\T5/ptm/m/n/13 created_-at, up-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2066--2066
+Underfull \hbox (badness 10000) in paragraph at lines 2089--2089
 []|\T5/ptm/m/n/13 organization_-mem-
  []
 
-[65 <./figures/erd-organization.png (PNG copy)>]
-<figures/erd-lab.png, id=1052, 390.45876pt x 501.875pt>
+[64 <./figures/erd-organization.png (PNG copy)>]
+<figures/erd-lab.png, id=1176, 390.45876pt x 501.875pt>
 File: figures/erd-lab.png Graphic file (type png)
 <use figures/erd-lab.png>
-Package pdftex.def Info: figures/erd-lab.png  used on input line 2080.
+Package pdftex.def Info: figures/erd-lab.png  used on input line 2103.
 (pdftex.def)             Requested size: 308.15518pt x 396.08633pt.
- [66]
-Underfull \hbox (badness 10000) in paragraph at lines 2109--2109
+ [65]
+Underfull \hbox (badness 10000) in paragraph at lines 2132--2132
 []|\T5/ptm/m/n/13 solutions_-pub-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 2112--2112
+Underfull \hbox (badness 10000) in paragraph at lines 2135--2135
 []|\T5/ptm/m/n/13 created_-at, up-
  []
 
 
-ignored: Infinite glue shrinkage found in box being split [67 <./figures/erd-lab.png (PNG copy)>] [68]
-<figures/ui-home.png, id=1067, 2890.8pt x 1806.75pt>
-File: figures/ui-home.png Graphic file (type png)
-<use figures/ui-home.png>
-Package pdftex.def Info: figures/ui-home.png  used on input line 2147.
-(pdftex.def)             Requested size: 441.01773pt x 275.63235pt.
-<figures/ui-problems.png, id=1069, 2890.8pt x 1806.75pt>
+ignored: Infinite glue shrinkage found in box being split [66 <./figures/erd-lab.png (PN
+G copy)>] [67]
+<figures/ui-problems.png, id=1191, 2890.8pt x 1806.75pt>
 File: figures/ui-problems.png Graphic file (type png)
 <use figures/ui-problems.png>
-Package pdftex.def Info: figures/ui-problems.png  used on input line 2163.
+Package pdftex.def Info: figures/ui-problems.png  used on input line 2170.
 (pdftex.def)             Requested size: 441.01773pt x 275.63235pt.
- [69 <./figures/ui-home.png (PNG copy)>]
-<figures/ui-problem-detail.png, id=1075, 2890.8pt x 1806.75pt>
+<figures/ui-problem-detail.png, id=1193, 2890.8pt x 1806.75pt>
 File: figures/ui-problem-detail.png Graphic file (type png)
 <use figures/ui-problem-detail.png>
-Package pdftex.def Info: figures/ui-problem-detail.png  used on input line 2180.
+Package pdftex.def Info: figures/ui-problem-detail.png  used on input line 2187
+.
 (pdftex.def)             Requested size: 441.01773pt x 275.63235pt.
- [70 <./figures/ui-problems.png (PNG copy)>]
-<figures/ui-hint.png, id=1082, 2890.8pt x 1806.75pt>
+ [68 <./figures/ui-problems.png (PNG copy)>]
+<figures/ui-hint.png, id=1200, 2890.8pt x 1806.75pt>
 File: figures/ui-hint.png Graphic file (type png)
 <use figures/ui-hint.png>
-Package pdftex.def Info: figures/ui-hint.png  used on input line 2195.
+Package pdftex.def Info: figures/ui-hint.png  used on input line 2202.
 (pdftex.def)             Requested size: 441.01773pt x 275.63235pt.
- [71 <./figures/ui-problem-detail.png (PNG copy)>]
-<figures/ui-contest.png, id=1091, 2890.8pt x 1806.75pt>
+ [69 <./figures/ui-problem-detail.png (PNG copy)>]
+<figures/ui-contest.png, id=1209, 2890.8pt x 1806.75pt>
 File: figures/ui-contest.png Graphic file (type png)
 <use figures/ui-contest.png>
-Package pdftex.def Info: figures/ui-contest.png  used on input line 2211.
+Package pdftex.def Info: figures/ui-contest.png  used on input line 2218.
 (pdftex.def)             Requested size: 441.01773pt x 275.63235pt.
- [72 <./figures/ui-hint.png (PNG copy)>]
-<figures/ui-admin.png, id=1097, 2890.8pt x 1806.75pt>
+ [70 <./figures/ui-hint.png (PNG copy)>]
+<figures/ui-admin.png, id=1215, 2890.8pt x 1806.75pt>
 File: figures/ui-admin.png Graphic file (type png)
 <use figures/ui-admin.png>
-Package pdftex.def Info: figures/ui-admin.png  used on input line 2227.
+Package pdftex.def Info: figures/ui-admin.png  used on input line 2234.
 (pdftex.def)             Requested size: 441.01773pt x 275.63235pt.
- [73 <./figures/ui-contest.png (PNG copy)>] [74 <./figures/ui-admin.png (PNG copy)>]
-CHÆ¯Æ NG 5.
-LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 2255.
-LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <9> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 2255.
-LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <7> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 2255.
-[75
+ [71 <./figures/ui-contest.png (PNG copy)>] [72 <./figures/ui-admin.png (PNG co
+py)>]
+<figures/jwt-flow.png, id=1228, 1194.4625pt x 1047.915pt>
+File: figures/jwt-flow.png Graphic file (type png)
+<use figures/jwt-flow.png>
+Package pdftex.def Info: figures/jwt-flow.png  used on input line 2284.
+(pdftex.def)             Requested size: 441.01773pt x 386.907pt.
+ [73] [74 <./figures/jwt-flow.png (PNG copy)>]
+Underfull \hbox (badness 2213) in paragraph at lines 2328--2328
+[]|\T5/ptm/m/n/12 ^^^«ng nhªp, ^^_«ng kþ, ^^_«ng
+ []
 
-] [76] [77]
-Underfull \hbox (badness 2753) in paragraph at lines 2402--2402
+
+Underfull \hbox (badness 10000) in paragraph at lines 2330--2330
+[]|\T5/ptm/m/n/12 Nëp b i (\T5/ptm/m/it/12 POST
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2332--2332
+[]|\T5/ptm/m/n/12 Trüc quan hâa (\T5/ptm/m/it/12 POST
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2336--2336
+[]|\T5/ptm/m/n/12 C¡c y¶u c¦u qu£n trà
+ []
+
+[75] [76]
+CHÆ¯Æ NG 5.
+[77
+
+] [78] [79] [80{C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/ba
+se/8r.enc}]
+Underfull \hbox (badness 2865) in paragraph at lines 2551--2551
+[]|\T5/ptm/m/n/13 Qu£n trà ng÷íi
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2560--2560
+[]|$\T5/cmtt/m/n/13 /api / problems / {id} /
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2564--2564
+[]|\T5/ptm/m/n/13 Tr÷íng hñp
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2572--2573
+[]|$\T5/cmtt/m/n/13 /api / organizations /
+ []
+
+
+ignored: Infinite glue shrinkage found in box being split [81] [82]
+Overfull \hbox (3.81712pt too wide) in paragraph at lines 2625--2626
+[]|\T5/ptm/m/n/12 /api/submissions/{id}/status| 
+ []
+
+[83] [84]
+Underfull \hbox (badness 4001) in paragraph at lines 2696--2697
+\T5/ptm/m/n/12 hi»n t¤i; ch¿ d¨n d­t,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 2703--2704
+[]|\T5/ptm/m/n/12 /api/problem-ai/generate-
+ []
+
+
+Overfull \hbox (13.7138pt too wide) in paragraph at lines 2688--2708
+ [][] 
+ []
+
+[85] [86]
+Underfull \hbox (badness 2753) in paragraph at lines 2782--2782
 []|\T5/ptm/m/n/12 Nëp b i cuëc thi khi
  []
 
-[78]
-<figures/grafana-dashboard.png, id=1138, 3212.0pt x 2007.5pt>
+[87]
+<figures/grafana-dashboard.png, id=1350, 3212.0pt x 2007.5pt>
 File: figures/grafana-dashboard.png Graphic file (type png)
 <use figures/grafana-dashboard.png>
-Package pdftex.def Info: figures/grafana-dashboard.png  used on input line 2424.
+Package pdftex.def Info: figures/grafana-dashboard.png  used on input line 2804
+.
 (pdftex.def)             Requested size: 441.01773pt x 275.62624pt.
 Package acronym Info: Label `acro:JVM' newly defined as it shall be overridden
-although it is yet undefined on input line 2429.
- [79 <./figures/grafana-dashboard.png (PNG copy)>]
-<figures/grafana-ratelimit.png, id=1150, 3212.0pt x 2007.5pt>
+although it is yet undefined on input line 2809.
+ [88 <./figures/grafana-dashboard.png (PNG copy)>]
+<figures/grafana-ratelimit.png, id=1362, 3212.0pt x 2007.5pt>
 File: figures/grafana-ratelimit.png Graphic file (type png)
 <use figures/grafana-ratelimit.png>
-Package pdftex.def Info: figures/grafana-ratelimit.png  used on input line 2471.
+Package pdftex.def Info: figures/grafana-ratelimit.png  used on input line 2851
+.
 (pdftex.def)             Requested size: 441.01773pt x 275.62624pt.
- [80]
-<figures/grafana-submit.png, id=1158, 3212.0pt x 2007.5pt>
+ [89]
+<figures/grafana-submit.png, id=1370, 3212.0pt x 2007.5pt>
 File: figures/grafana-submit.png Graphic file (type png)
 <use figures/grafana-submit.png>
-Package pdftex.def Info: figures/grafana-submit.png  used on input line 2484.
+Package pdftex.def Info: figures/grafana-submit.png  used on input line 2864.
 (pdftex.def)             Requested size: 441.01773pt x 275.62624pt.
- [81 <./figures/grafana-ratelimit.png (PNG copy)>] [82 <./figures/grafana-submit.png (PNG copy)>]
+ [90 <./figures/grafana-ratelimit.png (PNG copy)>] [91 <./figures/grafana-submi
+t.png (PNG copy)>]
 CHÆ¯Æ NG 6.
-[83
+[92
 
-]
+] [93]
 
 Package csquotes Warning: No space factor codes for 'T5' encoding.
-(csquotes)                Punctuation tracker may fail on input line 2505.
+(csquotes)                Punctuation tracker may fail on input line 2933.
 
 
 Package biblatex Warning: No driver for 'ieeetranbstctl'.
-(biblatex)                Using fallback driver on input line 2505.
+(biblatex)                Using fallback driver on input line 2933.
 
-[84
+[94
 
 ] (thesis.aux)
  ***********
@@ -2059,23 +2406,34 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 LaTeX Warning: There were undefined references.
 
 Package rerunfilecheck Info: File `thesis.out' has not changed.
-(rerunfilecheck)             Checksum: E04C0C635B1F082A78EB7237232AD067;11161.
+(rerunfilecheck)             Checksum: F8E79867F36919215BC5DC7B43662D3D;16532.
 Package logreq Info: Writing requests to 'thesis.run.xml'.
 \openout1 = `thesis.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 25448 strings out of 467867
- 443273 string characters out of 5418334
- 1473626 words of memory out of 5000000
- 53713 multiletter control sequences out of 15000+600000
- 675633 words of font info for 109 fonts, out of 8000000 for 9000
+ 25616 strings out of 467867
+ 445786 string characters out of 5418334
+ 1475542 words of memory out of 5000000
+ 53824 multiletter control sequences out of 15000+600000
+ 687407 words of font info for 127 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,12n,83p,714b,5054s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmb8v.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmr8v.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmri8v.pfb>
-Output written on thesis.pdf (98 pages, 5515634 bytes).
+ 75i,12n,83p,697b,5054s stack positions out of 10000i,1000n,20000p,200000b,200000s
+<C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
+cmex10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
+fonts/cm/cmmi10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/p
+ublic/amsfonts/cm/cmr10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts
+/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Admin/AppData/Local/Programs/MiK
+TeX/fonts/type1/urw/symbol/usyr.pfb><C:/Users/Admin/AppData/Local/Programs/MiKT
+eX/fonts/type1/vntex/urwvn/utmb8v.pfb><C:/Users/Admin/AppData/Local/Programs/Mi
+KTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/Admin/AppData/Local/Programs/Mi
+KTeX/fonts/type1/vntex/urwvn/utmr8v.pfb><C:/Users/Admin/AppData/Local/Programs/
+MiKTeX/fonts/type1/urw/times/utmri8a.pfb><C:/Users/Admin/AppData/Local/Programs
+/MiKTeX/fonts/type1/vntex/urwvn/utmri8v.pfb><C:/Users/Admin/AppData/Local/Progr
+ams/MiKTeX/fonts/type1/vntex/vnr/vntt12.pfb>
+Output written on thesis.pdf (110 pages, 5423304 bytes).
 PDF statistics:
- 1263 PDF objects out of 1440 (max. 8388607)
- 278 named destinations out of 1000 (max. 500000)
- 628 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 1522 PDF objects out of 1728 (max. 8388607)
+ 318 named destinations out of 1000 (max. 500000)
+ 812 words of extra memory for PDF output out of 10000 (max. 10000000)
 

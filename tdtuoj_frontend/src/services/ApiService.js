@@ -16,8 +16,8 @@ axios.interceptors.response.use(
 );
 
 export default class ApiService {
-  static BASE_URL = "http://localhost:8090/api";
-  static JUDGE0_BASE_URL = "http://localhost:2358";
+  static BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8090/api";
+  static JUDGE0_BASE_URL = import.meta.env.VITE_JUDGE0_BASE_URL ?? "http://localhost:2358";
 
   static saveToken(token) {
     localStorage.setItem("token", token);
@@ -418,16 +418,11 @@ export default class ApiService {
   }
 
   // ─── Visualizer ─────────────────────────────────────────────────────────────
-  static async visualize({
-    sourceCode,
-    language,
-    stdin = "",
-    mode = "MANUAL",
-  }) {
+  static async visualize({ sourceCode, language, stdin = "" }) {
     const resp = await axios.post(
       `${this.BASE_URL}/visualize`,
-      { sourceCode, language, stdin, mode },
-      { headers: this.getHeader() },
+      { sourceCode, language, stdin },
+      { headers: this.getHeader(), timeout: 120000 },
     );
     return resp.data; // Response<VisualizerResponse>
   }

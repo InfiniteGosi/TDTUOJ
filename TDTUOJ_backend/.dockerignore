@@ -1,0 +1,8 @@
+target/
+.git/
+.idea/
+*.iml
+.env
+HELP.md
+tdtuoj-db/
+*.md

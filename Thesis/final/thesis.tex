@@ -44,6 +44,7 @@
 
 \usepackage{graphicx}
 \usepackage{float}
+\usepackage{rotating}
 
 \usepackage{caption}
 \captionsetup{font=normalsize, labelsep=colon, justification=centering}
@@ -52,6 +53,8 @@
 \usepackage{longtable}
 \usepackage{multirow}
 \usepackage{array}
+\usepackage{url}
+\urlstyle{same}
 
 \usepackage{amsmath}
 \usepackage{amsfonts}
@@ -145,16 +148,18 @@
 % ------------------------------------------------------------
 \begin{titlepage}
   \begin{center}
-    \textbf{TỔNG LIÊN ĐOÀN LAO ĐỘNG VIỆT NAM}\\[0.3cm]
-    \textbf{TRƯỜNG ĐẠI HỌC TÔN ĐỨC THẮNG}\\[0.3cm]
-    \textbf{KHOA CÔNG NGHỆ THÔNG TIN}\\[1cm]
-    \includegraphics[width=0.25\textwidth]{figures/logo.png}\\[1cm]
-    {\large\textbf{\studentone}}\\[2.5cm]
-    {\Large\textbf{\MakeUppercase{\thesistitle}}}\\[1.5cm]
-    {\large\textbf{KHÓA LUẬN TỐT NGHIỆP}}\\[0.5cm]
-    {\normalsize\textbf{\major}}\\[0.5cm]
+    \textbf{TỔNG LIÊN ĐOÀN LAO ĐỘNG VIỆT NAM}\\[0.15cm]
+    \textbf{TRƯỜNG ĐẠI HỌC TÔN ĐỨC THẮNG}\\[0.15cm]
+    \textbf{KHOA CÔNG NGHỆ THÔNG TIN}\\[0.8cm]
+    \includegraphics[width=0.28\textwidth]{figures/logo.png}\\[0.8cm]
+    {\large\textbf{\MakeUppercase{\studentone}}}\\
+    \vspace{2.2cm}
+    {\LARGE\textbf{\MakeUppercase{\thesistitle}}}\\
+    \vspace{1.8cm}
+    {\Large\textbf{KHÓA LUẬN TỐT NGHIỆP}}\\[0.4cm]
+    {\Large\textbf{\MakeUppercase{\major}}}\\
     \vfill
-    \textbf{THÀNH PHỐ HỒ CHÍ MINH, NĂM \submityear}
+    {\large\textbf{THÀNH PHỐ HỒ CHÍ MINH, NĂM \submityear}}
   \end{center}
 \end{titlepage}
 
@@ -163,19 +168,58 @@
 % ------------------------------------------------------------
 \begin{titlepage}
   \begin{center}
-    \textbf{TỔNG LIÊN ĐOÀN LAO ĐỘNG VIỆT NAM}\\[0.3cm]
-    \textbf{TRƯỜNG ĐẠI HỌC TÔN ĐỨC THẮNG}\\[0.3cm]
-    \textbf{KHOA CÔNG NGHỆ THÔNG TIN}\\[1cm]
-    \includegraphics[width=0.25\textwidth]{figures/logo.png}\\[1cm]
-    {\large\textbf{\studentone}}\\[2.5cm]
-    {\Large\textbf{\MakeUppercase{\thesistitle}}}\\[1.5cm]
-    {\large\textbf{KHÓA LUẬN TỐT NGHIỆP}}\\[0.5cm]
-    {\normalsize\textbf{\major}}\\[1.5cm]
-    Người hướng dẫn:\\[0.2cm]
-    \textbf{\supervisor}
+    \textbf{TỔNG LIÊN ĐOÀN LAO ĐỘNG VIỆT NAM}\\[0.15cm]
+    \textbf{TRƯỜNG ĐẠI HỌC TÔN ĐỨC THẮNG}\\[0.15cm]
+    \textbf{KHOA CÔNG NGHỆ THÔNG TIN}\\[0.8cm]
+    \includegraphics[width=0.28\textwidth]{figures/logo.png}\\[0.8cm]
+    {\large\textbf{\MakeUppercase{\studentone}}}\\
+    \vspace{2.2cm}
+    {\LARGE\textbf{\MakeUppercase{\thesistitle}}}\\
+    \vspace{1.8cm}
+    {\Large\textbf{KHÓA LUẬN TỐT NGHIỆP}}\\[0.4cm]
+    {\Large\textbf{\MakeUppercase{\major}}}\\
+    \vspace{1.5cm}
+    {\large Người hướng dẫn}\\[0.2cm]
+    {\large\textbf{\supervisor}}
     \vfill
-    \textbf{THÀNH PHỐ HỒ CHÍ MINH, NĂM \submityear}
+    {\large\textbf{THÀNH PHỐ HỒ CHÍ MINH, NĂM \submityear}}
   \end{center}
+\end{titlepage}
+
+% ------------------------------------------------------------
+% TRANG XÁC NHẬN (Mẫu 3) — chừa chỗ chữ ký, không chữ ký/mộc
+% ------------------------------------------------------------
+\begin{titlepage}
+  \setstretch{1.5}
+  \noindent
+  Công trình được hoàn thành tại \textbf{Trường Đại học Tôn Đức Thắng}.
+
+  \vspace{0.3cm}
+  \noindent
+  Cán bộ hướng dẫn khoa học: \textbf{\supervisor}\\
+  \hspace*{\fill}\textit{(Ghi rõ học hàm, học vị, họ tên và chữ ký)}
+
+  \vspace{2.5cm}
+  \noindent
+  Khóa luận được bảo vệ tại \textbf{Hội đồng đánh giá Khóa luận của Trường Đại học
+  Tôn Đức Thắng} vào ngày \makebox[1cm]{\dotfill} tháng \makebox[1cm]{\dotfill}
+  năm \makebox[1.5cm]{\dotfill}
+
+  \vspace{1.5cm}
+  \noindent
+  Xác nhận của Chủ tịch Hội đồng đánh giá Khóa luận và Trưởng khoa quản lý chuyên
+  ngành sau khi nhận Khóa luận đã được sửa chữa (nếu có).
+
+  \vspace{1.2cm}
+  \noindent
+  \begin{minipage}[t]{0.5\textwidth}
+    \centering
+    \textbf{CHỦ TỊCH HỘI ĐỒNG}
+  \end{minipage}%
+  \begin{minipage}[t]{0.5\textwidth}
+    \centering
+    \textbf{TRƯỞNG KHOA}
+  \end{minipage}
 \end{titlepage}
 
 % ------------------------------------------------------------
@@ -428,22 +472,17 @@ thay thế Judge0, và hỗ trợ các ngôn ngữ lập trình ngoài bốn ng�
 
 \section{Ý nghĩa nghiên cứu}
 
-TDTUOJ không chỉ là một công cụ hỗ trợ giảng dạy đơn thuần mà là một nền tảng tổng thể có
-khả năng tạo ra tác động tích cực và lâu dài cho cộng đồng học thuật của nhà trường.
-
-Về ý nghĩa thực tiễn, với sinh viên, hệ thống tạo ra môi trường luyện tập lập trình chuyên
-nghiệp với phản hồi tức thì, phân tích thuật toán chuyên sâu và hỗ trợ học tập thông minh
-từ \ac{LLM} -- những yếu tố giúp người học phát triển tư duy giải quyết vấn đề một cách
-chủ động và hiệu quả. Với giảng viên, hệ thống giải phóng nguồn lực khỏi các công việc lặp
-đi lặp lại như chấm bài thủ công và soạn thảo đề bài, từ đó tập trung nhiều hơn vào việc
-thiết kế nội dung học thuật chất lượng cao.
+Về ý nghĩa thực tiễn, với sinh viên, hệ thống tạo ra môi trường luyện tập lập trình với
+phản hồi tức thì, phân tích thuật toán và hỗ trợ học tập từ \ac{LLM}, giúp người học phát
+triển tư duy giải quyết vấn đề một cách chủ động. Với giảng viên, hệ thống giải phóng
+nguồn lực khỏi các công việc lặp lại như chấm bài thủ công và soạn thảo đề bài, từ đó tập
+trung nhiều hơn vào thiết kế nội dung giảng dạy.
 
 Về ý nghĩa khoa học, đề tài đặt ra và giải quyết một số bài toán kỹ thuật có giá trị
 nghiên cứu: xây dựng luồng xử lý bài nộp bất đồng bộ có khả năng mở rộng theo chiều ngang,
-tích hợp \ac{LLM} vào quy trình đánh giá học tập, và áp dụng chiến lược cache phân tầng để
-phục vụ bảng xếp hạng thời gian thực. Ở tầm nhìn rộng hơn, TDTUOJ góp phần xây dựng văn
-hóa lập trình thi đấu tại \ac{TDTU}, đồng thời thể hiện năng lực nghiên cứu và phát triển
-phần mềm thực tiễn của sinh viên Khoa \ac{CNTT}.
+tích hợp \ac{LLM} vào quy trình hỗ trợ học tập, và áp dụng bộ nhớ đệm để phục vụ bảng xếp
+hạng thời gian thực. Ngoài ra, TDTUOJ góp phần xây dựng phong trào lập trình thi đấu tại
+\ac{TDTU}.
 
 % ============================================================
 % CHƯƠNG 2 – KIẾN TRÚC NỀN TẢNG
@@ -464,15 +503,13 @@ giai đoạn phát triển thực tế. Đây là lựa chọn thực tế và h
 nơi việc tổ chức họp sprint hay điều phối nhóm không phát sinh và mọi quyết định kỹ thuật
 được đưa ra trực tiếp dựa trên kết quả của từng tác vụ đã hoàn thành.
 
-Kanban board trong Trello được tổ chức thành bốn cột có ý nghĩa rõ ràng và liên kết trực
-tiếp với vòng đời của từng hạng mục công việc. Cột \textbf{Backlog} tập hợp toàn bộ các
-tính năng, yêu cầu kỹ thuật và tác vụ đã được xác định nhưng chưa được lên lịch thực hiện
--- đây là nguồn dữ liệu đầu vào chính để lập kế hoạch công việc theo từng giai đoạn. Cột
-\textbf{To Do} chứa các hạng mục đã được phân tích, ưu tiên hóa và sẵn sàng để bắt đầu
-thực hiện trong thời gian sắp tới. Cột \textbf{Doing} phản ánh các tác vụ đang được triển
-khai tích cực, với nguyên tắc giới hạn số lượng công việc đồng thời để tránh phân tán tập
-trung. Cột \textbf{Done} ghi nhận tất cả hạng mục đã hoàn thành, đã kiểm thử và được tích
-hợp vào nhánh chính -- đây cũng là cơ sở để đánh giá tiến độ tổng thể của dự án.
+Kanban board trong Trello được tổ chức thành bốn cột phản ánh vòng đời của từng hạng mục
+công việc: \textbf{Backlog} (đã xác định nhưng chưa lên lịch), \textbf{To Do} (đã phân
+tích và sẵn sàng thực hiện), \textbf{Doing} (đang triển khai, có giới hạn số lượng công
+việc đồng thời) và \textbf{Done} (đã hoàn thành, kiểm thử và tích hợp vào nhánh chính).
+Mỗi hạng mục trong Backlog được mô tả đủ chi tiết để ước lượng thời gian và xác định phụ
+thuộc kỹ thuật trước khi chuyển sang To Do, nhờ đó luôn rõ ràng về công việc tiếp theo và
+có cơ sở hữu hình để đánh giá tiến độ so với kế hoạch tổng thể.
 
 Quá trình phát triển được chia thành ba giai đoạn lớn, phản ánh thứ tự ưu tiên kỹ thuật từ
 nền tảng đến tính năng nâng cao. Giai đoạn đầu tập trung vào việc xây dựng nền tảng kiến
@@ -483,11 +520,6 @@ bảng xếp hạng: xây dựng các \ac{API} quản lý contest, tích hợp R
 và leaderboard cache, và phát triển giao diện frontend tương ứng bằng React. Giai đoạn thứ
 ba bổ sung các tính năng nâng cao: tích hợp \ac{LLM} cho hỗ trợ học tập, xây dựng AI
 Parser Service để nhập đề bài từ \ac{PDF}, và hoàn thiện giao diện quản trị.
-
-Mỗi hạng mục trong Backlog được mô tả đủ chi tiết để có thể ước lượng thời gian thực hiện
-và xác định các phụ thuộc kỹ thuật trước khi chuyển sang cột To Do. Cách tổ chức này giúp
-đảm bảo luôn có sự rõ ràng về công việc tiếp theo cần làm, đồng thời tạo ra cơ sở hữu hình
-để đánh giá tiến độ so với kế hoạch tổng thể của đề tài.
 
 \section{Các công nghệ sử dụng}
 
@@ -650,18 +682,9 @@ backend, trong đó ngữ cảnh bài toán (đề bài, giới hạn, ví dụ)
 
 \section{Thu thập yêu cầu}
 
-Thu thập yêu cầu là một giai đoạn then chốt trong quy trình phát triển phần mềm và quản lý
-dự án. Đây là quá trình thu thập, ghi chép và phân tích một cách có hệ thống các nhu cầu,
-kỳ vọng và ràng buộc của các bên liên quan đối với một hệ thống cụ thể. Quá trình này đóng
-vai trò nền tảng cho toàn bộ dự án, vì chất lượng của sản phẩm cuối cùng phụ thuộc trực
-tiếp vào mức độ đầy đủ và chính xác của các yêu cầu được xác định từ giai đoạn đầu. Một
-quy trình thu thập yêu cầu hiệu quả thường bao gồm nhiều kỹ thuật như phỏng vấn, khảo sát,
-bảng câu hỏi, quan sát người dùng và phân tích tài liệu nhằm thu thập góc nhìn toàn diện
-từ các nhóm người dùng khác nhau. Thông tin thu thập được sau đó được tổ chức thành tài
-liệu đặc tả yêu cầu rõ ràng, súc tích, đóng vai trò định hướng cho các nhà phát triển, nhà
-thiết kế và quản lý dự án trong suốt vòng đời phát triển.
-
-Trong đề tài này, hai kỹ thuật chính được áp dụng để thu thập yêu cầu của hệ thống là
+Thu thập yêu cầu là giai đoạn nền tảng của quy trình phát triển phần mềm: chất lượng sản
+phẩm cuối cùng phụ thuộc trực tiếp vào mức độ đầy đủ và chính xác của các yêu cầu được xác
+định từ đầu. Trong đề tài này, hai kỹ thuật chính được áp dụng để thu thập yêu cầu là
 phỏng vấn và khảo sát. Đối với kỹ thuật phỏng vấn, nhằm có được cái nhìn đầy đủ từ cả hai
 phía -- người học và người giảng dạy -- tác giả đã tiến hành phỏng vấn trực tiếp với một
 số sinh viên đang theo học tại Khoa Công nghệ Thông tin và một giảng viên phụ trách các
@@ -1288,15 +1311,16 @@ trong Hình~\ref{fig:seq-uc02}.
 
 Trực quan hóa và gỡ lỗi mã nguồn là Use Case đặc trưng của hệ thống, hỗ trợ người học hiểu
 cách lời giải vận hành thay vì chỉ nhận về kết quả đúng hay sai. Người dùng viết mã nguồn,
-chọn ngôn ngữ và chế độ trực quan hóa (AUTO hoặc MANUAL), sau đó yêu cầu hệ thống minh họa
-quá trình thực thi.
+chọn ngôn ngữ lập trình, sau đó yêu cầu hệ thống minh họa quá trình thực thi.
 
-Hệ thống chọn bộ chèn lệnh (instrumentor) tương ứng với ngôn ngữ, chuẩn hóa cấu trúc khối
-lệnh và chèn các câu lệnh đánh dấu \_\_TRACE\_\_ vào mã nguồn, rồi gửi mã đã chèn
-đến dịch vụ chấm bài để thực thi. Kết quả vết thực thi được phân tích thành chuỗi các bước,
-mỗi bước là một ảnh chụp trạng thái biến; trình minh họa hiển thị từng bước dưới dạng mảng,
-cây, đồ thị hoặc cấu trúc phù hợp để người dùng theo dõi. Bảng~\ref{tab:uc03} trình bày đặc
-tả chi tiết của Use Case này.
+Hệ thống chọn bộ ghi vết (tracer) tương ứng với ngôn ngữ để biến đổi mã nguồn sao cho khi
+chạy, chương trình tự phát ra chuỗi khung trạng thái (frame) mô tả ngăn xếp lời gọi và các
+biến tại từng dòng lệnh, rồi gửi mã đã biến đổi đến dịch vụ chấm bài để thực thi trong môi
+trường cô lập. Song song, một mô hình ngôn ngữ lớn phân loại vai trò ngữ nghĩa của từng biến
+(đồ thị, cây, bảng quy hoạch động\dots) để trình minh họa chọn cách hiển thị phù hợp. Vết
+thực thi được phân tích thành chuỗi các bước; trình minh họa hiển thị từng bước dưới dạng
+mảng, cây, đồ thị hoặc cấu trúc tương ứng để người dùng theo dõi. Bảng~\ref{tab:uc03} trình
+bày đặc tả chi tiết của Use Case này.
 
 \begin{longtable}{|>{\bfseries}p{2.8cm}|p{5.7cm}|p{5.7cm}|}
   \caption{Bảng đặc tả Use case Trực quan hóa và gỡ lỗi mã nguồn}
@@ -1313,9 +1337,9 @@ tả chi tiết của Use Case này.
   Bối cảnh & \multicolumn{2}{p{11.9cm}|}{Người dùng muốn quan sát trạng thái các biến và cấu
     trúc dữ liệu qua từng bước để hiểu hoặc gỡ lỗi lời giải.} \\
   \hline
-  Mô tả & \multicolumn{2}{p{11.9cm}|}{Hệ thống chèn lệnh theo dõi vào mã nguồn, thực thi qua
-    dịch vụ chấm bài và phân tích vết thực thi thành các bước minh họa cho người dùng xem
-    lại.} \\
+  Mô tả & \multicolumn{2}{p{11.9cm}|}{Hệ thống biến đổi mã nguồn để tự ghi vết khi chạy,
+    thực thi qua dịch vụ chấm bài và phân tích vết thành các bước minh họa cho người dùng
+    xem lại.} \\
   \hline
   Tác nhân & \multicolumn{2}{p{11.9cm}|}{Người dùng (sinh viên).} \\
   \hline
@@ -1323,7 +1347,7 @@ tả chi tiết của Use Case này.
     (Visualize) trong trình soạn thảo.} \\
   \hline
   Điều kiện tiên quyết & \multicolumn{2}{p{11.9cm}|}{+ Người dùng đã viết mã nguồn và chọn
-    ngôn ngữ lập trình được hỗ trợ (Python, Java, C, C++).} \\
+    ngôn ngữ lập trình được hỗ trợ (Python, JavaScript, Java, C\#, C, C++).} \\
   \hline
   Kết quả & \multicolumn{2}{p{11.9cm}|}{Quá trình thực thi được minh họa theo từng bước; người
     dùng có thể duyệt tới lui hoặc phát hoạt ảnh để quan sát trạng thái dữ liệu.} \\
@@ -1331,14 +1355,14 @@ tả chi tiết của Use Case này.
   Luồng sự kiện & \multicolumn{1}{c|}{\textbf{Tác nhân}}
                 & \multicolumn{1}{c|}{\textbf{Hệ thống}} \\
   \cline{2-3}
-   & 1. Người dùng viết mã nguồn, chọn ngôn ngữ và chế độ trực quan hóa (AUTO hoặc MANUAL). & \\
+   & 1. Người dùng viết mã nguồn và chọn ngôn ngữ lập trình. & \\
    & 2. Người dùng nhấn nút ``Trực quan hóa''.
-     & 2.1 Hệ thống chọn bộ chèn lệnh theo ngôn ngữ, chuẩn hóa khối lệnh và chèn các câu lệnh
-       \_\_TRACE\_\_.\newline
-       2.2 Hệ thống gửi mã đã chèn đến dịch vụ chấm bài để biên dịch và thực thi, thu lại vết
-       thực thi.\newline
+     & 2.1 Hệ thống chọn bộ ghi vết theo ngôn ngữ và biến đổi mã nguồn để tự phát ra khung
+       trạng thái khi chạy.\newline
+       2.2 Hệ thống gửi mã đã biến đổi đến dịch vụ chấm bài để biên dịch và thực thi, thu lại
+       vết thực thi; song song, mô hình ngôn ngữ lớn phân loại vai trò của các biến.\newline
        2.3 Hệ thống phân tích vết thực thi thành chuỗi các bước kèm ảnh chụp trạng thái biến
-       và trả về danh sách bước. \\
+       và trả về danh sách bước cùng kết quả phân loại. \\
    & 3. Người dùng duyệt từng bước, bước tới lui hoặc phát hoạt ảnh trong trình minh họa.
      & 3.1 Hệ thống hiển thị trạng thái dữ liệu tại mỗi bước bằng trình minh họa phù hợp. \\
   \hline
@@ -1722,12 +1746,11 @@ thống còn kết nối tới hai dịch vụ bên ngoài khác là AWS S3 đ�
 
 \subsection{Tổng quan}
 
-Mô hình dữ liệu giữ vai trò nền tảng, quyết định cách dữ liệu được tổ chức, lưu trữ và truy
-xuất trong toàn hệ thống. Một thiết kế cơ sở dữ liệu tốt không chỉ bảo đảm tính toàn vẹn và
-nhất quán của dữ liệu mà còn ảnh hưởng trực tiếp đến hiệu năng truy vấn cũng như khả năng mở
-rộng về sau. Cơ sở dữ liệu của hệ thống TDTUOJ được xây dựng theo mô hình quan hệ trên hệ
-quản trị PostgreSQL, trong đó mỗi thực thể nghiệp vụ được ánh xạ thành một bảng và các mối
-liên kết được thể hiện thông qua khóa ngoại.
+Cơ sở dữ liệu của hệ thống TDTUOJ được xây dựng theo mô hình quan hệ trên hệ quản trị
+PostgreSQL, trong đó mỗi thực thể nghiệp vụ được ánh xạ thành một bảng và các mối liên kết
+được thể hiện thông qua khóa ngoại. Thiết kế hướng đến bảo đảm tính toàn vẹn dữ liệu trong
+các tình huống nhiều bài nộp xử lý đồng thời, đồng thời giữ cấu trúc đủ đơn giản để truy
+vấn hiệu quả và mở rộng về sau.
 
 \subsection{Sơ đồ thực thể -- quan hệ (ERD)}
 
@@ -1746,12 +1769,12 @@ các mục dưới đây tách sơ đồ thành từng phân mảnh theo thực 
 mỗi mục liệt kê các thuộc tính chính cùng các quan hệ của thực thể tương ứng, trong đó những
 bảng liên kết và bảng phụ trợ được trình bày kèm trong phần quan hệ của bảng chủ.
 
-\begin{figure}[H]
+\begin{sidewaysfigure}
   \centering
-  \includegraphics[angle=90,height=0.92\textheight,keepaspectratio]{figures/erd.png}
+  \includegraphics[width=\textheight,height=\textwidth,keepaspectratio]{figures/erd.png}
   \caption{Sơ đồ thực thể -- quan hệ của hệ thống TDTUOJ}
   \label{fig:erd}
-\end{figure}
+\end{sidewaysfigure}
 
 \subsubsection{Thực thể Người dùng (User)}
 
@@ -2133,22 +2156,6 @@ thi, tổ chức và người dùng. Bố cục được thiết kế theo hư�
 phục vụ thao tác luyện tập và thi đấu. Các tiểu mục dưới đây trình bày những màn hình
 tiêu biểu của hệ thống.
 
-\subsection{Trang chủ}
-
-Trang chủ là điểm tiếp xúc đầu tiên của người dùng với hệ thống, có nhiệm vụ giới thiệu
-nền tảng và dẫn hướng vào các chức năng chính. Như Hình~\ref{fig:ui-home} minh họa, phần
-đầu trang gồm khẩu hiệu, đoạn mô tả ngắn cùng hai nút dẫn hướng đến danh sách bài toán và
-danh sách cuộc thi. Phía dưới là dải số liệu thống kê tổng quan của hệ thống gồm số bài
-toán, số thành viên và số lượt nộp bài, giúp người dùng nắm được quy mô hoạt động ngay khi
-truy cập.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\textwidth]{figures/ui-home.png}
-  \caption{Giao diện trang chủ của hệ thống TDTUOJ}
-  \label{fig:ui-home}
-\end{figure}
-
 \subsection{Trang danh sách bài toán}
 
 Trang danh sách bài toán cho phép người dùng tra cứu và lựa chọn bài toán để luyện tập.
@@ -2228,6 +2235,118 @@ tiện.
   \caption{Giao diện trang quản trị bài toán}
   \label{fig:ui-admin}
 \end{figure}
+
+% TODO: bổ sung nội dung mô tả + hình minh họa cho các trang giao diện bên dưới.
+
+\subsection{Trang đăng nhập và đăng ký}
+
+\subsection{Trang danh sách cuộc thi}
+
+\subsection{Trang làm bài trong cuộc thi}
+
+\subsection{Trang hồ sơ người dùng}
+
+\subsection{Trang bảng xếp hạng người dùng}
+
+\subsection{Trang tạo và chỉnh sửa bài toán}
+
+\subsection{Trang trực quan hóa cấu trúc dữ liệu}
+
+\subsection{Trang tổ chức và thành viên}
+
+\subsection{Trang bài thực hành}
+
+\subsection{Trang theo dõi tiến độ bài thực hành}
+
+\section{Thiết kế hiệu năng và bảo mật}
+
+Bên cạnh các thiết kế về kiến trúc, dữ liệu và giao diện, hệ thống TDTUOJ còn được thiết kế
+nhằm đáp ứng hai yêu cầu phi chức năng trọng yếu đã nêu ở Chương~3 là bảo mật và hiệu năng
+khi phục vụ nhiều người dùng đồng thời. Mục này trình bày hai cơ chế cốt lõi tương ứng: xác
+thực phi trạng thái bằng \ac{JWT} và giới hạn tần suất truy cập (rate limiting) dựa trên Redis.
+Cả hai cơ chế được hiện thực dưới dạng bộ lọc (filter) đặt trước tầng điều khiển, nhờ đó áp
+dụng nhất quán cho toàn bộ các yêu cầu \ac{REST} mà không xen lẫn vào mã nghiệp vụ.
+
+\subsection{Xác thực và phân quyền bằng JWT}
+
+Hệ thống áp dụng mô hình xác thực phi trạng thái (stateless): máy chủ không lưu phiên đăng
+nhập mà thay vào đó cấp cho người dùng một mã thông báo \ac{JWT} sau khi đăng nhập thành công.
+Mã thông báo được sinh bởi lớp \textit{JwtUtils} với thuật toán ký HMAC-SHA256, mang định danh
+người dùng (địa chỉ thư điện tử) ở trường \textit{subject}, thời điểm phát hành và thời hạn
+hiệu lực. Sau khi nhận được, phía giao diện lưu mã thông báo và đính kèm vào tiêu đề
+\textit{Authorization} dưới dạng lược đồ \textit{Bearer} trong mọi yêu cầu kế tiếp.
+
+Toàn bộ luồng xác thực, từ lúc đăng nhập đến khi một yêu cầu mang mã thông báo được kiểm
+tra và chuyển tiếp, được mô tả trong sơ đồ tuần tự ở Hình~\ref{fig:jwt-flow}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{figures/jwt-flow.png}
+  \caption{Sơ đồ tuần tự luồng xác thực và phân quyền bằng \ac{JWT}}
+  \label{fig:jwt-flow}
+\end{figure}
+
+Với mỗi yêu cầu đến, bộ lọc \textit{AuthFilter} (kế thừa \textit{OncePerRequestFilter}) trích
+mã thông báo từ tiêu đề, kiểm tra chữ ký và thời hạn, nạp thông tin người dùng từ cơ sở dữ
+liệu rồi thiết lập ngữ cảnh bảo mật của Spring Security. Nếu mã thông báo không hợp lệ hoặc đã
+hết hạn, yêu cầu bị từ chối với mã trạng thái \ac{HTTP} 401. Việc phân quyền theo vai trò
+(ADMIN, CREATOR, PARTICIPANT) được kiểm soát ở mức phương thức thông qua chú thích
+\textit{@PreAuthorize}. Nhờ không phụ thuộc phiên phía máy chủ, thiết kế này thuận lợi cho việc
+mở rộng theo chiều ngang khi triển khai nhiều thực thể máy chủ.
+
+\subsection{Giới hạn tần suất truy cập với Redis}
+
+Nhằm chống lạm dụng và bảo vệ các tài nguyên tốn kém như chấm bài hay gọi \ac{LLM}, hệ thống
+áp dụng cơ chế giới hạn tần suất truy cập theo thuật toán thùng token (token bucket) của thư
+viện Bucket4j. Trạng thái của mỗi thùng được lưu tập trung trên Redis (qua
+\textit{LettuceBasedProxyManager}), nhờ đó hạn mức được áp dụng nhất quán ngay cả khi hệ thống
+chạy trên nhiều thực thể máy chủ.
+
+Cơ chế được hiện thực bởi bộ lọc \textit{RateLimitFilter}, đặt ngay sau \textit{AuthFilter} để
+biết được danh tính người gọi. Khóa định danh do \textit{RateLimitKeyResolver} sinh ra: với
+người dùng đã xác thực dùng khóa theo mã định danh tài khoản (tiền tố \textit{rl:user:}), còn
+với người dùng ẩn danh dùng khóa theo địa chỉ IP (tiền tố \textit{rl:ip:}). Mỗi yêu cầu được
+phân vào một bậc giới hạn (tier)
+bởi \textit{RateLimitTierResolver} theo thứ tự ưu tiên: chú thích \textit{@RateLimit} trên
+phương thức điều khiển, kế đến là quy tắc khớp đường dẫn và phương thức \ac{HTTP}, cuối cùng là
+bậc mặc định. Mỗi bậc quy định hạn mức riêng cho người dùng ẩn danh và người dùng đã xác thực
+trong một cửa sổ thời gian; cấu hình các bậc được trình bày trong Bảng~\ref{tab:ratelimit-tiers}.
+
+\begin{table}[H]
+  \centering
+  \caption{Cấu hình các bậc giới hạn tần suất truy cập}
+  \label{tab:ratelimit-tiers}
+  \begin{tabular}{|l|p{5.2cm}|c|c|c|}
+    \hline
+    \textbf{Bậc} & \multicolumn{1}{c|}{\textbf{Phạm vi áp dụng}}
+      & \textbf{Ẩn danh} & \textbf{Đã xác thực} & \textbf{Cửa sổ (giây)} \\
+    \hline
+    default & Các yêu cầu còn lại & 60 & 120 & 60 \\
+    \hline
+    read-heavy & GET danh sách bài toán, cuộc thi, người dùng, tổ chức & 120 & 240 & 60 \\
+    \hline
+    auth & Đăng nhập, đăng ký, đăng nhập Google & 5 & 10 & 60 \\
+    \hline
+    submission & Nộp bài (\textit{POST /api/submissions/**}) & 3 & 10 & 60 \\
+    \hline
+    visualizer & Trực quan hóa (\textit{POST /api/visualize}) & 5 & 20 & 60 \\
+    \hline
+    ai & Gợi ý và trích xuất bằng \ac{LLM} & 0 & 10 & 60 \\
+    \hline
+    admin & Các yêu cầu quản trị (\textit{/api/admin/**}) & 0 & 300 & 60 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+Khi một yêu cầu được chấp nhận, máy chủ gắn thêm các tiêu đề thông tin như
+\textit{X-RateLimit-Limit} và \textit{X-RateLimit-Remaining} để phía giao diện theo dõi hạn
+mức còn lại. Khi vượt hạn mức, máy chủ trả về mã trạng thái \ac{HTTP} 429 kèm tiêu đề
+\textit{Retry-After} cho biết thời gian cần chờ. Giá trị hạn mức bằng 0 ở bậc \textit{ai} và
+\textit{admin} có nghĩa là chặn hoàn toàn người dùng ẩn danh, chỉ cho phép tài khoản đã xác
+thực truy cập. Để ưu tiên tính sẵn sàng, bộ lọc được thiết kế theo nguyên tắc \emph{fail-open}:
+nếu Redis gặp sự cố, yêu cầu vẫn được cho đi qua thay vì bị chặn. Ngoài ra, các chỉ số về số
+yêu cầu được chấp nhận, bị từ chối và lỗi Redis được thu thập qua \textit{RateLimitMetrics} để
+phục vụ giám sát hệ thống.
 
 % ============================================================
 % CHƯƠNG 5 – CÀI ĐẶT VÀ KIỂM THỬ
@@ -2341,6 +2460,267 @@ và không bị nghẽn khi nhiều bài nộp đến cùng lúc, đáp ứng y�
 đã nêu ở Chương~3. Các tính năng nổi bật khác như giới hạn tần suất truy cập, trình minh họa
 cấu trúc dữ liệu và gợi ý học tập bằng mô hình ngôn ngữ lớn (\ac{LLM}) cũng được cài đặt theo
 cùng nguyên tắc phân tầng và đã được mô tả ở các chương trước.
+
+\subsection{Tính điểm đánh giá năng lực sau cuộc thi}
+
+Đối với các cuộc thi có tính điểm (rated), hệ thống tự động cập nhật điểm đánh giá năng lực
+(rating) của thí sinh sau khi quá trình chấm bài kết thúc. Công việc này do lớp
+ContestRatingService đảm nhận, được kích hoạt bất đồng bộ bởi bộ lập lịch ContestRatingScheduler
+khi mọi bài nộp của cuộc thi đã được chấm xong. Mỗi thí sinh mới tham gia được gán một điểm
+khởi tạo mặc định là 1500.
+
+Trước hết, các thí sinh được xếp hạng theo thể thức ICPC: ưu tiên số bài giải được nhiều hơn,
+nếu bằng nhau thì xét tổng thời gian phạt nhỏ hơn; thứ hạng thu được ký hiệu là $r_i$ (đánh số
+từ 1). Gọi $N$ là số thí sinh và $R_i$ là điểm đánh giá hiện thời của thí sinh thứ $i$ trước
+cuộc thi. Hệ thống áp dụng một công thức dựa trên ý tưởng của hệ thống Elo, trong đó mỗi thí
+sinh có một thứ hạng kỳ vọng (seed) $s_i$ xác định bởi số thí sinh có điểm cao hơn mình, như
+trong Công thức~\eqref{eq:seed}.
+
+\begin{equation}
+  s_i = 1 + \bigl|\{\, j : 1 \le j \le N,\ j \ne i,\ R_j > R_i \,\}\bigr|
+  \label{eq:seed}
+\end{equation}
+
+Mức thay đổi điểm $\Delta_i$ của thí sinh được tính từ chênh lệch giữa thứ hạng kỳ vọng $s_i$
+và thứ hạng thực tế $r_i$ theo Công thức~\eqref{eq:delta}, với $K = 100$ là hệ số điều chỉnh.
+Nếu cuộc thi chỉ có một thí sinh ($N \le 1$) thì quy ước $\Delta_i = 0$.
+
+\begin{equation}
+  \Delta_i = \operatorname{round}\!\left( K \cdot \frac{s_i - r_i}{N} \right)
+  \label{eq:delta}
+\end{equation}
+
+Để tránh biến động quá lớn sau một cuộc thi, mức thay đổi được giới hạn trong khoảng
+$[-\Delta_{\max}, \Delta_{\max}]$ với $\Delta_{\max} = 150$, sau đó điểm mới $R_i'$ được cập
+nhật như Công thức~\eqref{eq:newrating}; điểm đánh giá không bao giờ nhỏ hơn 1.
+
+\begin{equation}
+  R_i' = \max\!\bigl(1,\ R_i + \operatorname{clip}(\Delta_i,\,-\Delta_{\max},\,\Delta_{\max})\bigr),
+  \quad \operatorname{clip}(x, a, b) = \max\!\bigl(a, \min(b, x)\bigr)
+  \label{eq:newrating}
+\end{equation}
+
+Kết quả được lưu vào bảng lịch sử điểm đánh giá (RatingHistory) gồm điểm trước và sau cuộc thi,
+mức thay đổi và thứ hạng; đồng thời điểm hiện thời và điểm cao nhất của thí sinh trong
+UserStatistics cũng được cập nhật. Do điểm trước một cuộc thi chính là điểm sau cuộc thi liền
+trước đó của thí sinh, khi một cuộc thi cũ được tính lại, hệ thống sẽ tính lại toàn bộ chuỗi
+lịch sử phía sau nhằm bảo đảm tính nhất quán.
+
+\section{Thiết kế API}
+
+Hệ thống cung cấp chức năng cho phía giao diện thông qua tập hợp giao diện lập trình ứng dụng
+(\ac{API}) dạng \ac{REST}, trao đổi dữ liệu bằng định dạng \ac{JSON} trên giao thức \ac{HTTP}.
+Mọi phản hồi đều tuân theo lớp vỏ chung Response<T> gồm mã trạng thái, thông điệp và dữ liệu;
+các yêu cầu cần định danh người dùng được bảo vệ bằng \ac{JWT} và được phân quyền theo vai trò.
+Các điểm cuối được tổ chức theo từng phân hệ nghiệp vụ, mỗi phân hệ tương ứng với một nhóm
+\ac{API} có đường dẫn gốc riêng.
+
+\subsection{Tổng quan các nhóm API}
+
+Bảng~\ref{tab:api-overview} liệt kê toàn bộ các nhóm \ac{API} của hệ thống cùng đường dẫn gốc
+và chức năng chính. Mỗi nhóm gồm nhiều điểm cuối tương ứng với các thao tác thêm, sửa, xóa và
+truy vấn trên một loại tài nguyên.
+
+\begin{longtable}{|p{3.1cm}|p{4.6cm}|p{6.2cm}|}
+  \caption{Tổng quan các nhóm API của hệ thống TDTUOJ}
+  \label{tab:api-overview} \\
+  \hline
+  \multicolumn{1}{|c|}{\textbf{Nhóm API}} & \multicolumn{1}{c|}{\textbf{Đường dẫn gốc}}
+    & \multicolumn{1}{c|}{\textbf{Chức năng chính}} \\
+  \hline
+  \endfirsthead
+
+  \multicolumn{3}{l}{\textit{(tiếp theo Bảng~\ref{tab:api-overview})}} \\
+  \hline
+  \multicolumn{1}{|c|}{\textbf{Nhóm API}} & \multicolumn{1}{c|}{\textbf{Đường dẫn gốc}}
+    & \multicolumn{1}{c|}{\textbf{Chức năng chính}} \\
+  \hline
+  \endhead
+
+  \hline
+  \endfoot
+
+  \hline
+  \endlastfoot
+
+  Xác thực & /api/auth & Đăng ký, đăng nhập, đăng nhập bằng Google \\
+  \hline
+  Người dùng & /api/users
+    & Hồ sơ, hoạt động, thống kê, lịch sử nộp bài và lịch sử xếp hạng \\
+  \hline
+  Quản trị người dùng & /api/admin/users & Xem và cập nhật tài khoản (dành cho quản trị viên) \\
+  \hline
+  Vai trò & /api/roles & Quản lý vai trò người dùng \\
+  \hline
+  Bài toán & /api/problems
+    & Quản lý bài toán, gán nhãn và lọc bài đủ điều kiện đưa vào cuộc thi \\
+  \hline
+  Nhãn bài toán & /api/problem-tags & Quản lý nhãn phân loại bài toán \\
+  \hline
+  Bình luận & \path|/api/problems/{id}/comments| & Bình luận theo bài toán và bình chọn \\
+  \hline
+  Yêu thích & /api/favorites & Đánh dấu và bỏ đánh dấu bài toán yêu thích \\
+  \hline
+  Trường hợp kiểm thử & /api/testcases & Quản lý bộ dữ liệu kiểm thử của bài toán \\
+  \hline
+  Bài nộp & /api/submissions & Nộp bài, truy vấn trạng thái và lịch sử chấm bài \\
+  \hline
+  Cuộc thi & /api/contests & Quản lý cuộc thi, đăng ký, bảng xếp hạng và giám sát \\
+  \hline
+  Tổ chức & /api/organizations & Quản lý tổ chức và thành viên \\
+  \hline
+  Bài thực hành & \path|/api/organizations/{orgId}/labs|
+    & Quản lý bài thực hành, theo dõi tiến độ và xuất kết quả \\
+  \hline
+  Trực quan hóa & /api/visualize & Trực quan hóa quá trình thực thi mã nguồn \\
+  \hline
+  Gợi ý học tập & /api/hints & Sinh gợi ý cho bài toán bằng \ac{LLM} \\
+  \hline
+  Hỗ trợ soạn đề & /api/problem-ai
+    & Trích xuất đề và sinh trường hợp kiểm thử bằng \ac{LLM} \\
+  \hline
+  Bảng điều khiển & /api/admin/dashboard & Thống kê tổng quan cho quản trị viên \\
+  \hline
+  Tập tin & /api/files & Truy xuất tập tin lưu trên AWS S3 \\
+  \hline
+\end{longtable}
+
+\subsection{Công cụ tài liệu hóa và kiểm thử API}
+
+Trong quá trình phát triển, các điểm cuối \ac{API} được tài liệu hóa và kiểm thử bằng hai công
+cụ. Thứ nhất là Swagger UI được sinh tự động bởi thư viện SpringDoc OpenAPI: giao diện này liệt
+kê toàn bộ điểm cuối kèm mô tả tham số, lược đồ yêu cầu và phản hồi, đồng thời cho phép gửi thử
+yêu cầu trực tiếp từ trình duyệt; đặc tả OpenAPI tương ứng được cung cấp tại đường dẫn
+/v3/api-docs. Thứ hai là Postman, dùng để kiểm thử thủ công và lưu lại các bộ yêu cầu
+(collection) phục vụ kiểm thử hồi quy, đặc biệt thuận tiện cho việc đính kèm mã thông báo
+\ac{JWT} và kiểm tra các luồng yêu cầu cần xác thực.
+
+\section{Mô tả các chức năng tiêu biểu}
+
+Bên cạnh các nhóm \ac{API} quản lý dữ liệu thông thường, hệ thống có ba chức năng nổi bật mang
+lại giá trị riêng cho một hệ thống chấm bài trực tuyến phục vụ giảng dạy. Mục này mô tả chi tiết
+ba chức năng đó: nộp bài, trực quan hóa cấu trúc dữ liệu và hỗ trợ bằng mô hình ngôn ngữ lớn.
+
+\subsection{Chức năng nộp bài}
+
+Nhóm \ac{API} nộp bài do lớp SubmissionController đảm nhận, cho phép người dùng gửi lời giải và
+theo dõi kết quả chấm. Do quá trình chấm bài diễn ra bất đồng bộ như đã trình bày ở mục trước,
+thiết kế được tách thành hai bước: yêu cầu tạo bài nộp trả về ngay một bản ghi ở trạng thái chờ
+kèm mã định danh, sau đó phía giao diện truy vấn định kỳ điểm cuối trạng thái để lấy kết quả khi
+việc chấm hoàn tất. Bảng~\ref{tab:api-submission} liệt kê các điểm cuối của nhóm chức năng này.
+
+\begin{table}[H]
+  \centering
+  \caption{Các điểm cuối API của chức năng nộp bài}
+  \label{tab:api-submission}
+  \begin{tabular}{|c|p{4.6cm}|p{6.4cm}|}
+    \hline
+    \multicolumn{1}{|c|}{\textbf{Phương thức}}
+      & \multicolumn{1}{c|}{\textbf{Đường dẫn}}
+      & \multicolumn{1}{c|}{\textbf{Mô tả}} \\
+    \hline
+    POST & /api/submissions
+      & Tạo bài nộp mới từ mã nguồn, ngôn ngữ và bài toán; trả bản ghi ở trạng thái chờ \\
+    \hline
+    GET & /api/submissions/\{id\}/status
+      & Truy vấn trạng thái và kết quả chấm của một bài nộp \\
+    \hline
+    GET & /api/submissions/me
+      & Lấy lịch sử bài nộp của người dùng hiện tại (phân trang, lọc theo bài toán) \\
+    \hline
+    GET & /api/submissions/count
+      & Đếm tổng số bài nộp trong hệ thống \\
+    \hline
+  \end{tabular}
+\end{table}
+
+Để chống lạm dụng, nhóm điểm cuối nộp bài chịu ràng buộc về khoảng chờ tối thiểu giữa hai lần
+nộp và bị giới hạn tần suất ở bậc submission như đã trình bày ở Chương~4.
+
+\subsection{Chức năng trực quan hóa cấu trúc dữ liệu}
+
+Chức năng trực quan hóa cho phép người dùng quan sát trạng thái các biến và cấu trúc dữ
+liệu của chương trình qua từng bước thực thi, phục vụ việc học thuật toán và gỡ lỗi. Toàn
+bộ chức năng được cung cấp qua một điểm cuối duy nhất POST /api/visualize, nhận mã nguồn,
+ngôn ngữ lập trình và dữ liệu đầu vào (nếu có), trả về danh sách các khung trạng thái
+(frame) để phía giao diện phát lại như một đoạn hoạt ảnh. Hệ thống hỗ trợ sáu ngôn ngữ:
+Python, JavaScript, Java, C\#, C và C++.
+
+Hạt nhân của chức năng là các bộ ghi vết (tracer), mỗi ngôn ngữ một bộ, do lớp
+VisualizerServiceImpl điều phối. Bộ ghi vết biến đổi mã nguồn của người dùng sao cho khi
+chạy, chương trình tự phát ra chuỗi khung trạng thái trên luồng lỗi chuẩn (stderr), được
+bao giữa hai dấu hiệu nhận biết để tách khỏi thông báo lỗi thật của chương trình; luồng ra
+chuẩn (stdout) được giữ nguyên cho kết quả của người dùng. Với Python, bộ ghi vết tận dụng
+cơ chế theo dõi thực thi có sẵn của trình thông dịch nên mã nguồn gốc không bị biến đổi;
+với các ngôn ngữ biên dịch, mã nguồn được viết lại để chèn lời gọi ghi vết tại từng dòng
+lệnh. Mọi bộ ghi vết đều phát ra cùng một lược đồ khung thống nhất: mỗi khung ghi số thứ tự
+bước, dòng lệnh tương ứng trong mã nguồn gốc, ngăn xếp lời gọi hàm kèm các biến cục bộ, và
+một vùng heap mô tả các giá trị phức hợp (danh sách, đối tượng, từ điển\dots) với định danh
+ổn định qua các khung -- nhờ đó phía giao diện có thể tạo hoạt ảnh một nút dữ liệu di
+chuyển thay vì vẽ lại từ đầu. Để bảo đảm an toàn, vết thực thi bị giới hạn ở 5000 bước và
+kích thước từng vùng dữ liệu đều có ngưỡng cắt; mã đã biến đổi được thực thi trong môi
+trường cô lập của Judge0 với giới hạn thời gian và bộ nhớ riêng.
+
+Song song với việc thực thi, hệ thống gửi mã nguồn gốc đến mô hình ngôn ngữ lớn Gemini để
+phân loại vai trò ngữ nghĩa của từng biến: một mảng hai chiều được duyệt theo đỉnh -- đỉnh
+là ma trận kề của đồ thị, trong khi một mảng được điền theo quan hệ truy hồi là bảng quy
+hoạch động. Kết quả phân loại giúp trình minh họa phía giao diện chọn cách hiển thị phù hợp
+(đồ thị, cây, ngăn xếp, hàng đợi\dots) thay vì chỉ dựa vào hình dạng dữ liệu. Bước phân
+loại này nằm ngoài đường găng của luồng xử lý: nó chạy đồng thời với việc chấm trên Judge0,
+bị giới hạn ngân sách thời gian ba giây và nếu thất bại thì trả về kết quả rỗng để phép
+suy luận theo kinh nghiệm (heuristic) ở phía giao diện tự đảm nhận. Kết quả phân loại được
+lưu đệm trên Redis theo mã băm của mã nguồn trong 24 giờ, nhờ đó các lần chạy lại khi gỡ
+lỗi không tốn thêm chi phí gọi mô hình.
+
+\subsection{Chức năng hỗ trợ bằng mô hình ngôn ngữ lớn}
+
+Hệ thống tích hợp mô hình ngôn ngữ lớn (\ac{LLM}) Gemini của Google nhằm cung cấp hai chức năng:
+gợi ý học tập cho người dùng và hỗ trợ soạn đề cho quản trị viên cùng giảng viên. Việc gọi mô
+hình được thực hiện ở phía máy chủ thông qua WebClient của Spring WebFlux, gửi yêu cầu \ac{HTTP}
+đến dịch vụ Generative Language của Google (mô hình gemini-2.5-flash) và nhận phản hồi dạng
+\ac{JSON}; cơ chế gọi lại (retry) được áp dụng khi dịch vụ quá tải. Bảng~\ref{tab:api-llm} liệt
+kê các điểm cuối của nhóm chức năng này.
+
+\begin{table}[H]
+  \centering
+  \caption{Các điểm cuối API của chức năng hỗ trợ bằng LLM}
+  \label{tab:api-llm}
+  \begin{tabular}{|c|p{4.9cm}|p{4.4cm}|p{2.6cm}|}
+    \hline
+    \multicolumn{1}{|c|}{\textbf{Phương thức}}
+      & \multicolumn{1}{c|}{\textbf{Đường dẫn}}
+      & \multicolumn{1}{c|}{\textbf{Mô tả}}
+      & \multicolumn{1}{c|}{\textbf{Quyền}} \\
+    \hline
+    POST & /api/hints
+      & Sinh gợi ý cho bài toán hiện tại; chỉ dẫn dắt, không tiết lộ lời giải
+      & Đã đăng nhập \\
+    \hline
+    POST & /api/problem-ai/extract-pdf
+      & Trích xuất đề bài từ tập tin \ac{PDF} tải lên
+      & ADMIN, CREATOR \\
+    \hline
+    POST & /api/problem-ai/generate-test-cases
+      & Sinh trường hợp kiểm thử từ nội dung đề bài
+      & ADMIN, CREATOR \\
+    \hline
+  \end{tabular}
+\end{table}
+
+Đối với gợi ý học tập, điểm cuối /api/hints nhận đề bài, mã nguồn hiện tại, thông báo lỗi và lịch
+sử hội thoại của người dùng. Một chỉ thị hệ thống (system instruction) ràng buộc mô hình chỉ đưa
+ra các gợi ý tăng dần, từ chối tiết lộ lời giải hoàn chỉnh và bỏ qua các câu hỏi nằm ngoài phạm
+vi bài toán. Thiết kế cho phép sử dụng nhiều nhà cung cấp mô hình thông qua việc tra cứu theo
+tên (Gemini là mặc định, ngoài ra còn hỗ trợ Claude và OpenAI), giúp dễ dàng thay thế hoặc bổ
+sung mô hình về sau.
+
+Đối với hỗ trợ soạn đề, hai điểm cuối được giới hạn riêng cho quản trị viên và giảng viên bằng
+chú thích @PreAuthorize. Điểm cuối extract-pdf dùng thư viện Apache PDFBox để rút văn bản từ tập
+tin \ac{PDF}, rồi nhờ Gemini trích xuất các trường có cấu trúc của bài toán gồm tiêu đề, đề bài,
+độ khó, giới hạn tài nguyên, trường hợp kiểm thử và nhãn gợi ý; nếu tập tin không chứa trường
+hợp kiểm thử, hệ thống tự động sinh năm trường hợp. Điểm cuối generate-test-cases sinh từ 1 đến
+50 trường hợp kiểm thử từ nội dung đề bài. Cả hai chức năng đều bị giới hạn tần suất ở bậc ai,
+chặn hoàn toàn người dùng ẩn danh.
 
 \section{Kiểm thử đơn vị}
 
@@ -2496,6 +2876,54 @@ triển khai thực tế.
 % CHƯƠNG 6 – KẾT LUẬN
 % ============================================================
 \chapter{Kết luận}
+
+\section{Kết quả đạt được}
+
+Đề tài đã xây dựng hoàn chỉnh hệ thống chấm bài trực tuyến TDTUOJ phục vụ việc giảng dạy
+và rèn luyện lập trình tại Khoa Công nghệ Thông tin, Trường Đại học Tôn Đức Thắng. Hệ
+thống bao phủ trọn vẹn luồng nghiệp vụ của một nền tảng chấm bài: quản lý kho bài toán với
+phân quyền công khai -- riêng tư, nộp bài và chấm tự động bất đồng bộ qua Judge0 với bốn
+ngôn ngữ lập trình, tổ chức cuộc thi theo thể thức \ac{ICPC} và \ac{IOI} kèm bảng xếp hạng
+thời gian thực, cơ chế đóng băng bảng xếp hạng và tính điểm đánh giá năng lực sau cuộc
+thi, cùng mô hình tổ chức -- bài thực hành phục vụ quản lý lớp học của giảng viên.
+
+Bên cạnh các chức năng cốt lõi, đề tài đóng góp hai nhóm tính năng hỗ trợ học tập có tính
+đặc thù. Thứ nhất là trình trực quan hóa cấu trúc dữ liệu: mã nguồn của người dùng được
+biến đổi để tự ghi vết khi thực thi, kết hợp mô hình ngôn ngữ lớn phân loại vai trò ngữ
+nghĩa của biến, cho phép minh họa từng bước chạy của thuật toán trên sáu ngôn ngữ lập
+trình. Thứ hai là lớp hỗ trợ học tập bằng \ac{LLM}: gợi ý hướng giải có kiểm soát không
+tiết lộ lời giải, trích xuất đề bài tự động từ tập tin \ac{PDF} và sinh trường hợp kiểm
+thử, giúp giảm đáng kể công sức soạn đề của giảng viên.
+
+Về mặt kỹ thuật, hệ thống được thiết kế theo kiến trúc phân tầng với xác thực phi trạng
+thái bằng \ac{JWT}, hàng đợi chấm bài và bộ nhớ đệm trên Redis, giới hạn tần suất truy cập
+theo thuật toán thùng token, cùng hạ tầng giám sát bằng Prometheus và Grafana. Chất lượng
+được kiểm chứng qua 101 ca kiểm thử đơn vị cho tầng nghiệp vụ và các kịch bản kiểm thử tải
+xác nhận hệ thống vận hành ổn định dưới lưu lượng cao.
+
+\section{Hạn chế}
+
+Bên cạnh các kết quả đạt được, hệ thống còn một số hạn chế. Thứ nhất, các phép đo hiệu
+năng được thực hiện trên một máy tính cá nhân nơi mọi thành phần chia sẻ tài nguyên, nên
+chưa phản ánh năng lực thực tế trong môi trường triển khai phân tán. Thứ hai, độ phủ kiểm
+thử đơn vị mới tập trung ở các phân hệ nghiệp vụ cốt lõi, các thành phần ngoại vi như tầng
+điều khiển và trình minh họa chưa được kiểm thử ở mức đơn vị. Thứ ba, kết quả chấm bài
+được phía giao diện truy vấn định kỳ (polling) thay vì đẩy chủ động, gây độ trễ nhỏ và
+lưu lượng dư thừa khi nhiều người cùng chờ kết quả. Cuối cùng, các tính năng phụ thuộc
+\ac{LLM} chịu ràng buộc về chi phí và hạn mức gọi dịch vụ bên ngoài, đồng thời chất lượng
+phản hồi chưa thể bảo đảm tuyệt đối trong mọi tình huống.
+
+\section{Hướng phát triển}
+
+Trong thời gian tới, hệ thống có thể được phát triển theo một số hướng. Trước hết là triển
+khai chính thức trên hạ tầng máy chủ của nhà trường hoặc dịch vụ đám mây, tách các thành
+phần ra nhiều máy chủ và đánh giá lại hiệu năng trong điều kiện thực tế. Về chức năng, các
+hướng mở rộng gồm: thay cơ chế truy vấn định kỳ bằng kết nối WebSocket để đẩy kết quả chấm
+theo thời gian thực; bổ sung ngôn ngữ lập trình mới vốn đã được Judge0 hỗ trợ sẵn; xây
+dựng cơ chế phát hiện sao chép mã nguồn giữa các bài nộp trong cuộc thi; và tích hợp với
+hệ thống quản lý học tập của nhà trường để đồng bộ danh sách lớp và điểm số. Về chất
+lượng, việc mở rộng độ phủ kiểm thử sang tầng điều khiển và bổ sung kiểm thử tích hợp tự
+động sẽ giúp hệ thống sẵn sàng hơn cho vận hành lâu dài.
 
 % ============================================================
 % TÀI LIỆU THAM KHẢO

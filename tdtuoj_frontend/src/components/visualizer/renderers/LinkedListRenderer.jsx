@@ -1,206 +1,148 @@
 // src/components/visualizer/renderers/LinkedListRenderer.jsx
-// Frame shape expected:
-//   { type: "linkedlist", nodes: [{id, val, next?}], highlighted?: id[], current?: id }
-
-const T = {
-  surface: "#1a1a1a",
-  border: "#2a2a2a",
-  text: "#e8e8e8",
-  textMuted: "#888",
-  accent: "#ffa116",
-  green: "#2cbb5d",
-  blue: "#3b82f6",
-  purple: "#a78bfa",
-};
-
-const NODE_W = 52;
-const NODE_H = 36;
-const GAP = 40; // space between nodes (for arrow)
+// Frame shape: { type: "linkedlist", nodes: [{id, val, next?}], highlighted?: id[], current?: id }
+// VisuAlgo-style: boxed nodes with a pointer compartment, thick arrows, ∅ terminator.
+import { V, MONO, Canvas, Legend, EmptyNote, onColor } from "./vizTheme";
 
 export default function LinkedListRenderer({ frame }) {
   if (!frame || !Array.isArray(frame.nodes) || frame.nodes.length === 0) {
-    return (
-      <div style={{ color: T.textMuted, fontSize: 13, padding: 16 }}>
-        No linked list data in this frame.
-      </div>
-    );
+    return <EmptyNote>No linked list data in this frame.</EmptyNote>;
   }
 
   const { nodes, highlighted = [], current = null } = frame;
+  const highlightedSet = new Set(highlighted.map(String));
 
-  // Sort nodes in list order following .next pointers
+  // order nodes by following next pointers from the head
   const map = {};
-  nodes.forEach((n) => {
-    map[n.id] = n;
-  });
-  const childIds = new Set(nodes.map((n) => n.next).filter(Boolean));
-  const heads = nodes.filter((n) => !childIds.has(n.id));
-  const head = heads[0] || nodes[0];
+  nodes.forEach((n) => (map[String(n.id)] = n));
+  const pointedTo = new Set(
+    nodes.filter((n) => n.next != null).map((n) => String(n.next)),
+  );
+  const head = nodes.find((n) => !pointedTo.has(String(n.id))) ?? nodes[0];
 
   const ordered = [];
-  let cur = head;
   const seen = new Set();
-  while (cur && !seen.has(cur.id)) {
+  let cur = head;
+  while (cur && !seen.has(String(cur.id)) && ordered.length <= nodes.length) {
+    seen.add(String(cur.id));
     ordered.push(cur);
-    seen.add(cur.id);
-    cur = cur.next != null ? map[cur.next] : null;
+    cur = cur.next != null ? map[String(cur.next)] : null;
   }
+  // orphans (cycles / disconnected) appended so nothing vanishes
+  nodes.forEach((n) => {
+    if (!seen.has(String(n.id))) ordered.push(n);
+  });
 
-  const totalW = ordered.length * NODE_W + (ordered.length - 1) * GAP + 32;
-  const svgH = NODE_H + 60;
-
-  const getColor = (id) => {
-    if (String(id) === String(current)) return T.accent;
-    if (highlighted.map(String).includes(String(id))) return T.purple;
-    return T.blue;
+  const fillOf = (id) => {
+    if (current != null && String(id) === String(current)) return V.current;
+    if (highlightedSet.has(String(id))) return V.highlight;
+    return V.node;
   };
 
   return (
-    <div style={{ width: "100%", overflowX: "auto", padding: "16px 8px" }}>
-      <svg
-        width={Math.max(totalW, 200)}
-        height={svgH}
-        style={{ display: "block", margin: "0 auto" }}
-      >
-        {ordered.map((node, i) => {
-          const x = 16 + i * (NODE_W + GAP);
-          const y = 20;
-          const color = getColor(node.id);
-          const isActive =
-            String(node.id) === String(current) ||
-            highlighted.map(String).includes(String(node.id));
-
-          return (
-            <g key={node.id}>
-              {/* Node box */}
-              <rect
-                x={x}
-                y={y}
-                width={NODE_W}
-                height={NODE_H}
-                rx={6}
-                fill={`${color}18`}
-                stroke={color}
-                strokeWidth={isActive ? 2 : 1}
-                style={{
-                  filter: isActive ? `drop-shadow(0 0 5px ${color}66)` : "none",
-                }}
-              />
-              <text
-                x={x + NODE_W / 2}
-                y={y + NODE_H / 2}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fill={isActive ? color : T.text}
-                fontSize={String(node.val).length > 3 ? 9 : 12}
-                fontFamily="'JetBrains Mono', monospace"
-                fontWeight={700}
-              >
-                {node.val}
-              </text>
-
-              {/* Index label */}
-              <text
-                x={x + NODE_W / 2}
-                y={y + NODE_H + 14}
-                textAnchor="middle"
-                fill={T.textMuted}
-                fontSize={9}
-                fontFamily="'JetBrains Mono', monospace"
-              >
-                {i}
-              </text>
-
-              {/* Arrow to next */}
-              {i < ordered.length - 1 && (
-                <>
-                  <line
-                    x1={x + NODE_W}
-                    y1={y + NODE_H / 2}
-                    x2={x + NODE_W + GAP - 6}
-                    y2={y + NODE_H / 2}
-                    stroke={T.border}
-                    strokeWidth={1.5}
-                    markerEnd="url(#arrowhead)"
-                  />
-                </>
-              )}
-
-              {/* NULL cap on last node */}
-              {i === ordered.length - 1 && (
-                <text
-                  x={x + NODE_W + 6}
-                  y={y + NODE_H / 2 + 1}
-                  fill={T.textMuted}
-                  fontSize={10}
-                  fontFamily="'JetBrains Mono', monospace"
-                  dominantBaseline="central"
-                >
-                  → null
-                </text>
-              )}
-            </g>
-          );
-        })}
-
-        <defs>
-          <marker
-            id="arrowhead"
-            markerWidth="6"
-            markerHeight="6"
-            refX="5"
-            refY="3"
-            orient="auto"
-          >
-            <path d="M0,0 L6,3 L0,6 Z" fill={T.textMuted} />
-          </marker>
-        </defs>
-      </svg>
-
-      {/* Legend */}
+    <Canvas>
       <div
         style={{
           display: "flex",
-          gap: 12,
-          marginTop: 4,
-          paddingLeft: 8,
+          alignItems: "center",
+          gap: 0,
           flexWrap: "wrap",
+          rowGap: 18,
         }}
       >
-        {current != null && (
-          <Legend color={T.accent} label={`Current: ${current}`} />
-        )}
-        {highlighted.length > 0 && (
-          <Legend
-            color={T.purple}
-            label={`Highlighted: [${highlighted.join(", ")}]`}
-          />
+        <div
+          style={{
+            fontSize: 12,
+            fontFamily: MONO,
+            fontWeight: 700,
+            color: V.muted,
+            marginRight: 8,
+          }}
+        >
+          HEAD →
+        </div>
+
+        {ordered.map((n, idx) => {
+          const fill = fillOf(n.id);
+          const active = fill !== V.node;
+          const isLast = idx === ordered.length - 1 || n.next == null;
+          return (
+            <div key={n.id} style={{ display: "flex", alignItems: "center" }}>
+              {/* node box: value | pointer compartment */}
+              <div
+                style={{
+                  display: "flex",
+                  border: `2px solid ${active ? fill : V.nodeBorder}`,
+                  borderRadius: 8,
+                  overflow: "hidden",
+                  boxShadow: active ? `0 0 10px ${fill}66` : "none",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <div
+                  style={{
+                    minWidth: 52,
+                    minHeight: 46,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: fill,
+                    color: onColor(fill),
+                    fontSize: 16,
+                    fontFamily: MONO,
+                    fontWeight: 700,
+                    padding: "0 10px",
+                  }}
+                >
+                  {String(n.val ?? "·")}
+                </div>
+                <div
+                  style={{
+                    width: 24,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: V.canvas,
+                    color: V.muted,
+                    fontSize: 14,
+                    borderLeft: `2px solid ${active ? fill : V.nodeBorder}`,
+                  }}
+                >
+                  {n.next != null ? "•" : "∅"}
+                </div>
+              </div>
+
+              {/* arrow to the next node */}
+              {!isLast && n.next != null && (
+                <svg width="36" height="20" style={{ flexShrink: 0 }}>
+                  <line x1="2" y1="10" x2="28" y2="10" stroke={V.edge} strokeWidth="2.5" />
+                  <path d="M26,4 L35,10 L26,16 z" fill={V.edge} />
+                </svg>
+              )}
+            </div>
+          );
+        })}
+
+        {ordered.length > 0 && ordered[ordered.length - 1].next == null && (
+          <div
+            style={{
+              marginLeft: 10,
+              fontSize: 13,
+              fontFamily: MONO,
+              fontWeight: 700,
+              color: V.faint,
+            }}
+          >
+            NULL
+          </div>
         )}
       </div>
-    </div>
-  );
-}
 
-function Legend({ color, label }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 5,
-        fontSize: 11,
-        color: T.textMuted,
-      }}
-    >
-      <div
-        style={{
-          width: 10,
-          height: 10,
-          borderRadius: 2,
-          backgroundColor: color,
-        }}
+      <Legend
+        items={[
+          current != null && { color: V.current, label: `Current: ${current}` },
+          highlighted.length > 0 && { color: V.highlight, label: "Highlighted" },
+        ]}
       />
-      {label}
-    </div>
+    </Canvas>
   );
 }

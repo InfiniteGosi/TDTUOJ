@@ -15,19 +15,22 @@ skinparam SwimlaneBorderColor #000000
 |User|
 start
 :Open problem in the IDE;
-:Write code & select language;
-:Choose visualizer mode\nAUTO or MANUAL;
+:Write code & select language\nPython / JS / Java / C# / C / C++;
 :Click "Visualize";
 
 |System|
-:Pick language instrumentor\nPython / Java / C / C++;
-:Normalize braces\ninject __TRACE__ statements;
-:Send instrumented code\nto judging service;
-:Run code, capture trace output;
+:Pick language tracer;
+:Transform source so it emits\nexecution frames when run;
+fork
+  :Send transformed code\nto judging service;
+  :Run code in sandbox,\ncapture frame stream;
+fork again
+  :Classify variable roles via LLM\ngraph / tree / DP table / ...;
+end fork
 
 if (Compile / run OK?) then (Yes)
-  :Parse __TRACE__ into steps\nvariable snapshots per step;
-  :Return step list;
+  :Parse frame stream into steps\ncall stack + heap per step;
+  :Return steps + classifications;
   |User|
   repeat
     :View step in renderer\narray / tree / graph / ...;

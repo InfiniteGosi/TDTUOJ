@@ -1,0 +1,52 @@
+name: Deploy backend
+
+# Frontend deploys itself via Vercel on every push — not handled here.
+# This pipeline gates on a build, then SSHes into the VM to redeploy the backend stack.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'TDTUOJ_backend/**'
+      - 'deploy/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    name: Build gate (compile backend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Skips TdtuojApplicationTests (@SpringBootTest) — it boots the full context and
+      # needs Postgres/Redis, which CI doesn't provide. The Mockito unit tests still run.
+      - name: Compile + unit tests
+        working-directory: TDTUOJ_backend
+        run: ./mvnw -B clean package -Dtest='!TdtuojApplicationTests' -DfailIfNoTests=false
+
+  deploy:
+    name: Redeploy on VM
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH and redeploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/TDTUOJ
+            git pull --ff-only
+            cd deploy
+            docker compose up -d --build
+            docker image prune -f

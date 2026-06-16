@@ -1,122 +1,90 @@
 // src/components/visualizer/renderers/ArrayRenderer.jsx
-// Frame shape expected:
-//   { type: "array", data: number[], highlighted?: number[], sorted?: number[], swapped?: number[] }
-
-const T = {
-  bg: "#0f0f0f",
-  surface: "#1a1a1a",
-  border: "#2a2a2a",
-  text: "#e8e8e8",
-  textMuted: "#888",
-  accent: "#ffa116",
-  green: "#2cbb5d",
-  red: "#ef4743",
-  blue: "#3b82f6",
-  purple: "#a78bfa",
-};
+// Frame shape: { type: "array", data: any[], highlighted?: number[], sorted?: number[], swapped?: number[] }
+// VisuAlgo-style: solid bars + boxed cells, orange compare / red swap / green sorted.
+import { V, MONO, Canvas, Legend, EmptyNote, onColor } from "./vizTheme";
 
 export default function ArrayRenderer({ frame }) {
   if (!frame || !Array.isArray(frame.data)) {
-    return (
-      <div style={{ color: T.textMuted, fontSize: 13, padding: 16 }}>
-        No array data in this frame.
-      </div>
-    );
+    return <EmptyNote>No array data in this frame.</EmptyNote>;
   }
 
   const { data, highlighted = [], sorted = [], swapped = [] } = frame;
-  const maxVal = Math.max(...data.map(Math.abs), 1);
+  const numeric = data.every((v) => typeof v === "number");
+  const maxVal = numeric ? Math.max(...data.map(Math.abs), 1) : 1;
+  const n = data.length;
+  const cellFont = n > 20 ? 12 : n > 12 ? 14 : 16;
 
-  const getColor = (index) => {
-    if (swapped.includes(index)) return T.red;
-    if (highlighted.includes(index)) return T.accent;
-    if (sorted.includes(index)) return T.green;
-    return T.blue;
-  };
-
-  const getBarOpacity = (index) => {
-    if (swapped.includes(index)) return 1;
-    if (highlighted.includes(index)) return 1;
-    if (sorted.includes(index)) return 0.9;
-    return 0.5;
+  const fillOf = (i) => {
+    if (swapped.includes(i)) return V.swap;
+    if (highlighted.includes(i)) return V.current;
+    if (sorted.includes(i)) return V.sorted;
+    return V.bar;
   };
 
   return (
-    <div style={{ width: "100%", padding: "16px 8px" }}>
-      {/* Bar chart */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-end",
-          gap: 3,
-          height: 140,
-          padding: "0 8px",
-          marginBottom: 8,
-        }}
-      >
-        {data.map((val, i) => {
-          const color = getColor(i);
-          const heightPct = Math.max((Math.abs(val) / maxVal) * 100, 4);
-          return (
-            <div
-              key={i}
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                height: "100%",
-              }}
-            >
-              {/* Value label on top of bar */}
+    <Canvas>
+      {/* Bar chart — numeric data only */}
+      {numeric && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            gap: n > 24 ? 2 : 4,
+            height: 150,
+            marginBottom: 12,
+          }}
+        >
+          {data.map((val, i) => {
+            const fill = fillOf(i);
+            const active = swapped.includes(i) || highlighted.includes(i);
+            const heightPct = Math.max((Math.abs(val) / maxVal) * 100, 5);
+            return (
               <div
+                key={i}
                 style={{
-                  fontSize: data.length > 20 ? 8 : 11,
-                  color:
-                    highlighted.includes(i) || swapped.includes(i)
-                      ? color
-                      : T.textMuted,
-                  marginBottom: 2,
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontWeight: 600,
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  height: "100%",
+                  minWidth: 14,
                 }}
               >
-                {data.length <= 30 ? val : ""}
+                {n <= 30 && (
+                  <div
+                    style={{
+                      fontSize: n > 20 ? 11 : 13,
+                      color: active ? fill : V.muted,
+                      marginBottom: 3,
+                      fontFamily: MONO,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {val}
+                  </div>
+                )}
+                <div
+                  style={{
+                    width: "100%",
+                    height: `${heightPct}%`,
+                    backgroundColor: fill,
+                    borderRadius: "4px 4px 0 0",
+                    transition: "height 0.15s ease, background-color 0.15s ease",
+                    boxShadow: active ? `0 0 10px ${fill}aa` : "none",
+                  }}
+                />
               </div>
-              <div
-                style={{
-                  width: "100%",
-                  height: `${heightPct}%`,
-                  backgroundColor: color,
-                  opacity: getBarOpacity(i),
-                  borderRadius: "3px 3px 0 0",
-                  transition: "height 0.15s ease, background-color 0.15s ease",
-                  boxShadow:
-                    highlighted.includes(i) || swapped.includes(i)
-                      ? `0 0 8px ${color}88`
-                      : "none",
-                }}
-              />
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Index cells */}
-      <div
-        style={{
-          display: "flex",
-          gap: 3,
-          padding: "0 8px",
-        }}
-      >
+      {/* Cells with indexes */}
+      <div style={{ display: "flex", gap: n > 24 ? 2 : 4 }}>
         {data.map((val, i) => {
-          const color = getColor(i);
-          const isActive =
-            highlighted.includes(i) ||
-            swapped.includes(i) ||
-            sorted.includes(i);
+          const active = highlighted.includes(i) || swapped.includes(i) || sorted.includes(i);
+          const fill = fillOf(i);
           return (
             <div
               key={i}
@@ -125,90 +93,45 @@ export default function ArrayRenderer({ frame }) {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: 2,
+                gap: 4,
+                minWidth: 26,
               }}
             >
               <div
                 style={{
                   width: "100%",
-                  minHeight: 32,
+                  minHeight: 42,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  border: `1px solid ${isActive ? color : T.border}`,
-                  borderRadius: 4,
-                  backgroundColor: isActive ? `${color}18` : T.surface,
-                  fontSize: data.length > 15 ? 9 : 12,
-                  fontFamily: "'JetBrains Mono', monospace",
+                  border: `2px solid ${active ? fill : V.nodeBorder}`,
+                  borderRadius: 6,
+                  backgroundColor: active ? fill : V.node,
+                  fontSize: cellFont,
+                  fontFamily: MONO,
                   fontWeight: 700,
-                  color: isActive ? color : T.text,
+                  color: active ? onColor(fill) : V.nodeText,
                   transition: "all 0.15s ease",
-                  boxShadow: isActive ? `0 0 6px ${color}44` : "none",
+                  boxShadow: active ? `0 0 10px ${fill}66` : "none",
+                  overflow: "hidden",
+                  padding: "0 2px",
                 }}
               >
-                {val}
+                {String(val)}
               </div>
-              <div
-                style={{
-                  fontSize: 9,
-                  color: T.textMuted,
-                  fontFamily: "'JetBrains Mono', monospace",
-                }}
-              >
-                {i}
-              </div>
+              <div style={{ fontSize: 11, color: V.faint, fontFamily: MONO }}>{i}</div>
             </div>
           );
         })}
       </div>
 
-      {/* Legend */}
-      <div
-        style={{
-          display: "flex",
-          gap: 12,
-          marginTop: 14,
-          paddingLeft: 8,
-          flexWrap: "wrap",
-        }}
-      >
-        {highlighted.length > 0 && (
-          <Legend
-            color={T.accent}
-            label={`Highlighted [${highlighted.join(", ")}]`}
-          />
-        )}
-        {swapped.length > 0 && (
-          <Legend color={T.red} label={`Swapped [${swapped.join(", ")}]`} />
-        )}
-        {sorted.length > 0 && (
-          <Legend color={T.green} label={`Sorted [${sorted.join(", ")}]`} />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function Legend({ color, label }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 5,
-        fontSize: 11,
-        color: T.textMuted,
-      }}
-    >
-      <div
-        style={{
-          width: 10,
-          height: 10,
-          borderRadius: 2,
-          backgroundColor: color,
-        }}
+      <Legend
+        items={[
+          highlighted.length > 0 && { color: V.current, label: "Highlighted" },
+          swapped.length > 0 && { color: V.swap, label: "Swapped" },
+          sorted.length > 0 && { color: V.sorted, label: "Sorted" },
+        ]}
       />
-      {label}
-    </div>
+    </Canvas>
   );
 }

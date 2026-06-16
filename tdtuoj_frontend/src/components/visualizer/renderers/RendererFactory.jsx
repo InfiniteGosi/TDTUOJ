@@ -6,12 +6,13 @@ import LinkedListRenderer from "./LinkedListRenderer";
 import StackRenderer from "./StackRenderer";
 import QueueRenderer from "./QueueRenderer";
 import MatrixRenderer from "./MatrixRenderer";
+import { V, MONO, Canvas } from "./vizTheme";
 
 const T = {
-  textMuted: "#888",
-  surface: "#1a1a1a",
-  border: "#2a2a2a",
-  accent: "#ffa116",
+  textMuted: V.muted,
+  surface: V.canvas,
+  border: V.canvasBorder,
+  accent: V.current,
 };
 
 export default function RendererFactory({ frame }) {
@@ -58,30 +59,26 @@ export default function RendererFactory({ frame }) {
       return <MatrixRenderer frame={frame} />;
 
     default:
-      // Fallback: render raw JSON so the user can debug their snapshot() call
+      // Fallback: render raw JSON for debugging
       return (
-        <div style={{ padding: 16 }}>
-          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8 }}>
+        <Canvas>
+          <div style={{ fontSize: 12, color: V.muted, marginBottom: 8 }}>
             Unknown frame type:{" "}
-            <code style={{ color: T.accent }}>{frame.type ?? "(none)"}</code>.
-            Add a <code style={{ color: T.accent }}>"type"</code> field to your
-            snapshot() call.
+            <code style={{ color: V.current }}>{frame.type ?? "(none)"}</code>
           </div>
           <pre
             style={{
-              fontSize: 11,
-              color: "#c8c8c8",
-              backgroundColor: T.surface,
-              border: `1px solid ${T.border}`,
-              borderRadius: 6,
-              padding: 12,
+              fontSize: 13,
+              color: V.text,
+              fontFamily: MONO,
+              margin: 0,
               overflowX: "auto",
               whiteSpace: "pre-wrap",
             }}
           >
             {JSON.stringify(frame, null, 2)}
           </pre>
-        </div>
+        </Canvas>
       );
   }
 }

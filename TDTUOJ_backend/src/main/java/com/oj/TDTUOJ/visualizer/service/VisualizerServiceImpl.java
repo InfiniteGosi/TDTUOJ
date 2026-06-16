@@ -3,14 +3,11 @@ package com.oj.TDTUOJ.visualizer.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oj.TDTUOJ.common.enums.SubmissionLanguage;
-import com.oj.TDTUOJ.common.enums.VisualizerMode;
 import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.visualizer.VisualizerRequest;
 import com.oj.TDTUOJ.visualizer.VisualizerResponse;
-import com.oj.TDTUOJ.visualizer.service.instrumentor.CppInstrumentor;
-import com.oj.TDTUOJ.visualizer.service.instrumentor.JavaInstrumentor;
-import com.oj.TDTUOJ.visualizer.service.instrumentor.PythonInstrumentor;
-import lombok.RequiredArgsConstructor;
+import com.oj.TDTUOJ.visualizer.service.classifier.VariableClassifier;
+import com.oj.TDTUOJ.visualizer.service.tracer.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -18,9 +15,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * Orchestrates a visualization run:
+ * instrument (tracer) → execute (Judge0) → parse frames (stderr) → attach LLM
+ * classifications (best-effort, time-budgeted).
+ */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class VisualizerServiceImpl implements VisualizerService {
 
@@ -29,30 +32,55 @@ public class VisualizerServiceImpl implements VisualizerService {
 
     private final WebClient.Builder webClientBuilder;
     private final ObjectMapper objectMapper;
+    private final VariableClassifier classifier;
+
+    private final Map<SubmissionLanguage, Tracer> tracers;
+
+    public VisualizerServiceImpl(WebClient.Builder webClientBuilder,
+                                 ObjectMapper objectMapper,
+                                 VariableClassifier classifier) {
+        this.webClientBuilder = webClientBuilder;
+        this.objectMapper = objectMapper;
+        this.classifier = classifier;
+        this.tracers = Map.of(
+                SubmissionLanguage.PYTHON,     new PythonTracer(),
+                SubmissionLanguage.JAVASCRIPT, new JsTracer(),
+                SubmissionLanguage.JAVA,       new JavaTracer(),
+                SubmissionLanguage.CSHARP,     new CSharpTracer(),
+                SubmissionLanguage.CPP,        new CppTracer(),
+                SubmissionLanguage.C,          new CTracer()
+        );
+    }
 
     private static final Map<SubmissionLanguage, Integer> LANG_ID = Map.of(
-            SubmissionLanguage.PYTHON, 71,
-            SubmissionLanguage.JAVA,   62,
-            SubmissionLanguage.C,      50,
-            SubmissionLanguage.CPP,    76
+            SubmissionLanguage.PYTHON,     71,
+            SubmissionLanguage.JAVA,       62,
+            SubmissionLanguage.C,          50,
+            SubmissionLanguage.CPP,        76,
+            SubmissionLanguage.CSHARP,     51,
+            SubmissionLanguage.JAVASCRIPT, 63
     );
 
-    private static final int MAX_FRAMES    = 5000;
-    private static final int MAX_CODE_BYTES = 50_000;
+    private static final int  MAX_CODE_BYTES        = 50_000;
+    private static final long CLASSIFIER_BUDGET_MS  = 3_000;
 
     @Override
     public Response<VisualizerResponse> visualize(VisualizerRequest request) {
         validateRequest(request);
+        log.info("Visualizing: language={}, codeLength={}",
+                request.getLanguage(), request.getSourceCode().length());
 
-        VisualizerMode mode = request.getMode();
-        if (mode == null) {
-            log.warn("VisualizerRequest.mode is null — defaulting to MANUAL.");
-            mode = VisualizerMode.MANUAL;
+        String instrumented;
+        try {
+            instrumented = tracers.get(request.getLanguage()).instrument(request.getSourceCode());
+        } catch (TracerException e) {
+            log.warn("Instrumentation failed for {}: {}", request.getLanguage(), e.getMessage());
+            return ok(error("Couldn't instrument your code: " + e.getMessage()), request);
         }
-        log.info("Visualizing: language={}, mode={}, codeLength={}",
-                request.getLanguage(), mode, request.getSourceCode().length());
 
-        String instrumented = instrument(request.getSourceCode(), request.getLanguage(), mode);
+        // Classification needs only the raw source — run it concurrently with Judge0.
+        CompletableFuture<Map<String, Object>> classification =
+                classifier.classify(request.getSourceCode(), request.getLanguage());
 
         Map<?, ?> judge0Response = submitToJudge0(
                 instrumented,
@@ -61,7 +89,13 @@ public class VisualizerServiceImpl implements VisualizerService {
         );
 
         VisualizerResponse result = parseJudge0Response(judge0Response);
+        result.setClassifications(awaitClassification(classification));
 
+        return ok(result, request);
+    }
+
+    private Response<VisualizerResponse> ok(VisualizerResponse result, VisualizerRequest request) {
+        result.setLanguage(request.getLanguage().name());
         return Response.<VisualizerResponse>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message(result.getError() != null ? "Visualization failed" : "Visualization complete")
@@ -69,25 +103,17 @@ public class VisualizerServiceImpl implements VisualizerService {
                 .build();
     }
 
-    // ── Instrumentation dispatch ──────────────────────────────────────────────
-
-    private String instrument(String code, SubmissionLanguage lang, VisualizerMode mode) {
-        if (mode == VisualizerMode.AUTO) {
-            return switch (lang) {
-                case PYTHON      -> PythonInstrumentor.instrumentAuto(code);
-                case JAVA        -> JavaInstrumentor.instrumentAuto(code);
-                case C           -> CppInstrumentor.instrumentCAuto(code);
-                case CPP         -> CppInstrumentor.instrumentCppAuto(code);
-                case CSHARP, JAVASCRIPT -> throw new com.oj.TDTUOJ.common.exceptions.BadRequestException("Visualizer not supported for this language");
-            };
+    private Map<String, Object> awaitClassification(CompletableFuture<Map<String, Object>> future) {
+        try {
+            Map<String, Object> labels = future.get(CLASSIFIER_BUDGET_MS, TimeUnit.MILLISECONDS);
+            return labels != null ? labels : Collections.emptyMap();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return Collections.emptyMap();
+        } catch (Exception e) {
+            log.debug("Variable classification unavailable: {}", e.toString());
+            return Collections.emptyMap();
         }
-        return switch (lang) {
-            case PYTHON      -> PythonInstrumentor.instrumentManual(code);
-            case JAVA        -> JavaInstrumentor.instrumentManual(code);
-            case C           -> CppInstrumentor.instrumentCManual(code);
-            case CPP         -> CppInstrumentor.instrumentCppManual(code);
-            case CSHARP, JAVASCRIPT -> throw new com.oj.TDTUOJ.common.exceptions.BadRequestException("Visualizer not supported for this language");
-        };
     }
 
     // ── Judge0 submission ─────────────────────────────────────────────────────
@@ -124,69 +150,77 @@ public class VisualizerServiceImpl implements VisualizerService {
             return error("Compile error:\n" + compileOutput.trim());
         }
 
+        String stdout = decode(response.get("stdout"));
         String stderr = decode(response.get("stderr"));
 
         if (statusId == 5) {
-            return error("Time limit exceeded — your algorithm may have too many snapshot() calls or an infinite loop");
+            return error("Time limit exceeded — your program may loop forever, or trace too many steps");
         }
 
-        String rawStdout = decode(response.get("stdout"));
-        log.info("=== RAW STDOUT ===\n{}", rawStdout);
-        log.info("=== STDERR ===\n{}", decode(response.get("stderr")));
-        log.info("=== COMPILE OUTPUT ===\n{}", decode(response.get("compile_output")));
-
-        if (rawStdout == null || rawStdout.isBlank()) {
-            String msg = stderr != null && !stderr.isBlank()
-                    ? "Runtime error:\n" + stderr.trim()
-                    : "No output — did you call snapshot() in your code?";
-            return error(msg);
-        }
-
-        return extractFrames(rawStdout, stderr);
+        return extractFrames(stdout, stderr);
     }
 
-    private VisualizerResponse extractFrames(String rawStdout, String stderr) {
-        int start = rawStdout.indexOf("__FRAMES__");
-        int end   = rawStdout.indexOf("__END__");
+    /**
+     * Frames arrive on STDERR between {@code __FRAMES__} and {@code __END__};
+     * everything else on stderr is genuine runtime-error output. Stdout is the
+     * user's untouched program output.
+     */
+    private VisualizerResponse extractFrames(String stdout, String stderr) {
+        String userStdout = stdout == null || stdout.isBlank() ? null : stdout.stripTrailing();
 
-        if (start == -1 || end == -1) {
+        if (stderr == null || !stderr.contains(Tracer.FRAMES_BEGIN)) {
+            String err = stderr != null && !stderr.isBlank()
+                    ? "Runtime error:\n" + stderr.trim()
+                    : "No trace produced — the program may have crashed before any line executed";
             return VisualizerResponse.builder()
                     .frames(Collections.emptyList())
-                    .stdout(rawStdout.trim())
-                    .error("No frames found — did you call snapshot() in your code?")
+                    .stdout(userStdout)
+                    .error(err)
                     .build();
         }
 
-        String framesJson = rawStdout.substring(start + "__FRAMES__".length(), end).trim();
-        String userStdout = rawStdout.substring(0, start).trim();
+        int start = stderr.indexOf(Tracer.FRAMES_BEGIN);
+        int end   = stderr.indexOf(Tracer.FRAMES_END, start);
+        if (end == -1) {
+            return VisualizerResponse.builder()
+                    .frames(Collections.emptyList())
+                    .stdout(userStdout)
+                    .error("Trace was cut off — output limit reached. Try a smaller input.")
+                    .build();
+        }
+
+        String framesJson = stderr.substring(start + Tracer.FRAMES_BEGIN.length(), end).trim();
+        String userStderr = (stderr.substring(0, start) + stderr.substring(end + Tracer.FRAMES_END.length())).trim();
 
         try {
             List<Map<String, Object>> frames = objectMapper.readValue(
                     framesJson, new TypeReference<>() {});
-
-            log.info("Parsed {} frames successfully", frames.size());
+            log.info("Parsed {} frames", frames.size());
 
             String warning = null;
-            if (frames.size() > MAX_FRAMES) {
-                log.warn("Frame count {} exceeds limit {}, truncating", frames.size(), MAX_FRAMES);
-                warning = "Output truncated: " + frames.size() + " frames captured, showing first " + MAX_FRAMES + ".";
-                frames = frames.subList(0, MAX_FRAMES);
-            }
-
-            String errorMsg = stderr != null && !stderr.isBlank() ? stderr.trim() : null;
-            if (warning != null) {
-                errorMsg = errorMsg != null ? warning + "\n" + errorMsg : warning;
+            if (frames.size() > Tracer.MAX_FRAMES) {
+                warning = "Trace truncated: showing first " + Tracer.MAX_FRAMES + " of "
+                        + frames.size() + " steps.";
+                frames = frames.subList(0, Tracer.MAX_FRAMES);
+            } else if (!frames.isEmpty()
+                    && Boolean.TRUE.equals(frames.get(frames.size() - 1).get("truncated"))) {
+                warning = "Trace truncated at " + Tracer.MAX_FRAMES + " steps.";
             }
 
             return VisualizerResponse.builder()
                     .frames(frames)
-                    .stdout(userStdout.isBlank() ? null : userStdout)
-                    .error(errorMsg)
+                    .stdout(userStdout)
+                    .error(userStderr.isBlank() ? null : userStderr)
+                    .warning(warning)
                     .build();
 
         } catch (Exception e) {
-            log.error("Failed to parse frames JSON: {}", framesJson, e);
-            return error("Failed to parse frames — make sure snapshot() receives a valid JSON-serializable object.\nDetail: " + e.getMessage());
+            log.error("Failed to parse frames JSON", e);
+            return VisualizerResponse.builder()
+                    .frames(Collections.emptyList())
+                    .stdout(userStdout)
+                    .error("Internal error: trace output could not be parsed")
+                    .build();
         }
     }
 

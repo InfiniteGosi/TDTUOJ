@@ -184,7 +184,7 @@ const ProblemSidebar = ({ problems, currentSlug, basePath, onNavigate, onClose }
             onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = T.surfaceHover; }}
             onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
             onClick={() => onNavigate(`${basePath}/${p.problemSlug}`)}>
-            <span style={{ width: 26, height: 26, borderRadius: "var(--radius-sm)", background: isActive ? T.accent : T.bg, color: isActive ? "#000" : T.textMuted, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "var(--text-xs)", fontFamily: "var(--font-code)", flexShrink: 0 }}>
+            <span style={{ width: 26, height: 26, borderRadius: "var(--radius-sm)", background: isActive ? T.accent : T.bg, color: isActive ? "var(--text-inverse)" : T.textMuted, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "var(--text-xs)", fontFamily: "var(--font-code)", flexShrink: 0 }}>
               {letter}
             </span>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -694,7 +694,7 @@ const LabProblemPage = () => {
                     <button
                       onClick={handleSubmit}
                       disabled={submitting || deadlinePassed}
-                      style={{ padding: "5px 18px", background: deadlinePassed ? T.borderBright : T.accent, color: deadlinePassed ? T.textMuted : "#000", fontWeight: 700, fontSize: "var(--text-sm)", borderRadius: "var(--radius-sm)", border: "none", cursor: deadlinePassed ? "not-allowed" : "pointer", outline: "none", transition: "all 0.15s", opacity: submitting ? 0.7 : 1, fontFamily: "var(--font-body)" }}
+                      style={{ padding: "5px 18px", background: deadlinePassed ? T.borderBright : T.accent, color: deadlinePassed ? T.textMuted : "var(--text-inverse)", fontWeight: 700, fontSize: "var(--text-sm)", borderRadius: "var(--radius-sm)", border: "none", cursor: deadlinePassed ? "not-allowed" : "pointer", outline: "none", transition: "all 0.15s", opacity: submitting ? 0.7 : 1, fontFamily: "var(--font-body)" }}
                       onMouseEnter={(e) => { if (!deadlinePassed && !submitting) { e.currentTarget.style.background = "var(--primary-bright)"; e.currentTarget.style.transform = "translateY(-1px)"; } }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = deadlinePassed ? T.borderBright : T.accent; e.currentTarget.style.transform = "translateY(0)"; }}>
                       {submitting ? "Running…" : deadlinePassed ? "Deadline Passed" : "Run & Submit"}

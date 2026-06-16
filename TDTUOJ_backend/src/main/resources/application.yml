@@ -32,7 +32,7 @@ aws:
 
 judge0:
   api:
-    url: http://localhost:2358
+    url: ${JUDGE0_API_URL:http://localhost:2358}
 
 anthropic:
   api:

@@ -308,7 +308,7 @@ const CommentBlock = ({
           />
           <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
             <button onClick={() => onEditSave(comment.id)}
-              style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", background: T.accent, color: "#000", fontSize: 12, fontWeight: "700", cursor: "pointer", outline: "none", border: "none" }}>Save</button>
+              style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", background: T.accent, color: "var(--text-inverse)", fontSize: 12, fontWeight: "700", cursor: "pointer", outline: "none", border: "none" }}>Save</button>
             <button onClick={() => { setEditingComment(null); setEditInput(""); }}
               style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", background: T.borderBright, color: T.textMuted, fontSize: 12, fontWeight: "600", cursor: "pointer", outline: "none", border: "none" }}>Cancel</button>
           </div>
@@ -415,7 +415,7 @@ const CommentBlock = ({
           />
           <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
             <button onClick={() => onReply(comment.id)}
-              style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", background: T.accent, color: "#000", fontSize: 12, fontWeight: "700", cursor: commentSubmitting ? "not-allowed" : "pointer", opacity: commentSubmitting ? 0.6 : 1, outline: "none", border: "none" }}>Post Reply</button>
+              style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", background: T.accent, color: "var(--text-inverse)", fontSize: 12, fontWeight: "700", cursor: commentSubmitting ? "not-allowed" : "pointer", opacity: commentSubmitting ? 0.6 : 1, outline: "none", border: "none" }}>Post Reply</button>
             <button onClick={() => { setReplyingTo(null); setReplyInput(""); }}
               style={{ paddingLeft: 12, paddingRight: 12, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", background: T.borderBright, color: T.textMuted, fontSize: 12, fontWeight: "600", cursor: "pointer", outline: "none", border: "none" }}>Cancel</button>
           </div>
@@ -1127,7 +1127,7 @@ const ProblemDetailsPage = () => {
       <button onClick={() => setVizOpen(true)} style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", color: "var(--text-secondary)", border: "1px solid var(--border-default)", fontWeight: "600", fontSize: 13, paddingLeft: 14, paddingRight: 14, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", cursor: "pointer", transition: "all 0.15s", outline: "none" }} onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-subtle)"; e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "var(--border-default)"; e.currentTarget.style.color = "var(--text-secondary)"; }}>
         <Activity size={13} />Visualize
       </button>
-      <button onClick={handleSubmit} disabled={submitting} style={{ background: T.accent, color: "#000", fontWeight: "700", fontSize: 13, paddingLeft: 20, paddingRight: 20, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", cursor: submitting ? "not-allowed" : "pointer", transition: "all 0.15s", outline: "none", border: "none", opacity: submitting ? 0.7 : 1 }} onMouseEnter={(e) => { if (!submitting) { e.currentTarget.style.background = "#ffb833"; e.currentTarget.style.transform = "translateY(-1px)"; } }} onMouseLeave={(e) => { e.currentTarget.style.background = T.accent; e.currentTarget.style.transform = "none"; }}>
+      <button onClick={handleSubmit} disabled={submitting} style={{ background: T.accent, color: "var(--text-inverse)", fontWeight: "700", fontSize: 13, paddingLeft: 20, paddingRight: 20, paddingTop: 4, paddingBottom: 4, borderRadius: "6px", cursor: submitting ? "not-allowed" : "pointer", transition: "all 0.15s", outline: "none", border: "none", opacity: submitting ? 0.7 : 1 }} onMouseEnter={(e) => { if (!submitting) { e.currentTarget.style.filter = "brightness(1.15)"; e.currentTarget.style.transform = "translateY(-1px)"; } }} onMouseLeave={(e) => { e.currentTarget.style.filter = "none"; e.currentTarget.style.transform = "none"; }}>
         Run & Submit
       </button>
     </div>

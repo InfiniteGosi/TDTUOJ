@@ -1,0 +1,25 @@
+# Judge0 CE config (env_file for judge0-server, judge0-workers, judge0-db, judge0-redis).
+# Copy to judge0.conf and set the two passwords. These creds are internal to the
+# compose network only (not published to the host), but still pick strong values.
+
+# ---- Postgres (Judge0's own DB, separate from the app DB) ----
+POSTGRES_HOST=judge0-db
+POSTGRES_PORT=5432
+POSTGRES_DB=judge0
+POSTGRES_USER=judge0
+POSTGRES_PASSWORD=CHANGE_ME_judge0_db_password
+
+# ---- Redis (Judge0's own Redis, separate from the app Redis) ----
+REDIS_HOST=judge0-redis
+REDIS_PORT=6379
+REDIS_PASSWORD=CHANGE_ME_judge0_redis_password
+
+# ---- Resource limits (sane defaults; tune for VM size) ----
+MAX_QUEUE_SIZE=100
+MAX_CPU_TIME_LIMIT=15
+MAX_WALL_TIME_LIMIT=20
+MAX_MEMORY_LIMIT=512000
+ENABLE_WAIT_RESULT=true
+
+# ---- Optional API auth. Leave blank to disable (backend calls over private network). ----
+# AUTHN_TOKEN=

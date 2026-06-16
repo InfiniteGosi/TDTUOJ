@@ -1,43 +1,24 @@
 // src/components/visualizer/renderers/TreeRenderer.jsx
-// Frame shape expected:
-//   { type: "tree", nodes: [{id, val, left?, right?}], highlighted?: (id|val)[], current?: id|val }
-//
-// nodes is a flat array. Missing left/right keys mean no child.
-// highlighted and current match against node.id (fallback to node.val).
-
+// Frame shape: { type: "tree", nodes: [{id, val, left?, right?}], highlighted?: (id|val)[], current?: id|val }
+// VisuAlgo-style: solid filled circles, thick edges, bold labels.
 import { useMemo } from "react";
+import { V, MONO, Canvas, Legend, EmptyNote, onColor } from "./vizTheme";
 
-const T = {
-  bg: "#0f0f0f",
-  surface: "#1a1a1a",
-  border: "#2a2a2a",
-  text: "#e8e8e8",
-  textMuted: "#888",
-  accent: "#ffa116",
-  green: "#2cbb5d",
-  red: "#ef4743",
-  blue: "#3b82f6",
-  purple: "#a78bfa",
-};
-
-const NODE_R = 22;
-const V_GAP = 64; // vertical gap between levels
-const H_GAP = 12; // minimum horizontal gap between siblings
+const NODE_R = 26;
+const V_GAP = 58; // vertical gap between levels
+const H_GAP = 16; // minimum horizontal gap between siblings
 
 // ── Tree layout: Walker's algorithm (simplified) ─────────────────────────────
-function buildLayout(nodes, highlighted = [], current = null) {
+function buildLayout(nodes) {
   if (!nodes || nodes.length === 0)
     return { positions: {}, width: 0, height: 0, edges: [] };
 
-  // Build a lookup map
   const map = {};
   nodes.forEach((n) => {
     map[n.id] = n;
   });
 
-  // Find root: node whose id doesn't appear as left/right of any other node.
-  // FIX: use != null instead of !== 0 so that node id=0 is correctly
-  // identified as a child when it appears in another node's left/right field.
+  // Root = node never referenced as a child (id == null guard keeps id 0 valid).
   const childIds = new Set();
   nodes.forEach((n) => {
     if (n.left != null) childIds.add(n.left);
@@ -48,8 +29,6 @@ function buildLayout(nodes, highlighted = [], current = null) {
     return { positions: {}, width: 0, height: 0, edges: [] };
   const root = roots[0];
 
-  // Assign depth + compute subtree widths.
-  // FIX: guard with id == null instead of !id so that id===0 is not skipped.
   const depth = {};
   const subtreeW = {};
   const order = [];
@@ -67,8 +46,6 @@ function buildLayout(nodes, highlighted = [], current = null) {
   }
   dfs(root.id, 0);
 
-  // Assign x positions.
-  // FIX: same guard as above.
   const x = {};
   function assignX(id, left) {
     if (id == null || !map[id]) return;
@@ -88,17 +65,11 @@ function buildLayout(nodes, highlighted = [], current = null) {
     };
   });
 
-  // Collect edges
   const edges = [];
   nodes.forEach((n) => {
     if (n.left != null && map[n.left] && positions[n.id] && positions[n.left])
       edges.push({ from: n.id, to: n.left });
-    if (
-      n.right != null &&
-      map[n.right] &&
-      positions[n.id] &&
-      positions[n.right]
-    )
+    if (n.right != null && map[n.right] && positions[n.id] && positions[n.right])
       edges.push({ from: n.id, to: n.right });
   });
 
@@ -107,46 +78,33 @@ function buildLayout(nodes, highlighted = [], current = null) {
   const width = Math.max(...allX) + NODE_R + 20;
   const height = Math.max(...allY) + NODE_R + 20;
 
-  return { positions, width, height, edges, map };
+  return { positions, width, height, edges };
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
 export default function TreeRenderer({ frame }) {
   if (!frame || !Array.isArray(frame.nodes) || frame.nodes.length === 0) {
-    return (
-      <div style={{ color: T.textMuted, fontSize: 13, padding: 16 }}>
-        No tree data in this frame.
-      </div>
-    );
+    return <EmptyNote>No tree data in this frame.</EmptyNote>;
   }
 
   const { nodes, highlighted = [], current = null } = frame;
   const { positions, width, height, edges } = useMemo(
-    () => buildLayout(nodes, highlighted, current),
-    [JSON.stringify(nodes), JSON.stringify(highlighted), current],
+    () => buildLayout(nodes),
+    [JSON.stringify(nodes)],
   );
 
-  const getNodeColor = (id) => {
-    if (String(id) === String(current)) return T.accent;
-    if (highlighted.map(String).includes(String(id))) return T.purple;
-    return T.blue;
+  const fillOf = (id) => {
+    if (current != null && String(id) === String(current)) return V.current;
+    if (highlighted.map(String).includes(String(id))) return V.highlight;
+    return V.node;
   };
 
   return (
-    <div
-      style={{
-        width: "100%",
-        overflowX: "auto",
-        overflowY: "auto",
-        padding: 8,
-      }}
-    >
+    <Canvas>
       <svg
         width={Math.max(width, 200)}
         height={Math.max(height, 100)}
         style={{ display: "block", margin: "0 auto" }}
       >
-        {/* Edges */}
         {edges.map((e, i) => {
           const from = positions[e.from];
           const to = positions[e.to];
@@ -158,33 +116,29 @@ export default function TreeRenderer({ frame }) {
               y1={from.y}
               x2={to.x}
               y2={to.y}
-              stroke={T.border}
-              strokeWidth={1.5}
+              stroke={V.edge}
+              strokeWidth={2.5}
             />
           );
         })}
 
-        {/* Nodes */}
         {nodes.map((n) => {
           const pos = positions[n.id];
           if (!pos) return null;
-          const color = getNodeColor(n.id);
-          const isCurrent = String(n.id) === String(current);
-          const isHighlighted = highlighted.map(String).includes(String(n.id));
-
+          const fill = fillOf(n.id);
+          const isCurrent = current != null && String(n.id) === String(current);
+          const label = n.val == null ? "·" : String(n.val);
           return (
             <g key={n.id}>
               <circle
                 cx={pos.x}
                 cy={pos.y}
                 r={NODE_R}
-                fill={`${color}22`}
-                stroke={color}
-                strokeWidth={isCurrent ? 2.5 : 1.5}
+                fill={fill}
+                stroke={fill === V.node ? V.nodeBorder : "#ffffff66"}
+                strokeWidth={isCurrent ? 3 : 2}
                 style={{
-                  filter: isCurrent
-                    ? `drop-shadow(0 0 6px ${color}88)`
-                    : "none",
+                  filter: isCurrent ? `drop-shadow(0 0 8px ${fill}cc)` : "none",
                 }}
               />
               <text
@@ -192,62 +146,24 @@ export default function TreeRenderer({ frame }) {
                 y={pos.y}
                 textAnchor="middle"
                 dominantBaseline="central"
-                fill={isHighlighted || isCurrent ? color : T.text}
-                fontSize={String(n.val).length > 2 ? 10 : 13}
-                fontFamily="'JetBrains Mono', monospace"
+                fill={onColor(fill)}
+                fontSize={label.length > 3 ? 12 : label.length > 2 ? 14 : 16}
+                fontFamily={MONO}
                 fontWeight={700}
               >
-                {n.val}
+                {label}
               </text>
             </g>
           );
         })}
       </svg>
 
-      {/* Legend */}
-      <div
-        style={{
-          display: "flex",
-          gap: 12,
-          marginTop: 8,
-          paddingLeft: 8,
-          flexWrap: "wrap",
-        }}
-      >
-        {current != null && (
-          <Legend color={T.accent} label={`Current: ${current}`} />
-        )}
-        {highlighted.length > 0 && (
-          <Legend
-            color={T.purple}
-            label={`Highlighted: [${highlighted.join(", ")}]`}
-          />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function Legend({ color, label }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 5,
-        fontSize: 11,
-        color: T.textMuted,
-      }}
-    >
-      <div
-        style={{
-          width: 10,
-          height: 10,
-          borderRadius: "50%",
-          backgroundColor: color,
-        }}
+      <Legend
+        items={[
+          current != null && { color: V.current, label: `Current: ${current}`, round: true },
+          highlighted.length > 0 && { color: V.highlight, label: "Highlighted", round: true },
+        ]}
       />
-      {label}
-    </div>
+    </Canvas>
   );
 }
