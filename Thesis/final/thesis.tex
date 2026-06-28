@@ -12,7 +12,6 @@
 \usepackage{csquotes}
 \usepackage{mathptmx}
 
-% Fix for texttt overflow: allow line breaks in \texttt
 \usepackage[htt]{hyphenat}
 \sloppy
 
@@ -370,13 +369,14 @@ hint and code explanation features.
   \acro{HTTP}{Hypertext Transfer Protocol}
   \acro{HTTPS}{Hypertext Transfer Protocol Secure}
   \acro{ICPC}{International Collegiate Programming Contest}
-  \acro{IOI}{International Olympiad in Informatics}
+  \acro{JDK}{Java Development Kit}
   \acro{JPA}{Java Persistence API}
   \acro{JSON}{JavaScript Object Notation}
   \acro{JVM}{Java Virtual Machine -- Máy ảo Java}
   \acro{JWT}{JSON Web Token}
   \acro{LLM}{Large Language Model -- Mô hình ngôn ngữ lớn}
   \acro{MLE}{Memory Limit Exceeded}
+  \acro{CSV}{Comma-Separated Values}
   \acro{MVC}{Model-View-Controller}
   \acro{OJ}{Online Judge}
   \acro{PDF}{Portable Document Format}
@@ -680,6 +680,51 @@ viên tiết kiệm đáng kể thời gian nhập liệu thủ công.
 Tất cả các yêu cầu đến \ac{LLM} đều được xây dựng với prompt có cấu trúc rõ ràng ở phía
 backend, trong đó ngữ cảnh bài toán (đề bài, giới hạn, ví dụ) được đưa vào system prompt
 để đảm bảo phản hồi của \ac{LLM} luôn liên quan và chính xác theo từng bài toán cụ thể.
+
+\subsection{Hạ tầng đám mây -- Microsoft Azure}
+
+Hệ thống được triển khai trên hạ tầng đám mây (cloud) của Microsoft Azure, sử dụng một máy
+chủ ảo (virtual machine) chạy hệ điều hành Ubuntu. Phương án máy chủ ảo được lựa chọn thay
+cho các dịch vụ nền tảng (Platform as a Service) bởi đặc thù của Judge0: dịch vụ chấm bài
+này cần chạy ở chế độ đặc quyền (privileged container) và yêu cầu trình quản lý tài nguyên
+ở mức nhân hệ điều hành (cgroup) để giới hạn bộ nhớ cho từng lần thực thi mã -- những quyền
+kiểm soát mà các nền tảng đóng gói sẵn thường không cho phép. Máy chủ ảo trao toàn quyền
+quản trị hệ điều hành, nhờ đó nhóm tác giả có thể tinh chỉnh nhân Linux để Judge0 vận hành
+ổn định.
+
+Trên máy chủ, toàn bộ các thành phần phía máy chủ (backend, PostgreSQL, Redis, Judge0) được
+dựng bằng Docker Compose, đặt sau một máy chủ proxy ngược (reverse proxy) Caddy đảm nhiệm
+việc cấp và gia hạn chứng chỉ \ac{HTTPS} tự động cho tên miền api.tdtuoj.me. Riêng
+phía giao diện người dùng (frontend) được triển khai tách biệt trên nền tảng Vercel. Chi
+tiết quy trình và kết quả triển khai được trình bày ở Chương~6.
+
+\subsection{Tích hợp và triển khai liên tục -- GitHub Actions}
+
+Để rút ngắn chu kỳ đưa thay đổi từ mã nguồn lên môi trường vận hành, hệ thống áp dụng quy
+trình tích hợp liên tục và triển khai liên tục (Continuous Integration / Continuous
+Deployment -- \ac{CI/CD}) bằng GitHub Actions. Quy trình được kích hoạt tự động mỗi khi có
+thay đổi được đẩy lên nhánh chính, và gồm hai giai đoạn nối tiếp nhau.
+
+Giai đoạn thứ nhất là cổng kiểm tra biên dịch: mã nguồn phía máy chủ được biên dịch bằng
+Maven trên môi trường \ac{JDK} 21 và chạy bộ kiểm thử đơn vị, nhằm bảo đảm chỉ những thay
+đổi vượt qua kiểm tra mới được phép triển khai. Giai đoạn thứ hai thực hiện triển khai: hệ
+thống kết nối an toàn qua \ac{SSH} vào máy chủ ảo, kéo về phiên bản mã nguồn mới nhất và
+dựng lại các container bằng Docker Compose. Cách tổ chức này loại bỏ thao tác triển khai
+thủ công, giảm thiểu sai sót và bảo đảm môi trường vận hành luôn đồng bộ với nhánh chính.
+
+\subsection{Kiểm thử tải và giám sát -- k6, Prometheus và Grafana}
+
+Nhằm đánh giá hiệu năng của hệ thống dưới điều kiện nhiều người dùng truy cập đồng thời,
+nhóm tác giả sử dụng công cụ k6 để mô phỏng tải. Các kịch bản kiểm thử tải tái hiện những
+tình huống thực tế như duyệt nội dung, nộp bài đồng loạt và kiểm tra cơ chế giới hạn tần
+suất truy cập, qua đó xác định ngưỡng chịu tải và các điểm nghẽn của hệ thống.
+
+Song song với kiểm thử tải, hệ thống được giám sát bằng bộ đôi Prometheus và Grafana.
+Prometheus định kỳ thu thập các số liệu (metrics) do phía máy chủ phát ra, bao gồm cả các
+số liệu nghiệp vụ tùy biến như độ sâu hàng đợi bài nộp và thời gian chấm bài; Grafana truy
+vấn và trực quan hóa các số liệu này thành các bảng điều khiển (dashboard) theo thời gian
+thực. Sự kết hợp giữa k6 và bộ giám sát cho phép quan sát trực tiếp phản ứng của hệ thống
+khi tải tăng cao. Kết quả kiểm thử tải và giám sát được phân tích chi tiết ở Chương~5.
 
 % ============================================================
 % CHƯƠNG 3 – PHÂN TÍCH HỆ THỐNG
@@ -1399,9 +1444,9 @@ trong Hình~\ref{fig:seq-uc03}.
 % ── UC04: Tham gia cuộc thi ──────────────────────────────────
 \subsubsection{Use case Tham gia cuộc thi}
 
-Tham gia cuộc thi cho phép người dùng thi đấu trực tuyến trên hệ thống theo thể thức \ac{ICPC}
-hoặc \ac{IOI}. Người dùng đăng ký tham gia một cuộc thi; với cuộc thi riêng tư hoặc thuộc tổ
-chức, đăng ký cần được người tạo cuộc thi phê duyệt trước khi được xác nhận.
+Tham gia cuộc thi cho phép người dùng thi đấu trực tuyến trên hệ thống theo thể thức \ac{ICPC}.
+Người dùng đăng ký tham gia một cuộc thi và được xác nhận tham gia ngay, miễn
+là cuộc thi còn trong thời gian cho phép đăng ký và chưa đạt giới hạn số lượng người tham gia.
 
 Trong thời gian diễn ra, người dùng mở từng bài toán, viết lời giải và nộp bài; hệ thống chấm
 bài, tính điểm theo thể thức và cập nhật bảng xếp hạng theo thời gian thực để người dùng theo
@@ -1431,7 +1476,7 @@ Bảng~\ref{tab:uc04} trình bày đặc tả chi tiết của Use Case này.
     dõi bảng xếp hạng; hệ thống chấm bài, tính điểm theo thể thức và cập nhật rating khi kết
     thúc.} \\
   \hline
-  Tác nhân & \multicolumn{2}{p{11.9cm}|}{Người dùng (sinh viên); Contest Creator (phê duyệt và
+  Tác nhân & \multicolumn{2}{p{11.9cm}|}{Người dùng (sinh viên); Contest Creator (tổ chức và
     công bố kết quả).} \\
   \hline
   Sự kiện kích hoạt & \multicolumn{2}{p{11.9cm}|}{Người dùng nhấn nút ``Đăng ký'' trên trang
@@ -1447,11 +1492,10 @@ Bảng~\ref{tab:uc04} trình bày đặc tả chi tiết của Use Case này.
                 & \multicolumn{1}{c|}{\textbf{Hệ thống}} \\
   \cline{2-3}
    & 1. Người dùng mở trang cuộc thi và nhấn nút ``Đăng ký''.
-     & 1.1 Hệ thống tạo bản ghi đăng ký với trạng thái REGISTERED.\newline
-       1.2 Với cuộc thi riêng tư hoặc thuộc tổ chức, hệ thống giữ đăng ký chờ người tạo cuộc
-       thi phê duyệt. \\
+     & 1.1 Hệ thống kiểm tra điều kiện đăng ký (còn thời hạn, chưa đầy chỗ, chưa đăng ký) rồi
+       tạo bản ghi đăng ký với trạng thái APPROVED và xác nhận tham gia ngay. \\
    & 2. Người dùng chờ đến giờ thi, mở bài toán và nộp lời giải.
-     & 2.1 Hệ thống chấm bài nộp và tính điểm theo thể thức (\ac{ICPC} hoặc \ac{IOI}).\newline
+     & 2.1 Hệ thống chấm bài nộp và tính điểm theo thể thức \ac{ICPC}.\newline
        2.2 Hệ thống ẩn bài nộp khỏi những người dùng khác cho đến khi cuộc thi kết
        thúc.\newline
        2.3 Hệ thống cập nhật bảng xếp hạng theo thời gian thực; trong khoảng đóng băng,
@@ -1464,8 +1508,8 @@ Bảng~\ref{tab:uc04} trình bày đặc tả chi tiết của Use Case này.
        4.2 Hệ thống mở lại quyền xem bài nộp, công khai các bài toán của cuộc thi và hiển
        thị bảng xếp hạng cuối cùng. \\
   \hline
-  Ngoại lệ & \multicolumn{2}{p{11.9cm}|}{Người tạo cuộc thi từ chối đăng ký $\Rightarrow$ hệ
-    thống thông báo người dùng không được tham gia.} \\
+  Ngoại lệ & \multicolumn{2}{p{11.9cm}|}{Cuộc thi đã kết thúc, đã đạt giới hạn số người tham
+    gia, hoặc người dùng đã đăng ký trước đó $\Rightarrow$ hệ thống từ chối và thông báo lý do.} \\
   \hline
 \end{longtable}
 
@@ -1978,7 +2022,7 @@ này. Phân mảnh sơ đồ tương ứng được minh họa trong Hình~\ref{
 \subsubsection{Thực thể Cuộc thi (Contest)}
 
 Bảng contests lưu thông tin các cuộc thi tổ chức trên hệ thống, theo thể thức
-\ac{ICPC} hoặc \ac{IOI}. Một cuộc thi do một người tạo lập, chứa nhiều bài toán, ghi nhận đăng
+\ac{ICPC}. Một cuộc thi do một người tạo lập, chứa nhiều bài toán, ghi nhận đăng
 ký và quá trình tham gia của người dùng. Bảng~\ref{tab:erd-contests} mô tả chi tiết thực thể
 này. Phân mảnh sơ đồ tương ứng được minh họa trong Hình~\ref{fig:frag-contest}.
 
@@ -2009,7 +2053,7 @@ này. Phân mảnh sơ đồ tương ứng được minh họa trong Hình~\ref{
   \hline
   creator\_id & Khóa ngoại tới users, là người tạo cuộc thi. \\
   \hline
-  contest\_style & Thể thức tính điểm (\ac{ICPC} hoặc \ac{IOI}). \\
+  contest\_style & Thể thức tính điểm (\ac{ICPC}). \\
   \hline
   start\_time, end\_time & Thời gian bắt đầu và kết thúc. \\
   \hline
@@ -2162,27 +2206,11 @@ thi, tổ chức và người dùng. Bố cục được thiết kế theo hư�
 phục vụ thao tác luyện tập và thi đấu. Các tiểu mục dưới đây trình bày những màn hình
 tiêu biểu của hệ thống.
 
-\subsection{Trang danh sách bài toán}
-
-Trang danh sách bài toán cho phép người dùng tra cứu và lựa chọn bài toán để luyện tập.
-Giao diện được tổ chức dưới dạng bảng như Hình~\ref{fig:ui-problems}, mỗi dòng tương ứng
-với một bài toán kèm các thông tin mã số, tên bài, mức độ khó, chủ đề, điểm số và trạng
-thái đã giải. Thanh công cụ phía trên cung cấp ô tìm kiếm cùng các tùy chọn sắp xếp, trong
-khi cột trạng thái ở cuối mỗi dòng đánh dấu trực quan những bài toán mà người dùng đã giải
-thành công hoặc đang thử sức.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\textwidth]{figures/ui-problems.png}
-  \caption{Giao diện trang danh sách bài toán}
-  \label{fig:ui-problems}
-\end{figure}
-
 \subsection{Trang chi tiết bài toán và nộp bài}
 
 Trang chi tiết bài toán là màn hình làm việc trọng tâm của người dùng, được chia thành hai
 khu vực như Hình~\ref{fig:ui-problem-detail}. Khu vực bên trái trình bày đề bài gồm phát
-biểu, định dạng dữ liệu vào -- ra và các ca dữ liệu mẫu. Khu vực bên phải là trình soạn
+biểu, định dạng dữ liệu vào -- ra và các bộ dữ liệu mẫu. Khu vực bên phải là trình soạn
 thảo mã nguồn Monaco, cho phép chọn ngôn ngữ lập trình và viết lời giải trực tiếp trên
 trình duyệt. Khi người dùng nộp bài, mã nguồn được gửi tới hệ thống chấm và kết quả được
 hiển thị ở bảng phía dưới: trong hình, lời giải được chấm đạt toàn bộ bốn trên bốn trường
@@ -2193,21 +2221,6 @@ hợp kiểm thử kèm thông tin thời gian và bộ nhớ tiêu thụ.
   \includegraphics[width=\textwidth]{figures/ui-problem-detail.png}
   \caption{Giao diện trang chi tiết bài toán và kết quả nộp bài}
   \label{fig:ui-problem-detail}
-\end{figure}
-
-\subsection{Bảng gợi ý học tập bằng LLM}
-
-Ngay trên trang chi tiết bài toán, hệ thống tích hợp một bảng gợi ý học tập sử dụng mô hình
-ngôn ngữ lớn (\ac{LLM}). Như Hình~\ref{fig:ui-hint} mô tả, bảng gợi ý hiển thị ở cạnh phải
-màn hình với một số câu hỏi gợi ý sẵn như giải thích đề bài, đề xuất hướng tiếp cận hay phân
-tích độ phức tạp. Gợi ý sinh ra được kiểm soát để chỉ định hướng tư duy mà không tiết lộ lời
-giải hoàn chỉnh, giúp người học tự rèn luyện thay vì sao chép đáp án.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\textwidth]{figures/ui-hint.png}
-  \caption{Giao diện bảng gợi ý học tập bằng \ac{LLM}}
-  \label{fig:ui-hint}
 \end{figure}
 
 \subsection{Trang cuộc thi và bảng xếp hạng}
@@ -2242,27 +2255,38 @@ tiện.
   \label{fig:ui-admin}
 \end{figure}
 
-% TODO: bổ sung nội dung mô tả + hình minh họa cho các trang giao diện bên dưới.
-
-\subsection{Trang đăng nhập và đăng ký}
-
-\subsection{Trang danh sách cuộc thi}
-
-\subsection{Trang làm bài trong cuộc thi}
-
-\subsection{Trang hồ sơ người dùng}
-
-\subsection{Trang bảng xếp hạng người dùng}
-
-\subsection{Trang tạo và chỉnh sửa bài toán}
-
 \subsection{Trang trực quan hóa cấu trúc dữ liệu}
 
-\subsection{Trang tổ chức và thành viên}
+Trình minh họa cấu trúc dữ liệu là một cửa sổ phụ mở ra ngay trên màn hình làm bài. Như
+Hình~\ref{fig:ui-visualizer} mô tả, cửa sổ chia thành hai phần: bên trái là mã nguồn của
+người dùng với dòng đang thực thi được tô sáng, bên phải là khung minh họa cấu trúc dữ liệu
+được phát hiện tự động từ dữ liệu trong quá trình chạy. Trong hình, một mảng đang được sắp
+xếp được biểu diễn dưới dạng biểu đồ cột kèm giá trị từng phần tử. Thanh điều khiển phía dưới
+cho phép phát lại từng bước thực thi như một đoạn hoạt ảnh, đồng thời khu vực kết quả hiển thị
+dữ liệu xuất ra của chương trình, hỗ trợ người học quan sát trực quan diễn biến của thuật toán.
 
-\subsection{Trang bài thực hành}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{figures/ui-visualizer.png}
+  \caption{Giao diện trình minh họa cấu trúc dữ liệu}
+  \label{fig:ui-visualizer}
+\end{figure}
 
 \subsection{Trang theo dõi tiến độ bài thực hành}
+
+Trang theo dõi tiến độ hỗ trợ giảng viên giám sát kết quả làm bài của sinh viên trong một bài
+thực hành. Như Hình~\ref{fig:ui-lab-progress} thể hiện, đầu trang tổng hợp các chỉ số chung
+như số sinh viên, số bài toán, tỷ lệ hoàn thành trung bình và sinh viên đạt điểm cao nhất.
+Bảng bên dưới hiển thị tiến độ chi tiết của từng sinh viên theo từng bài toán, đánh dấu trạng
+thái đã giải kèm điểm số đạt được. Giao diện còn cho phép xuất dữ liệu tiến độ ra tệp định
+dạng \ac{CSV} hoặc Excel để phục vụ việc đánh giá và lưu trữ.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{figures/ui-lab-progress.png}
+  \caption{Giao diện trang theo dõi tiến độ bài thực hành}
+  \label{fig:ui-lab-progress}
+\end{figure}
 
 \section{Thiết kế hiệu năng và bảo mật}
 
@@ -2518,13 +2542,13 @@ Hệ thống cung cấp chức năng cho phía giao diện thông qua tập hợ
 (\ac{API}) dạng \ac{REST}, trao đổi dữ liệu bằng định dạng \ac{JSON} trên giao thức \ac{HTTP}.
 Mọi phản hồi đều tuân theo lớp vỏ chung Response<T> gồm mã trạng thái, thông điệp và dữ liệu;
 các yêu cầu cần định danh người dùng được bảo vệ bằng \ac{JWT} và được phân quyền theo vai trò.
-Các điểm cuối được tổ chức theo từng phân hệ nghiệp vụ, mỗi phân hệ tương ứng với một nhóm
+Các endpoint được tổ chức theo từng phân hệ nghiệp vụ, mỗi phân hệ tương ứng với một nhóm
 \ac{API} có đường dẫn gốc riêng.
 
 \subsection{Tổng quan các nhóm API}
 
 Bảng~\ref{tab:api-overview} liệt kê toàn bộ các nhóm \ac{API} của hệ thống cùng đường dẫn gốc
-và chức năng chính. Mỗi nhóm gồm nhiều điểm cuối tương ứng với các thao tác thêm, sửa, xóa và
+và chức năng chính. Mỗi nhóm gồm nhiều endpoint tương ứng với các thao tác thêm, sửa, xóa và
 truy vấn trên một loại tài nguyên.
 
 \begin{longtable}{|p{3.1cm}|p{4.6cm}|p{6.2cm}|}
@@ -2593,9 +2617,9 @@ truy vấn trên một loại tài nguyên.
 
 \subsection{Công cụ tài liệu hóa và kiểm thử API}
 
-Trong quá trình phát triển, các điểm cuối \ac{API} được tài liệu hóa và kiểm thử bằng hai công
+Trong quá trình phát triển, các endpoint \ac{API} được tài liệu hóa và kiểm thử bằng hai công
 cụ. Thứ nhất là Swagger UI được sinh tự động bởi thư viện SpringDoc OpenAPI: giao diện này liệt
-kê toàn bộ điểm cuối kèm mô tả tham số, lược đồ yêu cầu và phản hồi, đồng thời cho phép gửi thử
+kê toàn bộ endpoint kèm mô tả tham số, lược đồ yêu cầu và phản hồi, đồng thời cho phép gửi thử
 yêu cầu trực tiếp từ trình duyệt; đặc tả OpenAPI tương ứng được cung cấp tại đường dẫn
 /v3/api-docs. Thứ hai là Postman, dùng để kiểm thử thủ công và lưu lại các bộ yêu cầu
 (collection) phục vụ kiểm thử hồi quy, đặc biệt thuận tiện cho việc đính kèm mã thông báo
@@ -2612,12 +2636,12 @@ ba chức năng đó: nộp bài, trực quan hóa cấu trúc dữ liệu và h
 Nhóm \ac{API} nộp bài do lớp SubmissionController đảm nhận, cho phép người dùng gửi lời giải và
 theo dõi kết quả chấm. Do quá trình chấm bài diễn ra bất đồng bộ như đã trình bày ở mục trước,
 thiết kế được tách thành hai bước: yêu cầu tạo bài nộp trả về ngay một bản ghi ở trạng thái chờ
-kèm mã định danh, sau đó phía giao diện truy vấn định kỳ điểm cuối trạng thái để lấy kết quả khi
-việc chấm hoàn tất. Bảng~\ref{tab:api-submission} liệt kê các điểm cuối của nhóm chức năng này.
+kèm mã định danh, sau đó phía giao diện truy vấn định kỳ endpoint trạng thái để lấy kết quả khi
+việc chấm hoàn tất. Bảng~\ref{tab:api-submission} liệt kê các endpoint của nhóm chức năng này.
 
 \begin{table}[H]
   \centering
-  \caption{Các điểm cuối API của chức năng nộp bài}
+  \caption{Các endpoint API của chức năng nộp bài}
   \label{tab:api-submission}
   \begin{tabular}{|c|p{4.6cm}|p{6.4cm}|}
     \hline
@@ -2640,14 +2664,14 @@ việc chấm hoàn tất. Bảng~\ref{tab:api-submission} liệt kê các đi�
   \end{tabular}
 \end{table}
 
-Để chống lạm dụng, nhóm điểm cuối nộp bài chịu ràng buộc về khoảng chờ tối thiểu giữa hai lần
+Để chống lạm dụng, nhóm endpoint nộp bài chịu ràng buộc về khoảng chờ tối thiểu giữa hai lần
 nộp và bị giới hạn tần suất ở bậc submission như đã trình bày ở Chương~4.
 
 \subsection{Chức năng trực quan hóa cấu trúc dữ liệu}
 
 Chức năng trực quan hóa cho phép người dùng quan sát trạng thái các biến và cấu trúc dữ
 liệu của chương trình qua từng bước thực thi, phục vụ việc học thuật toán và gỡ lỗi. Toàn
-bộ chức năng được cung cấp qua một điểm cuối duy nhất POST /api/visualize, nhận mã nguồn,
+bộ chức năng được cung cấp qua một endpoint duy nhất POST /api/visualize, nhận mã nguồn,
 ngôn ngữ lập trình và dữ liệu đầu vào (nếu có), trả về danh sách các khung trạng thái
 (frame) để phía giao diện phát lại như một đoạn hoạt ảnh. Hệ thống hỗ trợ sáu ngôn ngữ:
 Python, JavaScript, Java, C\#, C và C++.
@@ -2685,11 +2709,11 @@ gợi ý học tập cho người dùng và hỗ trợ soạn đề cho quản t
 hình được thực hiện ở phía máy chủ thông qua WebClient của Spring WebFlux, gửi yêu cầu \ac{HTTP}
 đến dịch vụ Generative Language của Google (mô hình gemini-2.5-flash) và nhận phản hồi dạng
 \ac{JSON}; cơ chế gọi lại (retry) được áp dụng khi dịch vụ quá tải. Bảng~\ref{tab:api-llm} liệt
-kê các điểm cuối của nhóm chức năng này.
+kê các endpoint của nhóm chức năng này.
 
 \begin{table}[H]
   \centering
-  \caption{Các điểm cuối API của chức năng hỗ trợ bằng LLM}
+  \caption{Các endpoint API của chức năng hỗ trợ bằng LLM}
   \label{tab:api-llm}
   \begin{tabular}{|c|p{4.9cm}|p{4.4cm}|p{2.6cm}|}
     \hline
@@ -2713,18 +2737,18 @@ kê các điểm cuối của nhóm chức năng này.
   \end{tabular}
 \end{table}
 
-Đối với gợi ý học tập, điểm cuối /api/hints nhận đề bài, mã nguồn hiện tại, thông báo lỗi và lịch
+Đối với gợi ý học tập, endpoint /api/hints nhận đề bài, mã nguồn hiện tại, thông báo lỗi và lịch
 sử hội thoại của người dùng. Một chỉ thị hệ thống (system instruction) ràng buộc mô hình chỉ đưa
 ra các gợi ý tăng dần, từ chối tiết lộ lời giải hoàn chỉnh và bỏ qua các câu hỏi nằm ngoài phạm
 vi bài toán. Thiết kế cho phép sử dụng nhiều nhà cung cấp mô hình thông qua việc tra cứu theo
 tên (Gemini là mặc định, ngoài ra còn hỗ trợ Claude và OpenAI), giúp dễ dàng thay thế hoặc bổ
 sung mô hình về sau.
 
-Đối với hỗ trợ soạn đề, hai điểm cuối được giới hạn riêng cho quản trị viên và giảng viên bằng
-chú thích @PreAuthorize. Điểm cuối extract-pdf dùng thư viện Apache PDFBox để rút văn bản từ tập
+Đối với hỗ trợ soạn đề, hai endpoint được giới hạn riêng cho quản trị viên và giảng viên bằng
+chú thích @PreAuthorize. Endpoint extract-pdf dùng thư viện Apache PDFBox để rút văn bản từ tập
 tin \ac{PDF}, rồi nhờ Gemini trích xuất các trường có cấu trúc của bài toán gồm tiêu đề, đề bài,
 độ khó, giới hạn tài nguyên, trường hợp kiểm thử và nhãn gợi ý; nếu tập tin không chứa trường
-hợp kiểm thử, hệ thống tự động sinh năm trường hợp. Điểm cuối generate-test-cases sinh từ 1 đến
+hợp kiểm thử, hệ thống tự động sinh năm trường hợp. Endpoint generate-test-cases sinh từ 1 đến
 50 trường hợp kiểm thử từ nội dung đề bài. Cả hai chức năng đều bị giới hạn tần suất ở bậc ai,
 chặn hoàn toàn người dùng ẩn danh.
 
@@ -2732,7 +2756,7 @@ chặn hoàn toàn người dùng ẩn danh.
 
 Kiểm thử đơn vị (unit testing) được áp dụng cho tầng dịch vụ -- nơi tập trung phần lớn logic
 nghiệp vụ. Bộ kiểm thử sử dụng JUnit 5 kết hợp Mockito để giả lập (mock) các phụ thuộc như
-kho dữ liệu và dịch vụ bên ngoài, nhờ đó mỗi ca kiểm thử chỉ tập trung kiểm chứng một đơn vị
+kho dữ liệu và dịch vụ bên ngoài, nhờ đó mỗi trường hợp kiểm thử chỉ tập trung kiểm chứng một đơn vị
 logic một cách độc lập và tất định. Tổng cộng đề tài xây dựng 13 lớp kiểm thử với 101 ca
 kiểm thử, bao phủ các phân hệ nghiệp vụ trọng yếu.
 
@@ -2764,8 +2788,8 @@ phân hệ dịch vụ đã được kiểm thử.
   \label{tab:coverage}
 \end{table}
 
-Mỗi ca kiểm thử kiểm chứng một tình huống nghiệp vụ cụ thể, bao gồm cả luồng thành công và
-các luồng ngoại lệ. Bảng~\ref{tab:testcases} liệt kê một số ca kiểm thử tiêu biểu cùng kết
+Mỗi trường hợp kiểm thử kiểm chứng một tình huống nghiệp vụ cụ thể, bao gồm cả luồng thành công và
+các luồng ngoại lệ. Bảng~\ref{tab:testcases} liệt kê một số trường hợp kiểm thử tiêu biểu cùng kết
 quả mong đợi.
 
 \begin{table}[H]
@@ -2791,7 +2815,7 @@ quả mong đợi.
       & Báo lỗi không tìm thấy \\
     \hline
   \end{tabular}
-  \caption{Một số ca kiểm thử đơn vị tiêu biểu}
+  \caption{Một số trường hợp kiểm thử đơn vị tiêu biểu}
   \label{tab:testcases}
 \end{table}
 
@@ -2843,7 +2867,7 @@ và lớp nghiệp vụ. Bảng~\ref{tab:metrics} mô tả ý nghĩa của các 
 \end{table}
 
 Quá trình kiểm thử tải sử dụng ba kịch bản. Kịch bản thứ nhất mô phỏng việc duyệt bài với
-số người dùng ảo (virtual user) tăng dần truy cập các điểm cuối công khai. Kịch bản thứ hai
+số người dùng ảo (virtual user) tăng dần truy cập các endpoint công khai. Kịch bản thứ hai
 mô phỏng nộp bài liên tục để quan sát hoạt động của hàng đợi và tiến trình chấm. Kịch bản
 thứ ba dồn dập gửi yêu cầu vượt ngưỡng cho phép nhằm kiểm chứng cơ chế giới hạn tần suất.
 
@@ -2909,8 +2933,8 @@ mạng riêng của Docker Compose, không phơi bày trực tiếp ra Internet.
 
 Phía giao diện người dùng được triển khai tách biệt trên nền tảng Vercel, vốn chuyên dụng
 cho các ứng dụng web tĩnh và tự động biên dịch, phân phối mã nguồn React qua mạng phân phối
-nội dung toàn cầu. Hệ thống sử dụng tên miền riêng \texttt{tdtuoj.me}, trong đó tên miền
-gốc trỏ tới giao diện người dùng trên Vercel còn tên miền phụ \texttt{api.tdtuoj.me} trỏ
+nội dung toàn cầu. Hệ thống sử dụng tên miền riêng tdtuoj.me, trong đó tên miền
+gốc trỏ tới giao diện người dùng trên Vercel còn tên miền phụ api.tdtuoj.me trỏ
 tới phía máy chủ trên máy ảo, việc phân giải được cấu hình thông qua bản ghi \ac{DNS}. Cả
 hai đầu đều được bảo vệ bằng \ac{HTTPS}, qua đó cho phép cơ chế đăng nhập bằng tài khoản
 Google hoạt động đúng yêu cầu bảo mật. Bảng~\ref{tab:deploy-stack} tổng hợp các thành phần
@@ -2931,7 +2955,7 @@ hạ tầng chính.
     \hline
     Phía giao diện & Vercel & Phân phối ứng dụng React \\
     \hline
-    Tên miền \& phân giải & Namecheap (\ac{DNS}) & Tên miền \texttt{tdtuoj.me} \\
+    Tên miền \& phân giải & Namecheap (\ac{DNS}) & Tên miền tdtuoj.me \\
     \hline
     Tích hợp liên tục & GitHub Actions & Tự động biên dịch và triển khai \\
     \hline
@@ -2957,7 +2981,7 @@ cấu hình bản ghi \ac{DNS} và để Caddy tự cấp chứng chỉ giúp ho
 
 Để giảm thao tác thủ công mỗi khi cập nhật mã nguồn, đề tài thiết lập một quy trình
 \ac{CI/CD} bằng GitHub Actions. Mỗi khi mã nguồn được đẩy lên nhánh chính, hệ thống tự động
-thực hiện hai giai đoạn: giai đoạn kiểm tra biên dịch và chạy các ca kiểm thử đơn vị nhằm
+thực hiện hai giai đoạn: giai đoạn kiểm tra biên dịch và chạy các trường hợp kiểm thử đơn vị nhằm
 bảo đảm mã nguồn hợp lệ; sau đó, nếu thành công, giai đoạn triển khai sẽ kết nối tới máy ảo
 qua giao thức \ac{SSH}, cập nhật mã nguồn mới và dựng lại các vùng chứa. Phía giao diện trên
 Vercel được tự động biên dịch và phân phối lại ngay khi có thay đổi mà không cần cấu hình
@@ -2967,7 +2991,7 @@ tự động và nhất quán.
 \section{Kết quả triển khai và chi phí vận hành}
 
 Hệ thống đã được triển khai thành công và truy cập được công khai tại địa chỉ
-\texttt{https://tdtuoj.me}, với phía máy chủ phục vụ tại \texttt{https://api.tdtuoj.me}. Các
+https://tdtuoj.me, với phía máy chủ phục vụ tại https://api.tdtuoj.me. Các
 chức năng chính đều hoạt động đúng trong môi trường vận hành thực tế: người dùng đăng ký và
 đăng nhập (kể cả đăng nhập bằng tài khoản Google), duyệt và nộp bài, dịch vụ Judge0 chấm bài
 và trả kết quả chính xác, kết nối được mã hóa \ac{HTTPS} đầu cuối. Quy trình \ac{CI/CD} cũng
@@ -2975,14 +2999,11 @@ vận hành đúng, tự động cập nhật hệ thống sau mỗi lần thay 
 
 Về chi phí, hầu hết các dịch vụ đều thuộc các gói miễn phí dành cho sinh viên hoặc nhà phát
 triển. Khoản chi phí đáng kể duy nhất là máy ảo trên Azure. Với cấu hình đã chọn, đơn giá
-xấp xỉ \texttt{62} đô-la Mỹ mỗi tháng nếu để chạy liên tục cả ngày lẫn đêm. Tuy
+xấp xỉ 62 đô-la Mỹ mỗi tháng nếu để chạy liên tục cả ngày lẫn đêm. Tuy
 nhiên, Azure chỉ tính phí phần xử lý theo số giờ máy ảo thực sự hoạt động; khi không cần
 trình diễn, máy ảo được giải phóng tài nguyên (deallocate) nên phần phí xử lý trở về không,
-chỉ còn phí lưu trữ đĩa và địa chỉ mạng tĩnh ở mức thấp, khoảng \texttt{5}--\texttt{9}
-đô-la Mỹ mỗi tháng. Trên thực tế, với vài chục giờ chạy phục vụ kiểm thử và trình
-diễn, tổng chi phí xử lý chỉ ở mức vài đô-la Mỹ. Khoản tín dụng \texttt{100}
-đô-la Mỹ mà chương trình Azure for Students cấp do đó đủ để vận hành hệ thống vượt
-xa thời điểm bảo vệ đề tài. Bảng~\ref{tab:deploy-cost} tóm tắt chi phí của từng thành phần.
+chỉ còn phí lưu trữ đĩa và địa chỉ mạng tĩnh ở mức thấp, khoảng 5--9
+đô-la Mỹ mỗi tháng.
 
 \begin{table}[H]
   \centering
@@ -2997,7 +3018,7 @@ xa thời điểm bảo vệ đề tài. Bảng~\ref{tab:deploy-cost} tóm tắt
     \hline
     Phía giao diện (Vercel) & Miễn phí (gói Hobby) \\
     \hline
-    Tên miền \texttt{tdtuoj.me} & Miễn phí năm đầu, khoảng 20 đô-la Mỹ mỗi năm sau đó \\
+    Tên miền tdtuoj.me & Miễn phí năm đầu, khoảng 20 đô-la Mỹ mỗi năm sau đó \\
     \hline
     Tích hợp liên tục (GitHub Actions) & Miễn phí \\
     \hline
@@ -3021,7 +3042,7 @@ hợp lý, đồng thời có thể tái dựng nhanh chóng nhờ mô hình đ�
 và rèn luyện lập trình tại Khoa Công nghệ Thông tin, Trường Đại học Tôn Đức Thắng. Hệ
 thống bao phủ trọn vẹn luồng nghiệp vụ của một nền tảng chấm bài: quản lý kho bài toán với
 phân quyền công khai -- riêng tư, nộp bài và chấm tự động bất đồng bộ qua Judge0 với bốn
-ngôn ngữ lập trình, tổ chức cuộc thi theo thể thức \ac{ICPC} và \ac{IOI} kèm bảng xếp hạng
+ngôn ngữ lập trình, tổ chức cuộc thi theo thể thức \ac{ICPC} kèm bảng xếp hạng
 thời gian thực, cơ chế đóng băng bảng xếp hạng và tính điểm đánh giá năng lực sau cuộc
 thi, cùng mô hình tổ chức -- bài thực hành phục vụ quản lý lớp học của giảng viên.
 
@@ -3036,7 +3057,7 @@ thử, giúp giảm đáng kể công sức soạn đề của giảng viên.
 Về mặt kỹ thuật, hệ thống được thiết kế theo kiến trúc phân tầng với xác thực phi trạng
 thái bằng \ac{JWT}, hàng đợi chấm bài và bộ nhớ đệm trên Redis, giới hạn tần suất truy cập
 theo thuật toán thùng token, cùng hạ tầng giám sát bằng Prometheus và Grafana. Chất lượng
-được kiểm chứng qua 101 ca kiểm thử đơn vị cho tầng nghiệp vụ và các kịch bản kiểm thử tải
+được kiểm chứng qua 101 trường hợp kiểm thử đơn vị cho tầng nghiệp vụ và các kịch bản kiểm thử tải
 xác nhận hệ thống vận hành ổn định dưới lưu lượng cao.
 
 Ngoài ra, hệ thống đã được triển khai thành công lên môi trường trực tuyến thực tế và truy

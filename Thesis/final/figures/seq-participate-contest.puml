@@ -34,17 +34,13 @@ UI -> C : POST /api/contests/{id}/register
 activate C
 C -> S : register(contestId, user)
 activate S
-S -> R : save(status = REGISTERED)
+S -> S : Check window, capacity, duplicate
+S -> R : save(status = APPROVED)
 activate R
 R --> S : registration
 deactivate R
-alt Private / organization contest
-  S --> C : pending approval
-  C --> UI : awaiting creator approval
-else Public contest
-  S --> C : registered
-  C --> UI : 200 registered
-end
+S --> C : registered
+C --> UI : 200 registered
 deactivate S
 deactivate C
 

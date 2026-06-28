@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,11 +28,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
 
-    private static final int USER_MONTHS_WINDOW = 12;
-    private static final int SUBMISSION_DAYS_WINDOW = 30;
     private static final int TOP_TAGS_LIMIT = 10;
 
-    private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private final ProblemRepository problemRepository;
@@ -83,18 +79,19 @@ public class DashboardServiceImpl implements DashboardService {
                 .collect(Collectors.toList());
     }
 
-    /** Monthly registrations for the last 12 months, gap-filled, with a running cumulative total. */
+    /** Daily registrations across all time, gap-filled, with a running cumulative total. */
     private List<DashboardStatsDTO.TimePoint> buildUsersOverTime() {
-        YearMonth startMonth = YearMonth.now().minusMonths(USER_MONTHS_WINDOW - 1);
-        LocalDateTime since = startMonth.atDay(1).atStartOfDay();
+        LocalDateTime earliest = userRepository.findEarliestCreatedAt();
+        if (earliest == null) return new ArrayList<>();
 
-        Map<String, Long> byMonth = toPeriodMap(userRepository.countRegistrationsByMonth(since));
-        long cumulative = userRepository.countByCreatedAtBefore(since);
+        Map<String, Long> byDay = toPeriodMap(userRepository.countRegistrationsByDay());
 
         List<DashboardStatsDTO.TimePoint> points = new ArrayList<>();
-        for (int i = 0; i < USER_MONTHS_WINDOW; i++) {
-            String period = startMonth.plusMonths(i).format(MONTH_FMT);
-            long count = byMonth.getOrDefault(period, 0L);
+        LocalDate today = LocalDate.now();
+        long cumulative = 0;
+        for (LocalDate d = earliest.toLocalDate(); !d.isAfter(today); d = d.plusDays(1)) {
+            String period = d.format(DAY_FMT);
+            long count = byDay.getOrDefault(period, 0L);
             cumulative += count;
             points.add(DashboardStatsDTO.TimePoint.builder()
                     .period(period)
@@ -105,16 +102,17 @@ public class DashboardServiceImpl implements DashboardService {
         return points;
     }
 
-    /** Daily submissions for the last 30 days, gap-filled. */
+    /** Daily submissions across all time, gap-filled. */
     private List<DashboardStatsDTO.TimePoint> buildSubmissionsOverTime() {
-        LocalDate startDay = LocalDate.now().minusDays(SUBMISSION_DAYS_WINDOW - 1);
-        LocalDateTime since = startDay.atStartOfDay();
+        LocalDateTime earliest = submissionRepository.findEarliestSubmissionDate();
+        if (earliest == null) return new ArrayList<>();
 
-        Map<String, Long> byDay = toPeriodMap(submissionRepository.countSubmissionsByDay(since));
+        Map<String, Long> byDay = toPeriodMap(submissionRepository.countAllSubmissionsByDay());
 
         List<DashboardStatsDTO.TimePoint> points = new ArrayList<>();
-        for (int i = 0; i < SUBMISSION_DAYS_WINDOW; i++) {
-            String period = startDay.plusDays(i).format(DAY_FMT);
+        LocalDate today = LocalDate.now();
+        for (LocalDate d = earliest.toLocalDate(); !d.isAfter(today); d = d.plusDays(1)) {
+            String period = d.format(DAY_FMT);
             points.add(DashboardStatsDTO.TimePoint.builder()
                     .period(period)
                     .count(byDay.getOrDefault(period, 0L))

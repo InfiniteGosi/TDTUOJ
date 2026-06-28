@@ -48,7 +48,7 @@
   /* Text */
   --text-primary:   #E8EEF8;
   --text-secondary: #8BA0C4;
-  --text-muted:     #4A5C7A;
+  --text-muted:     #6E82A6;
   --text-inverse:   #0A0A0A;
 
   /* Borders */
@@ -1111,6 +1111,17 @@ code:not(pre code) {
 /* Divider spacing */
 .w-md-editor-toolbar ul {
   gap: 2px !important;
+}
+
+/* Fullscreen: the editor's in-place fullscreen lives inside the page content, so
+   root-level fixed/sticky chrome (navbar, admin rail, sticky form bar — all marked
+   .app-chrome) would paint above it. Hide that chrome while fullscreen is active and
+   lift the editor to the top, so it truly covers the viewport. */
+.w-md-editor-fullscreen {
+  z-index: 2147483000 !important;
+}
+body:has(.w-md-editor-fullscreen) .app-chrome {
+  display: none !important;
 }
 
 /* ── 32. PROBLEM DESCRIPTION MARKDOWN ───────────────────────── */

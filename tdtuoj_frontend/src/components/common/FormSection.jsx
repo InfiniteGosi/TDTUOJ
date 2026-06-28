@@ -38,7 +38,7 @@ export const FormPageShell = ({ children }) => {
 
 /** Sticky top bar: back arrow + icon + title on the left, actions on the right. */
 export const StickyFormBar = ({ onBack, icon: Icon, title, children }) => (
-  <div style={{
+  <div className="app-chrome" style={{
     position: "sticky", top: 0, zIndex: 20,
     height: 56,
     background: "var(--bg-raised)",
@@ -82,10 +82,14 @@ export const SectionCard = ({ number, title, children, delay = 0, right = null }
       padding: "28px 28px 28px",
       position: "relative",
       marginTop: 32,
-      // Each card is a stacking context (animation transform) — give earlier
-      // cards higher z-index so their dropdowns render above later cards.
+      // Stacking context via position+z-index (NOT the animation transform) so
+      // earlier cards' dropdowns render above later cards. Fill-mode is `backwards`
+      // (not `both`): the card reverts to no transform after the entrance animation,
+      // otherwise a lingering `translateY(0)` would make it the containing block for
+      // any `position:fixed` descendant (e.g. the Markdown editor's fullscreen),
+      // trapping/clipping it and freezing the page.
       zIndex: 10 - number,
-      animation: `fadeUp 350ms cubic-bezier(0.16,1,0.3,1) ${delay}ms both`,
+      animation: `fadeUp 350ms cubic-bezier(0.16,1,0.3,1) ${delay}ms backwards`,
       transition: "border-color 200ms ease",
     }}>
       <div style={{

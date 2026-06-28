@@ -72,7 +72,7 @@ const NavBar = () => {
 
   return (
     <>
-      <nav style={{
+      <nav className="app-chrome" style={{
         position: "sticky", top: 0, zIndex: 100,
         background: "var(--bg-base)",
         borderBottom: "1px solid var(--border-default)",

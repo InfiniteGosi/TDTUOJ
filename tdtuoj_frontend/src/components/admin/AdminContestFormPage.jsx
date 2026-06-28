@@ -252,7 +252,7 @@ const AdminContestFormPage = () => {
       startTime: toIsoString(form.startTime), endTime: toIsoString(form.endTime),
       registrationStart: toIsoString(form.registrationStart), registrationEnd: toIsoString(form.startTime),
       maxParticipant: form.maxParticipant ? parseInt(form.maxParticipant) : null,
-      isPublic: form.isPublic, isRated: form.isRated, contestStyle: "ICPC",
+      isPublic: true, isRated: form.isRated, contestStyle: "ICPC",
       freezeDurationMinutes: form.freezeDuration === "" ? 0 : Math.max(0, parseInt(form.freezeDuration, 10) || 0),
       problems: form.problems.map((p) => ({ problemId: p.problemId, problemOrder: p.problemOrder, points: p.points })),
     };
@@ -378,7 +378,6 @@ const AdminContestFormPage = () => {
                   <input type="number" className="input" placeholder="e.g. 60" value={form.freezeDuration} onChange={(e) => set("freezeDuration", e.target.value)} min={0} style={{ width: 200 }} />
                 </Field>
                 <div className="flex gap-6">
-                  <Toggle value={form.isPublic} onChange={(v) => set("isPublic", v)} label="Public contest" />
                   <Toggle value={form.isRated} onChange={(v) => set("isRated", v)} label="Rated contest" />
                 </div>
               </div>

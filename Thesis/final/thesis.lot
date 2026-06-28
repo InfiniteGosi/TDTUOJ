@@ -2,32 +2,32 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {3.1}{\ignorespaces Các tác nhân của hệ thống TDTUOJ}}{13}{table.3.1}%
-\contentsline {table}{\numberline {3.2}{\ignorespaces Danh sách các Use Case của hệ thống TDTUOJ}}{16}{table.3.2}%
-\contentsline {table}{\numberline {3.3}{\ignorespaces Bảng đặc tả Use case Nộp bài giải}}{26}{table.3.3}%
-\contentsline {table}{\numberline {3.4}{\ignorespaces Bảng đặc tả Use case Tạo bài toán}}{29}{table.3.4}%
-\contentsline {table}{\numberline {3.5}{\ignorespaces Bảng đặc tả Use case Trực quan hóa và gỡ lỗi mã nguồn}}{34}{table.3.5}%
-\contentsline {table}{\numberline {3.6}{\ignorespaces Bảng đặc tả Use case Tham gia cuộc thi}}{38}{table.3.6}%
-\contentsline {table}{\numberline {3.7}{\ignorespaces Bảng đặc tả Use case Gợi ý học tập bằng \ac {LLM}}}{42}{table.3.7}%
-\contentsline {table}{\numberline {3.8}{\ignorespaces Bảng đặc tả Use case Quản lý bài thực hành}}{46}{table.3.8}%
+\contentsline {table}{\numberline {3.1}{\ignorespaces Các tác nhân của hệ thống TDTUOJ}}{15}{table.3.1}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Danh sách các Use Case của hệ thống TDTUOJ}}{18}{table.3.2}%
+\contentsline {table}{\numberline {3.3}{\ignorespaces Bảng đặc tả Use case Nộp bài giải}}{28}{table.3.3}%
+\contentsline {table}{\numberline {3.4}{\ignorespaces Bảng đặc tả Use case Tạo bài toán}}{31}{table.3.4}%
+\contentsline {table}{\numberline {3.5}{\ignorespaces Bảng đặc tả Use case Trực quan hóa và gỡ lỗi mã nguồn}}{36}{table.3.5}%
+\contentsline {table}{\numberline {3.6}{\ignorespaces Bảng đặc tả Use case Tham gia cuộc thi}}{40}{table.3.6}%
+\contentsline {table}{\numberline {3.7}{\ignorespaces Bảng đặc tả Use case Gợi ý học tập bằng \ac {LLM}}}{44}{table.3.7}%
+\contentsline {table}{\numberline {3.8}{\ignorespaces Bảng đặc tả Use case Quản lý bài thực hành}}{48}{table.3.8}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {4.1}{\ignorespaces Mô tả chi tiết thực thể users}}{56}{table.4.1}%
-\contentsline {table}{\numberline {4.2}{\ignorespaces Mô tả chi tiết thực thể problems}}{58}{table.4.2}%
-\contentsline {table}{\numberline {4.3}{\ignorespaces Mô tả chi tiết thực thể submissions}}{60}{table.4.3}%
-\contentsline {table}{\numberline {4.4}{\ignorespaces Mô tả chi tiết thực thể contests}}{62}{table.4.4}%
-\contentsline {table}{\numberline {4.5}{\ignorespaces Mô tả chi tiết thực thể organizations}}{65}{table.4.5}%
-\contentsline {table}{\numberline {4.6}{\ignorespaces Mô tả chi tiết thực thể labs}}{66}{table.4.6}%
-\contentsline {table}{\numberline {4.7}{\ignorespaces Cấu hình các bậc giới hạn tần suất truy cập}}{76}{table.caption.60}%
+\contentsline {table}{\numberline {4.1}{\ignorespaces Mô tả chi tiết thực thể users}}{58}{table.4.1}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces Mô tả chi tiết thực thể problems}}{60}{table.4.2}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces Mô tả chi tiết thực thể submissions}}{62}{table.4.3}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces Mô tả chi tiết thực thể contests}}{64}{table.4.4}%
+\contentsline {table}{\numberline {4.5}{\ignorespaces Mô tả chi tiết thực thể organizations}}{67}{table.4.5}%
+\contentsline {table}{\numberline {4.6}{\ignorespaces Mô tả chi tiết thực thể labs}}{68}{table.4.6}%
+\contentsline {table}{\numberline {4.7}{\ignorespaces Cấu hình các bậc giới hạn tần suất truy cập}}{77}{table.caption.64}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {5.1}{\ignorespaces Các thành phần trong môi trường cài đặt}}{77}{table.caption.61}%
-\contentsline {table}{\numberline {5.2}{\ignorespaces Các tầng trong mã nguồn phía máy chủ}}{78}{table.caption.62}%
-\contentsline {table}{\numberline {5.3}{\ignorespaces Tổng quan các nhóm API của hệ thống TDTUOJ}}{81}{table.5.3}%
-\contentsline {table}{\numberline {5.4}{\ignorespaces Các điểm cuối API của chức năng nộp bài}}{83}{table.caption.63}%
-\contentsline {table}{\numberline {5.5}{\ignorespaces Các điểm cuối API của chức năng hỗ trợ bằng LLM}}{85}{table.caption.64}%
-\contentsline {table}{\numberline {5.6}{\ignorespaces Độ phủ dòng lệnh của các phân hệ dịch vụ cốt lõi}}{87}{table.caption.65}%
-\contentsline {table}{\numberline {5.7}{\ignorespaces Một số ca kiểm thử đơn vị tiêu biểu}}{87}{table.caption.66}%
-\contentsline {table}{\numberline {5.8}{\ignorespaces Các chỉ số giám sát chính}}{89}{table.caption.69}%
+\contentsline {table}{\numberline {5.1}{\ignorespaces Các thành phần trong môi trường cài đặt}}{78}{table.caption.65}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces Các tầng trong mã nguồn phía máy chủ}}{79}{table.caption.66}%
+\contentsline {table}{\numberline {5.3}{\ignorespaces Tổng quan các nhóm API của hệ thống TDTUOJ}}{82}{table.5.3}%
+\contentsline {table}{\numberline {5.4}{\ignorespaces Các endpoint API của chức năng nộp bài}}{84}{table.caption.67}%
+\contentsline {table}{\numberline {5.5}{\ignorespaces Các endpoint API của chức năng hỗ trợ bằng LLM}}{86}{table.caption.68}%
+\contentsline {table}{\numberline {5.6}{\ignorespaces Độ phủ dòng lệnh của các phân hệ dịch vụ cốt lõi}}{88}{table.caption.69}%
+\contentsline {table}{\numberline {5.7}{\ignorespaces Một số trường hợp kiểm thử đơn vị tiêu biểu}}{88}{table.caption.70}%
+\contentsline {table}{\numberline {5.8}{\ignorespaces Các chỉ số giám sát chính}}{90}{table.caption.73}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {6.1}{\ignorespaces Các thành phần hạ tầng triển khai chính}}{93}{table.caption.77}%
-\contentsline {table}{\numberline {6.2}{\ignorespaces Chi phí vận hành các thành phần triển khai}}{95}{table.caption.79}%
+\contentsline {table}{\numberline {6.1}{\ignorespaces Các thành phần hạ tầng triển khai chính}}{94}{table.caption.79}%
+\contentsline {table}{\numberline {6.2}{\ignorespaces Chi phí vận hành các thành phần triển khai}}{96}{table.caption.80}%
 \addvspace {10\p@ }

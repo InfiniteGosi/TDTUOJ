@@ -110,7 +110,7 @@ public class ContestServiceImpl implements ContestService {
                 .slug(slug)
                 .startTime(dto.getStartTime())
                 .endTime(dto.getEndTime())
-                .isPublic(dto.getIsPublic() != null ? dto.getIsPublic() : Boolean.TRUE)
+                .isPublic(Boolean.TRUE) // contests are public-only; private creation removed
                 .isRated(dto.getIsRated()   != null ? dto.getIsRated()  : Boolean.FALSE)
                 .freezeDurationMinutes(dto.getFreezeDurationMinutes())
                 .maxParticipant(dto.getMaxParticipant())
@@ -166,7 +166,6 @@ public class ContestServiceImpl implements ContestService {
             contest.setEndTime(dto.getEndTime());
             contest.setRatingProcessed(false); // re-trigger rating on time change
         }
-        if (dto.getIsPublic()          != null) contest.setIsPublic(dto.getIsPublic());
         if (dto.getIsRated()           != null) {
             contest.setIsRated(dto.getIsRated());
             contest.setRatingProcessed(false); // re-trigger rating on rated change

@@ -28,7 +28,7 @@ const GlobalClockBar = () => {
       textAlign: "center",
       fontFamily: "var(--font-code)",
       fontSize: "var(--text-xs)",
-      color: "var(--text-muted)",
+      color: "var(--text-secondary)",
       letterSpacing: "var(--tracking-wide)",
     }}>
       🇻🇳 {vnTime} (GMT+7)

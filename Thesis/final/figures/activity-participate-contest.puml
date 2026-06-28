@@ -17,17 +17,12 @@ start
 :Open contest detail page;
 :Click "Register";
 |System|
-:Create registration\nstatus = REGISTERED;
-if (Private / organization\ncontest?) then (Yes)
-  :Hold for creator approval;
-  if (Creator approves?) then (Yes)
-    :Confirm participant;
-  else (No)
-    |User|
-    :Show rejected notice;
-    stop
-  endif
+if (Window open, not full,\nnot already registered?) then (Yes)
+  :Create registration\nstatus = APPROVED;
 else (No)
+  |User|
+  :Show rejection reason;
+  stop
 endif
 
 |User|

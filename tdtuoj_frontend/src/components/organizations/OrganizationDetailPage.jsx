@@ -378,11 +378,42 @@ const OrganizationDetailPage = () => {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-base)", paddingBottom: "var(--space-16)" }}>
-      <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }`}</style>
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+        .oj-hero { position: relative; overflow: hidden; background: var(--bg-void); border-bottom: 1px solid var(--border-default); }
+        .oj-hero::before {
+          content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+          background-image: radial-gradient(var(--border-strong) 1px, transparent 1px);
+          background-size: 22px 22px;
+          -webkit-mask-image: radial-gradient(125% 95% at 22% -12%, #000 0%, transparent 70%);
+                  mask-image: radial-gradient(125% 95% at 22% -12%, #000 0%, transparent 70%);
+          opacity:.55;
+        }
+        .oj-hero::after {
+          content:""; position:absolute; left:-7%; top:-60%; width:740px; height:600px; pointer-events:none; z-index:0;
+          background: radial-gradient(circle, var(--primary-glow) 0%, transparent 65%);
+        }
+        .oj-eyebrow {
+          display:inline-flex; align-items:center; gap:7px; margin:0;
+          font-family: var(--font-display); font-weight:700; letter-spacing:.24em; text-transform:uppercase;
+          font-size: var(--text-sm); color: var(--primary);
+        }
+        .oj-accentbar {
+          align-self:stretch; width:4px; border-radius:999px; flex-shrink:0;
+          background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 10%, transparent) 130%);
+          box-shadow: 0 0 22px -3px var(--accent);
+        }
+        .oj-title { font-family: var(--font-display); font-size: var(--text-4xl); font-weight:900; margin:0; line-height:1.04; letter-spacing:-.01em; color: var(--text-primary); }
+        .oj-card { background: var(--bg-raised); border:1px solid var(--border-default); border-radius: var(--radius-lg); box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.04); }
+        .oj-panelhead { display:flex; align-items:center; gap:9px; padding:11px 15px; border-bottom:1px solid var(--border-subtle); background: linear-gradient(180deg, var(--bg-overlay), var(--bg-raised)); }
+        .oj-panelhead::before { content:""; width:3px; height:13px; border-radius:2px; background: var(--primary); box-shadow:0 0 10px -1px var(--primary); }
+        .oj-panelhead-label { font-size: var(--text-xs); font-weight:700; color: var(--text-secondary); letter-spacing:.08em; text-transform:uppercase; }
+      `}</style>
 
       {/* ── Banner ── */}
-      <div style={{ background: "var(--bg-void)", borderBottom: "1px solid var(--border-default)" }}>
-        <div className="page-container" style={{ paddingTop: "var(--space-7)", paddingBottom: "var(--space-8)" }}>
+      <div className="oj-hero" style={{ "--accent": accentColor }}>
+        <div className="page-container" style={{ paddingTop: "var(--space-8)", paddingBottom: "var(--space-8)", position: "relative", zIndex: 1 }}>
           {/* Back */}
           <button onClick={() => navigate("/organizations")}
             style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "var(--text-muted)", fontSize: "var(--text-sm)", cursor: "pointer", outline: "none", padding: 0, marginBottom: "var(--space-6)", transition: "color 0.12s", fontFamily: "var(--font-body)" }}
@@ -392,7 +423,11 @@ const OrganizationDetailPage = () => {
           </button>
 
           {/* Accented content */}
-          <div style={{ borderLeft: `4px solid ${accentColor}`, paddingLeft: "var(--space-5)", display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+          <div style={{ display: "flex", gap: "var(--space-5)", alignItems: "stretch" }}>
+            <div className="oj-accentbar" />
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", flex: 1, minWidth: 0 }}>
+            {/* Eyebrow */}
+            <span className="oj-eyebrow"><Building2 size={13} />Organization</span>
             {/* Badges */}
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: "var(--radius-pill)", fontSize: "var(--text-xs)", fontWeight: 700, background: org.isPublic ? "var(--bg-overlay)" : "var(--bg-overlay)", color: "var(--text-muted)", border: "1px solid var(--border-default)" }}>
@@ -410,7 +445,7 @@ const OrganizationDetailPage = () => {
             </div>
 
             {/* Title */}
-            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-3xl)", fontWeight: 900, margin: 0, lineHeight: 1.1, color: "var(--text-primary)" }}>
+            <h1 className="oj-title" style={{ maxWidth: 720 }}>
               {org.name}
             </h1>
 
@@ -429,6 +464,7 @@ const OrganizationDetailPage = () => {
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
                 <Calendar size={13} color="var(--text-muted)" />Created {fmt(org.createdAt)}
               </span>
+            </div>
             </div>
           </div>
         </div>
@@ -473,7 +509,7 @@ const OrganizationDetailPage = () => {
                 )}
 
                 {/* Members table */}
-                <div style={{ background: "var(--bg-raised)", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-default)", overflow: "hidden", position: "relative" }}>
+                <div className="oj-card" style={{ overflow: "hidden", position: "relative" }}>
                   {membersLoading && (
                     <div style={{ position: "absolute", inset: 0, background: "rgba(15,15,15,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
                       <div className="spinner" />
@@ -632,9 +668,9 @@ const OrganizationDetailPage = () => {
 
             {/* Join code */}
             {org.code && canManage && (
-              <div style={{ background: "var(--bg-raised)", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-default)", overflow: "hidden" }}>
-                <div style={{ padding: "9px 14px", borderBottom: "1px solid var(--border-subtle)", background: "var(--bg-overlay)" }}>
-                  <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Invite Code</span>
+              <div className="oj-card" style={{ overflow: "hidden" }}>
+                <div className="oj-panelhead">
+                  <span className="oj-panelhead-label">Invite Code</span>
                 </div>
                 <div style={{ padding: "var(--space-3) var(--space-4)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ fontSize: "var(--text-xl)", fontWeight: 800, color: "var(--primary)", letterSpacing: "0.12em", fontFamily: "var(--font-code)" }}>{org.code}</span>
@@ -649,9 +685,9 @@ const OrganizationDetailPage = () => {
             )}
 
             {/* Org info */}
-            <div style={{ background: "var(--bg-raised)", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-default)", overflow: "hidden" }}>
-              <div style={{ padding: "9px 14px", borderBottom: "1px solid var(--border-subtle)", background: "var(--bg-overlay)" }}>
-                <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Info</span>
+            <div className="oj-card" style={{ overflow: "hidden" }}>
+              <div className="oj-panelhead">
+                <span className="oj-panelhead-label">Info</span>
               </div>
               <div style={{ padding: "0 var(--space-4)" }}>
                 {[

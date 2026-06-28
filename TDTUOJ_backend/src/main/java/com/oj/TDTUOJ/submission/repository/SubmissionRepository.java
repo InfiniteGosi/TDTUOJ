@@ -135,4 +135,16 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     )
     List<Object[]> countSubmissionsByDay(
         @org.springframework.data.repository.query.Param("since") java.time.LocalDateTime since);
+
+    /** Submissions per day ("YYYY-MM-DD") across all time (admin dashboard). */
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT FUNCTION('to_char', s.submissionDate, 'YYYY-MM-DD'), COUNT(s) FROM Submission s " +
+        "GROUP BY FUNCTION('to_char', s.submissionDate, 'YYYY-MM-DD') " +
+        "ORDER BY FUNCTION('to_char', s.submissionDate, 'YYYY-MM-DD')"
+    )
+    List<Object[]> countAllSubmissionsByDay();
+
+    /** Earliest submission timestamp — start of the all-time series. */
+    @org.springframework.data.jpa.repository.Query("SELECT MIN(s.submissionDate) FROM Submission s")
+    java.time.LocalDateTime findEarliestSubmissionDate();
 }

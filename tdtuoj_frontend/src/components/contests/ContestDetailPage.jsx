@@ -406,93 +406,42 @@ const ContestDetailPage = () => {
       <style>{`
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
         @keyframes spin   { to { transform: rotate(360deg); } }
+
+        .oj-hero { position: relative; overflow: hidden; background: var(--bg-void); border-bottom: 1px solid var(--border-default); }
+        .oj-hero::before {
+          content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+          background-image: radial-gradient(var(--border-strong) 1px, transparent 1px);
+          background-size: 22px 22px;
+          -webkit-mask-image: radial-gradient(125% 95% at 22% -12%, #000 0%, transparent 70%);
+                  mask-image: radial-gradient(125% 95% at 22% -12%, #000 0%, transparent 70%);
+          opacity:.55;
+        }
+        .oj-hero::after {
+          content:""; position:absolute; left:-7%; top:-60%; width:740px; height:600px; pointer-events:none; z-index:0;
+          background: radial-gradient(circle, var(--primary-glow) 0%, transparent 65%);
+        }
+        .oj-eyebrow {
+          display:inline-flex; align-items:center; gap:7px; margin:0;
+          font-family: var(--font-display); font-weight:700; letter-spacing:.24em; text-transform:uppercase;
+          font-size: var(--text-sm); color: var(--primary);
+        }
+        .oj-accentbar {
+          align-self:stretch; width:4px; border-radius:999px; flex-shrink:0;
+          background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 10%, transparent) 130%);
+          box-shadow: 0 0 22px -3px var(--accent);
+        }
+        .oj-title { font-family: var(--font-display); font-size: var(--text-4xl); font-weight:900; margin:0; line-height:1.04; letter-spacing:-.01em; color: var(--text-primary); }
+        .oj-card { background: var(--bg-raised); border:1px solid var(--border-default); border-radius: var(--radius-lg); box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.04); }
+        .oj-panelhead { display:flex; align-items:center; gap:9px; padding:11px 15px; border-bottom:1px solid var(--border-subtle); background: linear-gradient(180deg, var(--bg-overlay), var(--bg-raised)); }
+        .oj-panelhead::before { content:""; width:3px; height:13px; border-radius:2px; background: var(--primary); box-shadow:0 0 10px -1px var(--primary); }
+        .oj-panelhead-label { font-size: var(--text-xs); font-weight:700; color: var(--text-secondary); letter-spacing:.08em; text-transform:uppercase; }
       `}</style>
 
       {/* ── Banner ── */}
       {(() => {
         const accent     = status === "RUNNING" ? "var(--green-ac)" : status === "UPCOMING" ? "var(--amber-tle)" : "var(--border-strong)";
-        const glowHex    = status === "RUNNING" ? "#4ade80"         : status === "UPCOMING" ? "#fbbf24"          : "#6b7280";
         return (
-          <div style={{ background: "var(--bg-void)", borderBottom: "1px solid var(--border-default)", position: "relative", overflow: "hidden" }}>
-
-            {/* ── Trophy graphic ── */}
-            <div aria-hidden="true" style={{ position: "absolute", right: "7%", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", userSelect: "none", opacity: 0.65 }}>
-              {/* Status glow halo */}
-              <div style={{ position: "absolute", left: "50%", top: "42%", transform: "translate(-50%,-50%)", width: 240, height: 240, borderRadius: "50%", background: `radial-gradient(circle, ${glowHex} 0%, transparent 68%)`, opacity: 0.22, filter: "blur(32px)" }} />
-              <svg width="190" height="218" viewBox="0 0 200 230" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="tgCup" x1="38" y1="12" x2="162" y2="145" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#FFD97D" />
-                    <stop offset="48%" stopColor="#F5A000" />
-                    <stop offset="100%" stopColor="#A36A00" />
-                  </linearGradient>
-                  <linearGradient id="tgHandleL" x1="10" y1="42" x2="38" y2="114" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#F5A000" />
-                    <stop offset="100%" stopColor="#A36A00" />
-                  </linearGradient>
-                  <linearGradient id="tgHandleR" x1="190" y1="42" x2="162" y2="114" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#F5A000" />
-                    <stop offset="100%" stopColor="#A36A00" />
-                  </linearGradient>
-                  <linearGradient id="tgBase1" x1="56" y1="181" x2="144" y2="193" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#D4A017" />
-                    <stop offset="100%" stopColor="#9A7012" />
-                  </linearGradient>
-                  <linearGradient id="tgBase2" x1="46" y1="191" x2="154" y2="205" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#B8860B" />
-                    <stop offset="100%" stopColor="#7A5800" />
-                  </linearGradient>
-                </defs>
-
-                {/* Cup body */}
-                <path d="M40 13 L160 13 Q167 76 150 112 Q136 137 100 143 Q64 137 50 112 Q33 76 40 13 Z" fill="url(#tgCup)" />
-
-                {/* Cup rim highlight */}
-                <path d="M40 13 L160 13" stroke="#FFE566" strokeWidth="2.5" strokeLinecap="round" opacity="0.5" />
-
-                {/* Cup left-edge shine */}
-                <path d="M54 24 Q47 72 54 110" stroke="white" strokeWidth="3.5" strokeLinecap="round" opacity="0.18" fill="none" />
-
-                {/* Inner shadow on right */}
-                <path d="M152 24 Q158 68 150 108" stroke="#7A5800" strokeWidth="6" strokeLinecap="round" opacity="0.25" fill="none" />
-
-                {/* 5-pointed star emblem */}
-                <path d="M100 46 L108.5 71 L135 71 L114 86 L122 111 L100 96 L78 111 L86 86 L65 71 L91.5 71 Z" fill="white" opacity="0.2" />
-                <path d="M100 46 L108.5 71 L135 71 L114 86 L122 111 L100 96 L78 111 L86 86 L65 71 L91.5 71 Z" stroke="white" strokeWidth="1" fill="none" opacity="0.35" />
-
-                {/* Left handle outer stroke */}
-                <path d="M40 44 C13 44 8 64 8 79 C8 94 13 115 40 115" stroke="url(#tgHandleL)" strokeWidth="12" fill="none" strokeLinecap="round" />
-                {/* Left handle inner highlight */}
-                <path d="M40 44 C13 44 8 64 8 79 C8 94 13 115 40 115" stroke="#FFD97D" strokeWidth="4" fill="none" strokeLinecap="round" opacity="0.25" />
-
-                {/* Right handle outer stroke */}
-                <path d="M160 44 C187 44 192 64 192 79 C192 94 187 115 160 115" stroke="url(#tgHandleR)" strokeWidth="12" fill="none" strokeLinecap="round" />
-                {/* Right handle inner highlight */}
-                <path d="M160 44 C187 44 192 64 192 79 C192 94 187 115 160 115" stroke="#FFD97D" strokeWidth="4" fill="none" strokeLinecap="round" opacity="0.25" />
-
-                {/* Stem */}
-                <rect x="88" y="143" width="24" height="32" rx="2" fill="#A36A00" />
-                <rect x="90" y="143" width="7" height="32" rx="1" fill="#D4A017" opacity="0.4" />
-
-                {/* Connector bar */}
-                <rect x="64" y="173" width="72" height="10" rx="3" fill="#C49020" />
-                <rect x="64" y="173" width="72" height="3" rx="1.5" fill="#FFD97D" opacity="0.3" />
-
-                {/* Base tier 1 */}
-                <rect x="56" y="181" width="88" height="12" rx="3" fill="url(#tgBase1)" />
-                <rect x="56" y="181" width="88" height="3.5" rx="1.5" fill="#FFE580" opacity="0.25" />
-
-                {/* Base tier 2 */}
-                <rect x="46" y="191" width="108" height="13" rx="3" fill="url(#tgBase2)" />
-                <rect x="46" y="191" width="108" height="3.5" rx="1.5" fill="#D4A017" opacity="0.3" />
-
-                {/* Bottom edge */}
-                <rect x="44" y="201" width="112" height="5" rx="2" fill="#5A3E00" opacity="0.6" />
-
-                {/* Ground shadow ellipse */}
-                <ellipse cx="100" cy="220" rx="58" ry="7" fill={glowHex} opacity="0.12" />
-              </svg>
-            </div>
+          <div className="oj-hero">
 
             <div className="page-container" style={{ paddingTop: "var(--space-7)", paddingBottom: "var(--space-8)", position: "relative", zIndex: 1 }}>
               {/* Back */}
@@ -504,7 +453,12 @@ const ContestDetailPage = () => {
               </button>
 
               {/* Accented content block */}
-              <div style={{ borderLeft: `4px solid ${accent}`, paddingLeft: "var(--space-5)", display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+              <div style={{ display: "flex", gap: "var(--space-5)", alignItems: "stretch" }}>
+                <div className="oj-accentbar" style={{ "--accent": accent }} />
+                <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", flex: 1, minWidth: 0 }}>
+
+                {/* Eyebrow */}
+                <span className="oj-eyebrow"><Trophy size={13} />Contest</span>
 
                 {/* Badges */}
                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
@@ -541,7 +495,7 @@ const ContestDetailPage = () => {
                 </div>
 
                 {/* Title */}
-                <h1 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-3xl)", fontWeight: 900, margin: 0, lineHeight: 1.1, color: "var(--text-primary)", maxWidth: 720 }}>
+                <h1 className="oj-title" style={{ maxWidth: 720 }}>
                   {contest.name}
                 </h1>
 
@@ -564,6 +518,7 @@ const ContestDetailPage = () => {
                   {contest.creatorUsername && (
                     <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>by {contest.creatorUsername}</span>
                   )}
+                </div>
                 </div>
               </div>
             </div>
@@ -598,7 +553,7 @@ const ContestDetailPage = () => {
 
             {/* ── Problems tab ── */}
             {activeTab === "problems" && (
-              <div style={{ background: "var(--bg-raised)", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-default)", overflow: "hidden" }}>
+              <div className="oj-card" style={{ overflow: "hidden" }}>
                 {/* Gate: not registered, contest not ended */}
                 {!registered && !canEdit && status !== "ENDED" ? (
                   <div style={{ padding: "var(--space-6)", borderLeft: "3px solid var(--border-accent)" }}>
@@ -680,7 +635,7 @@ const ContestDetailPage = () => {
 
             {/* ── Leaderboard tab ── */}
             {activeTab === "leaderboard" && (
-              <div style={{ background: "var(--bg-raised)", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-default)", padding: "var(--space-5)" }}>
+              <div className="oj-card" style={{ padding: "var(--space-5)" }}>
                 <LeaderboardTable contestId={contest.id} problems={problems} />
               </div>
             )}
@@ -740,15 +695,15 @@ const ContestDetailPage = () => {
 
             {/* ── Countdown ── */}
             {clockTarget && (
-              <div style={{ background: "var(--bg-raised)", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-default)", padding: "var(--space-4)" }}>
+              <div className="oj-card" style={{ padding: "var(--space-4)" }}>
                 <SidebarClock targetDate={clockTarget} label={clockLabel} onExpire={reload} />
               </div>
             )}
 
             {/* ── Contest info ── */}
-            <div style={{ background: "var(--bg-raised)", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-default)", overflow: "hidden" }}>
-              <div style={{ padding: "9px 14px", borderBottom: "1px solid var(--border-subtle)", background: "var(--bg-overlay)" }}>
-                <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Contest Info</span>
+            <div className="oj-card" style={{ overflow: "hidden" }}>
+              <div className="oj-panelhead">
+                <span className="oj-panelhead-label">Contest Info</span>
               </div>
               <div style={{ padding: "0 var(--space-4)" }}>
                 {[

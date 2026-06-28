@@ -35,6 +35,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
            "ORDER BY FUNCTION('to_char', u.createdAt, 'YYYY-MM')")
     List<Object[]> countRegistrationsByMonth(@Param("since") LocalDateTime since);
 
+    /** Registrations per day ("YYYY-MM-DD") across all time (admin dashboard). */
+    @Query("SELECT FUNCTION('to_char', u.createdAt, 'YYYY-MM-DD'), COUNT(u) FROM User u " +
+           "GROUP BY FUNCTION('to_char', u.createdAt, 'YYYY-MM-DD') " +
+           "ORDER BY FUNCTION('to_char', u.createdAt, 'YYYY-MM-DD')")
+    List<Object[]> countRegistrationsByDay();
+
+    /** Earliest registration timestamp — start of the all-time cumulative curve. */
+    @Query("SELECT MIN(u.createdAt) FROM User u")
+    LocalDateTime findEarliestCreatedAt();
+
     /** Users registered before a given time — seeds the cumulative curve (admin dashboard). */
     long countByCreatedAtBefore(LocalDateTime time);
 }

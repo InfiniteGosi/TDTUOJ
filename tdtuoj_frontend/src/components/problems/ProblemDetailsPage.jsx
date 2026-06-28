@@ -1137,14 +1137,14 @@ const ProblemDetailsPage = () => {
   const renderPanelContent = (panelId) => {
     switch (panelId) {
       case "testcases": return (
-        <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
           {testCases.length === 0 ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, paddingTop: 48 }}>
               <Terminal size={28} style={{ color: "var(--text-muted)", opacity: 0.4 }} />
               <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)", fontFamily: "var(--font-body)" }}>No sample test cases</span>
             </div>
           ) : testCases.map((tc, i) => (
-            <div key={tc.id} style={{ borderRadius: "var(--radius-md)", border: "1px solid var(--border-default)", overflow: "hidden", background: "var(--bg-base)" }}>
+            <div key={tc.id} style={{ flexShrink: 0, borderRadius: "var(--radius-md)", border: "1px solid var(--border-default)", overflow: "hidden", background: "var(--bg-base)" }}>
               <div style={{ padding: "7px 14px", background: "var(--bg-void)", borderBottom: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, fontFamily: "var(--font-code)", color: "var(--primary)", background: "var(--primary-subtle)", border: "1px solid var(--border-accent)", padding: "1px 7px", borderRadius: "var(--radius-sm)", letterSpacing: "0.06em" }}>
                   CASE {i + 1}
@@ -1152,11 +1152,11 @@ const ProblemDetailsPage = () => {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
                 {[{ label: "INPUT", val: tc.input, accent: false }, { label: "EXPECTED OUTPUT", val: tc.output, accent: true }].map(({ label, val, accent }, idx) => (
-                  <div key={label} style={{ borderRight: idx === 0 ? "1px solid var(--border-subtle)" : "none" }}>
-                    <div style={{ padding: "6px 14px", borderBottom: "1px solid var(--border-subtle)", background: accent ? "var(--green-subtle)" : "transparent" }}>
+                  <div key={label} style={{ display: "flex", flexDirection: "column", borderRight: idx === 0 ? "1px solid var(--border-subtle)" : "none", background: accent ? "var(--green-subtle)" : "transparent" }}>
+                    <div style={{ padding: "6px 14px", borderBottom: "1px solid var(--border-subtle)" }}>
                       <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: accent ? "var(--green-ac)" : "var(--text-muted)", letterSpacing: "0.06em", fontFamily: "var(--font-code)" }}>{label}</span>
                     </div>
-                    <div style={{ padding: "12px 14px", fontFamily: "var(--font-code)", fontSize: "var(--text-sm)", color: accent ? "var(--green-ac)" : "var(--text-primary)", whiteSpace: "pre-wrap", lineHeight: 1.7, minHeight: 44, maxHeight: 200, overflowY: "auto", background: accent ? "var(--green-subtle)" : "transparent" }}>
+                    <div style={{ flex: 1, padding: "12px 14px", fontFamily: "var(--font-code)", fontSize: "var(--text-sm)", color: accent ? "var(--green-ac)" : "var(--text-primary)", whiteSpace: "pre-wrap", lineHeight: 1.7, minHeight: 44, maxHeight: 200, overflowY: "auto" }}>
                       {val || <span style={{ color: "var(--text-muted)", fontStyle: "italic", fontFamily: "var(--font-body)" }}>empty</span>}
                     </div>
                   </div>
@@ -1167,9 +1167,9 @@ const ProblemDetailsPage = () => {
         </div>
       );
       case "description": return (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {problemHeaderJSX}
-          <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
+          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: 20 }}>
             <div className="problem-description">
               <ReactMarkdown>{statement}</ReactMarkdown>
             </div>
@@ -1177,7 +1177,7 @@ const ProblemDetailsPage = () => {
         </div>
       );
       case "submissions": return (
-        <div style={{ flex: 1, overflowY: "auto" }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
           {loadingSubmissions ? (
             <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
               <div className="spinner" style={{ borderTopColor: "var(--primary)" }} />
@@ -1207,7 +1207,7 @@ const ProblemDetailsPage = () => {
         </div>
       );
       case "results": return (
-        <div style={{ flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
           {submitting && queuePosition != null && (
             <div style={{ padding: "18px 20px", borderRadius: "var(--radius-md)", background: "var(--blue-subtle)", border: "1px solid var(--border-default)", borderLeft: "4px solid var(--blue-ce)", display: "flex", alignItems: "center", gap: 14 }}>
               <div className="spinner" style={{ borderTopColor: "var(--blue-ce)", width: 18, height: 18, flexShrink: 0 }} />
@@ -1228,7 +1228,7 @@ const ProblemDetailsPage = () => {
           )}
           {results && (
             <>
-              <div style={{ padding: "18px 20px", borderRadius: "var(--radius-md)", background: results.allPassed ? "var(--green-subtle)" : "var(--red-subtle)", border: `1px solid ${results.allPassed ? "var(--green-ac)" : "var(--red-wa)"}33`, borderLeft: `4px solid ${results.allPassed ? "var(--green-ac)" : "var(--red-wa)"}` }}>
+              <div style={{ flexShrink: 0, padding: "18px 20px", borderRadius: "var(--radius-md)", background: results.allPassed ? "var(--green-subtle)" : "var(--red-subtle)", border: `1px solid ${results.allPassed ? "var(--green-ac)" : "var(--red-wa)"}33`, borderLeft: `4px solid ${results.allPassed ? "var(--green-ac)" : "var(--red-wa)"}` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                   {results.allPassed ? <CheckCircle size={20} color="var(--green-ac)" strokeWidth={2.5} /> : <XCircle size={20} color="var(--red-wa)" strokeWidth={2.5} />}
                   <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "var(--text-2xl)", letterSpacing: "0.01em", color: results.allPassed ? "var(--green-ac)" : "var(--red-wa)" }}>
@@ -1259,7 +1259,7 @@ const ProblemDetailsPage = () => {
                 )}
               </div>
               {results.errorMessage && (
-                <div style={{ borderRadius: "var(--radius-md)", border: "1px solid var(--red-wa)33", overflow: "hidden" }}>
+                <div style={{ flexShrink: 0, borderRadius: "var(--radius-md)", border: "1px solid var(--red-wa)33", overflow: "hidden" }}>
                   <div style={{ padding: "6px 14px", background: "var(--red-subtle)", borderBottom: "1px solid var(--red-wa)33" }}>
                     <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--red-wa)", fontFamily: "var(--font-code)", letterSpacing: "0.06em" }}>
                       {results.verdict === "CE" ? "COMPILATION ERROR" : "RUNTIME ERROR"}
@@ -1281,7 +1281,7 @@ const ProblemDetailsPage = () => {
         </div>
       );
       case "comments": return (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {/* Compose */}
           <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border-subtle)", flexShrink: 0 }}>
             {ApiService.isAuthenticated() ? (
@@ -1310,7 +1310,7 @@ const ProblemDetailsPage = () => {
             )}
           </div>
           {/* List */}
-          <div style={{ flex: 1, overflowY: "auto" }}>
+          <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
             {commentsLoading ? (
               <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
                 <div className="spinner" style={{ borderTopColor: "var(--primary)" }} />
@@ -1359,7 +1359,7 @@ const ProblemDetailsPage = () => {
         </div>
       );
       case "editor": return (
-        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           <CodeEditor ref={codeEditorRef} rightHeaderContent={editorHeaderButtons} />
         </div>
       );
