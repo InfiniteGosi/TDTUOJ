@@ -33,6 +33,7 @@ import LabProblemPage from "./components/organizations/LabProblemPage";
 import AdminOrganizationPage from "./components/admin/AdminOrganizationPage";
 import MyProblemsPage from "./components/problems/MyProblemsPage";
 import MyProblemFormPage from "./components/problems/MyProblemFormPage";
+import JudgeStatusPage from "./components/status/JudgeStatusPage";
 import { ToastProvider, useToast } from "./components/common/ToastMessage";
 import { useEffect } from "react";
 
@@ -75,6 +76,7 @@ function App() {
               <Route path="/organizations/:orgSlug/labs/:labSlug/progress" element={<LabProgressPage />} />
               <Route path="/organizations/:orgSlug/labs/:labSlug/problems/:problemSlug" element={<LabProblemPage />} />
               <Route path="/users" element={<UserPage />} />
+              <Route path="/status" element={<JudgeStatusPage />} />
               <Route path="/problems/:slug" element={<ProblemDetailsPage />} />
               <Route path="users/:username" element={<ProfilePage />} />
               <Route path="/profile" element={<EditProfilePage to="/home" />} />

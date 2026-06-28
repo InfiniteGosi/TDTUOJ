@@ -93,6 +93,7 @@ const VERDICT_LABEL = {
   TLE: "Time Limit Exceeded",
   MLE: "Memory Limit Exceeded",
   SF: "Runtime Error",
+  IE: "Judge Error",
 };
 
 const DIFF_STYLE = {
@@ -734,7 +735,7 @@ const ProblemDetailsPage = () => {
                 solved: true,
                 attempted: false,
               }));
-            } else if (!allPassed) {
+            } else if (!allPassed && updated.submissionVerdict !== "IE") {
               setProblem((prev) => ({ ...prev, attempted: true }));
             }
 
@@ -1262,7 +1263,7 @@ const ProblemDetailsPage = () => {
                 <div style={{ flexShrink: 0, borderRadius: "var(--radius-md)", border: "1px solid var(--red-wa)33", overflow: "hidden" }}>
                   <div style={{ padding: "6px 14px", background: "var(--red-subtle)", borderBottom: "1px solid var(--red-wa)33" }}>
                     <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--red-wa)", fontFamily: "var(--font-code)", letterSpacing: "0.06em" }}>
-                      {results.verdict === "CE" ? "COMPILATION ERROR" : "RUNTIME ERROR"}
+                      {results.verdict === "CE" ? "COMPILATION ERROR" : results.verdict === "IE" ? "JUDGE ERROR" : "RUNTIME ERROR"}
                     </span>
                   </div>
                   <pre style={{ margin: 0, padding: "12px 14px", fontFamily: "var(--font-code)", fontSize: "var(--text-xs)", color: "var(--red-wa)", whiteSpace: "pre-wrap", background: "var(--bg-void)", lineHeight: 1.7, maxHeight: 260, overflowY: "auto" }}>

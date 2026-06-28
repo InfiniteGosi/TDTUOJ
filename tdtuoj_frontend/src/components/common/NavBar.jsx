@@ -64,6 +64,7 @@ const NavBar = () => {
     { to: "/contests",      label: "Contests" },
     { to: "/organizations", label: "Organizations" },
     { to: "/users",         label: "Users" },
+    { to: "/status",        label: "Status" },
   ];
 
   const isActive = (to) => location.pathname.startsWith(to);

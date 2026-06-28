@@ -363,6 +363,12 @@ export default class ApiService {
     return resp.data;
   }
 
+  // ─── Status ──────────────────────────────────────────────────────────────────
+  static async getJudgeStatus() {
+    const resp = await axios.get(`${this.BASE_URL}/status/judge`);
+    return resp.data; // Response<JudgeStatusResponse>
+  }
+
   // ─── Judge0 ──────────────────────────────────────────────────────────────────
 
   static async executeCode(languageId, sourceCode, stdin, expectedOutput) {

@@ -6,5 +6,6 @@ public enum SubmissionVerdict {
     CE, // Compilation Error
     TLE,
     MLE,
-    SF // Segmentation Fault
+    SF, // Segmentation Fault
+    IE  // Internal/Judge Error — engine unavailable or failed to run
 }

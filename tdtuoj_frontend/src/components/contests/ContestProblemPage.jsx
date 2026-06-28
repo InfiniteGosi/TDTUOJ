@@ -77,6 +77,7 @@ const VERDICT_LABEL = {
   TLE: "Time Limit Exceeded",
   MLE: "Memory Limit Exceeded",
   SF:  "Runtime Error",
+  IE:  "Judge Error",
 };
 
 const VERDICT_COLOR = {
@@ -85,6 +86,7 @@ const VERDICT_COLOR = {
   TLE: { c: "var(--amber-tle)", bg: "var(--amber-subtle)"  },
   CE:  { c: "var(--blue-ce)",   bg: "var(--blue-subtle)"   },
   MLE: { c: "var(--text-muted)","bg": "var(--bg-overlay)"  },
+  IE:  { c: "var(--red-wa)",    bg: "var(--red-subtle)"    },
 };
 
 const DIFF_STYLE = {
@@ -367,7 +369,7 @@ const ContestProblemPage = () => {
             clearInterval(intervalId); setPollingId(null); setSubmitting(false); setQueuePosition(null);
             const allPassed = up.submissionVerdict === "AC";
             if (allPassed && !problem?.solved) setProblem((p) => ({ ...p, solved: true, attempted: false }));
-            else if (!allPassed) setProblem((p) => ({ ...p, attempted: true }));
+            else if (!allPassed && up.submissionVerdict !== "IE") setProblem((p) => ({ ...p, attempted: true }));
             setResults({ allPassed, passedCount: up.testCasesPassed ?? 0, totalCount: up.totalTestCases ?? testCases.length, verdict: up.submissionVerdict, errorMessage: up.errorMessage, executionTime: up.executionTime, memoryUsed: up.memoryUsed });
             showMessage(allPassed ? "All test cases passed!" : `${up.testCasesPassed}/${up.totalTestCases} passed — ${up.submissionVerdict}`, allPassed ? "success" : "warning");
             if (submissionsLoaded) await fetchSubmissions();
@@ -701,7 +703,7 @@ const ContestProblemPage = () => {
                             <div style={{ borderRadius: "var(--radius-md)", border: `1px solid ${T.red}33`, overflow: "hidden" }}>
                               <div style={{ padding: "6px 14px", background: T.redDim, borderBottom: `1px solid ${T.red}33` }}>
                                 <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: T.red, fontFamily: "var(--font-code)", letterSpacing: "0.06em" }}>
-                                  {results.verdict === "CE" ? "COMPILATION ERROR" : "RUNTIME ERROR"}
+                                  {results.verdict === "CE" ? "COMPILATION ERROR" : results.verdict === "IE" ? "JUDGE ERROR" : "RUNTIME ERROR"}
                                 </span>
                               </div>
                               <pre style={{ margin: 0, padding: "12px 14px", fontFamily: "var(--font-code)", fontSize: "var(--text-xs)", color: T.red, whiteSpace: "pre-wrap", background: T.bg, lineHeight: 1.7, maxHeight: 220, overflowY: "auto" }}>

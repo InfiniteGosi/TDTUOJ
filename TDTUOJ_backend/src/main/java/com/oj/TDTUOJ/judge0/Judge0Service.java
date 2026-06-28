@@ -58,6 +58,7 @@ public class Judge0Service {
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(Map.class)
+                .timeout(java.time.Duration.ofSeconds(30))
                 .block();
 
         log.info("Judge0 response: {}", response);

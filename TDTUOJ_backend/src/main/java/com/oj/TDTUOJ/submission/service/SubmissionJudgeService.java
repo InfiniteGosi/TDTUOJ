@@ -84,31 +84,45 @@ public class SubmissionJudgeService {
         double maxTime   = 0;
         int    maxMemory = 0;
 
-        for (TestCase tc : testCases) {
-            String input          = awsS3Service.readFileContent(tc.getInputFileUrl());
-            String expectedOutput = awsS3Service.readFileContent(tc.getExpectedOutputFileUrl());
+        try {
+            for (TestCase tc : testCases) {
+                String input          = awsS3Service.readFileContent(tc.getInputFileUrl());
+                String expectedOutput = awsS3Service.readFileContent(tc.getExpectedOutputFileUrl());
 
-            Judge0Result result = judge0Service.judge(
-                    job.getSourceCode(),
-                    job.getSubmissionLanguage(),
-                    input,
-                    expectedOutput,
-                    tc.getTimeLimit()   != null ? tc.getTimeLimit()   : problem.getTimeLimit(),
-                    tc.getMemoryLimit() != null ? tc.getMemoryLimit() : problem.getMemoryLimit()
-            );
+                Judge0Result result = judge0Service.judge(
+                        job.getSourceCode(),
+                        job.getSubmissionLanguage(),
+                        input,
+                        expectedOutput,
+                        tc.getTimeLimit()   != null ? tc.getTimeLimit()   : problem.getTimeLimit(),
+                        tc.getMemoryLimit() != null ? tc.getMemoryLimit() : problem.getMemoryLimit()
+                );
 
-            if (result.executionTime() != null)
-                maxTime   = Math.max(maxTime,   result.executionTime());
-            if (result.memoryUsed() != null)
-                maxMemory = Math.max(maxMemory, result.memoryUsed());
+                if (result.executionTime() != null)
+                    maxTime   = Math.max(maxTime,   result.executionTime());
+                if (result.memoryUsed() != null)
+                    maxMemory = Math.max(maxMemory, result.memoryUsed());
 
-            if (result.verdict() == SubmissionVerdict.AC) {
-                passed++;
-            } else {
-                finalVerdict = result.verdict();
-                errorMessage = result.errorMessage();
-                break; // stop on first failure
+                if (result.verdict() == SubmissionVerdict.AC) {
+                    passed++;
+                } else {
+                    finalVerdict = result.verdict();
+                    errorMessage = result.errorMessage();
+                    break; // stop on first failure
+                }
             }
+        } catch (Exception e) {
+            // Judge engine unreachable / hung / errored. Commit an Internal Error verdict
+            // so the submission resolves instead of being stuck "IN QUEUE" forever.
+            log.error("Judging failed for submissionId={} — marking IE", submission.getId(), e);
+            submission.setSubmissionVerdict(SubmissionVerdict.IE);
+            submission.setSubmissionStatus(SubmissionStatus.COMPLETED);
+            submission.setTestCasesPassed(0);
+            submission.setTotalTestCases(testCases.size());
+            submission.setErrorMessage("Judge engine unavailable. Please try again later.");
+            submissionRepository.save(submission);
+            meterRegistry.counter("submissions.judged", "verdict", SubmissionVerdict.IE.name()).increment();
+            return; // skip stats/leaderboard — an infra failure is not a real attempt
         }
 
         // 3. Update submission with Judge0 results

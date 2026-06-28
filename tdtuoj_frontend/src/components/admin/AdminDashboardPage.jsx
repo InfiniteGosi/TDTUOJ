@@ -44,6 +44,7 @@ const VERDICT_CHART_COLORS = {
   MLE: "#A78BFA",
   RE: "#F472B6",
   SF: "#6B7A95",
+  IE: "#EF4444",
 };
 
 const VERDICT_LABELS = {
@@ -54,6 +55,7 @@ const VERDICT_LABELS = {
   RE: "RE · Runtime Error",
   CE: "CE · Compile Error",
   SF: "SF · Segmentation Fault",
+  IE: "IE · Judge Error",
 };
 
 // ── helpers ────────────────────────────────────────────────────────────────
