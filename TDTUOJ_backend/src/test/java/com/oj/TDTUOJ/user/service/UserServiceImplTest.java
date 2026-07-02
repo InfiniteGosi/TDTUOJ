@@ -248,7 +248,8 @@ class UserServiceImplTest {
         d1.setId(10L);
 
         Page<User> page = new PageImpl<>(List.of(u1));
-        when(userRepository.findAll(any(Pageable.class))).thenReturn(page);
+        // null username → impl passes "" (empty filter) to the leaderboard query
+        when(userRepository.findAllForLeaderboard(eq(""), any(Pageable.class))).thenReturn(page);
         when(userStatisticsRepository.findAllByUserIdIn(anyList())).thenReturn(Collections.<UserStatistics>emptyList());
         when(modelMapper.map(u1, UserDTO.class)).thenReturn(d1);
 
@@ -261,14 +262,14 @@ class UserServiceImplTest {
         Page<UserDTO> data = resp.getData();
         assertEquals(1, data.getTotalElements());
         assertEquals(d1, data.getContent().get(0));
-        verify(userRepository).findAll(any(Pageable.class));
+        verify(userRepository).findAllForLeaderboard(eq(""), any(Pageable.class));
     }
 
     @Test
-    void getAllUsers_WithUsernameFilter_UsesContainingQuery() {
+    void getAllUsers_WithUsernameFilter_PassesFilterToLeaderboardQuery() {
         // given
         Page<User> empty = new PageImpl<>(Collections.<User>emptyList());
-        when(userRepository.findByUsernameContainingIgnoreCase(eq("ab"), any(Pageable.class)))
+        when(userRepository.findAllForLeaderboard(eq("ab"), any(Pageable.class)))
                 .thenReturn(empty);
         when(userStatisticsRepository.findAllByUserIdIn(anyList())).thenReturn(Collections.<UserStatistics>emptyList());
 
@@ -277,8 +278,7 @@ class UserServiceImplTest {
 
         // then
         assertEquals(HttpStatus.OK.value(), resp.getStatusCode());
-        verify(userRepository).findByUsernameContainingIgnoreCase(eq("ab"), any(Pageable.class));
-        verify(userRepository, never()).findAll(any(Pageable.class));
+        verify(userRepository).findAllForLeaderboard(eq("ab"), any(Pageable.class));
     }
 
 }
