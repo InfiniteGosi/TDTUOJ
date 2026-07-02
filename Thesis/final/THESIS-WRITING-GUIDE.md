@@ -7,8 +7,9 @@ khi soạn/sửa nội dung chương, mô tả hình, chú thích, tóm tắt.**
 
 ## 1. Ngôn ngữ & văn phong
 - **Tiếng Việt học thuật, trang trọng.** Không dùng văn nói, không từ lóng, không cảm thán.
-- **Khách quan, ngôi thứ ba.** KHÔNG dùng "tôi", "em", "mình". Dùng: *"nhóm tác giả"*,
+- **Khách quan, ngôi thứ ba.** KHÔNG dùng "tôi", "em", "mình". Dùng: *"nhóm"*,
   *"đề tài"*, *"hệ thống"*, hoặc câu bị động (*"được xây dựng"*, *"được triển khai"*).
+  (Dùng *"nhóm"*, KHÔNG dùng *"nhóm tác giả"*.)
 - **Câu rõ ràng, vừa phải.** Tránh câu quá dài lồng nhiều mệnh đề. Một ý chính một câu.
 - **Nhất quán thì/cách diễn đạt** trong cùng một phần.
 - Không viết tắt kiểu chat (vd "ko", "dc"). Viết đầy đủ.
@@ -91,13 +92,12 @@ khi soạn/sửa nội dung chương, mô tả hình, chú thích, tóm tắt.**
   **dòng trống mới tạo đoạn mới** — không thêm dòng trống khi chỉ wrap.
 - Khi reflow phải **an toàn token**: chỉ ngắt ở **dấu cách**, KHÔNG tách giữa lệnh như
   `\ac{LLM}`; **KHÔNG wrap dòng comment** (`%` — phần đuôi sẽ thành mã chạy); giữ nguyên `\\`, `&`.
+- **BỎ QUA bước biên dịch kiểm tra (`pdflatex`).** KHÔNG chạy `pdflatex`/`latexmk` sau khi
+  sửa nội dung — người dùng tự biên dịch khi cần. Chỉ cần đảm bảo an toàn token khi sửa.
 - Cách reflow nhanh + kiểm chứng (đã dùng):
   1. Script Python wrap theo cột, bỏ qua dòng có `%` và dòng ngắn, giữ thụt lề.
   2. **Kiểm chứng nội dung không đổi:** so sánh hai bản sau khi gộp mọi khoảng trắng
      (`re.sub(r'\s+',' ',s)`) — phải **IDENTICAL** (chỉ đổi cách xuống dòng).
-  3. **Biên dịch kiểm tra:** `pdflatex -interaction=nonstopmode -halt-on-error -draftmode thesis.tex`
-     phải EXIT 0 (doc dùng `utf8` + `[T5]fontenc` + `babel vietnamese` → engine **pdflatex**).
-  4. Dọn file phụ (`.aux .log .toc .out .lof .lot .bcf .bbl`...) sau khi kiểm.
 
 ## 8. Bảng quy đổi thuật ngữ ĐÃ ÁP DỤNG trong thesis.tex (dùng nhất quán)
 | Tiếng Anh | Lần đầu ghi | Sau đó |

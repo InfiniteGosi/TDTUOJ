@@ -303,7 +303,7 @@ const ProblemPage = () => {
   const [favorites, setFavorites] = useState([]);
   const [favLoading, setFavLoading] = useState(false);
   const [pagination, setPagination] = useState({
-    limit: 10,
+    limit: 50,
     offset: 0,
     totalElements: 0,
     totalPages: 0,

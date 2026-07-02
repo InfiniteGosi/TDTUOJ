@@ -363,6 +363,15 @@ export default class ApiService {
     return resp.data;
   }
 
+  static async getSubmissionAnalysis(submissionId) {
+    const resp = await axios.post(
+      `${this.BASE_URL}/submissions/${submissionId}/analysis`,
+      {},
+      { headers: this.getHeader() },
+    );
+    return resp.data; // Response<SubmissionAnalysisResult>
+  }
+
   // ─── Status ──────────────────────────────────────────────────────────────────
   static async getJudgeStatus() {
     const resp = await axios.get(`${this.BASE_URL}/status/judge`);

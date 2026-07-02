@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { DndContext, DragOverlay, useDraggable, useDroppable, PointerSensor, useSensors, useSensor } from "@dnd-kit/core";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { CheckCircle, XCircle, Clock, Bookmark, BookmarkCheck, MessageSquare, MessageCircle, ThumbsUp, ThumbsDown, Pencil, Trash2, CornerDownRight, Send, GripVertical, Lightbulb, Activity, Terminal, ChevronLeft, ChevronRight, Zap, HardDrive } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Bookmark, BookmarkCheck, MessageSquare, MessageCircle, ThumbsUp, ThumbsDown, Pencil, Trash2, CornerDownRight, Send, GripVertical, Lightbulb, Activity, Terminal, ChevronLeft, ChevronRight, Zap, HardDrive, Sparkles } from "lucide-react";
+import SubmissionAnalysisPanel from "./analysis/SubmissionAnalysisPanel";
 import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
 import ReactMarkdown from "react-markdown";
-import CodeEditor from "../CodeEditor/CodeEditor";
+import CodeEditor from "../codeEditor/CodeEditor";
 import HintPanel from "./HintPanel";
 import VisualizerModal from "../visualizer/VisualizerModal";
 import hljs from "highlight.js/lib/core";
@@ -502,7 +503,32 @@ const ProblemDetailsPage = () => {
   const [pollingId, setPollingId] = useState(null);
   const [queuePosition, setQueuePosition] = useState(null);
   const [viewingSubmission, setViewingSubmission] = useState(null);
+  const [analysis, setAnalysis] = useState(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisError, setAnalysisError] = useState(null);
   const [verdictFilter, setVerdictFilter] = useState(null);
+
+  // Reset AI analysis whenever the viewed submission changes.
+  useEffect(() => {
+    setAnalysis(null);
+    setAnalysisError(null);
+    setAnalysisLoading(false);
+  }, [viewingSubmission?.id]);
+
+  const handleAnalyze = async () => {
+    if (!viewingSubmission || analysisLoading) return;
+    setAnalysisLoading(true);
+    setAnalysisError(null);
+    try {
+      const resp = await ApiService.getSubmissionAnalysis(viewingSubmission.id);
+      if (resp.statusCode === 200) setAnalysis(resp.data);
+      else setAnalysisError(resp.message || "Failed to analyze submission");
+    } catch (e) {
+      setAnalysisError(e.response?.data?.message || "Failed to analyze submission");
+    } finally {
+      setAnalysisLoading(false);
+    }
+  };
 
   const [submissions, setSubmissions] = useState([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
@@ -1622,7 +1648,6 @@ const ProblemDetailsPage = () => {
                           <span style={{ fontSize: "var(--text-xs)", color: "var(--text-secondary)", fontFamily: "var(--font-code)", background: "var(--bg-overlay)", border: "1px solid var(--border-subtle)", padding: "2px 8px", borderRadius: "var(--radius-sm)" }}>
                             {viewingSubmission.submissionLanguage}
                           </span>
-                          <div style={{ flex: 1 }} />
                           {viewingSubmission.executionTime != null && (
                             <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "var(--text-xs)", color: "var(--text-secondary)", fontFamily: "var(--font-code)" }}>
                               <Clock size={10} />{viewingSubmission.executionTime}s
@@ -1632,6 +1657,16 @@ const ProblemDetailsPage = () => {
                             <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "var(--text-xs)", color: "var(--text-secondary)", fontFamily: "var(--font-code)" }}>
                               <HardDrive size={10} />{viewingSubmission.memoryUsed}KB
                             </span>
+                          )}
+                          <div style={{ flex: 1 }} />
+                          {/* Analysis button — AC submissions only (LeetCode-style) */}
+                          {viewingSubmission.submissionVerdict === "AC" && !analysis && (
+                            <button onClick={handleAnalyze} disabled={analysisLoading}
+                              style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 12px", borderRadius: "var(--radius-sm)", background: "var(--purple-subtle, rgba(167,139,250,0.12))", border: "1px solid var(--purple-mle, #A78BFA)", color: "var(--purple-mle, #A78BFA)", cursor: analysisLoading ? "wait" : "pointer", fontSize: "var(--text-xs)", fontWeight: 700, outline: "none", fontFamily: "var(--font-body)", flexShrink: 0, opacity: analysisLoading ? 0.7 : 1 }}>
+                              {analysisLoading
+                                ? <><div className="spinner" style={{ width: 11, height: 11, borderTopColor: "var(--purple-mle, #A78BFA)" }} />Analyzing…</>
+                                : <><Sparkles size={12} />Analysis</>}
+                            </button>
                           )}
                         </div>
 
@@ -1643,6 +1678,7 @@ const ProblemDetailsPage = () => {
                             border: "1px solid rgba(255,255,255,0.08)",
                             background: "#0D1117",
                             overflow: "hidden",
+                            flexShrink: 0,
                           }}
                         >
                           <div
@@ -1706,6 +1742,13 @@ const ProblemDetailsPage = () => {
                             />
                           </div>
                         </div>
+
+                        {analysisError && (
+                          <div style={{ margin: "0 16px 12px", padding: "8px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--red-wa)33", background: "var(--red-subtle)", color: "var(--red-wa)", fontSize: "var(--text-xs)" }}>
+                            {analysisError}
+                          </div>
+                        )}
+                        {analysis && <SubmissionAnalysisPanel data={analysis} />}
                       </div>
                     ) : (() => {
                       const VC = {

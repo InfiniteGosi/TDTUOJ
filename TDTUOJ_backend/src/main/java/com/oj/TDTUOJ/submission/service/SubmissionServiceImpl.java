@@ -1,10 +1,14 @@
 package com.oj.TDTUOJ.submission.service;
 
 import com.oj.TDTUOJ.submission.dto.SubmissionJobDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.oj.TDTUOJ.common.aws.AwsS3Service;
 import com.oj.TDTUOJ.common.enums.ContestRegistrationStatus;
 import com.oj.TDTUOJ.common.enums.SubmissionStatus;
+import com.oj.TDTUOJ.common.enums.SubmissionVerdict;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
 import com.oj.TDTUOJ.common.response.Response;
+import com.oj.TDTUOJ.submission.dto.SubmissionAnalysisResult;
 import com.oj.TDTUOJ.common.utils.ContestLockUtil;
 import com.oj.TDTUOJ.contest.entity.Contest;
 import com.oj.TDTUOJ.contest.repository.ContestRegistrationRepository;
@@ -26,6 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -42,6 +47,9 @@ public class SubmissionServiceImpl implements SubmissionService {
     private final LabRepository                 labRepository;
     private final ContestRepository             contestRepository;
     private final ContestRegistrationRepository contestRegistrationRepository;
+    private final SubmissionAnalysisService     submissionAnalysisService;
+    private final AwsS3Service                  awsS3Service;
+    private final ObjectMapper                  objectMapper = new ObjectMapper();
 
     @Override
     public Response<SubmissionDTO> createSubmission(SubmissionDTO submissionDTO) {
@@ -221,6 +229,78 @@ public class SubmissionServiceImpl implements SubmissionService {
                 .statusCode(HttpStatus.OK.value())
                 .message("Total submissions count")
                 .data(submissionRepository.count())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public Response<SubmissionAnalysisResult> getSubmissionAnalysis(Long id) {
+        Submission submission = submissionRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Submission not found"));
+
+        // Guard: analysis is only meaningful for an Accepted submission.
+        if (submission.getSubmissionVerdict() != SubmissionVerdict.AC) {
+            return Response.<SubmissionAnalysisResult>builder()
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .message("Analysis is only available for Accepted submissions")
+                    .build();
+        }
+
+        // Guard: only the owner (or an ADMIN) may analyze a submission.
+        User currentUser = userService.getCurrentLoggedInUser();
+        boolean isOwner = submission.getUserId() != null
+                && submission.getUserId().equals(currentUser.getId());
+        boolean isAdmin = currentUser.getRoles() != null && currentUser.getRoles().stream()
+                .anyMatch(r -> r.getName().equalsIgnoreCase("ADMIN"));
+        if (!isOwner && !isAdmin) {
+            return Response.<SubmissionAnalysisResult>builder()
+                    .statusCode(HttpStatus.FORBIDDEN.value())
+                    .message("You can only analyze your own submissions")
+                    .build();
+        }
+
+        // Cache hit — return the stored analysis without calling Gemini again.
+        if (submission.getAnalysis() != null && !submission.getAnalysis().isBlank()) {
+            try {
+                SubmissionAnalysisResult cached = objectMapper.readValue(
+                        submission.getAnalysis(), SubmissionAnalysisResult.class);
+                return ok(cached);
+            } catch (Exception e) {
+                log.warn("Cached analysis for submissionId={} is unparseable, regenerating", id, e);
+            }
+        }
+
+        // Best-effort: pull the problem statement from S3 for richer context.
+        Problem problem = submission.getProblem();
+        String title = problem != null ? problem.getTitle() : "(unknown)";
+        String statement = null;
+        try {
+            if (problem != null && problem.getStatementFileUrl() != null) {
+                statement = awsS3Service.readFileContent(problem.getStatementFileUrl());
+            }
+        } catch (Exception e) {
+            log.warn("Could not read statement for analysis of submissionId={}", id, e);
+        }
+
+        SubmissionAnalysisResult result = submissionAnalysisService.analyze(
+                title, statement, submission.getSubmissionLanguage(), submission.getSourceCode());
+
+        // Persist for future views.
+        try {
+            submission.setAnalysis(objectMapper.writeValueAsString(result));
+            submissionRepository.save(submission);
+        } catch (Exception e) {
+            log.warn("Failed to cache analysis for submissionId={}", id, e);
+        }
+
+        return ok(result);
+    }
+
+    private Response<SubmissionAnalysisResult> ok(SubmissionAnalysisResult data) {
+        return Response.<SubmissionAnalysisResult>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Submission analysis")
+                .data(data)
                 .build();
     }
 }

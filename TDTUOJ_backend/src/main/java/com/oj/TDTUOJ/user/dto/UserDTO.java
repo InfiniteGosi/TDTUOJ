@@ -41,6 +41,9 @@ public class UserDTO {
 
     private Integer rating;
 
+    /** Global leaderboard rank (1 = best) by rating desc, points desc; null if unranked (no positive score). */
+    private Integer rank;
+
     private Set<RoleDTO> roles;
 
     private List<String> roleNames;

@@ -15,7 +15,8 @@ public class ScoreboardEntryDTO {
     private Integer rank;
 
     private Long userId;
-    private String username;
+    private String username;   // immutable login slug — used for profile routing
+    private String name;       // display name — may change; resolved live for display
     private String profileUrl;
 
     private Integer score;

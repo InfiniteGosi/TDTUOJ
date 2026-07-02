@@ -50,18 +50,18 @@ const AdminContestPage = () => {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const SIZE = 10;
+  const [size, setSize] = useState(10);
 
   const isAdmin = ApiService.isAdmin();
 
   const fetchContests = async (p = page) => {
     try {
       setLoading(true);
-      const resp = await ApiService.getPublicContests({ page: p, size: SIZE });
+      const resp = await ApiService.getPublicContests({ page: p, size });
       if (resp.statusCode === 200) {
         const data = resp.data;
         const content = data.content ?? data;
-        const pageInfo = data.page ?? {};
+        const pageInfo = data.page ?? data;
         setContests(content);
         setTotalPages(pageInfo.totalPages ?? 1);
         setTotalElements(pageInfo.totalElements ?? content.length);
@@ -69,7 +69,7 @@ const AdminContestPage = () => {
     } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchContests(page); }, [page]);
+  useEffect(() => { fetchContests(page); }, [page, size]);
 
   const handleDelete = (id, name) =>
     showConfirm("Delete Contest", `Are you sure you want to delete "${name}"? This cannot be undone.`, async () => {
@@ -211,11 +211,15 @@ const AdminContestPage = () => {
               </tbody>
             </table>
 
-            {totalPages > 1 && (
+            {totalPages > 0 && (
               <Pagination
                 currentPage={page}
                 totalPages={totalPages}
                 onPageChange={setPage}
+                totalElements={totalElements}
+                offset={page * size}
+                limit={size}
+                onLimitChange={(l) => { setPage(0); setSize(l); }}
               />
             )}
           </div>

@@ -146,7 +146,7 @@ const RegisterPage = () => {
             TDTUOJ
           </span>
           <span className="font-code text-muted text-xs tracking-wide">
-            // The Arena
+            // TDTU Online Judge
           </span>
         </div>
 

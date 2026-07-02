@@ -3,7 +3,7 @@ mainframe sd Create problem
 hide footbox
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
+skinparam defaultFontSize 16
 skinparam SequenceArrowColor #000000
 skinparam SequenceLifeLineBorderColor #000000
 skinparam SequenceGroupBorderColor #000000

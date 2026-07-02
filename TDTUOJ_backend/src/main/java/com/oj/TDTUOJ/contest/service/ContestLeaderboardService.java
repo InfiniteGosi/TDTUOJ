@@ -13,6 +13,8 @@ import com.oj.TDTUOJ.contest.repository.ContestRepository;
 import com.oj.TDTUOJ.contest.repository.LeaderboardCacheRepository;
 import com.oj.TDTUOJ.common.enums.ContestParticipationType;
 import com.oj.TDTUOJ.common.utils.ContestLockUtil;
+import com.oj.TDTUOJ.user.entity.User;
+import com.oj.TDTUOJ.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.HashOperations;
@@ -25,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Redis-backed leaderboard engine for ICPC-style contests.
@@ -76,6 +79,7 @@ public class ContestLeaderboardService {
     private final ContestProblemRepository       contestProblemRepository;
     private final LeaderboardCacheRepository     leaderboardCacheRepository;
     private final LeaderboardCacheHelper         cacheHelper;
+    private final UserRepository                 userRepository;
 
     // ── Public API ────────────────────────────────────────────────────────── //
 
@@ -254,6 +258,7 @@ public class ContestLeaderboardService {
                     displayRank++, tuple.getScore());
             result.add(entry);
         }
+        enrichDisplayFields(result);
         return result;
     }
 
@@ -343,6 +348,7 @@ public class ContestLeaderboardService {
                         Long.parseLong(memberId), rank++, tuple.getScore()));
             }
         }
+        enrichDisplayFields(entries);
 
         return LeaderboardDTO.builder()
                 .contestId(contest.getId())
@@ -390,6 +396,32 @@ public class ContestLeaderboardService {
         entry.setProblemScores(problemScores);
 
         return entry;
+    }
+
+    /**
+     * Resolves display fields (name, username, profileUrl) live from the DB by
+     * userId, overriding the values cached in the Redis meta hash. This keeps the
+     * board's display name and avatar current after a user renames or changes
+     * avatar, and guarantees the {@code username} used for profile links is the
+     * present immutable slug (never a stale value). Batched into one query.
+     */
+    private void enrichDisplayFields(List<ScoreboardEntryDTO> entries) {
+        if (entries == null || entries.isEmpty()) return;
+        List<Long> ids = entries.stream()
+                .map(ScoreboardEntryDTO::getUserId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        if (ids.isEmpty()) return;
+        Map<Long, User> users = userRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+        for (ScoreboardEntryDTO e : entries) {
+            User u = users.get(e.getUserId());
+            if (u == null) continue;
+            e.setName(u.getName());
+            e.setUsername(u.getUsername());
+            e.setProfileUrl(u.getProfileUrl());
+        }
     }
 
     private void writeMeta(

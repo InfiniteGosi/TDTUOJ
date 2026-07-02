@@ -22,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.JpaSort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -106,23 +108,35 @@ public class UserServiceImpl implements UserService {
         if (sortField == null || sortField.isBlank()) sortField = "id";
         if (direction == null || direction.isBlank()) direction = "asc";
 
-        Sort sort = Sort.by(Sort.Direction.fromString(direction), sortField);
+        // point/rating live on UserStatistics, not User, so a plain Sort on the
+        // User root fails ("No property 'rating' found for type 'User'").
+        // Map sort keys to JPQL expressions over the User + UserStatistics join
+        // and apply them via JpaSort.unsafe so ORDER BY can target alias "s".
+        Map<String, String> sortExpr = Map.of(
+                "id", "u.id",
+                "username", "u.username",
+                "point", "s.totalPoints",
+                "rating", "s.currentRating");
+        String expr = sortExpr.getOrDefault(sortField, "u.id");
 
-        //Pageable pageable = new UserPageRequest(limit, offset, sort);
+        Sort sort = JpaSort.unsafe(Sort.Direction.fromString(direction), expr);
+        if (!"u.id".equals(expr)) {
+            sort = sort.and(JpaSort.unsafe(Sort.Direction.ASC, "u.id")); // stable tiebreak
+        }
+
         int page = offset / limit;
         Pageable pageable = PageRequest.of(page, limit, sort);
 
-        Page<User> userPage;
-
-        if (username != null && !username.isBlank()) {
-            userPage = userRepository.findByUsernameContainingIgnoreCase(username, pageable);
-        } else {
-            userPage = userRepository.findAll(pageable);
-        }
+        String usernameFilter = (username != null) ? username : "";
+        Page<User> userPage = userRepository.findAllForLeaderboard(usernameFilter, pageable);
 
         List<Long> userIds = userPage.getContent().stream().map(User::getId).collect(Collectors.toList());
         Map<Long, UserStatistics> statsMap = userStatisticsRepository.findAllByUserIdIn(userIds)
                 .stream().collect(Collectors.toMap(UserStatistics::getUserId, Function.identity()));
+
+        // Global leaderboard rank (userId -> rank), independent of the current sort/page.
+        // Only users with a positive score are ranked; everyone else stays unranked (null).
+        Map<Long, Integer> rankMap = computeGlobalRanks();
 
         Page<UserDTO> pageDTO = userPage.map(user -> {
             UserDTO dto = modelMapper.map(user, UserDTO.class);
@@ -130,7 +144,11 @@ public class UserServiceImpl implements UserService {
             if (stats != null) {
                 dto.setPoint(stats.getTotalPoints());
                 dto.setRating(stats.getCurrentRating());
+            } else {
+                dto.setPoint(0);
+                dto.setRating(0);
             }
+            dto.setRank(rankMap.get(user.getId()));
             return dto;
         });
 
@@ -139,6 +157,33 @@ public class UserServiceImpl implements UserService {
                 .message("Users retrieved successfully")
                 .data(pageDTO)
                 .build();
+    }
+
+    /**
+     * Builds a global userId -> rank map ordered by rating desc, then points desc.
+     * Only users with a positive score are ranked; the rest are omitted (unranked).
+     * Rank is a stable per-user property, so medals stay on the same users no matter
+     * how the client sorts or paginates the list.
+     */
+    private Map<Long, Integer> computeGlobalRanks() {
+        List<UserStatistics> ranked = userStatisticsRepository.findAll().stream()
+                .filter(s -> nz(s.getCurrentRating()) > 0 || nz(s.getTotalPoints()) > 0)
+                .sorted((a, b) -> {
+                    int byRating = Integer.compare(nz(b.getCurrentRating()), nz(a.getCurrentRating()));
+                    return byRating != 0 ? byRating
+                            : Integer.compare(nz(b.getTotalPoints()), nz(a.getTotalPoints()));
+                })
+                .toList();
+
+        Map<Long, Integer> rankMap = new HashMap<>();
+        for (int i = 0; i < ranked.size(); i++) {
+            rankMap.put(ranked.get(i).getUserId(), i + 1);
+        }
+        return rankMap;
+    }
+
+    private static int nz(Integer value) {
+        return value != null ? value : 0;
     }
 
     @Override

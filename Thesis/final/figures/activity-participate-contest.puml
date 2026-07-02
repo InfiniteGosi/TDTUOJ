@@ -32,7 +32,7 @@ endif
 repeat
   :Write solution & submit;
   |System|
-  :Judge submission\nscore by style (ICPC / IOI);
+  :Judge submission\nscore by style (ICPC);
   :Hide submission from\nother participants;
   if (Inside freeze window?) then (Yes)
     :Serve frozen scoreboard\nto public viewers;

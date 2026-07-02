@@ -23,17 +23,20 @@ const MyProblemsPage = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
   const fetchProblems = async () => {
     setLoading(true);
     try {
-      const resp = await ApiService.getMyProblems({ page, size: 12, search });
+      const resp = await ApiService.getMyProblems({ page, size, search });
       if (resp.statusCode === 200) {
-        setProblems(resp.data.content || []);
-        setTotalPages(resp.data.totalPages || 0);
-        setTotalElements(resp.data.totalElements ?? (resp.data.content || []).length);
+        const d = resp.data;
+        const pi = d.page ?? d; // Spring serializes page info under `page`
+        setProblems(d.content || []);
+        setTotalPages(pi.totalPages || 0);
+        setTotalElements(pi.totalElements ?? (d.content || []).length);
       }
     } catch (e) {
       showMessage(e.response?.data?.message || e.message, "error");
@@ -42,7 +45,7 @@ const MyProblemsPage = () => {
     }
   };
 
-  useEffect(() => { fetchProblems(); }, [page, search]);
+  useEffect(() => { fetchProblems(); }, [page, search, size]);
 
   const handleTogglePublic = async (problem) => {
     try {
@@ -248,11 +251,15 @@ const MyProblemsPage = () => {
               </tbody>
             </table>
 
-            {totalPages > 1 && (
+            {totalPages > 0 && (
               <Pagination
                 currentPage={page}
                 totalPages={totalPages}
                 onPageChange={setPage}
+                totalElements={totalElements}
+                offset={page * size}
+                limit={size}
+                onLimitChange={(l) => { setPage(0); setSize(l); }}
               />
             )}
           </div>

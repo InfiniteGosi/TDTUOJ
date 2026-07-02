@@ -63,8 +63,7 @@ header_line_y  = TITLE_H + OY + divider_top
 
 # Outer frame
 d.rectangle([0, 0, new_W - 1, new_H - 1], outline="black", width=2)
-# Line under title bar (separates title from lane-header row)
-d.line([0, TITLE_H, new_W - 1, TITLE_H], fill="black", width=1)
+# (no line under the title bar — keeps the lane-header labels free of a line directly above them)
 # Line under lane-header row (separates headers from activity body)
 d.line([OX, header_line_y, OX + W - 1, header_line_y], fill="black", width=1)
 # Extend the lane divider up through the header row to the title-bar line

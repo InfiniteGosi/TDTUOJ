@@ -4,8 +4,8 @@
 \contentsline {chapter}{TÓM TẮT}{}{chapter*.3}%
 \contentsline {chapter}{ABSTRACT}{}{chapter*.6}%
 \contentsline {chapter}{DANH MỤC HÌNH VẼ}{vi}{chapter*.8}%
-\contentsline {chapter}{DANH MỤC BẢNG BIỂU}{viii}{chapter*.10}%
-\contentsline {chapter}{DANH MỤC CÁC CHỮ VIẾT TẮT}{ix}{chapter*.11}%
+\contentsline {chapter}{DANH MỤC BẢNG BIỂU}{vii}{chapter*.10}%
+\contentsline {chapter}{DANH MỤC CÁC CHỮ VIẾT TẮT}{viii}{chapter*.11}%
 \contentsline {chapter}{\numberline {1}Mở đầu và tổng quan đề tài}{1}{chapter.1}%
 \contentsline {section}{\numberline {1.1}Lý do chọn đề tài}{1}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Khảo sát}{1}{section.1.2}%
@@ -14,83 +14,82 @@
 \contentsline {section}{\numberline {1.5}Ý nghĩa nghiên cứu}{3}{section.1.5}%
 \contentsline {chapter}{\numberline {2}Kiến trúc nền tảng}{4}{chapter.2}%
 \contentsline {section}{\numberline {2.1}Vòng đời phát triển phần mềm}{4}{section.2.1}%
-\contentsline {section}{\numberline {2.2}Các công nghệ sử dụng}{5}{section.2.2}%
-\contentsline {subsection}{\numberline {2.2.1}Phía máy chủ -- Java và Spring Boot}{5}{subsection.2.2.1}%
-\contentsline {subsection}{\numberline {2.2.2}Cơ sở dữ liệu -- PostgreSQL}{6}{subsection.2.2.2}%
-\contentsline {subsection}{\numberline {2.2.3}Công nghệ đóng gói -- Docker}{6}{subsection.2.2.3}%
-\contentsline {subsection}{\numberline {2.2.4}Hàng đợi và Bộ nhớ đệm -- Redis}{7}{subsection.2.2.4}%
-\contentsline {subsection}{\numberline {2.2.5}Dịch vụ chấm bài -- Judge0}{7}{subsection.2.2.5}%
-\contentsline {subsection}{\numberline {2.2.6}Phía giao diện -- React}{8}{subsection.2.2.6}%
-\contentsline {subsection}{\numberline {2.2.7}Lưu trữ file -- AWS S3}{8}{subsection.2.2.7}%
+\contentsline {section}{\numberline {2.2}Các công nghệ sử dụng}{4}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Phía máy chủ: Java và Spring Boot}{5}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Cơ sở dữ liệu: PostgreSQL}{5}{subsection.2.2.2}%
+\contentsline {subsection}{\numberline {2.2.3}Công nghệ đóng gói: Docker}{6}{subsection.2.2.3}%
+\contentsline {subsection}{\numberline {2.2.4}Hàng đợi và Bộ nhớ đệm: Redis}{6}{subsection.2.2.4}%
+\contentsline {subsection}{\numberline {2.2.5}Dịch vụ chấm bài: Judge0}{7}{subsection.2.2.5}%
+\contentsline {subsection}{\numberline {2.2.6}Phía giao diện: React}{7}{subsection.2.2.6}%
+\contentsline {subsection}{\numberline {2.2.7}Lưu trữ file: AWS S3}{8}{subsection.2.2.7}%
 \contentsline {subsection}{\numberline {2.2.8}Tích hợp LLM}{9}{subsection.2.2.8}%
-\contentsline {subsection}{\numberline {2.2.9}Hạ tầng đám mây -- Microsoft Azure}{10}{subsection.2.2.9}%
-\contentsline {subsection}{\numberline {2.2.10}Tích hợp và triển khai liên tục -- GitHub Actions}{10}{subsection.2.2.10}%
-\contentsline {subsection}{\numberline {2.2.11}Kiểm thử tải và giám sát -- k6, Prometheus và Grafana}{11}{subsection.2.2.11}%
+\contentsline {subsection}{\numberline {2.2.9}Hạ tầng đám mây: Microsoft Azure}{9}{subsection.2.2.9}%
+\contentsline {subsection}{\numberline {2.2.10}Tích hợp và triển khai liên tục: GitHub Actions}{10}{subsection.2.2.10}%
+\contentsline {subsection}{\numberline {2.2.11}Kiểm thử tải và giám sát: k6, Prometheus và Grafana}{11}{subsection.2.2.11}%
 \contentsline {chapter}{\numberline {3}Phân tích hệ thống}{12}{chapter.3}%
 \contentsline {section}{\numberline {3.1}Thu thập yêu cầu}{12}{section.3.1}%
-\contentsline {section}{\numberline {3.2}Xử lý nghiệp vụ}{13}{section.3.2}%
+\contentsline {section}{\numberline {3.2}Xử lý nghiệp vụ}{12}{section.3.2}%
 \contentsline {subsection}{\numberline {3.2.1}Các bên liên quan và thực thể nghiệp vụ}{13}{subsection.3.2.1}%
 \contentsline {subsubsection}{\numberline {3.2.1.1}Bài toán (Problem)}{13}{subsubsection.3.2.1.1}%
-\contentsline {subsubsection}{\numberline {3.2.1.2}Bài nộp (Submission)}{14}{subsubsection.3.2.1.2}%
+\contentsline {subsubsection}{\numberline {3.2.1.2}Bài nộp (Submission)}{13}{subsubsection.3.2.1.2}%
 \contentsline {subsubsection}{\numberline {3.2.1.3}Cuộc thi (Contest)}{14}{subsubsection.3.2.1.3}%
 \contentsline {subsubsection}{\numberline {3.2.1.4}Kết quả chấm bài (Judge Result)}{14}{subsubsection.3.2.1.4}%
-\contentsline {subsection}{\numberline {3.2.2}Các tác nhân hệ thống}{15}{subsection.3.2.2}%
-\contentsline {section}{\numberline {3.3}Yêu cầu chức năng (Functional Requirements)}{18}{section.3.3}%
-\contentsline {subsection}{\numberline {3.3.1}Tổng quan Use Case}{18}{subsection.3.3.1}%
-\contentsline {subsection}{\numberline {3.3.2}Các Use Case chính}{28}{subsection.3.3.2}%
-\contentsline {subsubsection}{\numberline {3.3.2.1}Use case Nộp bài giải}{28}{subsubsection.3.3.2.1}%
-\contentsline {subsubsection}{\numberline {3.3.2.2}Use case Tạo bài toán}{31}{subsubsection.3.3.2.2}%
-\contentsline {subsubsection}{\numberline {3.3.2.3}Use case Trực quan hóa và gỡ lỗi mã nguồn}{35}{subsubsection.3.3.2.3}%
-\contentsline {subsubsection}{\numberline {3.3.2.4}Use case Tham gia cuộc thi}{39}{subsubsection.3.3.2.4}%
-\contentsline {subsubsection}{\numberline {3.3.2.5}Use case Gợi ý học tập bằng LLM}{43}{subsubsection.3.3.2.5}%
-\contentsline {subsubsection}{\numberline {3.3.2.6}Use case Quản lý bài thực hành}{47}{subsubsection.3.3.2.6}%
-\contentsline {section}{\numberline {3.4}Yêu cầu phi chức năng (Non-functional Requirements)}{51}{section.3.4}%
-\contentsline {subsection}{\numberline {3.4.1}Hiệu năng và thời gian phản hồi}{52}{subsection.3.4.1}%
-\contentsline {subsection}{\numberline {3.4.2}Khả năng mở rộng}{52}{subsection.3.4.2}%
-\contentsline {subsection}{\numberline {3.4.3}Bảo mật}{52}{subsection.3.4.3}%
-\contentsline {subsection}{\numberline {3.4.4}Độ tin cậy và tính sẵn sàng}{53}{subsection.3.4.4}%
-\contentsline {subsection}{\numberline {3.4.5}Khả năng bảo trì và khả năng sử dụng}{53}{subsection.3.4.5}%
-\contentsline {chapter}{\numberline {4}Thiết kế hệ thống}{54}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Thiết kế kiến trúc}{54}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Thiết kế cơ sở dữ liệu / ERD}{55}{section.4.2}%
-\contentsline {subsection}{\numberline {4.2.1}Tổng quan}{55}{subsection.4.2.1}%
-\contentsline {subsection}{\numberline {4.2.2}Sơ đồ thực thể -- quan hệ (ERD)}{56}{subsection.4.2.2}%
-\contentsline {subsubsection}{\numberline {4.2.2.1}Thực thể Người dùng (User)}{56}{subsubsection.4.2.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Các tác nhân hệ thống}{14}{subsection.3.2.2}%
+\contentsline {section}{\numberline {3.3}Yêu cầu chức năng (Functional Requirements)}{17}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Tổng quan Use Case}{17}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Các Use Case chính}{27}{subsection.3.3.2}%
+\contentsline {subsubsection}{\numberline {3.3.2.1}Use case Nộp bài giải}{27}{subsubsection.3.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.3.2.2}Use case Tạo bài toán}{30}{subsubsection.3.3.2.2}%
+\contentsline {subsubsection}{\numberline {3.3.2.3}Use case Trực quan hóa và gỡ lỗi mã nguồn}{34}{subsubsection.3.3.2.3}%
+\contentsline {subsubsection}{\numberline {3.3.2.4}Use case Tham gia cuộc thi}{38}{subsubsection.3.3.2.4}%
+\contentsline {subsubsection}{\numberline {3.3.2.5}Use case Gợi ý học tập bằng LLM}{42}{subsubsection.3.3.2.5}%
+\contentsline {subsubsection}{\numberline {3.3.2.6}Use case Quản lý bài thực hành}{46}{subsubsection.3.3.2.6}%
+\contentsline {section}{\numberline {3.4}Yêu cầu phi chức năng (Non-functional Requirements)}{50}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}Hiệu năng và thời gian phản hồi}{51}{subsection.3.4.1}%
+\contentsline {subsection}{\numberline {3.4.2}Khả năng mở rộng}{51}{subsection.3.4.2}%
+\contentsline {subsection}{\numberline {3.4.3}Bảo mật}{51}{subsection.3.4.3}%
+\contentsline {subsection}{\numberline {3.4.4}Độ tin cậy và tính sẵn sàng}{52}{subsection.3.4.4}%
+\contentsline {subsection}{\numberline {3.4.5}Khả năng bảo trì và khả năng sử dụng}{52}{subsection.3.4.5}%
+\contentsline {chapter}{\numberline {4}Thiết kế hệ thống}{53}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Thiết kế kiến trúc}{53}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Thiết kế cơ sở dữ liệu / ERD}{54}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Tổng quan}{54}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}Sơ đồ thực thể-quan hệ (ERD)}{55}{subsection.4.2.2}%
+\contentsline {subsubsection}{\numberline {4.2.2.1}Thực thể Người dùng (User)}{57}{subsubsection.4.2.2.1}%
 \contentsline {subsubsection}{\numberline {4.2.2.2}Thực thể Bài toán (Problem)}{59}{subsubsection.4.2.2.2}%
 \contentsline {subsubsection}{\numberline {4.2.2.3}Thực thể Bài nộp (Submission)}{61}{subsubsection.4.2.2.3}%
-\contentsline {subsubsection}{\numberline {4.2.2.4}Thực thể Cuộc thi (Contest)}{63}{subsubsection.4.2.2.4}%
-\contentsline {subsubsection}{\numberline {4.2.2.5}Thực thể Tổ chức (Organization)}{66}{subsubsection.4.2.2.5}%
-\contentsline {subsubsection}{\numberline {4.2.2.6}Thực thể Bài thực hành (Lab)}{67}{subsubsection.4.2.2.6}%
-\contentsline {section}{\numberline {4.3}Thiết kế giao diện}{69}{section.4.3}%
-\contentsline {subsection}{\numberline {4.3.1}Trang chi tiết bài toán và nộp bài}{69}{subsection.4.3.1}%
-\contentsline {subsection}{\numberline {4.3.2}Trang cuộc thi và bảng xếp hạng}{70}{subsection.4.3.2}%
-\contentsline {subsection}{\numberline {4.3.3}Trang quản trị}{71}{subsection.4.3.3}%
-\contentsline {subsection}{\numberline {4.3.4}Trang trực quan hóa cấu trúc dữ liệu}{72}{subsection.4.3.4}%
-\contentsline {subsection}{\numberline {4.3.5}Trang theo dõi tiến độ bài thực hành}{73}{subsection.4.3.5}%
-\contentsline {section}{\numberline {4.4}Thiết kế hiệu năng và bảo mật}{74}{section.4.4}%
-\contentsline {subsection}{\numberline {4.4.1}Xác thực và phân quyền bằng JWT}{74}{subsection.4.4.1}%
-\contentsline {subsection}{\numberline {4.4.2}Giới hạn tần suất truy cập với Redis}{76}{subsection.4.4.2}%
-\contentsline {chapter}{\numberline {5}Cài đặt và kiểm thử}{78}{chapter.5}%
-\contentsline {section}{\numberline {5.1}Môi trường và công cụ cài đặt}{78}{section.5.1}%
-\contentsline {section}{\numberline {5.2}Cài đặt hệ thống}{79}{section.5.2}%
-\contentsline {subsection}{\numberline {5.2.1}Tổ chức mã nguồn theo tầng}{79}{subsection.5.2.1}%
-\contentsline {subsection}{\numberline {5.2.2}Luồng nộp bài và chấm bài bất đồng bộ}{80}{subsection.5.2.2}%
-\contentsline {subsection}{\numberline {5.2.3}Tính điểm đánh giá năng lực sau cuộc thi}{80}{subsection.5.2.3}%
-\contentsline {section}{\numberline {5.3}Thiết kế API}{82}{section.5.3}%
-\contentsline {subsection}{\numberline {5.3.1}Tổng quan các nhóm API}{82}{subsection.5.3.1}%
+\contentsline {subsubsection}{\numberline {4.2.2.4}Thực thể Cuộc thi (Contest)}{62}{subsubsection.4.2.2.4}%
+\contentsline {subsubsection}{\numberline {4.2.2.5}Thực thể Tổ chức (Organization)}{65}{subsubsection.4.2.2.5}%
+\contentsline {subsubsection}{\numberline {4.2.2.6}Thực thể Bài thực hành (Lab)}{66}{subsubsection.4.2.2.6}%
+\contentsline {section}{\numberline {4.3}Thiết kế giao diện}{68}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Trang chi tiết bài toán và nộp bài}{68}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Trang cuộc thi và bảng xếp hạng}{69}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Trang quản trị}{70}{subsection.4.3.3}%
+\contentsline {subsection}{\numberline {4.3.4}Trang trực quan hóa cấu trúc dữ liệu}{71}{subsection.4.3.4}%
+\contentsline {subsection}{\numberline {4.3.5}Trang theo dõi tiến độ bài thực hành}{72}{subsection.4.3.5}%
+\contentsline {section}{\numberline {4.4}Thiết kế hiệu năng và bảo mật}{73}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Xác thực và phân quyền bằng JWT}{73}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}Giới hạn tần suất truy cập với Redis}{75}{subsection.4.4.2}%
+\contentsline {chapter}{\numberline {5}Cài đặt và kiểm thử}{77}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Môi trường và công cụ cài đặt}{77}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Cài đặt hệ thống}{77}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}Tổ chức mã nguồn theo tầng}{77}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}Luồng nộp bài và chấm bài bất đồng bộ}{79}{subsection.5.2.2}%
+\contentsline {subsection}{\numberline {5.2.3}Tính điểm đánh giá năng lực sau cuộc thi}{79}{subsection.5.2.3}%
+\contentsline {section}{\numberline {5.3}Thiết kế API}{81}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}Tổng quan các nhóm API}{81}{subsection.5.3.1}%
 \contentsline {subsection}{\numberline {5.3.2}Công cụ tài liệu hóa và kiểm thử API}{83}{subsection.5.3.2}%
-\contentsline {section}{\numberline {5.4}Mô tả các chức năng tiêu biểu}{84}{section.5.4}%
-\contentsline {subsection}{\numberline {5.4.1}Chức năng nộp bài}{84}{subsection.5.4.1}%
-\contentsline {subsection}{\numberline {5.4.2}Chức năng trực quan hóa cấu trúc dữ liệu}{85}{subsection.5.4.2}%
-\contentsline {subsection}{\numberline {5.4.3}Chức năng hỗ trợ bằng mô hình ngôn ngữ lớn}{86}{subsection.5.4.3}%
-\contentsline {section}{\numberline {5.5}Kiểm thử đơn vị}{87}{section.5.5}%
-\contentsline {section}{\numberline {5.6}Kiểm thử tải và giám sát}{88}{section.5.6}%
-\contentsline {chapter}{\numberline {6}Triển khai hệ thống}{93}{chapter.6}%
-\contentsline {section}{\numberline {6.1}Hạ tầng và công cụ triển khai}{93}{section.6.1}%
-\contentsline {section}{\numberline {6.2}Quy trình triển khai và tích hợp liên tục}{94}{section.6.2}%
-\contentsline {section}{\numberline {6.3}Kết quả triển khai và chi phí vận hành}{95}{section.6.3}%
-\contentsline {chapter}{\numberline {7}Kết luận}{97}{chapter.7}%
-\contentsline {section}{\numberline {7.1}Kết quả đạt được}{97}{section.7.1}%
-\contentsline {section}{\numberline {7.2}Hạn chế}{98}{section.7.2}%
-\contentsline {section}{\numberline {7.3}Hướng phát triển}{98}{section.7.3}%
-\contentsline {chapter}{TÀI LIỆU THAM KHẢO}{99}{chapter*.81}%
+\contentsline {section}{\numberline {5.4}Mô tả các chức năng tiêu biểu}{83}{section.5.4}%
+\contentsline {subsection}{\numberline {5.4.1}Chức năng trực quan hóa cấu trúc dữ liệu}{84}{subsection.5.4.1}%
+\contentsline {subsection}{\numberline {5.4.2}Chức năng hỗ trợ bằng mô hình ngôn ngữ lớn}{85}{subsection.5.4.2}%
+\contentsline {section}{\numberline {5.5}Kiểm thử đơn vị}{86}{section.5.5}%
+\contentsline {section}{\numberline {5.6}Kiểm thử tải và giám sát}{87}{section.5.6}%
+\contentsline {chapter}{\numberline {6}Triển khai hệ thống}{92}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Hạ tầng và công cụ triển khai}{92}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Quy trình triển khai và tích hợp liên tục}{93}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Kết quả triển khai và chi phí vận hành}{94}{section.6.3}%
+\contentsline {chapter}{\numberline {7}Kết luận}{96}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Kết quả đạt được}{96}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Hạn chế}{97}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Hướng phát triển}{97}{section.7.3}%
+\contentsline {chapter}{TÀI LIỆU THAM KHẢO}{98}{chapter*.80}%

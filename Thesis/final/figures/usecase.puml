@@ -22,7 +22,6 @@ actor "User"            as User
 actor "Contest creator" as Creator
 actor "Admin"           as Admin
 actor "LLM"             as LLM
-actor "AI parser service" as AIParser
 actor "Judging service"   as Judge
 
 ' Role generalizations (system: Creator is a logged-in User; Admin can do everything Creator can)
@@ -184,8 +183,8 @@ User --> UC_Hints
 User --> UC_Explain
 User --> UC_Complexity
 
-UC_PDF   --> AIParser
-UC_GenTC --> AIParser
+UC_PDF   --> LLM
+UC_GenTC --> LLM
 
 UC_Submit    --> Judge
 UC_Evaluate  --> Judge

@@ -1,6 +1,7 @@
 package com.oj.TDTUOJ.submission.controller;
 
 import com.oj.TDTUOJ.common.response.Response;
+import com.oj.TDTUOJ.submission.dto.SubmissionAnalysisResult;
 import com.oj.TDTUOJ.submission.dto.SubmissionDTO;
 import com.oj.TDTUOJ.submission.service.SubmissionService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,14 @@ public class SubmissionController {
             @PathVariable Long id
     ) {
         return ResponseEntity.ok(submissionService.getSubmissionStatus(id));
+    }
+
+    @PostMapping("/{id}/analysis")
+    public ResponseEntity<Response<SubmissionAnalysisResult>> analyzeSubmission(
+            @PathVariable Long id
+    ) {
+        Response<SubmissionAnalysisResult> response = submissionService.getSubmissionAnalysis(id);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
     @GetMapping("/count")

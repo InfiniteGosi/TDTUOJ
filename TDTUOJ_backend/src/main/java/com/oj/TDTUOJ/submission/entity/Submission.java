@@ -48,6 +48,9 @@ public class Submission {
     @Column(columnDefinition = "TEXT")
     private String errorMessage;
 
+    @Column(columnDefinition = "TEXT")
+    private String analysis; // cached LeetCode-style AI analysis (JSON), populated on demand
+
     private Boolean isPublic;
 
     @ManyToOne(fetch = FetchType.LAZY)

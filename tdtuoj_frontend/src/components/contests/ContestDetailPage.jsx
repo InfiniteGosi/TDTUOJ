@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 import { useToast } from "../common/ToastMessage";
+import RankBadge from "../common/RankBadge";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -136,6 +137,7 @@ const SidebarClock = ({ targetDate, label, onExpire }) => {
 
 const LeaderboardTable = ({ contestId, problems }) => {
   const { showMessage } = useToast();
+  const navigate = useNavigate();
   const [data, setData]         = useState(null);
   const [loading, setLoading]   = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -230,13 +232,15 @@ const LeaderboardTable = ({ contestId, problems }) => {
                     onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-subtle)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = rowBg; }}>
                     <td style={{ textAlign: "center", padding: "10px 8px" }}>
-                      {entry.rank <= 3
-                        ? <span style={{ fontSize: "var(--text-base)" }}>{entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : "🥉"}</span>
-                        : <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--text-muted)" }}>{entry.rank}</span>
-                      }
+                      <RankBadge rank={entry.rank} />
                     </td>
                     <td style={{ padding: "10px 8px" }}>
-                      <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-primary)" }}>{entry.username}</span>
+                      <span
+                        onClick={() => navigate(`/users/${entry.username}`)}
+                        style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-primary)", cursor: "pointer" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = "var(--primary)"; e.currentTarget.style.textDecoration = "underline"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-primary)"; e.currentTarget.style.textDecoration = "none"; }}
+                      >{entry.name || entry.username}</span>
                     </td>
                     <td style={{ textAlign: "center", padding: "10px 8px" }}>
                       <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-sm)", fontWeight: 800, color: "var(--green-ac)" }}>{entry.problemsSolved ?? 0}</span>

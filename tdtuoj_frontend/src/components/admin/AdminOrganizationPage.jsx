@@ -165,18 +165,18 @@ const AdminOrganizationPage = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
-  const SIZE = 10;
+  const [size, setSize] = useState(10);
 
   const isAdmin = ApiService.isAdmin();
 
   const fetchOrgs = async (p = page) => {
     try {
       setLoading(true);
-      const resp = await ApiService.getOrganizations({ page: p, size: SIZE, search });
+      const resp = await ApiService.getOrganizations({ page: p, size, search });
       if (resp.statusCode === 200) {
         const data = resp.data;
         const content = data.content ?? data;
-        const pageInfo = data.page ?? {};
+        const pageInfo = data.page ?? data;
         setOrganizations(content);
         setTotalPages(pageInfo.totalPages ?? 1);
         setTotalElements(pageInfo.totalElements ?? content.length);
@@ -184,7 +184,7 @@ const AdminOrganizationPage = () => {
     } catch (err) { showMessage(err.response?.data?.message || err.message, "error"); } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchOrgs(page); }, [page]);
+  useEffect(() => { fetchOrgs(page); }, [page, size]);
   useEffect(() => {
     const timer = setTimeout(() => { setPage(0); fetchOrgs(0); }, 300);
     return () => clearTimeout(timer);
@@ -354,11 +354,15 @@ const AdminOrganizationPage = () => {
               </tbody>
             </table>
 
-            {totalPages > 1 && (
+            {totalPages > 0 && (
               <Pagination
                 currentPage={page}
                 totalPages={totalPages}
                 onPageChange={setPage}
+                totalElements={totalElements}
+                offset={page * size}
+                limit={size}
+                onLimitChange={(l) => { setPage(0); setSize(l); }}
               />
             )}
           </div>

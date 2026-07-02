@@ -82,11 +82,19 @@ public class VisualizerServiceImpl implements VisualizerService {
         CompletableFuture<Map<String, Object>> classification =
                 classifier.classify(request.getSourceCode(), request.getLanguage());
 
-        Map<?, ?> judge0Response = submitToJudge0(
-                instrumented,
-                request.getLanguage(),
-                request.getStdin()
-        );
+        Map<?, ?> judge0Response;
+        try {
+            judge0Response = submitToJudge0(
+                    instrumented,
+                    request.getLanguage(),
+                    request.getStdin()
+            );
+        } catch (Exception e) {
+            // Judge0 unreachable / hung / errored — surface a friendly message
+            // instead of leaking the raw "Connection refused: ...:2358".
+            log.error("Judge0 unavailable during visualization", e);
+            return ok(error("The code execution service is currently unavailable. Please try again in a moment."), request);
+        }
 
         VisualizerResponse result = parseJudge0Response(judge0Response);
         result.setClassifications(awaitClassification(classification));

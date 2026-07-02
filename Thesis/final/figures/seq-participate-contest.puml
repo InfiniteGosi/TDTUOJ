@@ -3,7 +3,7 @@ mainframe sd Participate in contest
 hide footbox
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
+skinparam defaultFontSize 16
 skinparam SequenceArrowColor #000000
 skinparam SequenceLifeLineBorderColor #000000
 skinparam SequenceGroupBorderColor #000000
@@ -48,7 +48,7 @@ loop while contest running
   U -> UI : Submit solution to problem
   UI -> SUB : createSubmission(dto)
   activate SUB
-  SUB -> SUB : Judge & score (ICPC / IOI)
+  SUB -> SUB : Judge & score (ICPC)
   SUB --> UI : verdict
   deactivate SUB
   UI -> C : GET /api/contests/{id}/leaderboard

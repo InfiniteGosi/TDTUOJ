@@ -23,7 +23,7 @@ const OrganizationPage = () => {
   useEffect(() => { const q = searchParams.get("q"); if (q) setSearch(q); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [loading, setLoading]             = useState(true);
   const [page, setPage]                   = useState(0);
-  const [size, setSize]                   = useState(10);
+  const [size, setSize]                   = useState(50);
   const [totalPages, setTotalPages]       = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [tab, setTab]                     = useState("ALL");

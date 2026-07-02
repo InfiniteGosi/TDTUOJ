@@ -97,7 +97,7 @@ const UserPage = () => {
   useEffect(() => { const q = searchParams.get("q"); if (q) setSearchQuery(q); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
-    limit: 10,
+    limit: 50,
     offset: 0,
     totalElements: 0,
     totalPages: 0,
@@ -265,7 +265,7 @@ const UserPage = () => {
                 >
                   {/* Rank */}
                   <td style={{ textAlign: "center" }}>
-                    <RankBadge rank={user.id} />
+                    <RankBadge rank={user.rank} />
                   </td>
 
                   {/* User info */}

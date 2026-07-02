@@ -21,6 +21,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
     Optional<User> findByProviderIdAndAuthProvider(String providerId, String authProvider);
 
+    /**
+     * Leaderboard listing: all users, with an optional username filter.
+     * LEFT JOIN to UserStatistics so users without a stats row still appear.
+     * Sort by point/rating is supplied via JpaSort.unsafe referencing alias "s"
+     * (e.g. "s.totalPoints", "s.currentRating") since those fields live on
+     * UserStatistics, not User.
+     * Pass "" for username to match all (avoids null-param type inference issues
+     * on PostgreSQL, where a null bind triggers "function lower(bytea) does not exist").
+     */
+    @Query("SELECT u FROM User u LEFT JOIN UserStatistics s ON s.userId = u.id " +
+           "WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%'))")
+    Page<User> findAllForLeaderboard(@Param("username") String username, Pageable pageable);
+
     /** Search users NOT in a given org, by username. */
     @Query("SELECT u FROM User u WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "AND u.id NOT IN (SELECT m.user.id FROM OrganizationMember m WHERE m.organization.id = :orgId)")

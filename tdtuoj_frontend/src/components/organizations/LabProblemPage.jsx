@@ -8,7 +8,7 @@ import {
 import { useToast } from "../common/ToastMessage";
 import ApiService from "../../services/ApiService";
 import ReactMarkdown from "react-markdown";
-import CodeEditor from "../CodeEditor/CodeEditor";
+import CodeEditor from "../codeEditor/CodeEditor";
 import Editor from "@monaco-editor/react";
 import hljs from "highlight.js/lib/core";
 import cpp from "highlight.js/lib/languages/cpp";

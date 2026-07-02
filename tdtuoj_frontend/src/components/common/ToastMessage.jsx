@@ -9,17 +9,17 @@ import {
 import ReactDOM from "react-dom";
 
 const injectKeyframes = () => {
-  if (document.getElementById("toast-keyframes")) return;
+  if (document.getElementById("toast-keyframes-v2")) return;
   const style = document.createElement("style");
-  style.id = "toast-keyframes";
+  style.id = "toast-keyframes-v2";
   style.textContent = `
     @keyframes toast-slide-in {
-      from { transform: translateX(calc(100% + 40px)); opacity: 0; }
-      to   { transform: translateX(0);                 opacity: 1; }
+      from { transform: translateY(-120%); opacity: 0; }
+      to   { transform: translateY(0);     opacity: 1; }
     }
     @keyframes toast-slide-out {
-      from { transform: translateX(0);                 opacity: 1; }
-      to   { transform: translateX(calc(100% + 40px)); opacity: 0; }
+      from { transform: translateY(0);     opacity: 1; }
+      to   { transform: translateY(-120%); opacity: 0; }
     }
     @keyframes toast-progress {
       from { width: 100%; }
@@ -142,27 +142,30 @@ const ToastMessage = ({ status, message, onDismiss }) => {
     <div
       style={{
         position: "fixed",
-        bottom: "24px",
-        right: "20px",
+        top: "24px",
+        left: 0,
+        right: 0,
         zIndex: 9999,
-        minWidth: "320px",
-        maxWidth: "420px",
-        overflow: "hidden",
-        animation: isExiting
-          ? "toast-slide-out 350ms cubic-bezier(0.4, 0, 1, 1) forwards"
-          : "toast-slide-in 350ms cubic-bezier(0, 0, 0.2, 1) forwards",
-        willChange: "transform, opacity",
+        display: "flex",
+        justifyContent: "center",
+        pointerEvents: "none",
       }}
     >
       <div
         style={{
+          minWidth: "320px",
+          maxWidth: "420px",
+          pointerEvents: "auto",
           background: "var(--bg-overlay)",
-          border: `1px solid var(--border-default)`,
-          borderLeft: `3px solid ${styles.borderColor}`,
-          borderRadius: "var(--radius-md)",
+          border: `1px solid color-mix(in srgb, ${styles.borderColor} 50%, transparent)`,
+          borderRadius: "var(--radius-lg)",
           boxShadow: "var(--shadow-lg)",
           overflow: "hidden",
           position: "relative",
+          animation: isExiting
+            ? "toast-slide-out 300ms cubic-bezier(0.4, 0, 1, 1) forwards"
+            : "toast-slide-in 300ms cubic-bezier(0, 0, 0.2, 1) forwards",
+          willChange: "transform, opacity",
         }}
       >
         {/* Content row */}
@@ -185,7 +188,7 @@ const ToastMessage = ({ status, message, onDismiss }) => {
               style={{
                 fontSize: "var(--text-sm)",
                 fontWeight: 600,
-                color: "var(--text-primary)",
+                color: styles.iconColor,
                 fontFamily: "var(--font-body)",
                 marginBottom: "2px",
               }}
