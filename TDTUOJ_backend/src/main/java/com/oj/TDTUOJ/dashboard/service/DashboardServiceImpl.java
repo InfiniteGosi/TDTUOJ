@@ -24,10 +24,16 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Default {@link DashboardService}. Fans out to each domain repository's
+ * aggregation queries, then reshapes the raw {@code Object[]} rows into the
+ * typed series the frontend charts consume.
+ */
 @Service
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
 
+    // Cap the "problems by tag" breakdown to the top N tags to keep the chart readable.
     private static final int TOP_TAGS_LIMIT = 10;
 
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -39,6 +45,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final OrganizationRepository organizationRepository;
     private final UserStatisticsRepository userStatisticsRepository;
 
+    /** Builds every dashboard section in one pass and wraps it in the standard response envelope. */
     @Override
     public Response<DashboardStatsDTO> getDashboardStats() {
         DashboardStatsDTO dto = DashboardStatsDTO.builder()
@@ -59,6 +66,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .build();
     }
 
+    /** Top-line entity counts (cheap COUNT(*) per table). */
     private DashboardStatsDTO.Totals buildTotals() {
         return DashboardStatsDTO.Totals.builder()
                 .problems(problemRepository.count())
@@ -88,6 +96,9 @@ public class DashboardServiceImpl implements DashboardService {
 
         List<DashboardStatsDTO.TimePoint> points = new ArrayList<>();
         LocalDate today = LocalDate.now();
+        // Walk every calendar day from the first registration to today so the series
+        // has no gaps (days with no registrations emit a zero rather than being skipped),
+        // while carrying a running cumulative total for the growth line.
         long cumulative = 0;
         for (LocalDate d = earliest.toLocalDate(); !d.isAfter(today); d = d.plusDays(1)) {
             String period = d.format(DAY_FMT);
@@ -111,6 +122,7 @@ public class DashboardServiceImpl implements DashboardService {
 
         List<DashboardStatsDTO.TimePoint> points = new ArrayList<>();
         LocalDate today = LocalDate.now();
+        // Same gap-fill as users-over-time, but no cumulative (this is a per-day volume series).
         for (LocalDate d = earliest.toLocalDate(); !d.isAfter(today); d = d.plusDays(1)) {
             String period = d.format(DAY_FMT);
             points.add(DashboardStatsDTO.TimePoint.builder()
@@ -121,6 +133,7 @@ public class DashboardServiceImpl implements DashboardService {
         return points;
     }
 
+    /** Indexes raw (period, count) rows by period string for O(1) gap-fill lookups. */
     private Map<String, Long> toPeriodMap(List<Object[]> rows) {
         Map<String, Long> map = new HashMap<>();
         for (Object[] row : rows) {
@@ -136,12 +149,16 @@ public class DashboardServiceImpl implements DashboardService {
         List<UserStatistics> top = userStatisticsRepository
                 .findTop10ByOrderByProblemsSolvedDescAcceptedSubmissionsDesc();
 
+        // Batch-load the referenced users in one query and index by id to avoid N+1 lookups
+        // while stitching stats to their owner's username/avatar below.
         List<Long> userIds = top.stream().map(UserStatistics::getUserId).toList();
         Map<Long, User> usersById = userRepository.findAllById(userIds).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
 
         return top.stream()
                 .map(stats -> {
+                    // User may be null if the account was deleted after its stats row was written;
+                    // fall back to placeholder fields rather than dropping the entry.
                     User user = usersById.get(stats.getUserId());
                     return DashboardStatsDTO.TopSolverDTO.builder()
                             .userId(stats.getUserId())

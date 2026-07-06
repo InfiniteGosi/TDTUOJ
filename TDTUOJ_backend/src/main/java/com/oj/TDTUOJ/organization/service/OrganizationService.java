@@ -6,6 +6,12 @@ import com.oj.TDTUOJ.organization.dto.OrganizationDTO;
 import com.oj.TDTUOJ.organization.dto.OrganizationMemberDTO;
 import org.springframework.data.domain.Page;
 
+/**
+ * Business operations for organizations and their membership roster. Role rules
+ * (enforced in {@code OrganizationServiceImpl}): OWNER = full control incl. role
+ * changes and deletion; ADMIN = manage members (add/remove) but cannot touch other
+ * admins or the owner; MEMBER = ordinary participant. Platform ADMIN bypasses org checks.
+ */
 public interface OrganizationService {
 
     Response<OrganizationDTO> createOrganization(CreateOrganizationRequest request);

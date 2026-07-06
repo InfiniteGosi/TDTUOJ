@@ -30,6 +30,12 @@ public final class JsTracer implements Tracer {
     private static volatile Script acornScript;
     private static volatile Script driverScript;
 
+    /**
+     * Instrument JS by running the acorn-based driver INSIDE Rhino on the backend (the sandbox
+     * never runs any of this), then prepend the runtime preamble. Rhino is used purely as an
+     * embedded JS engine to transform the source string; the transformed source is what Judge0
+     * later executes on Node.
+     */
     @Override
     public String instrument(String source) {
         try {
@@ -58,6 +64,8 @@ public final class JsTracer implements Tracer {
         }
     }
 
+    /** Compile acorn + the instrumentation driver once and cache them (double-checked locking).
+     *  Interpreted mode (optimizationLevel -1) sidesteps Rhino's 64K-per-method classfile limit. */
     private static void ensureCompiled() throws Exception {
         if (acornScript != null && driverScript != null) return;
         synchronized (LOCK) {
@@ -82,6 +90,8 @@ public final class JsTracer implements Tracer {
     }
 
     // Node-12-compatible: no optional chaining / nullish coalescing.
+    // NOTE: this Java text block IS JavaScript source. Backslashes are doubled so escapes land
+    // correctly in the emitted JS (e.g. "\\n__FRAMES__" here becomes the JS string "\n__FRAMES__").
     private static final String PREAMBLE = """
             var __viz = (function () {
               var MAXF = __MAX_FRAMES__, MAXH = 200, MAXE = 1000, MAXS = 256, MAXD = 8, MAXFLD = 64;

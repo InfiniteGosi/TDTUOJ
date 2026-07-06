@@ -16,6 +16,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST endpoints for contests under {@code /api/contests}. Read and registration
+ * endpoints are public/authenticated; create/update/delete and the monitor
+ * endpoints require ADMIN or CREATOR (method-level {@code @PreAuthorize} here,
+ * with ownership re-checked in the service layer).
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/contests")
@@ -25,6 +31,7 @@ public class ContestController {
 
     // ── Public read endpoints ─────────────────────────────────────────────── //
 
+    /** Paginated list of public contests; {@code search} filters by name (case-insensitive). */
     @GetMapping
     public ResponseEntity<Response<Page<ContestDTO>>> getPublicContests(
             @RequestParam(defaultValue = "0")  int page,
@@ -34,11 +41,13 @@ public class ContestController {
         return ResponseEntity.ok(contestService.getPublicContests(page, size, search));
     }
 
+    /** Fetch a contest by numeric id. */
     @GetMapping("/{id}")
     public ResponseEntity<Response<ContestDTO>> getContestById(@PathVariable Long id) {
         return ResponseEntity.ok(contestService.getContestById(id));
     }
 
+    /** Fetch a contest by its URL slug (used for shareable contest links). */
     @GetMapping("/slug/{slug}")
     public ResponseEntity<Response<ContestDTO>> getContestBySlug(@PathVariable String slug) {
         return ResponseEntity.ok(contestService.getContestBySlug(slug));
@@ -80,23 +89,27 @@ public class ContestController {
 
     // ── Authenticated write endpoints ─────────────────────────────────────── //
 
+    /** Register the current user for a contest (capacity- and time-window-checked in the service). */
     @PostMapping("/{id}/register")
     public ResponseEntity<Response<Void>> register(@PathVariable Long id) {
         Response<Void> response = contestService.registerForContest(id);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
+    /** Unregister the current user; only permitted before the contest starts. */
     @DeleteMapping("/{id}/register")
     public ResponseEntity<Response<Void>> unregister(@PathVariable Long id) {
         Response<Void> response = contestService.unregisterFromContest(id);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
+    /** Whether the current user is registered — drives the register/unregister button state. */
     @GetMapping("/{id}/is-registered")
     public ResponseEntity<Response<Boolean>> isRegistered(@PathVariable Long id) {
         return ResponseEntity.ok(contestService.isRegisteredForContest(id));
     }
 
+    /** Create a contest (ADMIN or CREATOR). */
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
     public ResponseEntity<Response<ContestDTO>> createContest(
@@ -106,6 +119,7 @@ public class ContestController {
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
+    /** Update a contest (ADMIN any, CREATOR own). */
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
     public ResponseEntity<Response<ContestDTO>> updateContest(
@@ -115,6 +129,7 @@ public class ContestController {
         return ResponseEntity.ok(contestService.updateContest(id, dto));
     }
 
+    /** Delete a contest (ADMIN any, CREATOR own). */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
     public ResponseEntity<Response<Void>> deleteContest(@PathVariable Long id) {

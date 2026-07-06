@@ -34,6 +34,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+/**
+ * Default {@link SubmissionService} implementation.
+ *
+ * <p>Owns the synchronous side of a submission: guarding intake (cooldown, contest registration,
+ * lab deadline), persisting the row as PENDING, and enqueuing a {@link SubmissionJobDTO} so the
+ * {@link com.oj.TDTUOJ.submission.worker.SubmissionWorker} can judge it later. It also serves
+ * status polling (with locked-contest visibility rules) and lazily generates/caches AI analysis.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -51,6 +59,14 @@ public class SubmissionServiceImpl implements SubmissionService {
     private final AwsS3Service                  awsS3Service;
     private final ObjectMapper                  objectMapper = new ObjectMapper();
 
+    /**
+     * Validates and accepts a submission, then returns immediately without waiting for judging.
+     *
+     * <p>Order matters: rate-limit first (cheapest rejection), then authorization/eligibility
+     * guards (contest registration, lab deadline), and only then persist + enqueue so we never
+     * create a row or start a cooldown for a request that was going to be rejected. Returns
+     * 202 Accepted with the PENDING row and its queue position.
+     */
     @Override
     public Response<SubmissionDTO> createSubmission(SubmissionDTO submissionDTO) {
         User currentUser = userService.getCurrentLoggedInUser();
@@ -68,7 +84,8 @@ public class SubmissionServiceImpl implements SubmissionService {
         Problem problem = problemRepository.findById(submissionDTO.getProblemId())
                 .orElseThrow(() -> new NotFoundException("Problem not found"));
 
-        // 2b. Contest registration guard
+        // 2b. Contest registration guard — for contest submissions, only an approved registrant
+        // (or the contest creator / an admin, who submit for testing) may submit.
         if (submissionDTO.getContestId() != null) {
             Long contestId = submissionDTO.getContestId();
             Contest contest = contestRepository.findById(contestId).orElse(null);
@@ -120,7 +137,8 @@ public class SubmissionServiceImpl implements SubmissionService {
                 .build();
         submission = submissionRepository.save(submission);
 
-        // 3. Push to Redis queue — worker picks it up asynchronously
+        // 3. Push to Redis queue — worker picks it up asynchronously. The job embeds the source
+        // code so the worker is self-sufficient and needn't reload the row.
         SubmissionJobDTO job = SubmissionJobDTO.builder()
                 .submissionId(submission.getId())
                 .problemId(problem.getId())
@@ -147,6 +165,11 @@ public class SubmissionServiceImpl implements SubmissionService {
                 .build();
     }
 
+    /**
+     * Returns a submission's current status for client polling. Enforces contest fairness: a
+     * submission inside a still-locked contest is hidden from non-owners as a 404 (not 403) so
+     * the response doesn't even confirm the submission exists.
+     */
     @Override
     public Response<SubmissionDTO> getSubmissionStatus(Long id) {
         Submission submission = submissionRepository.findById(id)
@@ -195,10 +218,15 @@ public class SubmissionServiceImpl implements SubmissionService {
         return isAdmin || isCreator;
     }
 
+    /**
+     * Lists the current user's submissions newest-first. Accepts limit/offset (client-friendly)
+     * and converts them to a Spring page index, defaulting bad/absent values rather than erroring.
+     */
     @Override
     public Response<Page<SubmissionDTO>> getMySubmissions(Integer limit, Integer offset, Long problemId) {
         if (limit == null || limit <= 0) limit = 20;
         if (offset == null || offset < 0) offset = 0;
+        // offset/limit → 0-based page index expected by Spring Data's PageRequest.
         int page = offset / limit;
 
         Pageable pageable = PageRequest.of(page, limit,
@@ -223,6 +251,7 @@ public class SubmissionServiceImpl implements SubmissionService {
                 .build();
     }
 
+    /** Platform-wide submission count for the admin dashboard. */
     @Override
     public Response<Long> getTotalSubmissionsCount() {
         return Response.<Long>builder()
@@ -232,6 +261,11 @@ public class SubmissionServiceImpl implements SubmissionService {
                 .build();
     }
 
+    /**
+     * Returns AI analysis for a submission, generating it on first request and caching the JSON
+     * on the row so subsequent calls skip the (slow, paid) Gemini round-trip. Restricted to
+     * Accepted submissions and to the owner or an admin. Transactional so the cache write commits.
+     */
     @Override
     @Transactional
     public Response<SubmissionAnalysisResult> getSubmissionAnalysis(Long id) {

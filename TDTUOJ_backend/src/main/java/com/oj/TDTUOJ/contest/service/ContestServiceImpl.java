@@ -42,6 +42,16 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Default {@link ContestService} implementation.
+ *
+ * <p>Central to the contest-fairness model: problems must be private, authored
+ * by the caller, and unsolved by others before they can enter a contest
+ * ({@link #validateProblemEligibleForContest}); after a contest ends a scheduled
+ * job flips them public. Leaderboard reads delegate to
+ * {@link ContestLeaderboardService} and honour the scoreboard-freeze window for
+ * non-privileged viewers. Only ICPC style is currently accepted.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -230,6 +240,12 @@ public class ContestServiceImpl implements ContestService {
 
     // ── Registration ──────────────────────────────────────────────────────── //
 
+    /**
+     * Registration rules, in order: contest must not have already ended, the user
+     * must not already be registered (unique constraint also guards this), and the
+     * per-contest registration count must be below {@code maxParticipant} if set.
+     * Registrations are auto-APPROVED (no approval workflow).
+     */
     @Override
     @Transactional
     public Response<Void> registerForContest(Long contestId) {
@@ -273,6 +289,10 @@ public class ContestServiceImpl implements ContestService {
 
     // ── Unregistration ─────────────────────────────────────────────────────── //
 
+    /**
+     * Unregister the current user — allowed only strictly before the contest
+     * starts, so a competitor cannot drop out mid-contest to hide a poor result.
+     */
     @Override
     @Transactional
     public Response<Void> unregisterFromContest(Long contestId) {
@@ -317,6 +337,7 @@ public class ContestServiceImpl implements ContestService {
 
     // ── Leaderboard ───────────────────────────────────────────────────────── //
 
+    /** Full leaderboard; privileged viewers (ADMIN/creator) bypass the freeze window. */
     @Override
     public Response<LeaderboardDTO> getLeaderboard(Long contestId, int page, int size) {
         Contest contest = contestRepository.findById(contestId)
@@ -363,6 +384,11 @@ public class ContestServiceImpl implements ContestService {
 
     // ── Internal helpers ──────────────────────────────────────────────────── //
 
+    /**
+     * Maps a contest to its DTO. The problem list is hidden unless the caller may
+     * see it — ADMIN/CREATOR always, participants only once registered AND the
+     * contest has started — so problems aren't leaked before the contest opens.
+     */
     private ContestDTO toDTO(Contest contest) {
         ContestDTO dto = modelMapper.map(contest, ContestDTO.class);
         dto.setCreatorId(contest.getCreator() != null ? contest.getCreator().getId() : null);
@@ -494,6 +520,12 @@ public class ContestServiceImpl implements ContestService {
 
     // ── Admin monitor ────────────────────────────────────────────────────── //
 
+    /**
+     * Builds the live monitoring dashboard entirely from the submissions table:
+     * per-problem verdict counts (with acceptance rate) and per-participant
+     * activity (distinct solves, last submission), sorted by most recent activity.
+     * Requires ADMIN, else contest ownership.
+     */
     @Override
     @Transactional(readOnly = true)
     public Response<ContestMonitorDTO> getContestMonitor(Long contestId) {

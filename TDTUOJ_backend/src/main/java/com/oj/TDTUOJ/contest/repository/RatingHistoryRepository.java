@@ -8,6 +8,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Data access for {@link RatingHistory}. The "chain walk" finders let the rating
+ * service resolve a user's prior rating and rewrite every downstream row so the
+ * {@code oldRating == previousRow.newRating} invariant holds after (re)processing.
+ */
 @Repository
 public interface RatingHistoryRepository extends JpaRepository<RatingHistory, Long> {
 

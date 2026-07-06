@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Read view of a {@link com.oj.TDTUOJ.contest.entity.RatingHistory} row for the profile page. */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

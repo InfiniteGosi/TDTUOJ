@@ -8,6 +8,11 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Transport object for a single comment. Serves both directions: it carries {@code content}
+ * (and optional {@code parentId} for replies) on create/edit, and the full rendered view —
+ * author, vote tallies, the caller's own {@link VoteType}, and nested {@code replies} — on read.
+ */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

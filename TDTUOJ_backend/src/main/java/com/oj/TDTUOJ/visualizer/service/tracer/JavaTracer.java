@@ -34,6 +34,11 @@ import java.util.List;
  */
 public final class JavaTracer implements Tracer {
 
+    /**
+     * Parse the source to an AST, insert snaps + method-body guards, then append the
+     * {@code __Viz} runtime class. Snap line numbers are captured from original parse
+     * positions before re-printing, so the trace still maps to the user's line numbers.
+     */
     @Override
     public String instrument(String source) {
         CompilationUnit cu;
@@ -214,6 +219,10 @@ public final class JavaTracer implements Tracer {
     }
 
     // ── Runtime preamble (appended as a package-private top-level class) ─────
+    // NOTE: this is a Java text block whose contents ARE Java source. Backslashes are
+    // doubled because they must survive twice: once as this text-block literal, and again
+    // as string literals inside the emitted __Viz code — e.g. "{\\"step\\":" here becomes
+    // the source {"step": in __Viz's own StringBuilder output. Do not "simplify" them.
     private static final String PREAMBLE = """
             class __Viz {
                 private static final int MAXF = __MAX_FRAMES__, MAXH = 200, MAXE = 1000, MAXS = 256, MAXD = 8, MAXFLD = 64;

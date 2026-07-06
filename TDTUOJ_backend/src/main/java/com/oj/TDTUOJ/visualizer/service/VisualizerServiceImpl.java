@@ -52,6 +52,9 @@ public class VisualizerServiceImpl implements VisualizerService {
         );
     }
 
+    // Judge0 language ids for visualization. NOTE: CPP is id 76 here, NOT 54 as in
+    // Judge0Service — intentional. The visualizer's generated serializers rely on a
+    // newer GCC/compiler config exposed under id 76; the two code paths are independent.
     private static final Map<SubmissionLanguage, Integer> LANG_ID = Map.of(
             SubmissionLanguage.PYTHON,     71,
             SubmissionLanguage.JAVA,       62,
@@ -102,6 +105,7 @@ public class VisualizerServiceImpl implements VisualizerService {
         return ok(result, request);
     }
 
+    /** Wrap a result in a 200 envelope, echoing the language for frontend renderer hints. */
     private Response<VisualizerResponse> ok(VisualizerResponse result, VisualizerRequest request) {
         result.setLanguage(request.getLanguage().name());
         return Response.<VisualizerResponse>builder()
@@ -111,6 +115,11 @@ public class VisualizerServiceImpl implements VisualizerService {
                 .build();
     }
 
+    /**
+     * Collect the LLM classification within a hard time budget. The classifier is
+     * strictly best-effort: any timeout/failure/interrupt yields an empty map so the
+     * frontend's heuristics carry the run rather than blocking it.
+     */
     private Map<String, Object> awaitClassification(CompletableFuture<Map<String, Object>> future) {
         try {
             Map<String, Object> labels = future.get(CLASSIFIER_BUDGET_MS, TimeUnit.MILLISECONDS);
@@ -126,6 +135,11 @@ public class VisualizerServiceImpl implements VisualizerService {
 
     // ── Judge0 submission ─────────────────────────────────────────────────────
 
+    /**
+     * Submit instrumented code to Judge0 synchronously ({@code wait=true}). A generous
+     * 10s CPU limit is used because instrumentation multiplies the work; frames come
+     * back on stderr and are parsed by {@link #parseJudge0Response}.
+     */
     private Map<?, ?> submitToJudge0(String code, SubmissionLanguage language, String stdin) {
         Map<String, Object> body = new HashMap<>();
         body.put("source_code",    encode(code));
@@ -147,6 +161,7 @@ public class VisualizerServiceImpl implements VisualizerService {
 
     // ── Response parsing ──────────────────────────────────────────────────────
 
+    /** Triage the Judge0 response: compile error / TLE take priority, else extract frames. */
     private VisualizerResponse parseJudge0Response(Map<?, ?> response) {
         if (response == null) return error("No response from Judge0");
 
@@ -197,6 +212,8 @@ public class VisualizerServiceImpl implements VisualizerService {
                     .build();
         }
 
+        // Slice out the JSON array between the markers; whatever surrounds it on stderr
+        // is the user's own runtime-error output, preserved as the response `error`.
         String framesJson = stderr.substring(start + Tracer.FRAMES_BEGIN.length(), end).trim();
         String userStderr = (stderr.substring(0, start) + stderr.substring(end + Tracer.FRAMES_END.length())).trim();
 
@@ -205,6 +222,8 @@ public class VisualizerServiceImpl implements VisualizerService {
                     framesJson, new TypeReference<>() {});
             log.info("Parsed {} frames", frames.size());
 
+            // Two truncation signals: too many frames actually arrived (defensively cap),
+            // or the tracer self-disabled and appended a {"truncated":true} marker frame.
             String warning = null;
             if (frames.size() > Tracer.MAX_FRAMES) {
                 warning = "Trace truncated: showing first " + Tracer.MAX_FRAMES + " of "
@@ -234,6 +253,7 @@ public class VisualizerServiceImpl implements VisualizerService {
 
     // ── Utilities ─────────────────────────────────────────────────────────────
 
+    /** Reject empty/oversized source and unsupported languages before doing any work. */
     private void validateRequest(VisualizerRequest request) {
         if (request.getSourceCode() == null || request.getSourceCode().isBlank()) {
             throw new IllegalArgumentException("Source code is required");

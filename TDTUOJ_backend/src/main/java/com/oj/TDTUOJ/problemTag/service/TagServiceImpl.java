@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+/** Default implementation of tag management, backed by {@link TagRepository} + ModelMapper. */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -31,6 +32,7 @@ public class TagServiceImpl implements TagService {
             throw new BadRequestException("Tag with name '" + tagDTO.getName() + "' already exists");
         }
 
+        // Default new tags to active when the client omits the flag.
         Tag tag = Tag.builder()
                 .name(tagDTO.getName())
                 .isActive(tagDTO.getIsActive() != null ? tagDTO.getIsActive() : true)
@@ -50,13 +52,15 @@ public class TagServiceImpl implements TagService {
         Tag existingTag = tagRepository.findById(tagDTO.getId())
                 .orElseThrow(() -> new NotFoundException("Tag not found with id: " + tagDTO.getId()));
 
+        // Only enforce uniqueness when the name is actually changing — otherwise the tag's own
+        // existing row would falsely trip existsByName.
         if (!existingTag.getName().equals(tagDTO.getName()) &&
                 tagRepository.existsByName(tagDTO.getName())) {
             throw new BadRequestException("Tag with name '" + tagDTO.getName() + "' already exists");
         }
 
         existingTag.setName(tagDTO.getName());
-        log.info(tagDTO.getIsActive().toString());
+        // isActive is optional on update; only overwrite when supplied (null = leave unchanged).
         if (tagDTO.getIsActive() != null) {
             existingTag.setIsActive(tagDTO.getIsActive());
         }
@@ -91,6 +95,7 @@ public class TagServiceImpl implements TagService {
         if (direction == null || direction.isBlank()) direction = "asc";
 
         Sort sort = Sort.by(Sort.Direction.fromString(direction), sortField);
+        // Convert the row offset the API exposes into the zero-based page index Spring expects.
         int page = offset / limit;
         Pageable pageable = PageRequest.of(page, limit, sort);
 
@@ -130,6 +135,7 @@ public class TagServiceImpl implements TagService {
         Tag tag = tagRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Tag not found with id: " + id));
 
+        // Flip active state; the null-safe equals treats a null flag as "currently inactive".
         tag.setIsActive(!Boolean.TRUE.equals(tag.getIsActive()));
         Tag saved = tagRepository.save(tag);
 

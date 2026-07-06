@@ -6,6 +6,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * API view of a member row. Also reused for "search non-members" results, in which
+ * case {@code id}/{@code joinedAt}/{@code role} are left null (the user isn't a member yet).
+ */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -8,6 +8,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Self-contained work item carried through the Redis judging queue.
+ *
+ * <p>Holds everything the worker needs to judge a submission (the source code and language are
+ * embedded so the worker never has to re-read the {@code Submission} row). It is serialized to
+ * and from Redis, hence the Jackson annotations: {@code NON_NULL} keeps the payload small and
+ * {@code ignoreUnknown} keeps deserialization forward-compatible if fields are added later.
+ */
 @Data
 @Builder
 @NoArgsConstructor

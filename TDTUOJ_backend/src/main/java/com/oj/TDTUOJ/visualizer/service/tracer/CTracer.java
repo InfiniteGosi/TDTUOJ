@@ -63,8 +63,16 @@ public final class CTracer implements Tracer {
         }
     }
 
+    /**
+     * Line-scan the (brace-normalized) source and, unlike C++, emit TYPED capture calls per
+     * variable (C has no templates), plus per-struct serializers and a cleanup-attribute frame
+     * guard. Struct serializer prototypes are forward-declared up top and their bodies appended
+     * at the end (C has no ADL, so definitions must be reachable by name before use).
+     */
     @Override
     public String instrument(String source) {
+        // Same 3-step front-end as C++: normalize braceless bodies, blank literals/comments,
+        // then fold multi-line signatures so the single-line FUNC regexes match.
         BraceSynthesizer.Result norm = BraceSynthesizer.normalize(source);
         String[] lines = norm.lines();
         int[] origLine = norm.origLine();
@@ -120,6 +128,7 @@ public final class CTracer implements Tracer {
             int opens = count(code, '{');
             int closes = count(code, '}');
 
+            // net brace delta returns us to/below the innermost function's open depth → body ends
             boolean closesFunc = !funcDepth.isEmpty() && closes > 0
                     && depth + opens - closes <= funcDepth.get(funcDepth.size() - 1);
             if (closesFunc) funcDepth.remove(funcDepth.size() - 1);
@@ -186,10 +195,13 @@ public final class CTracer implements Tracer {
                 break;
             }
             List<Var> visible = visible(globals, scope);
+            // Snap at a genuine statement boundary only (see CppTracer for the same rationale).
             boolean statementEnd = inFunc && parenBal == 0 && trimmed.endsWith(";")
                     && !funcStructure && !nextIsElse && !closesFunc
                     && !startsWithAny(trimmed, "return", "break", "continue", "goto", "typedef")
                     && !trimmed.startsWith("}");
+            // Wrap the whole snap in its own { ... } block so declaring _viz_* temporaries never
+            // collides with user names and the appended call can't change the enclosing statement.
             if (statementEnd && !visible.isEmpty()) {
                 out.append(" { _viz_begin(").append(lineNo).append(");");
                 for (Var v : visible) out.append(cap(v));
@@ -218,6 +230,12 @@ public final class CTracer implements Tracer {
 
     // ── classification & capture codegen ─────────────────────────────────────
 
+    /**
+     * Determine a declared variable's capture {@link Kind} from its declaration syntax, so
+     * {@link #cap} can emit the correctly-typed {@code _viz_cap_*} call. Struct patterns are
+     * tried first (the {@code struct} keyword would otherwise be rejected as a keyword); returns
+     * {@code null} when the line is not a recognized declaration.
+     */
     private Var classify(String code, String trimmed, java.util.Set<String> structNames, int depth) {
         // struct declarations first — "struct" itself is a keyword
         Matcher sv = P_STRUCT_VAL.matcher(code);
@@ -246,6 +264,10 @@ public final class CTracer implements Tracer {
         return null;
     }
 
+    /** Render the capture call for one variable. Array lengths are computed with
+     *  {@code sizeof(a)/sizeof(a[0])}, which is correct only for true stack/global arrays whose
+     *  size is known at the call site (a decayed pointer would give a wrong count) — hence only
+     *  locally-declared arrays reach the ARR_* kinds. */
     private String cap(Var v) {
         return switch (v.kind) {
             case LL    -> " _viz_cap_ll(\"" + v.name + "\", (long long)" + v.name + ");";
@@ -268,6 +290,9 @@ public final class CTracer implements Tracer {
         };
     }
 
+    /** Harvest typed parameter Vars from a signature: struct-pointer params (for pointer chasing),
+     *  integer/char scalars, and floating-point scalars. Parameters whose type isn't recognized
+     *  (arrays, structs by value, etc.) are simply skipped rather than mis-captured. */
     private List<Var> cParams(String params, java.util.Set<String> structNames) {
         List<Var> out = new ArrayList<>();
         if (params == null || params.isBlank() || params.trim().equals("void")) return out;
@@ -325,6 +350,9 @@ public final class CTracer implements Tracer {
     }
 
     // ── C11 runtime preamble ─────────────────────────────────────────────────
+    // NOTE: this Java text block IS C source. Backslashes are doubled to survive the
+    // text-block literal and emerge as single backslashes in the C string literals
+    // (e.g. "{\\"type\\":" here compiles as the C string {"type": ). Do not "un-double" them.
     private static final String PREAMBLE = """
             #include <stdio.h>
             #include <stdlib.h>

@@ -22,6 +22,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * AWS SDK v2 implementation of {@link AwsS3Service}.
+ *
+ * <p>Every operation wraps SDK exceptions in a {@link RuntimeException} carrying a
+ * human-readable, key-scoped message so upstream error handling and logs identify which
+ * object failed without exposing raw SDK internals.
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -53,7 +60,8 @@ public class AwsS3ServiceImpl implements AwsS3Service {
                     .metadata(metadata)
                     .build();
 
-            // Upload file using input stream (more memory efficient)
+            // Stream the bytes rather than buffering the whole file in memory — matters for
+            // large problem/test-case uploads.
             s3Client.putObject(
                     putObjectRequest,
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
@@ -98,6 +106,9 @@ public class AwsS3ServiceImpl implements AwsS3Service {
         }
     }
 
+    /**
+     * Returns the object's URL by construction (bucket + key); does not verify the object exists.
+     */
     @Override
     public URL getFileUrl(String keyName) {
         try {
@@ -112,6 +123,10 @@ public class AwsS3ServiceImpl implements AwsS3Service {
         }
     }
 
+    /**
+     * Generates a signed, expiring GET URL so clients can fetch a private object directly
+     * without proxying bytes through the API.
+     */
     @Override
     public URL getPresignedUrl(String keyName, Duration duration) {
         try {
@@ -139,6 +154,10 @@ public class AwsS3ServiceImpl implements AwsS3Service {
         }
     }
 
+    /**
+     * Bulk-deletes every object under a prefix. Used to purge all files belonging to a
+     * deleted problem/contest in one sweep.
+     */
     @Override
     public void deleteFolder(String folderPath) {
         try {
@@ -181,7 +200,8 @@ public class AwsS3ServiceImpl implements AwsS3Service {
             log.info("Deleted {} objects from folder '{}' in bucket '{}'",
                     deleteResponse.deleted().size(), folderPath, bucketName);
 
-            // Handle continuation for folders with more than 1000 objects
+            // ListObjectsV2 caps a page at 1000 keys; page through the continuation token so
+            // folders larger than that are fully deleted rather than only the first page.
             while (listResponse.isTruncated()) {
                 listRequest = listRequest.toBuilder()
                         .continuationToken(listResponse.nextContinuationToken())
@@ -221,6 +241,10 @@ public class AwsS3ServiceImpl implements AwsS3Service {
         }
     }
 
+    /**
+     * Moves an object by copy-then-delete, since S3 offers no atomic rename. Used e.g. when a
+     * draft file is promoted to its final published location.
+     */
     @Override
     public void moveFile(String sourceKey, String destinationKey) {
         try {
@@ -247,9 +271,15 @@ public class AwsS3ServiceImpl implements AwsS3Service {
         }
     }
 
+    /**
+     * Reads a text object given its full public URL — convenient for callers that stored a URL
+     * (e.g. a test-case file link) rather than the raw key.
+     */
     @Override
     public String readFileContent(String fileUrl) {
         try {
+            // Recover the S3 key from the URL by stripping everything up to and including the
+            // ".amazonaws.com/" host segment, leaving just the object path.
             String key = fileUrl.substring(fileUrl.indexOf(".amazonaws.com/") + ".amazonaws.com/".length());
 
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()

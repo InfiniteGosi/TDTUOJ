@@ -13,12 +13,25 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST endpoints for problems under {@code /api/problems}.
+ *
+ * <p>Read endpoints (list, by-id, by-slug) are public and only surface {@code isPublic}
+ * problems; management endpoints (create/update/delete/tags) and the lecturer views
+ * ({@code /my}, {@code /contest-eligible}) are gated to ADMIN/CREATOR via
+ * {@link PreAuthorize}. Create/update consume multipart form data because the statement
+ * and test-case files are uploaded alongside the JSON fields.</p>
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/problems")
 public class ProblemController {
     private final ProblemService problemService;
 
+    /**
+     * Public, paginated problem listing with optional title / tag / difficulty filters.
+     * {@code offset} is a row offset (converted to a page index in the service), not a page number.
+     */
     @GetMapping
     public ResponseEntity<Response<Page<ProblemDTO>>> getAllProblems(
             @RequestParam(defaultValue = "20") Integer limit,
@@ -36,6 +49,7 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.getProblemById(id));
     }
 
+    /** Fetch by URL slug (the id used in public links). Enforces the private-problem visibility guard in the service. */
     @GetMapping("slug/{slug}")
     public ResponseEntity<Response<ProblemDTO>> getProblemBySlug(@PathVariable String slug) {
         return ResponseEntity.ok(problemService.getProblemBySlug(slug));
@@ -63,6 +77,7 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.getContestEligibleProblems(page, size, search));
     }
 
+    /** Create a problem. Multipart: statement markdown + test-case input/output files are uploaded to S3 in the service. */
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Response<ProblemDTO>> createProblem(

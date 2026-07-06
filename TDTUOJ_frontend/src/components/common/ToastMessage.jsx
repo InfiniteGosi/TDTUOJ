@@ -90,6 +90,8 @@ const ToastMessage = ({ status, message, onDismiss }) => {
   const [isExiting, setIsExiting] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const dismissRef = useRef(onDismiss);
+  // When true, the countdown interval skips ticks so the toast stays up while hovered.
+  const pausedRef = useRef(false);
 
   useEffect(() => {
     dismissRef.current = onDismiss;
@@ -122,7 +124,10 @@ const ToastMessage = ({ status, message, onDismiss }) => {
     const totalSteps = duration / stepTime;
     let step = 0;
 
+    pausedRef.current = false;
     const timer = setInterval(() => {
+      // Freeze the countdown while the pointer hovers the toast so it can be read.
+      if (pausedRef.current) return;
       step += 1;
       setProgress(100 - (step / totalSteps) * 100);
       if (step >= totalSteps) {
@@ -152,6 +157,8 @@ const ToastMessage = ({ status, message, onDismiss }) => {
       }}
     >
       <div
+        onMouseEnter={() => { pausedRef.current = true; }}
+        onMouseLeave={() => { pausedRef.current = false; }}
         style={{
           minWidth: "320px",
           maxWidth: "420px",

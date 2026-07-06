@@ -11,6 +11,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A programming contest. Holds the scheduling window (start/end, registration
+ * window), scoring style, and the flags that drive the post-contest lifecycle:
+ * {@code isRated}/{@code ratingProcessed} (rating job), {@code problemsPublished}
+ * (auto-publish of private problems to the practice archive), and
+ * {@code freezeDurationMinutes} (scoreboard freeze). Contest state (UPCOMING /
+ * RUNNING / ENDED) is not stored — it is derived from start/end vs. now.
+ */
 @Entity
 @Data
 @Table(name = "contests")

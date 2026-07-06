@@ -6,6 +6,11 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * Request/response DTO for test cases. On write it doubles as a multipart form object:
+ * {@code inputFile}/{@code expectedOutputFile} carry the uploaded content, while the
+ * {@code *FileUrl} fields carry the stored S3 locations back on read.
+ */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

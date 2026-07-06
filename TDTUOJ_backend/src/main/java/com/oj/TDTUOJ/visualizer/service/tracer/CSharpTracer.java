@@ -61,8 +61,16 @@ public final class CSharpTracer implements Tracer {
         Var(String name, int depth) { this.name = name; this.depth = depth; }
     }
 
+    /**
+     * Line-scan the (brace-normalized) source, inserting {@code __Viz.Snap(...)} after each
+     * in-method statement and wrapping each method body as
+     * {@code Enter("m"); try { <body> } finally { Exit(); }}. Only variable NAMES are harvested;
+     * the appended {@code __Viz} class does all value serialization via reflection at runtime.
+     */
     @Override
     public String instrument(String source) {
+        // Normalize braceless control bodies into explicit blocks so per-statement snaps land
+        // inside loop/if bodies (one statement per line) rather than once after the construct.
         BraceSynthesizer.Result norm = BraceSynthesizer.normalize(source);
         String[] lines = norm.lines();
         int[] origLine = norm.origLine();
@@ -104,11 +112,14 @@ public final class CSharpTracer implements Tracer {
             boolean inLambda = !lambdaDepths.isEmpty();
 
             // ── method body closing? (handle before emitting the line) ──────
+            // net brace delta drops back to the method's open depth → the '}' on this line closes
+            // the body; splice the try/finally close in front of that specific brace
             boolean closesMethod = !methodDepth.isEmpty()
                     && depth + opens - closes < methodDepth.get(methodDepth.size() - 1) + 1
                     && closes > 0;
             if (closesMethod) {
-                // insert "} finally { __Viz.Exit(); }" before the brace that closes the body
+                // rewrite "...}" → "...} finally { __Viz.Exit(); } }" so Exit() runs on every exit
+                // path (return/throw/fallthrough); the extra outer '}' closes the try we opened.
                 int cut = raw.lastIndexOf('}');
                 raw = raw.substring(0, cut) + "} finally { __Viz.Exit(); } }" +
                       raw.substring(cut + 1);
@@ -197,6 +208,7 @@ public final class CSharpTracer implements Tracer {
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
+    /** Distinct variable names currently in scope, insertion-ordered. */
     private List<String> visible(List<Var> scope) {
         // dedupe keeping the most recent declaration of each name
         Map<String, Boolean> seen = new LinkedHashMap<>();
@@ -213,6 +225,8 @@ public final class CSharpTracer implements Tracer {
         return sb.toString();
     }
 
+    /** Parameter NAMES from a method's argument list; splits on top-level commas so generic
+     *  type args ({@code Dictionary<int,int> d}) aren't split inside their angle brackets. */
     private static List<String> paramNames(String params) {
         List<String> out = new ArrayList<>();
         if (params == null || params.isBlank()) return out;
@@ -288,6 +302,9 @@ public final class CSharpTracer implements Tracer {
     }
 
     // ── Runtime preamble (C# 7.3 / Mono 6.6 compatible) ──────────────────────
+    // NOTE: this Java text block IS C# source. Backslashes are doubled to survive the
+    // text-block literal and emerge as single backslashes in the C# string literals
+    // (e.g. "{\\"step\\":" here compiles as the C# string {"step": ). Do not "un-double" them.
     private static final String PREAMBLE = """
             static class __Viz {
                 const int MAXF = __MAX_FRAMES__, MAXH = 200, MAXE = 1000, MAXS = 256, MAXD = 8, MAXFLD = 64;

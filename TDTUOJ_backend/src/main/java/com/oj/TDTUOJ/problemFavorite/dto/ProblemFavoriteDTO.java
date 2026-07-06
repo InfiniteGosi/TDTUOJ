@@ -6,6 +6,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Result of a favorite toggle. The {@code isFavorited} flag reports the state <i>after</i> the
+ * operation (true = just added, false = just removed) so the client can update its UI directly.
+ */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -40,6 +40,11 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * User account service. Handles profile reads, the leaderboard listing (which
+ * joins in {@link UserStatistics} for points/rating and computes a global rank),
+ * self-service mutations, and admin edits. Avatars are stored in S3.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -52,6 +57,10 @@ public class UserServiceImpl implements UserService {
     private final RatingHistoryRepository ratingHistoryRepository;
     private final UserStatisticsRepository userStatisticsRepository;
 
+    /**
+     * Resolves the authenticated caller from the security context. The JWT's
+     * subject is the email, so the principal name is used to load the entity.
+     */
     @Override
     public User getCurrentLoggedInUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -60,6 +69,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new NotFoundException("User not found"));
     }
 
+    /** Returns the caller's own account details. */
     @Override
     public Response<UserDTO> getOwnAccountDetails() {
         User user = getCurrentLoggedInUser();
@@ -72,6 +82,7 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    /** Fetch a user by primary key (admin path). */
     @Override
     public Response<UserDTO> getUserById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
@@ -84,6 +95,7 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    /** Fetch a user by username slug (public profile path). */
     @Override
     public Response<UserDTO> getUserByUsername(String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new NotFoundException("User not found"));
@@ -96,6 +108,12 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    /**
+     * Leaderboard listing. Pages over users (optionally filtered by username),
+     * enriches each with points/rating from {@link UserStatistics}, and stamps a
+     * stable global rank. Sorting supports fields that live on the stats table,
+     * which requires the JpaSort/join workaround below.
+     */
     @Override
     public Response<Page<UserDTO>> getAllUsers(Integer limit,
                                                Integer offset,
@@ -130,6 +148,7 @@ public class UserServiceImpl implements UserService {
         String usernameFilter = (username != null) ? username : "";
         Page<User> userPage = userRepository.findAllForLeaderboard(usernameFilter, pageable);
 
+        // Batch-load stats for just this page's users (avoids an N+1 lookup per row).
         List<Long> userIds = userPage.getContent().stream().map(User::getId).collect(Collectors.toList());
         Map<Long, UserStatistics> statsMap = userStatisticsRepository.findAllByUserIdIn(userIds)
                 .stream().collect(Collectors.toMap(UserStatistics::getUserId, Function.identity()));
@@ -186,6 +205,11 @@ public class UserServiceImpl implements UserService {
         return value != null ? value : 0;
     }
 
+    /**
+     * Self-service profile update. Only name/about and the avatar are editable
+     * here (identity/role/status fields are intentionally not touched); non-null
+     * DTO fields are applied so the client can send partial updates.
+     */
     @Override
     public Response<?> updateOwnAccount(UserDTO userDTO) {
         User user = getCurrentLoggedInUser();
@@ -194,13 +218,14 @@ public class UserServiceImpl implements UserService {
 
         // Check if a new profile image is uploaded
         if (imageFile != null && !imageFile.isEmpty()) {
-            // Delete old image in S3 if it exists
+            // Delete old image first so replaced avatars don't accumulate as orphaned S3 objects.
             if (profileUrl != null && !profileUrl.isEmpty()) {
+                // Derive the S3 key from the stored URL's trailing path segment.
                 String keyName = profileUrl.substring(profileUrl.lastIndexOf("/") + 1);
                 awsS3Service.deleteFile("profile/" + keyName);
             }
 
-            // Upload new image to S3 with a unique name
+            // Prefix the key with the username and strip whitespace so the object name is unique and URL-safe.
             String originalName = imageFile.getOriginalFilename();
             String safeName = originalName != null ? originalName.replaceAll("\\s+", "_") : "image";
             String imageName = user.getUsername() + "_" + safeName;
@@ -209,7 +234,7 @@ public class UserServiceImpl implements UserService {
             user.setProfileUrl(newImageUrl.toString());
         }
 
-        // Update non-null fields
+        // Partial update: only overwrite fields the client actually sent.
         if (userDTO.getName() != null) user.setName(userDTO.getName());
         if (userDTO.getAbout() != null) user.setAbout(userDTO.getAbout());
 
@@ -222,6 +247,12 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    /**
+     * Admin edit of any user. Beyond the self-service fields, admins may change
+     * active status, password, email (with a uniqueness re-check), and the role
+     * set. Roles arrive either as {@code roleNames} (multipart form) or {@code roles}
+     * (JSON), so both are handled with a PARTICIPANT fallback when neither is given.
+     */
     @Override
     public Response<?> updateUserAsAdmin(UserDTO userDTO) {
         User user = userRepository.findById(userDTO.getId())
@@ -253,12 +284,13 @@ public class UserServiceImpl implements UserService {
         if (userDTO.getAbout() != null) user.setAbout(userDTO.getAbout());
         if (userDTO.getIsActive() != null) user.setIsActive(userDTO.getIsActive());
 
-        // Update password if provided
+        // Password is optional on admin edit; when present, BCrypt-hash it (never store plaintext).
         if (userDTO.getPassword() != null && !userDTO.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         }
 
-        // Update email if changed
+        // Only re-check email uniqueness when it actually changed, otherwise the
+        // user's own existing email would trip the "already exists" guard.
         if (userDTO.getEmail() != null && !userDTO.getEmail().equals(user.getEmail())) {
             if (userRepository.existsByEmail(userDTO.getEmail())) {
                 throw new BadRequestException("Email already exists");
@@ -296,6 +328,11 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    /**
+     * Self-service password change. Runs the checks in order — confirmation match,
+     * current-password proof, difference from the old password, minimum length —
+     * before persisting the new BCrypt hash.
+     */
     @Override
     public Response<?> changePassword(ChangePasswordRequest request) {
         User user = getCurrentLoggedInUser();
@@ -305,12 +342,12 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("New passwords do not match");
         }
 
-        // Verify current password
+        // Prove the caller knows the current password before allowing a change.
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new BadRequestException("Current password is incorrect");
         }
 
-        // Don't allow same password
+        // Reject a no-op change (new hash matches the stored one).
         if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
             throw new BadRequestException("New password must be different from current password");
         }
@@ -332,6 +369,7 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    /** Soft-deletes the caller's account by flagging it inactive (login then rejects it). */
     @Override
     public Response<?> deactivateOwnAccount() {
         User user = getCurrentLoggedInUser();
@@ -343,6 +381,7 @@ public class UserServiceImpl implements UserService {
                 .message("Account deactivated successfully")
                 .build();
     }
+    /** Returns a user's per-contest rating changes, newest first, for the profile rating chart. */
     @Override
     public Response<List<RatingHistoryDTO>> getRatingHistory(String username) {
         User user = userRepository.findByUsername(username)

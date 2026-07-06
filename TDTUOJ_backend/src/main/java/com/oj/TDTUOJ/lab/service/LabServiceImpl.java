@@ -47,6 +47,16 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Lab business logic. Two authorization tiers are used throughout:
+ * <ul>
+ *   <li><b>member</b> ({@link #assertOrgMember}) — anyone in the org may read labs;</li>
+ *   <li><b>owner</b> ({@link #assertOrgOwner}) — only the org OWNER may create,
+ *       edit, delete, view progress, export, or publish solutions.</li>
+ * </ul>
+ * A platform ADMIN bypasses both. Note the deliberately stricter owner-only gate
+ * on mutations: unlike most org actions, org ADMINs cannot manage labs.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -65,7 +75,7 @@ public class LabServiceImpl implements LabService {
     @Override
     public Response<Page<LabDTO>> getLabsByOrg(Long orgId, int page, int size) {
         findOrgOrThrow(orgId);
-        assertOrgMember(orgId);
+        assertOrgMember(orgId); // reading the lab list requires org membership
 
         if (size <= 0) size = 10;
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -94,6 +104,7 @@ public class LabServiceImpl implements LabService {
 
     // ── Create lab ────────────────────────────────────────────────────────── //
 
+    /** Owner-only. Generates a unique slug, persists the lab, then attaches each requested problem as an exercise. */
     @Override
     @Transactional
     public Response<LabDTO> createLab(Long orgId, CreateLabRequest request) {
@@ -102,7 +113,7 @@ public class LabServiceImpl implements LabService {
         assertOrgOwner(orgId, currentUser);
 
         String slug = generateSlug(request.getTitle());
-        // Ensure unique within org
+        // Append -1, -2, ... until the slug is unique within this org (slugs are only per-org unique).
         int suffix = 1;
         String baseSlug = slug;
         while (labRepository.existsByOrganizationIdAndSlug(orgId, slug)) {
@@ -128,6 +139,7 @@ public class LabServiceImpl implements LabService {
                         .orElseThrow(() -> new NotFoundException("Problem not found: " + entry.getProblemId()));
                 validateProblemEligibleForLab(problem, currentUser);
 
+                // Fall back to the problem's default point value when the request omits points.
                 LabExercise exercise = LabExercise.builder()
                         .lab(lab)
                         .problem(problem)
@@ -150,6 +162,7 @@ public class LabServiceImpl implements LabService {
 
     // ── Update lab ────────────────────────────────────────────────────────── //
 
+    /** Owner-only. Updates metadata and fully rebuilds the exercise list from the request. */
     @Override
     @Transactional
     public Response<LabDTO> updateLab(Long orgId, Long labId, CreateLabRequest request) {
@@ -160,6 +173,7 @@ public class LabServiceImpl implements LabService {
         Lab lab = labRepository.findById(labId)
                 .orElseThrow(() -> new NotFoundException("Lab not found: " + labId));
 
+        // Guard against a labId from a different org being manipulated via this org's URL.
         if (!lab.getOrganization().getId().equals(orgId)) {
             throw new BadRequestException("Lab does not belong to this organization");
         }
@@ -168,13 +182,15 @@ public class LabServiceImpl implements LabService {
         lab.setDescription(request.getDescription());
         lab.setDeadline(request.getDeadline());
 
-        // Re-sync exercises
+        // Re-sync exercises: wipe the existing list and rebuild from the request payload.
         if (request.getExercises() != null) {
             // Problems already attached are exempt from eligibility checks
             // (e.g. one later published manually must not break lab edits).
             java.util.Set<Long> alreadyAttached = lab.getExercises().stream()
                     .map(ex -> ex.getProblem().getId())
                     .collect(Collectors.toSet());
+            // orphanRemoval deletes the cleared LabExercise rows; flush forces the
+            // DELETEs to hit the DB before the re-inserts below to avoid constraint clashes.
             lab.getExercises().clear();
             labRepository.flush();
 
@@ -213,6 +229,7 @@ public class LabServiceImpl implements LabService {
         Lab lab = labRepository.findById(labId)
                 .orElseThrow(() -> new NotFoundException("Lab not found: " + labId));
 
+        // Reject cross-org tampering: the lab must belong to the org in the path.
         if (!lab.getOrganization().getId().equals(orgId)) {
             throw new BadRequestException("Lab does not belong to this organization");
         }
@@ -228,6 +245,10 @@ public class LabServiceImpl implements LabService {
 
     // ── Progress tracking ─────────────────────────────────────────────────── //
 
+    /**
+     * Builds the owner-facing progress grid: one row per student (org ADMIN/MEMBER),
+     * one status cell per exercise. Owner-only.
+     */
     @Override
     public Response<List<LabProgressDTO>> getLabProgress(Long orgId, Long labId) {
         findOrgOrThrow(orgId);
@@ -239,7 +260,8 @@ public class LabServiceImpl implements LabService {
 
         List<LabExercise> exercises = exerciseRepository.findByLabIdOrderByExerciseOrderAsc(labId);
 
-        // Get ADMIN + MEMBER users (exclude OWNER)
+        // Treat everyone except the OWNER as a "student" to track (org ADMINs are graded too).
+        // Large page size (10000) is used as a cheap "fetch all members" since there's no unpaged variant.
         List<OrganizationMember> students = memberRepository.findByOrganizationId(orgId,
                         PageRequest.of(0, 10000, Sort.by("joinedAt")))
                 .getContent()
@@ -259,6 +281,8 @@ public class LabServiceImpl implements LabService {
             for (LabExercise ex : exercises) {
                 total += (ex.getPoints() != null ? ex.getPoints() : 0);
 
+                // Submissions are matched on (user, problem, THIS lab) so attempts made
+                // outside the lab context don't count toward lab progress.
                 boolean hasAC = submissionRepository.existsByUserIdAndProblemIdAndLabIdAndSubmissionVerdict(
                         user.getId(), ex.getProblem().getId(), labId, SubmissionVerdict.AC);
 
@@ -268,6 +292,7 @@ public class LabServiceImpl implements LabService {
                 String status;
                 String bestVerdict = null;
 
+                // Three-state model: any AC => SOLVED (points earned); else any submission => ATTEMPTED; else NOT_STARTED.
                 if (hasAC) {
                     status = "SOLVED";
                     bestVerdict = "AC";
@@ -275,7 +300,7 @@ public class LabServiceImpl implements LabService {
                     earned += (ex.getPoints() != null ? ex.getPoints() : 0);
                 } else if (subCount > 0) {
                     status = "ATTEMPTED";
-                    bestVerdict = "WA"; // simplified
+                    bestVerdict = "WA"; // simplified — actual best non-AC verdict isn't computed
                 } else {
                     status = "NOT_STARTED";
                 }
@@ -304,6 +329,7 @@ public class LabServiceImpl implements LabService {
 
     // ── Export ─────────────────────────────────────────────────────────────── //
 
+    /** Reuses {@link #getLabProgress} (which re-runs the owner check) then serializes to the requested format. */
     @Override
     public byte[] exportLabProgress(Long orgId, Long labId, String format) {
         Response<List<LabProgressDTO>> resp = getLabProgress(orgId, labId);
@@ -322,7 +348,7 @@ public class LabServiceImpl implements LabService {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintWriter pw = new PrintWriter(new OutputStreamWriter(baos, StandardCharsets.UTF_8));
 
-        // Header
+        // Header: fixed columns + one column per exercise, labelled A, B, C... by 1-based order.
         StringBuilder header = new StringBuilder("Name,Username");
         for (LabExercise ex : exercises) {
             String label = String.valueOf((char) ('A' + ex.getExerciseOrder() - 1));
@@ -355,7 +381,7 @@ public class LabServiceImpl implements LabService {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(lab.getTitle());
 
-            // Styles
+            // Colour-coded cell styles: green=SOLVED, yellow=ATTEMPTED, red=NOT_STARTED.
             CellStyle greenStyle = workbook.createCellStyle();
             greenStyle.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
             greenStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -429,6 +455,7 @@ public class LabServiceImpl implements LabService {
 
     // ── Publish solutions ─────────────────────────────────────────────────── //
 
+    /** Owner-only toggle. Flips {@code solutionsPublished}, which controls whether solution fields leak into exercise DTOs. */
     @Override
     @Transactional
     public Response<LabDTO> publishSolutions(Long orgId, Long labId) {
@@ -439,6 +466,7 @@ public class LabServiceImpl implements LabService {
         Lab lab = labRepository.findById(labId)
                 .orElseThrow(() -> new NotFoundException("Lab not found: " + labId));
 
+        // Toggle rather than set — same endpoint both publishes and unpublishes.
         lab.setSolutionsPublished(!lab.getSolutionsPublished());
         Lab saved = labRepository.save(lab);
 
@@ -455,15 +483,17 @@ public class LabServiceImpl implements LabService {
                 .orElseThrow(() -> new NotFoundException("Organization not found: " + orgId));
     }
 
+    /** Passes if the caller is a platform ADMIN or holds any membership row in the org. */
     private void assertOrgMember(Long orgId) {
         User currentUser = userService.getCurrentLoggedInUser();
-        if (hasPlatformRole(currentUser, "ADMIN")) return;
+        if (hasPlatformRole(currentUser, "ADMIN")) return; // platform admins can read any org's labs
 
         if (!memberRepository.existsByOrganizationIdAndUserId(orgId, currentUser.getId())) {
             throw new UnauthorizedAccessException("You are not a member of this organization");
         }
     }
 
+    /** Passes for platform ADMIN, org OWNER, or org ADMIN. (Currently unused by lab flows, which require OWNER.) */
     private void assertOrgAdminOrOwner(Long orgId, User user) {
         if (hasPlatformRole(user, "ADMIN")) return;
 
@@ -476,6 +506,10 @@ public class LabServiceImpl implements LabService {
         }
     }
 
+    /**
+     * Strictest gate: only the single org OWNER (or a platform ADMIN) passes.
+     * All lab mutations use this — org ADMINs are intentionally excluded from managing labs.
+     */
     private void assertOrgOwner(Long orgId, User user) {
         if (hasPlatformRole(user, "ADMIN")) return;
 
@@ -487,6 +521,7 @@ public class LabServiceImpl implements LabService {
         }
     }
 
+    // Platform-level (not org-level) role check, e.g. the global "ADMIN" superuser role. Case-insensitive.
     private boolean hasPlatformRole(User user, String roleName) {
         return user.getRoles().stream().anyMatch(r -> r.getName().equalsIgnoreCase(roleName));
     }
@@ -511,6 +546,11 @@ public class LabServiceImpl implements LabService {
         }
     }
 
+    /**
+     * Best-effort current-user lookup for endpoints that behave differently when
+     * authenticated but must not fail for anonymous callers — returns null instead
+     * of throwing so per-student progress fields simply stay unpopulated.
+     */
     private User tryGetCurrentUser() {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -523,6 +563,11 @@ public class LabServiceImpl implements LabService {
 
     // ── DTO mappers ───────────────────────────────────────────────────────── //
 
+    /**
+     * Maps a lab to its DTO. When {@code currentUser} is non-null, also computes that
+     * user's solved/attempted rollup; {@code includeExercises} adds the full exercise
+     * list (detail view only) to keep list responses lightweight.
+     */
     private LabDTO toLabDTO(Lab lab, User currentUser, boolean includeExercises) {
         List<LabExercise> exercises = exerciseRepository.findByLabIdOrderByExerciseOrderAsc(lab.getId());
 
@@ -560,7 +605,7 @@ public class LabServiceImpl implements LabService {
             dto.setAttemptedCount(attempted);
         }
 
-        // Exercise details (for detail view)
+        // Exercise details are expensive (per-exercise submission queries) so only build them for the detail view.
         if (includeExercises) {
             List<LabExerciseDTO> exerciseDTOs = exercises.stream()
                     .map(ex -> toExerciseDTO(ex, lab, currentUser))
@@ -584,7 +629,7 @@ public class LabServiceImpl implements LabService {
                 .problemDifficulty(p.getProblemDifficulty() != null ? p.getProblemDifficulty().name() : null)
                 .build();
 
-        // Solution — only when published
+        // Solution fields are the sensitive part: only expose them once the owner has published solutions.
         if (Boolean.TRUE.equals(lab.getSolutionsPublished())) {
             if (p.getSolutionFileUrl() != null) {
                 dto.setSolutionFileUrl(p.getSolutionFileUrl());
@@ -622,6 +667,7 @@ public class LabServiceImpl implements LabService {
     private static final Pattern NON_LATIN = Pattern.compile("[^\\w-]");
     private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
 
+    // Normalizes a title into a URL-safe slug: strip accents/diacritics, spaces -> dashes, lowercase, collapse dashes.
     private String generateSlug(String input) {
         String noWhitespace = WHITESPACE.matcher(input).replaceAll("-");
         String normalized = Normalizer.normalize(noWhitespace, Normalizer.Form.NFD);

@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST endpoints for labs, nested under an organization ({@code /api/organizations/{orgId}/labs}).
+ * Authorization (member vs. owner) is enforced in the service layer, not here.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/organizations/{orgId}/labs")
@@ -79,6 +83,7 @@ public class LabController {
         return ResponseEntity.ok(labService.getLabProgress(orgId, labId));
     }
 
+    /** Download the progress table as a file. Returns raw bytes (not the Response envelope) so the browser can save it. */
     @GetMapping("/{labId}/export")
     public ResponseEntity<byte[]> exportProgress(
             @PathVariable Long orgId,
@@ -87,6 +92,7 @@ public class LabController {
     ) {
         byte[] data = labService.exportLabProgress(orgId, labId, format);
 
+        // Pick filename + MIME type from the requested format; anything other than xls/xlsx falls back to CSV.
         String filename;
         MediaType mediaType;
         if ("xlsx".equalsIgnoreCase(format) || "xls".equalsIgnoreCase(format)) {

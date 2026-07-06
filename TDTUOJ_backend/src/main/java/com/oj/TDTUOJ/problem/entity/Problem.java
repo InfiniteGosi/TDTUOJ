@@ -18,6 +18,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * JPA entity for a competitive-programming problem.
+ *
+ * <p>Central aggregate of the judge: owns its test cases, submissions, tags and
+ * favorites. The {@code slug} is a URL-friendly unique key derived from the title
+ * (see {@code ProblemSlugUtils} / {@code ProblemServiceImpl}), used in place of the
+ * numeric id in public URLs.</p>
+ *
+ * <p>The {@code isPublic} flag is the visibility guard that separates the open
+ * public problem set from private/lecturer-repository problems (e.g. problems being
+ * prepared for a contest or lab). Public listings must always filter on it.</p>
+ */
 @Entity
 @Data
 @Table(name = "problems")
@@ -35,9 +47,13 @@ public class Problem {
     @Column(unique = true)
     private String slug;
 
+    // Visibility guard. true → listed in the public problem set; false → private
+    // (lecturer repo / contest / lab). Contest problems auto-publish when the contest ends.
     @Builder.Default
     private Boolean isPublic = true; // for private contests
 
+    // Owning lecturer/admin. LAZY + @JsonIgnore to avoid loading and serializing the
+    // whole User graph (which would recurse back into problems) on every response.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
     @JsonIgnore  // Prevent circular reference
@@ -68,6 +84,9 @@ public class Problem {
     @OneToMany(mappedBy = "problem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Submission> submissions;
 
+    // Tags are fetched EAGERly (small set) so listings can filter/display them without
+    // extra queries. @JsonIgnore + exclude from toString/equals to break the M:N cycle;
+    // the DTO layer serializes tags explicitly instead.
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "problems_tags",

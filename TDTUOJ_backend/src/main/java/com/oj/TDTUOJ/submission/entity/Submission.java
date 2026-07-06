@@ -12,6 +12,14 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * Persisted record of one code submission and its judged outcome.
+ *
+ * <p>Its lifecycle mirrors the judging flow: created PENDING at submit time, moved to RUNNING
+ * when the worker starts, then COMPLETED once a {@link SubmissionVerdict} is resolved. A
+ * submission may belong to a practice attempt (contestId/labId null), a contest, or a lab; the
+ * problem is a lazy association while user/contest/lab are stored as raw ids to keep the row light.
+ */
 @Entity
 @Data
 @Table(name = "submissions")

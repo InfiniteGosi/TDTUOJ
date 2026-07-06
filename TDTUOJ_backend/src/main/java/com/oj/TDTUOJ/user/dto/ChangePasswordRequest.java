@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+/** Request body for the self-service change-password flow (current + new + confirmation). */
 @Data
 public class ChangePasswordRequest {
     @NotBlank(message = "Current password is required")

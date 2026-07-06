@@ -6,6 +6,11 @@ import com.oj.TDTUOJ.testcase.dto.TestCaseDTO;
 import java.util.List;
 
 
+/**
+ * Standalone test-case management. Note that most test-case lifecycle actually happens
+ * inside {@code ProblemServiceImpl} (create/update problem); the write methods here are
+ * only partially implemented (see {@code TestCaseServiceImpl}).
+ */
 public interface TestCaseService {
     Response<List<TestCaseDTO>> getAllTestCases();
     Response<TestCaseDTO> getTestCaseById(Long id);

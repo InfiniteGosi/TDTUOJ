@@ -6,6 +6,7 @@ import com.oj.TDTUOJ.problemFavorite.dto.ProblemFavoriteDTO;
 
 import java.util.List;
 
+/** Bookmark/favorite operations scoped to the currently authenticated user. */
 public interface ProblemFavoriteService {
     /** Returns the favorite problem list of the currently authenticated user. */
     Response<List<ProblemDTO>> getFavoriteProblems();

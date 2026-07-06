@@ -7,6 +7,11 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * One student's progress across a whole lab, used by the owner's progress table
+ * and the CSV/XLSX export. Holds a per-exercise status list plus roll-up
+ * counts (solved count, earned vs. total points).
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

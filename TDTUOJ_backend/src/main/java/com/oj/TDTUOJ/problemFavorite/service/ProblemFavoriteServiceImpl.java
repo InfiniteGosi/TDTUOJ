@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/** Default implementation of the bookmark/favorite service. */
 @Service
 @RequiredArgsConstructor
 public class ProblemFavoriteServiceImpl implements ProblemFavoriteService {
@@ -45,6 +46,10 @@ public class ProblemFavoriteServiceImpl implements ProblemFavoriteService {
                 .build();
     }
 
+    /**
+     * Idempotent toggle: if the (user, problem) bookmark already exists it is deleted,
+     * otherwise it is created. The returned DTO's {@code isFavorited} reflects the resulting state.
+     */
     @Override
     @Transactional
     public Response<ProblemFavoriteDTO> toggleFavorite(Long problemId) {

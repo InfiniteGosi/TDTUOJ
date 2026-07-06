@@ -6,6 +6,11 @@ import com.oj.TDTUOJ.common.enums.ProblemDifficulty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+/**
+ * A problem slot inside a contest. On write only {@code problemId}, order and
+ * points matter; the {@code problemTitle}/{@code problemSlug}/difficulty fields
+ * are denormalized on read for display.
+ */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

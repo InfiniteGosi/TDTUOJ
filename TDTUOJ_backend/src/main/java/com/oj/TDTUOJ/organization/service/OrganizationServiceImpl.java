@@ -33,6 +33,17 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Pattern;
 
+/**
+ * Organization + membership business logic.
+ *
+ * <p>Authorization tiers (a platform ADMIN bypasses all org-level gates):
+ * <ul>
+ *   <li>{@link #assertOrgAdminOrOwner} — OWNER or ADMIN may manage members;</li>
+ *   <li>{@link #assertOrgOwner} — only the OWNER may change roles or delete the org.</li>
+ * </ul>
+ * Additional invariants enforced below: there is exactly one OWNER, the OWNER can
+ * neither leave nor be removed nor be demoted, and an ADMIN cannot act on another ADMIN.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -55,10 +66,12 @@ public class OrganizationServiceImpl implements OrganizationService {
         User creator = userService.getCurrentLoggedInUser();
 
         String slug = slugify(request.getName());
+        // Slug is globally unique — on collision, append a timestamp to force uniqueness.
         if (organizationRepository.existsBySlug(slug)) {
             slug = slug + "-" + System.currentTimeMillis();
         }
 
+        // Join code: honor a caller-supplied custom code (upper-cased, must be free), else auto-generate one.
         String code;
         if (request.getCode() != null && !request.getCode().isBlank()) {
             code = request.getCode().toUpperCase().trim();
@@ -80,7 +93,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
         Organization saved = organizationRepository.save(org);
 
-        // Creator automatically becomes OWNER
+        // The creator is seeded as the sole OWNER; this is the only place an OWNER row is created.
         OrganizationMember ownerMember = OrganizationMember.builder()
                 .organization(saved)
                 .user(creator)
@@ -98,6 +111,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     // ── Update ────────────────────────────────────────────────────────────── //
 
+    /** OWNER/ADMIN only. Null request fields are treated as "leave unchanged" (partial update). */
     @Override
     @Transactional
     public Response<OrganizationDTO> updateOrganization(Long id, CreateOrganizationRequest request) {
@@ -110,6 +124,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         if (request.getIsPublic() != null) org.setIsPublic(request.getIsPublic());
         if (request.getCode() != null && !request.getCode().isBlank()) {
             String newCode = request.getCode().toUpperCase().trim();
+            // Only enforce global uniqueness when the code actually changes (re-submitting the same code is fine).
             if (!newCode.equals(org.getCode()) && organizationRepository.existsByCode(newCode)) {
                 throw new BadRequestException("Code '" + newCode + "' is already in use");
             }
@@ -122,13 +137,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     // ── Delete ────────────────────────────────────────────────────────────── //
 
+    /** OWNER or platform ADMIN only. Cascades to members (and their labs) via JPA. */
     @Override
     @Transactional
     public Response<Void> deleteOrganization(Long id) {
         Organization org = findOrgOrThrow(id);
         User currentUser = userService.getCurrentLoggedInUser();
 
-        // Only OWNER or platform ADMIN can delete
+        // Platform admins skip the org-owner check; everyone else must be the OWNER.
         if (!hasPlatformRole(currentUser, "ADMIN")) {
             assertOrgOwner(org.getId(), currentUser);
         }
@@ -168,6 +184,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         return ok(dtoPage);
     }
 
+    /** Orgs the caller belongs to, newest-joined first — driven by their membership rows, not org visibility. */
     @Override
     public Response<Page<OrganizationDTO>> getMyOrganizations(int page, int size) {
         if (size <= 0) size = 12;
@@ -181,17 +198,19 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     // ── Join / Leave ──────────────────────────────────────────────────────── //
 
+    /** Self-service join. Public orgs join freely; private orgs require the matching code. New members join as MEMBER. */
     @Override
     @Transactional
     public Response<OrganizationDTO> joinOrganization(Long orgId, String code) {
         User currentUser = userService.getCurrentLoggedInUser();
         Organization org = findOrgOrThrow(orgId);
 
+        // Idempotency guard — the unique (org,user) constraint would otherwise throw a DB error.
         if (memberRepository.existsByOrganizationIdAndUserId(org.getId(), currentUser.getId())) {
             throw new BadRequestException("You are already a member of this organization");
         }
 
-        // Private orgs require the correct code
+        // Code gate applies to private orgs only; public orgs ignore the code entirely.
         if (!Boolean.TRUE.equals(org.getIsPublic())) {
             if (code == null || code.isBlank()) {
                 throw new BadRequestException("This organization requires a code to join");
@@ -201,6 +220,7 @@ public class OrganizationServiceImpl implements OrganizationService {
             }
         }
 
+        // Self-joiners always start as MEMBER — never ADMIN/OWNER.
         OrganizationMember member = OrganizationMember.builder()
                 .organization(org)
                 .user(currentUser)
@@ -225,6 +245,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         OrganizationMember membership = memberRepository.findByOrganizationIdAndUserId(id, currentUser.getId())
                 .orElseThrow(() -> new BadRequestException("You are not a member of this organization"));
 
+        // The OWNER can't abandon the org (it would leave it ownerless) — they must transfer or delete instead.
         if (membership.getRole() == OrganizationMemberRole.OWNER) {
             throw new BadRequestException("Owner cannot leave the organization. Transfer ownership or delete the organization.");
         }
@@ -239,6 +260,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     // ── Members ───────────────────────────────────────────────────────────── //
 
+    /**
+     * Roster listing with visibility tiers: members and platform admins see the full
+     * roster (searchable by username); non-members only see the leadership (OWNER/ADMIN).
+     */
     @Override
     public Response<Page<OrganizationMemberDTO>> getMembers(Long orgId, int page, int size, String search) {
         findOrgOrThrow(orgId);
@@ -277,6 +302,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         return ok(dtoPage);
     }
 
+    /** Backs the "Add Member" picker: platform users not already in the org. OWNER/ADMIN only. */
     @Override
     public Response<Page<OrganizationMemberDTO>> searchNonMembers(Long orgId, String query, int page, int size) {
         findOrgOrThrow(orgId);
@@ -294,13 +320,14 @@ public class OrganizationServiceImpl implements OrganizationService {
             dto.setUsername(u.getUsername());
             dto.setName(u.getName());
             dto.setProfileUrl(u.getProfileUrl());
-            dto.setRole(null); // not a member yet
+            dto.setRole(null); // reusing the member DTO for a non-member: no role/id/joinedAt yet
             return dto;
         });
 
         return ok(dtoPage);
     }
 
+    /** OWNER/ADMIN manually adds an existing user directly as MEMBER (bypasses the join code). */
     @Override
     @Transactional
     public Response<OrganizationMemberDTO> addMember(Long orgId, Long userId) {
@@ -315,6 +342,7 @@ public class OrganizationServiceImpl implements OrganizationService {
             throw new BadRequestException("User is already a member of this organization");
         }
 
+        // Admin-added users also start as MEMBER; promotion to ADMIN requires a separate role update by the OWNER.
         OrganizationMember member = OrganizationMember.builder()
                 .organization(org)
                 .user(targetUser)
@@ -330,18 +358,24 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .build();
     }
 
+    /**
+     * OWNER-only role change (promote MEMBER↔ADMIN). Deliberately cannot target the
+     * OWNER row or assign OWNER — ownership is a separate transfer flow, keeping the
+     * "exactly one OWNER" invariant intact.
+     */
     @Override
     @Transactional
     public Response<OrganizationMemberDTO> updateMemberRole(Long orgId, Long userId, String role) {
         findOrgOrThrow(orgId);
         User currentUser = userService.getCurrentLoggedInUser();
 
-        // Only OWNER can change roles
+        // Role changes are the OWNER's exclusive right — org ADMINs cannot re-rank peers.
         assertOrgOwner(orgId, currentUser);
 
         OrganizationMember target = memberRepository.findByOrganizationIdAndUserId(orgId, userId)
                 .orElseThrow(() -> new NotFoundException("Member not found in this organization"));
 
+        // The OWNER's own role is immutable here (no self-demotion / no accidental ownerless org).
         if (target.getRole() == OrganizationMemberRole.OWNER) {
             throw new BadRequestException("Cannot change the owner's role");
         }
@@ -353,6 +387,7 @@ public class OrganizationServiceImpl implements OrganizationService {
             throw new BadRequestException("Invalid role: " + role + ". Valid roles: ADMIN, MEMBER");
         }
 
+        // Can't mint a second OWNER via this path — only ADMIN/MEMBER are assignable.
         if (newRole == OrganizationMemberRole.OWNER) {
             throw new BadRequestException("Cannot assign OWNER role. Use ownership transfer instead.");
         }
@@ -363,6 +398,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         return ok(toMemberDTO(saved));
     }
 
+    /** OWNER/ADMIN removes a member. The OWNER is unremovable, and an ADMIN may not remove a fellow ADMIN. */
     @Override
     @Transactional
     public Response<Void> removeMember(Long orgId, Long userId) {
@@ -373,16 +409,20 @@ public class OrganizationServiceImpl implements OrganizationService {
         OrganizationMember target = memberRepository.findByOrganizationIdAndUserId(orgId, userId)
                 .orElseThrow(() -> new NotFoundException("Member not found in this organization"));
 
+        // The OWNER can never be removed (mirrors the "owner can't leave" rule).
         if (target.getRole() == OrganizationMemberRole.OWNER) {
             throw new BadRequestException("Cannot remove the organization owner");
         }
 
-        // An ADMIN cannot remove another ADMIN — only OWNER can
-        OrganizationMember actorMembership = memberRepository.findByOrganizationIdAndUserId(orgId, currentUser.getId())
-                .orElseThrow(() -> new UnauthorizedAccessException("You are not a member of this organization"));
-        if (actorMembership.getRole() == OrganizationMemberRole.ADMIN
-                && target.getRole() == OrganizationMemberRole.ADMIN) {
-            throw new UnauthorizedAccessException("An admin cannot remove another admin");
+        // Peer-protection: an org ADMIN may remove MEMBERs but not other ADMINs — only the OWNER outranks an ADMIN.
+        // Platform ADMINs bypass this (they passed assertOrgAdminOrOwner without necessarily having an org membership row).
+        if (!hasPlatformRole(currentUser, "ADMIN")) {
+            OrganizationMember actorMembership = memberRepository.findByOrganizationIdAndUserId(orgId, currentUser.getId())
+                    .orElseThrow(() -> new UnauthorizedAccessException("You are not a member of this organization"));
+            if (actorMembership.getRole() == OrganizationMemberRole.ADMIN
+                    && target.getRole() == OrganizationMemberRole.ADMIN) {
+                throw new UnauthorizedAccessException("An admin cannot remove another admin");
+            }
         }
 
         memberRepository.delete(target);
@@ -400,6 +440,11 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .orElseThrow(() -> new NotFoundException("Organization not found: " + id));
     }
 
+    /**
+     * Maps an org to its DTO, computing the caller-relative fields: {@code myRole}
+     * (the caller's membership role, if any) and the sensitive join {@code code},
+     * which is only revealed to the OWNER/ADMIN of the org or a platform ADMIN.
+     */
     private OrganizationDTO toDTO(Organization org, User currentUser) {
         OrganizationDTO dto = new OrganizationDTO();
         dto.setId(org.getId());
@@ -413,19 +458,19 @@ public class OrganizationServiceImpl implements OrganizationService {
         dto.setCreatedAt(org.getCreatedAt());
         dto.setUpdatedAt(org.getUpdatedAt());
 
-        // Set caller's role & conditionally include code
+        // For an authenticated caller, expose their own role and gate the join code by privilege.
         if (currentUser != null) {
             Optional<OrganizationMember> membership =
                     memberRepository.findByOrganizationIdAndUserId(org.getId(), currentUser.getId());
             if (membership.isPresent()) {
                 OrganizationMemberRole myRole = membership.get().getRole();
                 dto.setMyRole(myRole.name());
-                // Only OWNER / ADMIN can see the join code
+                // Leadership (OWNER/ADMIN) may see the code so they can share it; plain MEMBERs cannot.
                 if (myRole == OrganizationMemberRole.OWNER || myRole == OrganizationMemberRole.ADMIN) {
                     dto.setCode(org.getCode());
                 }
             }
-            // Platform ADMIN can also see the code
+            // Platform ADMINs can see the code even without being an org member.
             if (hasPlatformRole(currentUser, "ADMIN")) {
                 dto.setCode(org.getCode());
             }
@@ -446,6 +491,11 @@ public class OrganizationServiceImpl implements OrganizationService {
         return dto;
     }
 
+    /**
+     * OWNER-only gate. Note: unlike {@link #assertOrgAdminOrOwner}, this does NOT
+     * pre-empt for platform ADMIN — callers that want the platform-admin bypass
+     * (e.g. delete) check {@code hasPlatformRole} themselves before invoking this.
+     */
     private void assertOrgOwner(Long orgId, User user) {
         OrganizationMember membership = memberRepository.findByOrganizationIdAndUserId(orgId, user.getId())
                 .orElseThrow(() -> new UnauthorizedAccessException("You are not a member of this organization"));
@@ -454,8 +504,9 @@ public class OrganizationServiceImpl implements OrganizationService {
         }
     }
 
+    /** Passes for platform ADMIN, org OWNER, or org ADMIN — the standard "can manage this org" check. */
     private void assertOrgAdminOrOwner(Long orgId, User user) {
-        // Platform ADMINs bypass org-level checks
+        // Platform ADMINs are superusers and bypass org-level role checks entirely.
         if (hasPlatformRole(user, "ADMIN")) return;
 
         OrganizationMember membership = memberRepository.findByOrganizationIdAndUserId(orgId, user.getId())
@@ -466,6 +517,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         }
     }
 
+    // Platform-level role check (the global ADMIN/CREATOR/PARTICIPANT roles), distinct from the per-org OrganizationMemberRole.
     private boolean hasPlatformRole(User user, String roleName) {
         return user.getRoles().stream()
                 .anyMatch(r -> roleName.equals(r.getName()));
@@ -486,6 +538,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         return null;
     }
 
+    // Generates a random 6-char alphanumeric join code, retrying until it doesn't collide with an existing one.
     private String generateUniqueCode() {
         String code;
         do {

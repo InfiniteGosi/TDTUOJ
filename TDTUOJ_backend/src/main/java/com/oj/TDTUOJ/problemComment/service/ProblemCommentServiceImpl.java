@@ -27,6 +27,20 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Default implementation of the threaded comment + voting system.
+ *
+ * <p>Key design points reflected below:</p>
+ * <ul>
+ *   <li><b>Flat threading</b> — replies always attach to the root top-level comment; a reply to
+ *       a reply is redirected up to the root so the tree never nests beyond one level.</li>
+ *   <li><b>Denormalized counters</b> — {@code upvoteCount}/{@code downvoteCount} on the comment
+ *       are kept in sync via {@link #adjustCounts} on every vote add/switch/remove, avoiding an
+ *       aggregate query per render.</li>
+ *   <li><b>N+1 avoidance</b> — the caller's own votes for a whole page (comments + replies) are
+ *       fetched in a single bulk query via {@link #buildUserVoteMap}.</li>
+ * </ul>
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -43,6 +57,7 @@ public class ProblemCommentServiceImpl implements ProblemCommentService {
     @Transactional(readOnly = true)
     public Response<Page<ProblemCommentDTO>> getComments(Long problemId, int page, int size) {
         ensureProblemExists(problemId);
+        // Clamp client-supplied paging to a sane window (cap page size at 50) to bound query cost.
         if (size <= 0 || size > 50) size = 10;
         if (page < 0) page = 0;
 
@@ -181,7 +196,8 @@ public class ProblemCommentServiceImpl implements ProblemCommentService {
 
         ProblemComment saved = commentRepository.save(comment);
 
-        // Populate userVote for response
+        // Re-read the (possibly now-absent) vote so the response reflects the caller's final
+        // state — UPVOTE, DOWNVOTE, or null after an un-vote.
         Optional<CommentVote> afterVote = voteRepository.findByCommentIdAndUserId(commentId, currentUser.getId());
         Map<Long, VoteType> voteMap = afterVote
                 .map(v -> Map.of(commentId, v.getVoteType()))
@@ -207,6 +223,11 @@ public class ProblemCommentServiceImpl implements ProblemCommentService {
         }
     }
 
+    /**
+     * Applies {@code delta} (+1/-1) to the denormalized counter matching {@code type}.
+     * Floored at 0 defensively so a counter can never go negative if it ever drifts out of
+     * sync with the underlying vote rows.
+     */
     private void adjustCounts(ProblemComment comment, VoteType type, int delta) {
         if (type == VoteType.UPVOTE) {
             comment.setUpvoteCount(Math.max(0, comment.getUpvoteCount() + delta));

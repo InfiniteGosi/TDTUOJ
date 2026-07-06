@@ -5,6 +5,10 @@ import com.oj.TDTUOJ.problem.entity.Problem;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Join row between a {@link Lab} and a {@link Problem}: one problem appearing as
+ * a graded exercise in a lab, with its own display order and point value.
+ */
 @Entity
 @Data
 @Table(name = "lab_exercises")
@@ -17,6 +21,7 @@ public class LabExercise {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Parent lab. @JsonIgnore breaks the lab -> exercises -> lab serialization cycle.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lab_id", nullable = false)
     @JsonIgnore
@@ -30,7 +35,9 @@ public class LabExercise {
     @EqualsAndHashCode.Exclude
     private Problem problem;
 
+    // 1-based position within the lab; also drives the A/B/C... column labels on export.
     private Integer exerciseOrder;
 
+    // Points awarded for solving; defaults to the problem's own point value if unspecified.
     private Integer points;
 }

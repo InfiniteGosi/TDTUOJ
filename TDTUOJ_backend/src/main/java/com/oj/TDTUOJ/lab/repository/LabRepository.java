@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/** Data access for {@link Lab}. All lookups are scoped by organization since slugs are only unique per-org. */
 @Repository
 public interface LabRepository extends JpaRepository<Lab, Long> {
 
@@ -15,5 +16,6 @@ public interface LabRepository extends JpaRepository<Lab, Long> {
 
     Optional<Lab> findByOrganizationIdAndSlug(Long organizationId, String slug);
 
+    // Used to de-duplicate generated slugs within an org before insert.
     boolean existsByOrganizationIdAndSlug(Long organizationId, String slug);
 }

@@ -19,8 +19,14 @@ import java.time.LocalDateTime;
  */
 public final class ContestLockUtil {
 
-    private ContestLockUtil() {}
+    private ContestLockUtil() {} // static-only helper; never instantiated
 
+    /**
+     * Whether a contest's submissions must stay hidden from ordinary users right now.
+     *
+     * <p>Locked while running/upcoming, and — for rated contests — kept locked after the end
+     * time until ratings are processed, so results aren't leaked before the official recalc.
+     */
     public static boolean isLocked(Contest contest, LocalDateTime now) {
         if (contest == null) return false; // contest deleted → nothing left to protect
         if (contest.getEndTime() == null || !contest.getEndTime().isBefore(now)) {
@@ -37,6 +43,13 @@ public final class ContestLockUtil {
         return contest.getEndTime().minusMinutes(mins);
     }
 
+    /**
+     * Whether the public scoreboard should be frozen (stop updating) right now.
+     *
+     * <p>True once we are past the freeze start AND the contest is still locked — the extra
+     * {@link #isLocked} check ensures the board automatically thaws the moment the contest
+     * unlocks, rather than staying frozen forever after the end time.
+     */
     public static boolean isFrozen(Contest contest, LocalDateTime now) {
         LocalDateTime start = freezeStart(contest);
         if (start == null) return false;

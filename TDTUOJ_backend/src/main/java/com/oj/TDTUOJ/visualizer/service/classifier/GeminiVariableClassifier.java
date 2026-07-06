@@ -61,12 +61,21 @@ public class GeminiVariableClassifier implements VariableClassifier {
             Omit plain loop counters and scalars. Omit variables you are unsure about rather than guessing wildly.
             """;
 
+    /**
+     * Asynchronously label the data-structure variables in {@code sourceCode}.
+     *
+     * <p>Fast paths that never touch the network: no API key configured, or a Redis
+     * cache hit keyed on the source hash. Otherwise a single temperature-0 Gemini call
+     * (10s timeout) returns JSON that is strictly parsed and cached. Any failure resolves
+     * to an empty map — the classifier is never on the critical path.
+     */
     @Override
     public CompletableFuture<Map<String, Object>> classify(String sourceCode, SubmissionLanguage language) {
         if (geminiApiKey == null || geminiApiKey.isBlank()) {
             return CompletableFuture.completedFuture(Collections.emptyMap());
         }
 
+        // Cache by (language + source) hash so re-runs while debugging cost zero tokens.
         String cacheKey = CACHE_PREFIX + sha256(language.name() + "\n" + sourceCode);
         try {
             String cached = redis.opsForValue().get(cacheKey);
@@ -117,6 +126,7 @@ public class GeminiVariableClassifier implements VariableClassifier {
                 });
     }
 
+    /** Dig the model's text out of Gemini's {@code candidates[0].content.parts[0].text}; null on any shape mismatch. */
     @SuppressWarnings({"rawtypes", "unchecked"})
     private String extractText(Map response) {
         try {
@@ -138,7 +148,8 @@ public class GeminiVariableClassifier implements VariableClassifier {
         }
         try {
             Map<String, Object> parsed = objectMapper.readValue(json, new TypeReference<>() {});
-            // keep only well-formed entries: value must be a map with a string role
+            // Trust nothing from the model: keep only entries whose value is an object
+            // carrying a string `role`; drop anything else so a bad label can't crash inference.
             Map<String, Object> out = new LinkedHashMap<>();
             for (Map.Entry<String, Object> e : parsed.entrySet()) {
                 if (e.getValue() instanceof Map<?, ?> v && v.get("role") instanceof String) {
@@ -152,6 +163,7 @@ public class GeminiVariableClassifier implements VariableClassifier {
         }
     }
 
+    /** Stable hex cache key for the source; falls back to hashCode if SHA-256 is unavailable. */
     private String sha256(String s) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");

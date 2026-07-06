@@ -6,9 +6,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/** Data access for {@link LabExercise} rows (a lab's problems). */
 @Repository
 public interface LabExerciseRepository extends JpaRepository<LabExercise, Long> {
 
+    // Exercises in display order — the canonical ordering used everywhere (detail view, progress, export columns).
     List<LabExercise> findByLabIdOrderByExerciseOrderAsc(Long labId);
 
     void deleteByLabId(Long labId);

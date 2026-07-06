@@ -19,6 +19,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Default {@link UserStatisticsService}. Keeps a denormalized counter row per
+ * user in sync as submissions arrive, and can reconstruct that row from raw
+ * submission history for users predating the feature (see {@link #backfillFromSubmissions}).
+ */
 @Service
 @RequiredArgsConstructor
 public class UserStatisticsServiceImpl implements UserStatisticsService {
@@ -46,6 +51,11 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
                 });
     }
 
+    /**
+     * Computes a fresh statistics row from the user's entire submission history.
+     * Runs once per user (the first time stats are needed) and then persists the
+     * result so subsequent updates are incremental.
+     */
     private UserStatistics backfillFromSubmissions(Long userId) {
         List<Submission> all = submissionRepository.findAllByUserId(userId);
 
@@ -54,6 +64,7 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
                 .filter(s -> s.getSubmissionVerdict() == SubmissionVerdict.AC)
                 .count();
 
+        // Solved = number of DISTINCT problems with at least one AC (repeated ACs count once).
         long solved = all.stream()
                 .filter(s -> s.getSubmissionVerdict() == SubmissionVerdict.AC
                         && s.getProblem() != null)
@@ -70,6 +81,7 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
                         s.getProblem().getId(), s.getProblem().getPoint()));
         int totalPoints = firstAcPoints.values().stream().mapToInt(Integer::intValue).sum();
 
+        // Acceptance rate as a 0-100 percentage, rounded to one decimal place.
         double rate = total == 0 ? 0.0
                 : Math.round((accepted * 100.0 / total) * 10.0) / 10.0;
 
@@ -83,12 +95,15 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
                 .build());
     }
 
+    /** Bumps submission/acceptance counters (and points) for a single graded submission. */
     @Override
     public void recordSubmission(Long userId, boolean isAccepted, Integer points) {
         UserStatistics stats = getOrCreate(userId);
 
         stats.setTotalSubmissions(stats.getTotalSubmissions() + 1);
 
+        // Only award points on an AC that actually carries points; a zero-point AC
+        // still counts as accepted but adds nothing to the total.
         if (isAccepted && points > 0) {
             stats.setAcceptedSubmissions(stats.getAcceptedSubmissions() + 1);
             stats.setTotalPoints(stats.getTotalPoints() + points);
@@ -104,6 +119,7 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
         statisticsRepository.save(stats);
     }
 
+    /** Increments the distinct-problems-solved counter; caller ensures this fires only on a first solve. */
     @Override
     public void recordProblemSolved(Long userId) {
         UserStatistics stats = getOrCreate(userId);
@@ -111,6 +127,7 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
         statisticsRepository.save(stats);
     }
 
+    /** Fetches (or backfills) and returns a user's stats by numeric id. */
     @Override
     public Response<UserStatisticsDTO> getStatsByUserId(Long userId) {
         UserStatistics stats = getOrCreate(userId);
@@ -121,6 +138,7 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
                 .build();
     }
 
+    /** Same as {@link #getStatsByUserId} but resolves the user by username first (for profile pages). */
     @Override
     public Response<UserStatisticsDTO> getStatsByUsername(String username) {
         Long userId = userRepository.findByUsername(username)

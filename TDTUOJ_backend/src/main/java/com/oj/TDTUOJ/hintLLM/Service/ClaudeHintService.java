@@ -11,6 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Anthropic (Claude) implementation of {@link HintService}. Registered under the
+ * bean name {@code "claude"} so {@code HintController} can route to it via the
+ * request's {@code model} field.
+ *
+ * <p>Like the other providers, the assistant is guarded by a system prompt that
+ * keeps it on-task (coding hints only, no giveaway solutions, no math/markdown
+ * formatting) — the guardrails live in the prompt text, not in code.
+ */
 @Service("claude")
 @Slf4j
 public class ClaudeHintService implements HintService {
@@ -18,6 +27,7 @@ public class ClaudeHintService implements HintService {
     @Value("${anthropic.api.key}")
     private String anthropicApiKey;
 
+    // Reactive HTTP client for the Anthropic Messages API; built once and reused.
     private final WebClient webClient = WebClient.builder()
             .baseUrl("https://api.anthropic.com")
             .codecs(configurer -> configurer
@@ -25,11 +35,17 @@ public class ClaudeHintService implements HintService {
                     .jackson2JsonEncoder(new org.springframework.http.codec.json.Jackson2JsonEncoder()))
             .build();
 
+    /**
+     * Build the Claude message array (prior turns + current guarded prompt), call
+     * the Messages API synchronously ({@code .block()}), and return the assistant's
+     * text. 4xx responses are logged and rethrown as a generic runtime error so the
+     * raw provider error never leaks to the client.
+     */
     @Override
     public String getHint(HintRequest request) {
         List<Map<String, Object>> messages = new ArrayList<>();
 
-        // Add history first
+        // Prior conversation turns go first so the model has context for the follow-up.
         if (request.getHistory() != null) {
             for (Map<String, String> entry : request.getHistory()) {
                 messages.add(Map.of(
@@ -62,6 +78,7 @@ public class ClaudeHintService implements HintService {
                 .header("Content-Type", "application/json")
                 .bodyValue(body)
                 .retrieve()
+                // Log the provider's error body server-side, but surface only a generic message.
                 .onStatus(status -> status.is4xxClientError(), clientResponse ->
                         clientResponse.bodyToMono(String.class)
                                 .doOnNext(err -> log.error("Anthropic error: {}", err))
@@ -70,11 +87,17 @@ public class ClaudeHintService implements HintService {
                 .bodyToMono(Map.class)
                 .block();
 
+        // Anthropic returns content as a list of blocks; the first block holds the text.
         List<Map> content = (List<Map>) response.get("content");
         return (String) content.get(0).get("text");
     }
 
     // In GeminiHintService buildPrompt, add at the top:
+    /**
+     * Assemble the single user-turn prompt: the same guard preamble, then the
+     * problem title/statement, optional current-code and error-message blocks
+     * (included only when non-blank), and finally the user's question.
+     */
     private String buildPrompt(HintRequest request) {
         String codeContext = (request.getCurrentCode() != null && !request.getCurrentCode().isBlank())
                 ? """

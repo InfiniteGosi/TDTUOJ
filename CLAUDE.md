@@ -25,18 +25,28 @@ Environment variables live in `TDTUOJ_backend/.env` (loaded via `spring-dotenv`)
 
 ## Architecture Overview
 
-```
-┌─────────────────────┐        ┌──────────────────────────────────────────────┐
-│  React SPA (Vite)   │──REST──│  Spring Boot API (:8090)                     │
-│  ChakraUI v3        │        │  ┌─────────┐ ┌──────────┐ ┌──────────────┐  │
-│  Bootstrap 5        │        │  │ Security │ │ JPA/     │ │ WebFlux      │  │
-│  Monaco Editor      │        │  │ (JWT)    │ │ Postgres │ │ (Judge0,     │  │
-│  React Router 7     │        │  └─────────┘ └──────────┘ │  Gemini API) │  │
-└─────────────────────┘        │                           └──────────────┘  │
-                               │  ┌───────┐  ┌─────┐  ┌───────────────────┐  │
-                               │  │ Redis │  │ S3  │  │ Judge0 (:2358)    │  │
-                               │  └───────┘  └─────┘  └───────────────────┘  │
-                               └──────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    SPA["React SPA<br/>Vite · Radix UI + CSS tokens<br/>Monaco Editor · React Router 7"]
+
+    subgraph API["Spring Boot API (:8090)"]
+        SEC["Security (JWT)"]
+        JPA["JPA / Postgres"]
+        FLUX["WebFlux clients<br/>(Judge0, LLM APIs)"]
+    end
+
+    DB[("PostgreSQL")]
+    REDIS[("Redis")]
+    S3[("AWS S3")]
+    J0["Judge0 (:2358)"]
+    LLM["Gemini / Claude / OpenAI"]
+
+    SPA -- REST --> API
+    JPA --> DB
+    API --> REDIS
+    API --> S3
+    FLUX --> J0
+    FLUX --> LLM
 ```
 
 ---
@@ -93,26 +103,27 @@ com.oj.TDTUOJ
 ├── lab/                            # Lab assignments within organizations
 ├── hintLLM/                        # AI hint generation (Gemini) — hint-only, guarded
 ├── judge0/                         # Judge0 HTTP client (WebClient)
-├── visualizer/                     # Data structure visualizer (code instrumentation)
-│   └── service/instrumentor/       # Language-specific instrumentors (Python, Java, C/C++)
+├── visualizer/                     # Data structure visualizer (runtime tracing)
+│   ├── service/tracer/             # Language tracers (Python, Java, C/C++, C#, JS) + BraceSynthesizer, StructCodegen
+│   └── service/classifier/         # LLM variable classifier (GeminiVariableClassifier + Noop fallback)
 ├── userDailyActivity/              # Daily activity heatmap tracking
 └── userStatistics/                 # Solved count, rating history, language stats
 ```
 
 ### Key Enums (`common/enums/`)
 
-| Enum                        | Values (typical)                                            |
+| Enum                        | Values                                                      |
 |-----------------------------|-------------------------------------------------------------|
 | `ProblemDifficulty`         | EASY, MEDIUM, HARD                                          |
-| `SubmissionLanguage`        | PYTHON, JAVA, C, CPP                                       |
-| `SubmissionStatus`          | PENDING, JUDGING, COMPLETED                                 |
-| `SubmissionVerdict`         | AC, WA, TLE, MLE, RE, CE                                   |
+| `SubmissionLanguage`        | C, CPP, JAVA, PYTHON, CSHARP, JAVASCRIPT                   |
+| `SubmissionStatus`          | PENDING, RUNNING, COMPLETED                                 |
+| `SubmissionVerdict`         | AC, WA, CE, TLE, MLE, SF, IE                               |
 | `ContestStyle`              | ICPC, IOI                                                   |
-| `ContestStatus`             | UPCOMING, RUNNING, ENDED                                    |
-| `ContestParticipationType`  | PUBLIC, PRIVATE, ORGANIZATION                               |
-| `ContestRegistrationStatus` | REGISTERED, UNREGISTERED                                    |
+| `ContestStatus`             | UPCOMING, ONGOING, ENDED                                    |
+| `ContestParticipationType`  | CONTESTANT, VIRTUAL                                         |
+| `ContestRegistrationStatus` | PENDING, APPROVED, REJECTED, CANCELLED                      |
 | `OrganizationMemberRole`    | OWNER, ADMIN, MEMBER                                        |
-| `InvitationStatus`          | PENDING, ACCEPTED, REJECTED                                 |
+| `InvitationStatus`          | PENDING, ACCEPTED, REJECTED, EXPIRED                        |
 | `VisualizerMode`            | AUTO, MANUAL                                                |
 | `VoteType`                  | UPVOTE, DOWNVOTE                                            |
 
@@ -187,11 +198,13 @@ Server starts on **port 8090**.
 | Framework    | React 19 + Vite 7                            |
 | Language     | JavaScript (JSX, no TypeScript)              |
 | Routing      | React Router v7 (`react-router-dom`)         |
-| UI Library   | Chakra UI v3 + Bootstrap 5                   |
-| Code Editor  | Monaco Editor (`@monaco-editor/react`)       |
+| UI Library   | Radix UI primitives (dialog, dropdown, tabs, tooltip) + hand-rolled CSS design system — **no Chakra, no Bootstrap** |
+| Code Editor  | Monaco Editor (`@monaco-editor/react`, + `monaco-vim`) |
 | HTTP         | Axios                                        |
-| Markdown     | `react-markdown`                             |
+| Markdown     | `react-markdown` + `@uiw/react-md-editor`    |
 | Icons        | FontAwesome + Lucide React                   |
+| Charts       | recharts + d3                                |
+| Animation    | `motion`                                     |
 | Syntax HL    | highlight.js                                 |
 
 ### Directory Structure
@@ -200,7 +213,7 @@ Server starts on **port 8090**.
 tdtuoj_frontend/src/
 ├── App.jsx                     # Root component with all routes
 ├── main.jsx                    # React DOM entry point
-├── index.css                   # Global CSS (large, ~79KB — full design system)
+├── index.css                   # Global CSS (~39KB — "THE ARENA" design-token system)
 ├── App.css                     # App-level overrides
 ├── assets/                     # Static assets
 ├── styles/
@@ -219,9 +232,10 @@ tdtuoj_frontend/src/
     ├── contests/               # ContestPage, ContestDetailPage, ContestProblemPage
     ├── organizations/          # OrganizationPage, OrganizationDetailPage, LabFormPage, LabDetailPage, LabProgressPage, LabProblemPage
     ├── admin/                  # AdminLayout, AdminSideBar, AdminProblemPage/FormPage, AdminContestPage/FormPage/MonitorPage, AdminUserPage/EditUserPage, AdminProblemTagPage, AdminOrganizationPage
-    ├── CodeEditor/             # Monaco-based code editor wrapper
+    ├── codeEditor/             # Monaco-based code editor wrapper (settings persisted to localStorage)
     └── visualizer/             # VisualizerModal, VisualizerPlayer
-        └── renderers/          # ArrayRenderer, StackRenderer, QueueRenderer, LinkedListRenderer, TreeRenderer, GraphRenderer, MatrixRenderer, AutoTraceRenderer, RendererFactory
+        ├── inference/          # materialize.js (heap+ref frames → JS values), inferShape.js (kind classifier)
+        └── renderers/          # ArrayRenderer, StackRenderer, QueueRenderer, LinkedListRenderer, TreeRenderer, GraphRenderer, MatrixRenderer, MemoryModelRenderer (fallback), RendererFactory
 ```
 
 ### Routing Summary
@@ -281,24 +295,22 @@ npm run preview   # Preview production build
 A standout feature that instruments user code to trace variable state at each step.
 
 ### Backend Flow
-1. User submits code + language + mode (AUTO/MANUAL) to `POST /api/visualize`.
-2. `VisualizerServiceImpl` delegates to a language-specific instrumentor:
-   - `PythonInstrumentor` — injects `print("__TRACE__:...")` statements
-   - `JavaInstrumentor` — injects `System.out.println("__TRACE__:...")` statements
-   - `CppInstrumentor` — injects `cout << "__TRACE__:..."` statements
-   - `BraceNormalizer` — normalizes brace styles before instrumentation
-3. Instrumented code is sent to Judge0 for execution.
-4. Trace output is parsed into structured `VisualizerResponse` (list of steps with variable snapshots).
+1. User submits code + language to `POST /api/visualize`.
+2. `VisualizerServiceImpl` delegates to a language-specific tracer in `visualizer/service/tracer/` (`PythonTracer`, `JavaTracer`, `CppTracer`, `CTracer`, `CSharpTracer`, `JsTracer`; `BraceSynthesizer` normalizes brace styles first). Tracers rewrite the source to emit per-line frames in a heap+reference format (`locals: {name: value | "@heapId"}`, `heap: {...}`).
+3. Instrumented code runs on Judge0; frames are parsed from stderr. Note: the visualizer uses Judge0 C++ language id **76** while `Judge0Service` uses **54** — intentional, different compiler configs.
+4. A best-effort LLM step (`GeminiVariableClassifier`, ~3s budget, `NoopVariableClassifier` fallback) labels variable kinds.
 
-### Frontend Renderers
-`RendererFactory` picks the correct renderer based on data type:
-- `ArrayRenderer` — 1D arrays
-- `MatrixRenderer` — 2D arrays
-- `StackRenderer`, `QueueRenderer` — LIFO/FIFO structures
-- `LinkedListRenderer` — singly linked lists
-- `TreeRenderer` — binary trees
-- `GraphRenderer` — adjacency-based graphs
-- `AutoTraceRenderer` — automatic variable tracking
+### Frontend Pipeline
+1. `inference/materialize.js` — turns heap+reference frames into plain JS values.
+2. `inference/inferShape.js` — heuristic classifier per variable (array/matrix/stack/queue/linkedlist/tree/graph/memory). Precedence: user override > LLM label (confidence ≥ 0.7) > heuristic rule.
+3. `RendererFactory` dispatches by kind:
+   - `ArrayRenderer` — 1D arrays
+   - `MatrixRenderer` — 2D arrays
+   - `StackRenderer`, `QueueRenderer` — LIFO/FIFO structures
+   - `LinkedListRenderer` — singly linked lists
+   - `TreeRenderer` — binary trees
+   - `GraphRenderer` — adjacency-based graphs
+   - `MemoryModelRenderer` — fallback for unrecognized structures
 
 ---
 
@@ -326,7 +338,7 @@ A standout feature that instruments user code to trace variable state at each st
 
 ### Frontend
 - **No TypeScript** — plain JSX throughout.
-- **Styling**: Global CSS in `index.css` (~79KB design system) + `authStyle.css` + Bootstrap 5 + Chakra UI v3.
+- **Styling**: Global CSS design system in `index.css` (~39KB, "THE ARENA" tokens: dark carbon palette + TDTU gold/navy; legacy `--cyan*` vars alias `--primary`) + `authStyle.css`. Radix UI for interactive primitives. **No Chakra UI, no Bootstrap.**
 - **State management**: Local `useState`/`useEffect` — no Redux or Zustand.
 - **Toast notifications**: Custom `ToastProvider` context wrapping the app.
 - **Route guards**: `AdminRoute`, `AdminOrCreatorRoute`, `ParticipantRoute` in `Guard.jsx`.

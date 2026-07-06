@@ -15,9 +15,20 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+/**
+ * Redis wiring for the two distinct ways the app uses Redis: Bucket4j rate limiting and
+ * general-purpose caching/leaderboard storage via {@link RedisTemplate}.
+ */
 @Configuration
 public class RedisConfig {
 
+    /**
+     * Proxy manager that backs Bucket4j distributed rate limiting on Redis.
+     *
+     * <p>It reuses the Spring-managed Lettuce connection factory but opens a dedicated
+     * connection with a {@code String} key / {@code byte[]} value codec, because Bucket4j
+     * stores each bucket's state as an opaque serialized byte blob rather than JSON.
+     */
     @Bean
     public LettuceBasedProxyManager<String> rateLimitProxyManager(
             LettuceConnectionFactory lettuceConnectionFactory) {
@@ -27,6 +38,13 @@ public class RedisConfig {
         return LettuceBasedProxyManager.<String>builderFor(connection).build();
     }
 
+    /**
+     * General-purpose template for application caching and leaderboard (ZSET/HASH) operations.
+     *
+     * <p>String keys keep entries human-readable in redis-cli; values use JSON so cached POJOs
+     * round-trip with type info, while hash fields use plain strings to match the raw
+     * string members written by the leaderboard code.
+     */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();

@@ -15,6 +15,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Multi-purpose user transfer object serving reads (profile/leaderboard) and
+ * writes (self-update and admin edit). NON_NULL serialization keeps unset
+ * fields out of responses; {@code roles} vs {@code roleNames} coexist because
+ * JSON requests send the former while multipart admin forms send the latter.
+ * {@code profileImage} is inbound-only (avatar upload) and never serialized back.
+ */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

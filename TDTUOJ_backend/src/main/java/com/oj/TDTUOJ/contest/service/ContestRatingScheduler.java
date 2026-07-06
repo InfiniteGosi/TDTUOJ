@@ -34,6 +34,12 @@ public class ContestRatingScheduler {
     private static final List<SubmissionStatus> UNJUDGED_STATUSES =
             List.of(SubmissionStatus.PENDING, SubmissionStatus.RUNNING);
 
+    /**
+     * Every 60s: process ratings for ended rated contests, oldest-first, but only
+     * once none of a contest's submissions are still PENDING/RUNNING (rating must
+     * see final verdicts). Chronological order keeps chain rebuilds moving forward
+     * only. One contest's failure is logged and does not abort the others.
+     */
     @Scheduled(fixedDelay = 60_000)
     public void checkAndProcessRatings() {
         List<Contest> candidates = new ArrayList<>(contestRepository

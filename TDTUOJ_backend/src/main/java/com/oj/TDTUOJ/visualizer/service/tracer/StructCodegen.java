@@ -20,8 +20,11 @@ import java.util.regex.Pattern;
  */
 final class StructCodegen {
 
+    /** One field of a struct: its type, name, level of pointer indirection (0/1/2, capped),
+     *  and the raw array-size text if it is an array member (else {@code null}). */
     record Member(String type, String name, int pointerDepth, String arraySize) {}
 
+    /** A discovered struct/class and its serializable members. */
     record StructDef(String name, List<Member> members) {}
 
     private static final Pattern STRUCT_OPEN =

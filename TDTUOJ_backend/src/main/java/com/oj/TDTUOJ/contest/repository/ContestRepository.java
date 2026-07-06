@@ -12,6 +12,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Data access for {@link Contest}. Beyond CRUD, exposes the two scheduler
+ * queries that drive the post-contest lifecycle: unprocessed rated contests
+ * (rating job) and ended contests with unpublished problems (auto-publish job).
+ * Both are hand-written JPQL so NULL flag values (rows predating the column)
+ * are matched, which derived queries would silently skip.
+ */
 @Repository
 public interface ContestRepository extends JpaRepository<Contest, Long> {
 

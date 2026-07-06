@@ -11,6 +11,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * Admin-only user management endpoints. The class-level {@code @PreAuthorize}
+ * gates every method to the ADMIN authority, so individual handlers don't repeat it.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/admin/users")
@@ -18,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class AdminUserController {
     private final UserService userService;
 
+    /** Paginated user listing with optional username filter, for the admin dashboard. */
     @GetMapping
     public ResponseEntity<Response<Page<UserDTO>>> getAllUsers(
             @RequestParam(defaultValue = "20") Integer limit,
@@ -29,11 +34,17 @@ public class AdminUserController {
         return ResponseEntity.ok(userService.getAllUsers(limit, offset, sortField, direction, username));
     }
 
+    /** Fetch a single user by primary key (admin lookup). */
     @GetMapping("/{userId}")
     public ResponseEntity<Response<UserDTO>> getUserById(@PathVariable Long userId) {
         return ResponseEntity.ok(userService.getUserById(userId));
     }
 
+    /**
+     * Admin edit of any user. Accepts multipart so an avatar can be uploaded
+     * alongside the JSON-ish form fields; the optional image part is folded
+     * into the DTO before delegating so the service sees a single object.
+     */
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Response<?>> updateUser(
             @ModelAttribute UserDTO userDTO,

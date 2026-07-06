@@ -10,18 +10,27 @@ import org.springframework.data.domain.Page;
 
 import java.util.List;
 
+/**
+ * Contest domain operations: CRUD, self-service registration, leaderboard reads,
+ * and the ADMIN/creator monitoring endpoints. Authorization (ownership vs. ADMIN)
+ * and freeze-window handling are enforced in the implementation, not here.
+ */
 public interface ContestService {
 
+    /** Paginated public contest list, optionally filtered by name search. */
     Response<Page<ContestDTO>> getPublicContests(int page, int size, String search);
 
     Response<ContestDTO> getContestBySlug(String slug);
 
     Response<ContestDTO> getContestById(Long id);
 
+    /** Create a contest owned by the current user; attaches and validates any supplied problems. */
     Response<ContestDTO> createContest(ContestDTO dto);
 
+    /** Partial update; ADMIN may edit any contest, CREATOR only their own. */
     Response<ContestDTO> updateContest(Long id, ContestDTO dto);
 
+    /** Delete a contest; ADMIN may delete any, CREATOR only their own. */
     Response<Void> deleteContest(Long id);
 
     /** Register the currently authenticated user for a contest. */

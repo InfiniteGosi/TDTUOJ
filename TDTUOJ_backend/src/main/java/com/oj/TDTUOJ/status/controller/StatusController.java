@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Public system-status endpoints. Backs the Status page; intentionally
+ * unauthenticated so uptime can be checked without logging in.
+ */
 @RestController
 @RequestMapping("/api/status")
 @RequiredArgsConstructor
@@ -17,6 +21,7 @@ public class StatusController {
 
     private final StatusService statusService;
 
+    /** GET /api/status/judge — current Judge0 engine health (reachability, version, workers). */
     @GetMapping("/judge")
     public ResponseEntity<Response<JudgeStatusResponse>> getJudgeStatus() {
         JudgeStatusResponse data = statusService.getJudgeStatus();

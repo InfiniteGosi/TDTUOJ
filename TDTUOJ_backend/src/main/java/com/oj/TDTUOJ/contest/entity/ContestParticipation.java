@@ -9,6 +9,12 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * Runtime standing of a user within a contest — the durable (DB) mirror of the
+ * Redis leaderboard ZSET. Score/rank/penalty/solved are recomputed after each
+ * accepted submission and snapshotted here for durability; {@code ratingBefore}/
+ * {@code ratingAfter} are filled once the contest is finalized by the rating job.
+ */
 @Entity
 @Data
 @Table(

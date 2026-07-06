@@ -15,6 +15,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Core account entity. Backs both local (email/password) and federated
+ * (Google) sign-in — {@code authProvider}/{@code providerId} distinguish the
+ * two, and {@code password} is null for accounts that only ever used Google.
+ */
 @Entity
 @Data
 @AllArgsConstructor
@@ -36,11 +41,13 @@ public class User {
 
     private String password;
 
+    // "LOCAL" for password accounts, "GOOGLE" for federated ones; drives which
+    // login path is valid and whether a password is expected.
     @Column(nullable = false)
     @Builder.Default
     private String authProvider = "LOCAL";
 
-    private String providerId;
+    private String providerId; // external subject id from the OAuth provider (Google "sub")
 
     private String about;
 
@@ -48,6 +55,8 @@ public class User {
 
     private String profileUrl;
 
+    // EAGER: roles are needed on nearly every authenticated request (authority
+    // checks / JWT role claims), so they're loaded up-front to avoid lazy-init issues.
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "users_roles",

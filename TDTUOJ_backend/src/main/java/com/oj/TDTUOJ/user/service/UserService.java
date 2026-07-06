@@ -9,6 +9,11 @@ import org.springframework.data.domain.Page;
 
 import java.util.List;
 
+/**
+ * User account operations: reads (self, by id/username, leaderboard listing),
+ * self-service mutations, and admin edits. {@code getCurrentLoggedInUser}
+ * resolves the caller from the security context for the self-service methods.
+ */
 public interface UserService {
     User getCurrentLoggedInUser();
 

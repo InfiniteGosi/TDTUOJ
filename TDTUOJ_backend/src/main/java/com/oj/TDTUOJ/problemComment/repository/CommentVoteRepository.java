@@ -12,6 +12,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Data access for {@link CommentVote} rows — the per-user vote records backing the
+ * denormalized upvote/downvote counters on {@link com.oj.TDTUOJ.problemComment.entity.ProblemComment}.
+ */
 public interface CommentVoteRepository extends JpaRepository<CommentVote, Long> {
 
     /** Find current user's vote on a specific comment. */

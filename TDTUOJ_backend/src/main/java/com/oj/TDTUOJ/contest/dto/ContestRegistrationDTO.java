@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Read view of a {@link com.oj.TDTUOJ.contest.entity.ContestRegistration} row. */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

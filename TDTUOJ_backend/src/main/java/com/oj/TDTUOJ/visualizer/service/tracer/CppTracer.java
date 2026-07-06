@@ -71,11 +71,21 @@ public final class CppTracer implements Tracer {
         Var(String name, int depth) { this.name = name; this.depth = depth; }
     }
 
+    /**
+     * Line-scan the (brace-normalized) source, appending {@code _viz_snap(...)} after each
+     * in-function statement and an RAII {@code _VizGuard} at each function open, then append
+     * the generated struct serializers. Two structural views are kept in lockstep: {@code raw}
+     * (emitted verbatim) and {@code stripped} (literals/comments blanked) for all brace/paren
+     * and keyword decisions.
+     */
     @Override
     public String instrument(String source) {
+        // 1. Normalize braceless control bodies into explicit blocks (one statement per line)
+        //    so the line-oriented snap logic below fires per-iteration, not once after the loop.
         BraceSynthesizer.Result norm = BraceSynthesizer.normalize(source);
         String[] lines = norm.lines();
         int[] origLine = norm.origLine();
+        // 2. Build the masked structural view (strings/chars/comments blanked, length-preserving).
         String[] stripped = new String[lines.length];
         boolean inBlock = false;
         for (int i = 0; i < lines.length; i++) {
@@ -83,6 +93,7 @@ public final class CppTracer implements Tracer {
             stripped[i] = s.code();
             inBlock = s.inBlockComment();
         }
+        // 3. Fold multi-line function signatures onto one line so the single-line FUNC regexes match.
         BraceSynthesizer.joinSignatures(lines, stripped, SIG_START, SIG_REJECT);
 
         List<StructCodegen.StructDef> structs = StructCodegen.findStructs(stripped);
@@ -125,6 +136,8 @@ public final class CppTracer implements Tracer {
             while (!lambdaDepths.isEmpty() && depth < lambdaDepths.peek()) lambdaDepths.pop();
             boolean inLambda = !lambdaDepths.isEmpty();
 
+            // this line's net brace delta drops us back to (or below) the depth at which the
+            // innermost tracked function opened → the function body ends here (guard destructs)
             boolean closesFunc = !funcDepth.isEmpty() && closes > 0
                     && depth + opens - closes <= funcDepth.get(funcDepth.size() - 1);
             if (closesFunc) funcDepth.remove(funcDepth.size() - 1);
@@ -193,6 +206,9 @@ public final class CppTracer implements Tracer {
                 break;
             }
             List<String> visible = visible(globals, scope);
+            // Snap only at a real statement boundary: inside a function, no open parens (so we
+            // aren't mid multi-line call/header), line ends in ';', not a control-flow head, and
+            // not a jump statement (a snap after return/break/continue/throw is dead or misplaced).
             boolean statementEnd = inFunc && parenBal == 0 && trimmed.endsWith(";")
                     && !funcStructure && !nextIsElse && !closesFunc && !inLambda
                     && !startsWithAny(trimmed, "return", "break", "continue", "throw", "using", "typedef", "goto")
@@ -214,6 +230,9 @@ public final class CppTracer implements Tracer {
             if (opens > closes && LAMBDA_OPEN.matcher(code).find()) lambdaDepths.push(depth);
         }
 
+        // Struct serializers go LAST: ADL resolves them at end-of-TU template instantiation,
+        // so they may follow the user code and still be found. The #line reset stops any error
+        // in generated code from being blamed on a user line.
         out.append("#line 1 \"viz-generated.cpp\"\n");
         out.append(StructCodegen.cppSerializers(structs));
         return out.toString();
@@ -221,6 +240,7 @@ public final class CppTracer implements Tracer {
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
+    /** Names in scope for a snap: globals first, then locals; dedup keeps latest, order stable. */
     private static List<String> visible(List<String> globals, List<Var> scope) {
         Map<String, Boolean> seen = new LinkedHashMap<>();
         for (String g : globals) seen.put(g, true);
@@ -228,6 +248,9 @@ public final class CppTracer implements Tracer {
         return new ArrayList<>(seen.keySet());
     }
 
+    /** Extract parameter NAMES from a signature's argument list (the trailing identifier of
+     *  each comma-separated part), splitting on top-level commas only so {@code map<int,int> m}
+     *  is not torn apart by the comma inside the template arguments. */
     private static List<String> paramNames(String params) {
         List<String> out = new ArrayList<>();
         if (params == null || params.isBlank() || params.trim().equals("void")) return out;
@@ -307,6 +330,9 @@ public final class CppTracer implements Tracer {
     }
 
     // ── C++14 runtime preamble ───────────────────────────────────────────────
+    // NOTE: this Java text block IS C++ source. Backslashes are doubled to survive the
+    // text-block literal and land as single backslashes in the emitted C++ string literals
+    // (e.g. "{\\"type\\":" here compiles as the C++ string {"type": ). Do not "un-double" them.
     private static final String PREAMBLE = """
             #include <cstdio>
             #include <cstdlib>

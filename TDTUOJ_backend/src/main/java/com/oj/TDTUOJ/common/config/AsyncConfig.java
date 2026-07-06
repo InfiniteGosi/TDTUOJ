@@ -9,11 +9,25 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import java.util.concurrent.Executor;
 
+/**
+ * Central async/scheduling configuration.
+ *
+ * <p>Enables {@code @Scheduled} tasks and {@code @Async} method execution, and defines the
+ * two thread pools the app relies on: a scheduler for the submission-judging workers and a
+ * separate executor for fire-and-forget leaderboard persistence. Keeping these pools distinct
+ * prevents slow leaderboard writes from starving the judging pipeline.
+ */
 @Configuration
 @EnableScheduling
 @EnableAsync
 public class AsyncConfig {
 
+    /**
+     * Scheduler backing the periodic submission-polling workers.
+     *
+     * <p>Pool size is deliberately pinned to the number of Judge0 workers so we never schedule
+     * more concurrent polling loops than the execution engine can serve.
+     */
     @Bean
     public ThreadPoolTaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();

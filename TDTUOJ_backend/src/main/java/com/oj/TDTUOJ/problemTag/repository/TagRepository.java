@@ -8,8 +8,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/** Data access for {@link Tag} entities, including name-uniqueness checks and name search. */
 @Repository
 public interface TagRepository extends JpaRepository<Tag, Long> {
+    /** Guards the unique-name constraint before an insert/rename. */
     boolean existsByName(String name);
 
     Optional<Tag> findByName(String name);
@@ -21,5 +23,6 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
      */
     Optional<Tag> findByNameIgnoreCase(String name);
 
+    /** Case-insensitive substring search, used by the admin tag list's name filter. */
     Page<Tag> findByNameContainingIgnoreCase(String name, Pageable pageable);
 }

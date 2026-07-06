@@ -14,6 +14,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * REST endpoints for organizations and membership management. Read endpoints are
+ * public (results are filtered per caller); create requires platform ADMIN/CREATOR
+ * via {@code @PreAuthorize}; finer-grained org-role checks live in the service layer.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/organizations")
@@ -57,6 +62,7 @@ public class OrganizationController {
         return ResponseEntity.ok(organizationService.getMyOrganizations(page, size));
     }
 
+    // Only lecturers (CREATOR) and platform admins may create orgs; students (PARTICIPANT) cannot.
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('CREATOR')")
     public ResponseEntity<Response<OrganizationDTO>> createOrganization(
@@ -86,6 +92,7 @@ public class OrganizationController {
             @PathVariable Long id,
             @RequestBody(required = false) Map<String, String> body
     ) {
+        // Body is optional: public orgs need no code, so it may be absent entirely.
         String code = (body != null) ? body.get("code") : null;
         Response<OrganizationDTO> response = organizationService.joinOrganization(id, code);
         return ResponseEntity.status(response.getStatusCode()).body(response);

@@ -7,6 +7,13 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * One immutable link in a user's rating chain: the old/new rating and delta from
+ * a single rated contest. Rows are ordered by {@code contestEndTime}; each row's
+ * {@code oldRating} must equal the previous row's {@code newRating}, an invariant
+ * that {@link com.oj.TDTUOJ.contest.service.ContestRatingService} rebuilds on
+ * (re)processing. The (user, contest) unique constraint enforces idempotency.
+ */
 @Entity
 @Data
 @Table(name = "rating_history", uniqueConstraints = @UniqueConstraint(name = "uk_rating_history_user_contest", columnNames = {"user_id", "contest_id"}))

@@ -5,6 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * API view of a single lab exercise. Solution fields are only filled in once the
+ * lab owner publishes solutions; the per-student status fields are only filled
+ * in for an authenticated caller.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

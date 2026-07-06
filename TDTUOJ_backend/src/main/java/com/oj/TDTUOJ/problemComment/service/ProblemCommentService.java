@@ -7,6 +7,10 @@ import org.springframework.data.domain.Page;
 
 import java.util.List;
 
+/**
+ * Business operations for the threaded problem-discussion system: listing comments with their
+ * replies, posting/editing/soft-deleting comments, and toggling per-user upvotes/downvotes.
+ */
 public interface ProblemCommentService {
 
     /** Get paginated top-level comments (with replies) for a problem, newest first. */

@@ -11,6 +11,7 @@ import lombok.Data;
 
 import java.util.Set;
 
+/** Transport object for {@link com.oj.TDTUOJ.problemTag.entity.Tag} create/update/read operations. */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

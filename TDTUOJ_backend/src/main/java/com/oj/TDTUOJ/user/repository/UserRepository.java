@@ -12,13 +12,19 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Data access for {@link User}. Beyond CRUD, provides the auth lookups (by
+ * email / provider), leaderboard and org-search queries, and the admin-dashboard
+ * registration aggregates.
+ */
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByEmail(String email);
-    Optional<User> findByUsername(String username);
+    Optional<User> findByEmail(String email);        // login + JWT subject resolution
+    Optional<User> findByUsername(String username);  // public profile lookup (username is the slug)
     Page<User> findByUsernameContainingIgnoreCase(String username, Pageable pageable);
-    boolean existsByEmail(String email);
-    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);             // registration uniqueness guard
+    boolean existsByUsername(String username);       // registration uniqueness guard
+    // Locate a federated account by its external provider identity (auth-provider linking).
     Optional<User> findByProviderIdAndAuthProvider(String providerId, String authProvider);
 
     /**

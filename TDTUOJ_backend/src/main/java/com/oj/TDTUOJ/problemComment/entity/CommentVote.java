@@ -9,6 +9,13 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * A single user's vote (UPVOTE or DOWNVOTE) on one comment.
+ *
+ * <p>The {@code (comment_id, user_id)} unique constraint enforces <b>one vote per user per
+ * comment</b> at the database level — the service toggles/switches this row rather than
+ * inserting duplicates, and the parent comment's denormalized counters are adjusted to match.</p>
+ */
 @Entity
 @Data
 @Table(

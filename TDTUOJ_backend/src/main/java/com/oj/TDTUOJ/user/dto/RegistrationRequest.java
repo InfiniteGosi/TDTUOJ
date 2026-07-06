@@ -7,6 +7,10 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * New-account registration payload. {@code roles} is optional — the service
+ * defaults to PARTICIPANT when it's absent, so normal signups omit it.
+ */
 @Data
 public class RegistrationRequest {
     @NotBlank(message = "Username is required")

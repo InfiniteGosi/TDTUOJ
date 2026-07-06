@@ -36,6 +36,12 @@ public class SubmissionAnalysisService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * Asks Gemini to analyze a solution and returns structured results. Strips any markdown
+     * fences the model may wrap the JSON in, parses it, and normalizes the complexity class to
+     * the canonical set so the frontend graph can always map it. Throws if the model returns
+     * unparseable JSON (callers surface a retry message).
+     */
     public SubmissionAnalysisResult analyze(String problemTitle,
                                             String problemStatement,
                                             SubmissionLanguage language,

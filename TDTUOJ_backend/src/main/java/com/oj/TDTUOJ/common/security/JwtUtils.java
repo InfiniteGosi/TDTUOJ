@@ -14,10 +14,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.function.Function;
 
+/**
+ * Stateless JWT helper: mints HS256-signed tokens and verifies them.
+ * <p>
+ * The signing secret is HMAC only (symmetric) — the same key signs and verifies, so it must never
+ * leave the server. Tokens carry only the user's email as the subject; no roles are embedded, which
+ * is why {@code AuthFilter} always re-loads the user (and thus authorities) from the DB per request.
+ * <p>
+ * Note the deliberately long 30-day lifetime: there is no refresh-token mechanism, so a single
+ * access token is expected to stay valid for the whole session window.
+ */
 @Service
 @Slf4j
 public class JwtUtils {
-    // Token validity: 30 days (in milliseconds)
+    // Token validity: 30 days (in milliseconds). The trailing 'L' forces long arithmetic so the
+    // multiplication does not silently overflow a 32-bit int.
     private static final long EXPIRATION_TIME = 30L * 24 * 60 * 60 * 1000;
 
     // Key used to sign and verify JWT tokens
@@ -86,6 +97,8 @@ public class JwtUtils {
      * @return extracted claim
      */
     private <T> T extractClaims(String token, Function<Claims, T> claimsResolver) {
+        // parseSignedClaims throws (JwtException/ExpiredJwtException) on a bad signature or expiry,
+        // so simply reaching getPayload() means the token's integrity has already been validated.
         return claimsResolver.apply(
                 Jwts.parser()
                         .verifyWith(secretKey) // verify token with signing key

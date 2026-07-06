@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+/** Email/password credentials for the local login endpoint. */
 @Data
 public class LoginRequest {
     @NotBlank(message = "Email is required")

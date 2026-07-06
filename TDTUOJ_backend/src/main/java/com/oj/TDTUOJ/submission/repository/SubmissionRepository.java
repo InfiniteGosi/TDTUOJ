@@ -11,6 +11,13 @@ import org.springframework.stereotype.Repository;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Data access for {@link Submission}. Beyond basic CRUD it backs several distinct callers:
+ * the judging/scoring paths (global vs. contest-scoped AC/WA counts, excluding the current row),
+ * public-profile feeds (which must hide submissions to still-locked contests), lab progress,
+ * the contest monitor, per-language stats, and admin dashboard aggregates. Query-method names
+ * and the handful of {@code @Query} definitions encode those filters.
+ */
 @Repository
 public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 

@@ -6,6 +6,11 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * API view of an {@link com.oj.TDTUOJ.organization.entity.Organization}. Two fields
+ * are caller-relative: {@code code} is only set for privileged callers (OWNER/ADMIN/
+ * platform admin), and {@code myRole} reflects the current caller's membership.
+ */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

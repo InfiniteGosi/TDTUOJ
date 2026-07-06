@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/** Request body for creating or updating a lab, including its ordered list of exercises. */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

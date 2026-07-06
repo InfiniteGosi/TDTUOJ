@@ -4,6 +4,11 @@ import lombok.Data;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+/**
+ * {@link Pageable} adapter that accepts a row {@code offset} + {@code limit}
+ * (the API's paging convention) instead of Spring's page-number model, deriving
+ * the page number as {@code offset / limit}.
+ */
 @Data
 public class UserPageRequest implements Pageable {
     private Integer limit;

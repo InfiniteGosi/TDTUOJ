@@ -10,6 +10,12 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Data access for {@link ContestParticipation} — the durable mirror of the Redis
+ * leaderboard. The JOIN FETCH variant avoids N+1 loads when the rating job walks
+ * every participant, and the bulk {@code updateScoreAndRank} persists the ranking
+ * asynchronously after Redis re-ranks.
+ */
 @Repository
 public interface ContestParticipationRepository extends JpaRepository<ContestParticipation, Long> {
 

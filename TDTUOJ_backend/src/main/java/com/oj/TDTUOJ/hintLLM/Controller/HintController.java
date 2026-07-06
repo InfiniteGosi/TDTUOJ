@@ -14,19 +14,31 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
+/**
+ * REST entry point for AI-generated problem hints ({@code POST /api/hints}).
+ *
+ * <p>Dispatches to one of several LLM-backed {@link HintService} implementations
+ * chosen at request time by the {@code model} field. Each provider registers
+ * itself as a Spring bean whose name is the model key ("gemini", "claude",
+ * "openai"), so Spring injects them all as a name→bean map and this controller
+ * only has to look one up — adding a provider needs no change here.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/hints")
 public class HintController {
 
+    /** All hint providers keyed by bean name (= model key); populated by Spring. */
     private final Map<String, HintService> hintServices;
 
     @PostMapping
     public ResponseEntity<Response<String>> getHint(@RequestBody HintRequest request) {
+        // Default to Gemini when the client omits/blanks the model field.
         String modelKey = (request.getModel() != null && !request.getModel().isBlank())
                 ? request.getModel().toLowerCase()
                 : "gemini";
 
+        // Unknown model key → 400 rather than a null-pointer downstream.
         HintService hintService = hintServices.get(modelKey);
         if (hintService == null) {
             throw new BadRequestException("Unsupported model: " + modelKey);

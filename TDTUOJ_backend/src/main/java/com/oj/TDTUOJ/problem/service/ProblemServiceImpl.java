@@ -37,6 +37,20 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Default {@link ProblemService} implementation.
+ *
+ * <p>Owns three cross-cutting concerns worth calling out:</p>
+ * <ul>
+ *   <li><b>Visibility guard</b> — public listings only return {@code isPublic} problems;
+ *       single-problem lookup additionally exposes private problems to the author/staff,
+ *       to contest participants while a contest runs, and to lab students.</li>
+ *   <li><b>Unique slugs</b> — a title-derived slug is made collision-free by appending an
+ *       incrementing suffix ({@code -1}, {@code -2}, …).</li>
+ *   <li><b>S3 file lifecycle</b> — statement + per-test-case input/output files live under a
+ *       {@code problems/{id}-{title}/} prefix; renames move files and prune the old prefix.</li>
+ * </ul>
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -52,6 +66,11 @@ public class ProblemServiceImpl implements ProblemService {
     private final com.oj.TDTUOJ.contest.repository.ContestProblemRepository contestProblemRepository;
     private final com.oj.TDTUOJ.lab.repository.LabExerciseRepository labExerciseRepository;
 
+    /**
+     * Public, paginated problem listing. Only {@code isPublic} problems are returned
+     * (every branch below routes to an {@code IsPublicTrue}/{@code isPublic = true} query).
+     * The filter combination (title × tags × difficulty) selects which repository method runs.
+     */
     @Override
     public Response<Page<ProblemDTO>> getAllProblems(Integer limit, Integer offset, String sortField,
                                                      String direction, String title, List<String> tagNames,
@@ -62,7 +81,7 @@ public class ProblemServiceImpl implements ProblemService {
         if (direction == null || direction.isBlank()) direction = "asc";
 
         Sort sort = Sort.by(Sort.Direction.fromString(direction), sortField);
-        int page = offset / limit;
+        int page = offset / limit; // translate a row offset into a zero-based page index
         Pageable pageable = PageRequest.of(page, limit, sort);
 
         // Resolve difficulty enum (null = no filter)
@@ -116,6 +135,12 @@ public class ProblemServiceImpl implements ProblemService {
                 .build();
     }
 
+    /**
+     * Single-problem lookup by slug with the visibility guard applied.
+     * Private problems are hidden with a 404 (never 403) so the response does not
+     * confirm the problem exists — except to the author/staff, mid-contest participants,
+     * or lab students who legitimately need it.
+     */
     @Override
     @Transactional
     public Response<ProblemDTO> getProblemBySlug(String slug) {
@@ -158,6 +183,7 @@ public class ProblemServiceImpl implements ProblemService {
                             || r.getName().equalsIgnoreCase("CREATOR"));
     }
 
+    /** Lookup by numeric id. Intended for staff/internal use — does NOT apply the public/private guard. */
     @Override
     @Transactional
     public Response<ProblemDTO> getProblemById(Long id) {
@@ -170,6 +196,12 @@ public class ProblemServiceImpl implements ProblemService {
                 .build();
     }
 
+    /**
+     * Create a problem: validate inputs, mint a unique slug, persist to obtain an id,
+     * then upload the statement and each test case to S3 under {@code problems/{id}-{title}/}.
+     * The entity is saved once up front so the generated id can be used in the S3 key prefix,
+     * then re-saved after the file URLs are attached.
+     */
     @Override
     @Transactional
     public Response<ProblemDTO> createProblem(ProblemDTO problemDTO) {
@@ -184,6 +216,8 @@ public class ProblemServiceImpl implements ProblemService {
                 throw new IllegalArgumentException("Problem with title '" + problemDTO.getTitle() + "' already exists");
             }
 
+            // Slugify the title, then de-duplicate against existing slugs (title is unique,
+            // but slugification can still collide, e.g. "C++" vs "C  " → "c").
             String uniqueSlug = generateUniqueSlug(ProblemSlugUtils.generateSlug(problemDTO.getTitle()));
             User author = userRepository.findById(problemDTO.getAuthorId())
                     .orElseThrow(() -> new NotFoundException("Author not found with id: " + problemDTO.getAuthorId()));
@@ -206,7 +240,7 @@ public class ProblemServiceImpl implements ProblemService {
                     .tags(problemTags)
                     .build();
 
-            problem = problemRepository.save(problem);
+            problem = problemRepository.save(problem); // save first so problem.getId() exists for the S3 prefix
 
             String sanitizedTitle = sanitize(problemDTO.getTitle());
             String basePath = String.format("problems/%d-%s", problem.getId(), sanitizedTitle);
@@ -252,6 +286,15 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
+    /**
+     * Partial update of a problem (only non-null DTO fields are applied).
+     *
+     * <p>Because the S3 key prefix embeds the (sanitized) title, a title change forces
+     * the slug to be regenerated and all statement/test-case files to be moved from
+     * {@code oldBasePath} to {@code newBasePath}; the stale prefix is deleted at the end.
+     * Test cases are reconciled by id: matched ones are updated in place, unmatched
+     * incoming ones are created, and existing ones absent from the payload are deleted.</p>
+     */
     @Override
     @Transactional
     public Response<ProblemDTO> updateProblem(ProblemDTO problemDTO) {
@@ -259,6 +302,7 @@ public class ProblemServiceImpl implements ProblemService {
             Problem problem = problemRepository.findById(problemDTO.getId())
                     .orElseThrow(() -> new NotFoundException("Problem not found with id: " + problemDTO.getId()));
 
+            // S3 prefix is derived from id + title; a title change relocates every file under it.
             String oldBasePath = String.format("problems/%d-%s", problem.getId(), sanitize(problem.getTitle()));
             String newBasePath = oldBasePath;
             boolean pathChanged = false;
@@ -302,6 +346,8 @@ public class ProblemServiceImpl implements ProblemService {
             // Test cases
             if (problemDTO.getTestCases() != null && !problemDTO.getTestCases().isEmpty()) {
                 List<TestCase> existing = testCaseRepository.findTestCasesByProblemId(problem.getId());
+                // Index existing test cases by id; entries are removed as they are matched below,
+                // so whatever remains in the map afterwards is what the user deleted.
                 Map<Long, TestCase> existingMap = existing.stream()
                         .collect(Collectors.toMap(TestCase::getId, tc -> tc));
                 List<TestCase> updated = new ArrayList<>();
@@ -457,6 +503,7 @@ public class ProblemServiceImpl implements ProblemService {
                 .build();
     }
 
+    /** Delete a problem and best-effort purge all its S3 artifacts (test-case files, statement, folder). */
     @Override
     @Transactional
     public Response<?> deleteProblem(Long id) {
@@ -501,6 +548,11 @@ public class ProblemServiceImpl implements ProblemService {
         }
     }
 
+    /**
+     * Lecturer's own problem repository (public + private), newest first. Each row is
+     * annotated with usage badges so the UI can warn before editing/deleting a problem
+     * that is already attached to a contest or lab.
+     */
     @Override
     public Response<Page<ProblemDTO>> getMyProblems(int page, int size, String search) {
         User currentUser = userService.getCurrentLoggedInUser();
@@ -528,6 +580,11 @@ public class ProblemServiceImpl implements ProblemService {
                 .build();
     }
 
+    /**
+     * Problems that may be attached to a contest: private and untouched by non-authors
+     * (so no one has pre-solved them). ADMINs see all such problems; CREATORs see only
+     * their own. Scope is chosen by role below.
+     */
     @Override
     public Response<Page<ProblemDTO>> getContestEligibleProblems(int page, int size, String search) {
         User currentUser = userService.getCurrentLoggedInUser();
@@ -535,6 +592,7 @@ public class ProblemServiceImpl implements ProblemService {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         String term = search != null ? search.trim() : "";
 
+        // ADMIN → all private problems; CREATOR → only problems they authored.
         boolean isAdmin = currentUser.getRoles().stream()
                 .anyMatch(r -> r.getName().equalsIgnoreCase("ADMIN"));
         Page<Problem> problems = isAdmin
@@ -593,12 +651,14 @@ public class ProblemServiceImpl implements ProblemService {
         return new HashSet<>();
     }
 
+    /** Turns a title into a filesystem/S3-safe path segment (alnum + '-'/'_', collapsed dashes, lowercase). */
     private String sanitize(String title) {
         return title.replaceAll("[^a-zA-Z0-9-_]", "-")
                 .replaceAll("-+", "-")
                 .toLowerCase();
     }
 
+    /** Derives the S3 object key from a stored file URL (the URL path minus its leading slash). */
     private String extractS3Key(String url) {
         try {
             URL s3Url = new URL(url);
@@ -612,6 +672,7 @@ public class ProblemServiceImpl implements ProblemService {
     // Keep old name as alias for compatibility
     private String extractS3KeyFromUrl(String url) { return extractS3Key(url); }
 
+    /** Appends {@code -1}, {@code -2}, … to the base slug until it is unique across all problems. */
     private String generateUniqueSlug(String baseSlug) {
         String slug = baseSlug;
         int counter = 1;
@@ -621,6 +682,7 @@ public class ProblemServiceImpl implements ProblemService {
         return slug;
     }
 
+    /** Same as {@link #generateUniqueSlug} but ignores the problem being updated, so it can keep its own slug. */
     private String generateUniqueSlugExcludingCurrent(String baseSlug, Long excludeId) {
         String slug = baseSlug;
         int counter = 1;
@@ -672,11 +734,14 @@ public class ProblemServiceImpl implements ProblemService {
                     .collect(Collectors.toSet()));
         }
 
+        // Per-viewer progress flags. Resolving the current user throws for anonymous
+        // callers, in which case both flags default to false (nothing solved/attempted).
         try {
             User currentUser = userService.getCurrentLoggedInUser();
 
             boolean solved = submissionRepository.existsByUserIdAndProblemIdAndSubmissionVerdict(
                     currentUser.getId(), problem.getId(), SubmissionVerdict.AC);
+            // "attempted" is only meaningful when not yet solved
             boolean attempted = !solved && submissionRepository.existsByUserIdAndProblemId(
                     currentUser.getId(), problem.getId());
 

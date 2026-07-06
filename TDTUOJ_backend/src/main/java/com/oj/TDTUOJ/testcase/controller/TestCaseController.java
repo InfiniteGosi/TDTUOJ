@@ -12,6 +12,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Test-case endpoints under {@code /api/testcases}, entirely gated to ADMIN/CREATOR
+ * (class-level {@link PreAuthorize}). Primarily read access; test-case authoring in
+ * practice goes through the problem endpoints.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/testcases")

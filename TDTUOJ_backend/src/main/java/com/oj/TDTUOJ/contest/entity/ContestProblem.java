@@ -5,6 +5,12 @@ import com.oj.TDTUOJ.problem.entity.Problem;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Join row attaching a {@link com.oj.TDTUOJ.problem.entity.Problem} to a
+ * {@link Contest}, carrying contest-scoped overrides: display order and the
+ * points awarded within this contest (which may differ from the problem's base
+ * point value).
+ */
 @Entity
 @Data
 @Table(name = "contests_problems")

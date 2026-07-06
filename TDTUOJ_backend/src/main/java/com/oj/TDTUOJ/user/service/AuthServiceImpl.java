@@ -31,6 +31,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Authentication service: local registration/login and Google Sign-In.
+ * Passwords are stored only as BCrypt hashes (via {@link PasswordEncoder}), and
+ * a successful auth yields a JWT minted from the user's email.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -40,9 +45,15 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtils jwtUtils;
     private final RoleRepository roleRepository;
 
+    // Expected audience for verifying Google ID tokens; injected from config.
     @Value("${google.client.id}")
     private String googleClientId;
 
+    /**
+     * Register a new local account: enforces unique username/email, resolves the
+     * requested roles (or defaults to PARTICIPANT), and persists the user with a
+     * BCrypt-hashed password.
+     */
     @Override
     public Response<?> register(RegistrationRequest registrationRequest) {
         // Reject if username already exists
@@ -71,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
             userRoles = roles;
         }
 
-        // Build User entity with encoded password and default values
+        // Build User entity; the raw password is BCrypt-hashed here so plaintext is never persisted.
         User user = User.builder()
                 .username(registrationRequest.getUsername())
                 .password(passwordEncoder.encode(registrationRequest.getPassword()))
@@ -89,6 +100,11 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    /**
+     * Local email/password login. Returns a JWT and role names on success.
+     * Uses the same generic "Invalid email or password" message for both unknown
+     * email and wrong password so the response can't be used to enumerate accounts.
+     */
     @Override
     public Response<LoginResponse> login(LoginRequest loginRequest) {
         // Step 1: Find user by email or fail
@@ -100,7 +116,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("User not active, please contact customer support");
         }
 
-        // Step 3: Verify password
+        // Step 3: Verify password by hashing the input and comparing to the stored BCrypt hash.
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new UnauthorizedAccessException("Invalid email or password");
         }
@@ -125,6 +141,12 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    /**
+     * Google Sign-In. Verifies the client-supplied ID token against our client id,
+     * then finds-or-creates the matching account and issues our own JWT. First-time
+     * Google users are auto-registered; pre-existing LOCAL accounts with the same
+     * email are transparently linked to the Google provider.
+     */
     @Override
     public Response<LoginResponse> loginWithGoogle(GoogleAuthRequest googleAuthRequest) {
         // Step 1: Verify Google ID token server-side
@@ -137,9 +159,11 @@ public class AuthServiceImpl implements AuthService {
         try {
             idToken = verifier.verify(googleAuthRequest.getIdToken());
         } catch (Exception e) {
+            // Malformed token or transport failure during verification.
             throw new BadRequestException("Invalid Google ID token: " + e.getMessage());
         }
 
+        // verify() returns null (rather than throwing) when signature/audience/expiry checks fail.
         if (idToken == null) {
             throw new BadRequestException("Invalid Google ID token");
         }
@@ -154,7 +178,9 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email).orElse(null);
 
         if (user == null) {
-            // New user — auto-register with derived username
+            // New user — auto-register. Derive a username from the email local-part,
+            // sanitizing to the allowed charset, then append an incrementing suffix
+            // until it's unique (username has a UNIQUE constraint).
             String baseUsername = email.split("@")[0].replaceAll("[^a-zA-Z0-9_-]", "_");
             String username = baseUsername;
             int suffix = 1;
@@ -170,7 +196,7 @@ public class AuthServiceImpl implements AuthService {
                     .username(username)
                     .email(email)
                     .name(name)
-                    .password(null)
+                    .password(null) // Google-only account: no local password exists
                     .authProvider("GOOGLE")
                     .providerId(googleId)
                     .profileUrl(pictureUrl)
@@ -185,7 +211,9 @@ public class AuthServiceImpl implements AuthService {
             if (!user.getIsActive()) {
                 throw new BadRequestException("User not active, please contact customer support");
             }
-            // Auto-link if previously LOCAL
+            // Same email registered locally: link it to Google so future Google
+            // logins resolve to this account. Only backfill the avatar if none is set,
+            // to avoid overwriting a picture the user chose themselves.
             if ("LOCAL".equals(user.getAuthProvider())) {
                 user.setAuthProvider("GOOGLE");
                 user.setProviderId(googleId);

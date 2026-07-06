@@ -13,6 +13,15 @@ import java.util.List;
 import java.util.Optional;
 
 
+/**
+ * Data-access for {@link Problem}.
+ *
+ * <p>Note the two families of finders: public-facing queries carry an
+ * {@code AndIsPublicTrue} suffix (or {@code p.isPublic = true} in JPQL) so the open
+ * problem set never leaks private/lecturer problems; the {@code findByAuthorId*} /
+ * {@code findContestEligible*} finders deliberately omit that guard because they serve
+ * the authenticated lecturer repository and contest-attachment flows.</p>
+ */
 @Repository
 public interface ProblemRepository extends JpaRepository<Problem, Long> {
 
@@ -43,6 +52,8 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
             GROUP BY p
             HAVING COUNT(DISTINCT t.name) = :tagCount
             """)
+    // HAVING COUNT(DISTINCT t.name) = tagCount enforces AND (not OR) semantics:
+    // a problem qualifies only if it matched every requested tag, not just one.
     Page<Problem> findByTagNames(@Param("tagNames") List<String> tagNames,
                                  @Param("tagCount") Long tagCount,
                                  Pageable pageable);

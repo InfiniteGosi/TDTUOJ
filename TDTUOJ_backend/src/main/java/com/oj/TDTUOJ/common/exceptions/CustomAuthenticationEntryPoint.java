@@ -23,6 +23,13 @@ import java.io.IOException;
 //        "message": "Unauthorized access"
 //       }
 
+/**
+ * Handles authentication failures (401) — no valid credentials/JWT were presented. Invoked both by
+ * Spring Security's entry point machinery and directly by {@code AuthFilter} when a token is malformed
+ * or expired. Distinct from {@link CustomAccessDenialHandler}, which handles the authenticated-but-
+ * forbidden case (403). Writes the standard JSON envelope so unauthenticated clients get consistent
+ * error shapes instead of the default HTML page.
+ */
 @Component
 @RequiredArgsConstructor
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {

@@ -8,6 +8,11 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * API view of a {@link com.oj.TDTUOJ.lab.entity.Lab}. Some fields are populated
+ * conditionally: {@code solvedCount}/{@code attemptedCount} only when a user is
+ * logged in, and {@code exercises} only in the detail view.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

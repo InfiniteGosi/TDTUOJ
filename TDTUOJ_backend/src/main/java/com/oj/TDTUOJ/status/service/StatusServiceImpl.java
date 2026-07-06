@@ -13,6 +13,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Probes the Judge0 engine's /about, /workers and /system_info endpoints and
+ * assembles a {@link JudgeStatusResponse}. Every probe is best-effort and
+ * time-boxed, and results are cached briefly so the public Status page can be
+ * hit freely without hammering Judge0.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -29,8 +35,10 @@ public class StatusServiceImpl implements StatusService {
     // In-memory cache — backend runs as a single instance on the VM, so no Redis needed.
     private final AtomicReference<Cached> cache = new AtomicReference<>();
 
+    // Snapshot plus the wall-clock time it was fetched, for TTL comparison.
     private record Cached(JudgeStatusResponse value, long fetchedAt) {}
 
+    /** Serves the cached snapshot while it is within {@link #CACHE_TTL_MS}, otherwise refetches. */
     @Override
     public JudgeStatusResponse getJudgeStatus() {
         Cached current = cache.get();
@@ -43,6 +51,10 @@ public class StatusServiceImpl implements StatusService {
         return fresh;
     }
 
+    /**
+     * Live probe of Judge0. Returns a not-reachable response if /about fails;
+     * /workers and /system_info are optional and their failures are swallowed.
+     */
     private JudgeStatusResponse fetch() {
         WebClient client = webClientBuilder.baseUrl(judge0Url).build();
 
@@ -76,8 +88,10 @@ public class StatusServiceImpl implements StatusService {
                     .collectList().timeout(TIMEOUT).block();
             if (raw != null) {
                 for (Map w : raw) {
+                    // Judge0 reports capacity under the key "available"; we treat it as the worker total.
                     Integer total   = asInt(w.get("available"));
                     Integer working = asInt(w.get("working"));
+                    // Load% = busy workers over total capacity; guard against divide-by-zero / nulls.
                     Integer loadPct = (total != null && total > 0 && working != null)
                             ? (int) Math.round(working * 100.0 / total) : 0;
                     workers.add(JudgeStatusResponse.WorkerStatus.builder()
@@ -132,6 +146,7 @@ public class StatusServiceImpl implements StatusService {
                 .build();
     }
 
+    /** Coerces a JSON value (Number or numeric String) to Integer, null on absence/parse failure. */
     private static Integer asInt(Object o) {
         if (o == null) return null;
         if (o instanceof Number n) return n.intValue();
@@ -139,6 +154,7 @@ public class StatusServiceImpl implements StatusService {
         catch (NumberFormatException e) { return null; }
     }
 
+    /** Null-safe toString for optional system-info fields. */
     private static String str(Object o) {
         return o != null ? o.toString() : null;
     }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/** Data access for {@link Organization}. Slug and code are both globally unique, hence the exists/find-by lookups. */
 @Repository
 public interface OrganizationRepository extends JpaRepository<Organization, Long> {
 
@@ -15,10 +16,12 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
 
     Optional<Organization> findByCode(String code);
 
+    // Uniqueness pre-checks used when generating slugs / validating custom join codes.
     boolean existsBySlug(String slug);
 
     boolean existsByCode(String code);
 
+    // Public-only listings (private orgs hidden from discovery); the *NameContaining* variant backs search.
     Page<Organization> findByIsPublicTrue(Pageable pageable);
 
     Page<Organization> findByIsPublicTrueAndNameContainingIgnoreCase(String name, Pageable pageable);

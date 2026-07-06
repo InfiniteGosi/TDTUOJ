@@ -10,6 +10,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Default (Gemini) {@link HintService}, registered under the bean name {@code "gemini"}.
+ *
+ * <p>This is the GUARDED hint generator: the {@link #SYSTEM_INSTRUCTION} constrains the
+ * model to incremental hints only, forbids handing out full solutions no matter how the
+ * user phrases the ask, and forces it to refuse anything off-topic from the current problem.
+ * Sent via Gemini's dedicated {@code systemInstruction} field (stronger than an inline
+ * instruction) alongside the conversation history and the current turn.</p>
+ */
 @Service("gemini")
 @Slf4j
 public class GeminiHintService implements HintService {
@@ -24,6 +33,9 @@ public class GeminiHintService implements HintService {
                     .jackson2JsonEncoder(new org.springframework.http.codec.json.Jackson2JsonEncoder()))
             .build();
 
+    // The guard. Rules 1–3 are the security-relevant ones: no full solution / algorithm /
+    // ready-to-submit code, hints only, and a fixed refusal string for off-topic questions.
+    // Rules 4–6 are formatting constraints for the chat UI.
     private static final String SYSTEM_INSTRUCTION = """
             You are a hint assistant embedded in a competitive programming judge. Your ONLY job is to guide \
             the user toward solving the current problem themselves — you must NEVER hand out the solution.
@@ -46,6 +58,8 @@ public class GeminiHintService implements HintService {
     public String getHint(HintRequest request) {
         List<Map<String, Object>> contents = new ArrayList<>();
 
+        // Replay prior turns. Gemini expects role "model" for assistant messages,
+        // so map the frontend's "assistant" role accordingly ("user" otherwise).
         if (request.getHistory() != null) {
             for (Map<String, String> entry : request.getHistory()) {
                 String role = entry.get("role").equals("assistant") ? "model" : "user";
@@ -56,6 +70,7 @@ public class GeminiHintService implements HintService {
             }
         }
 
+        // Current turn: problem context + user question (role defaults to user).
         contents.add(Map.of(
                 "parts", List.of(Map.of("text", buildPrompt(request)))
         ));

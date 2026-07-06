@@ -4,6 +4,7 @@ import com.oj.TDTUOJ.common.response.Response;
 import com.oj.TDTUOJ.problemTag.dto.TagDTO;
 import org.springframework.data.domain.Page;
 
+/** CRUD and active-state management for problem tags (admin/creator facing). */
 public interface TagService {
     Response<TagDTO> createTag(TagDTO tagDTO);
     Response<TagDTO> updateTag(TagDTO tagDTO);

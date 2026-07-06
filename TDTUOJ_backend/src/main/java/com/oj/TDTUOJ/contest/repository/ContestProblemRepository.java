@@ -10,6 +10,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Data access for {@link ContestProblem} join rows. The "active"/"started"
+ * attachment checks back the contest-fairness rules: a problem cannot be edited
+ * or deleted while it is in a running contest, and cannot be reused elsewhere.
+ */
 @Repository
 public interface ContestProblemRepository extends JpaRepository<ContestProblem, Long> {
 

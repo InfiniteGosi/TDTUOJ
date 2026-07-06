@@ -11,6 +11,12 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Contest payload for both read (list/detail) and write (create/update).
+ * {@code status}, {@code totalProblems}, {@code totalParticipants}, and the
+ * denormalized creator fields are derived on read; {@code problems} is only
+ * populated for viewers allowed to see them (see ContestServiceImpl.toDTO).
+ */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

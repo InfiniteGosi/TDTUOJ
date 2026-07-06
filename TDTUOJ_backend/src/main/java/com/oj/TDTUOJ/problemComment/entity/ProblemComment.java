@@ -12,6 +12,20 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A comment posted on a problem's discussion thread.
+ *
+ * <p>The threading model is intentionally <b>flat (two levels only)</b>: a comment is either
+ * a top-level comment ({@code parent == null}) or a direct reply to a top-level comment.
+ * Replies-to-replies are collapsed back onto the root parent (see the create logic in the
+ * service), so nesting never exceeds one level. This keeps rendering simple and avoids
+ * unbounded recursion.</p>
+ *
+ * <p>Upvote/downvote tallies are stored <b>denormalized</b> on the row ({@code upvoteCount} /
+ * {@code downvoteCount}) so the discussion list can be rendered without aggregating the
+ * {@code comment_votes} table on every read; the individual votes still live in
+ * {@link CommentVote}.</p>
+ */
 @Entity
 @Data
 @Table(name = "problem_comments")

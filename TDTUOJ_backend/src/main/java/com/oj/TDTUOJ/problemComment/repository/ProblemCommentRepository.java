@@ -10,6 +10,11 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Data access for {@link ProblemComment}. Queries generally scope by {@code problemId} and
+ * distinguish top-level comments ({@code parent IS NULL}) from replies, matching the flat
+ * two-level threading model.
+ */
 public interface ProblemCommentRepository extends JpaRepository<ProblemComment, Long> {
 
     /**

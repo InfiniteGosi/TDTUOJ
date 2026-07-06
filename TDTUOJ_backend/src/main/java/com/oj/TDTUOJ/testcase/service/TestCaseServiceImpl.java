@@ -56,6 +56,11 @@ public class TestCaseServiceImpl implements TestCaseService {
                 .build();
     }
 
+    /**
+     * NOTE: incomplete/stub. It validates the problem and files and computes the S3 keys
+     * but returns {@code null} without persisting — creation is handled by
+     * {@code ProblemServiceImpl.createProblem/updateProblem} in practice.
+     */
     @Override
     public Response<TestCaseDTO> createTestCase(TestCaseDTO testCaseDTO) {
         // Ensures problem exists
@@ -85,16 +90,19 @@ public class TestCaseServiceImpl implements TestCaseService {
         return null;
     }
 
+    /** Not implemented — test-case updates go through {@code ProblemServiceImpl.updateProblem}. */
     @Override
     public Response<TestCaseDTO> updateTestCase(TestCaseDTO testCaseDTO) {
         return null;
     }
 
+    /** Not implemented — orphan test cases are pruned during {@code ProblemServiceImpl.updateProblem}. */
     @Override
     public Response<?> deleteTestCase(Long id) {
         return null;
     }
 
+    /** Builds the S3 key prefix ({@code problems/{id}-{safeName}/testcases/}) for a problem's test-case files. */
     private String buildBasePath(Long problemId, String problemName) {
         // Sanitize the problem name for use in S3 (no spaces, special chars)
         String safeName = problemName

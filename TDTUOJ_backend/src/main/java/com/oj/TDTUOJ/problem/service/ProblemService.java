@@ -7,6 +7,11 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 
+/**
+ * Business operations for problems: public listing/lookup (visibility-guarded),
+ * CRUD with S3-backed statement and test-case files, tag assignment, and the
+ * lecturer-facing "my problems" / "contest-eligible" queries.
+ */
 public interface ProblemService {
 
     Response<Page<ProblemDTO>> getAllProblems(Integer limit, Integer offset, String sortField,

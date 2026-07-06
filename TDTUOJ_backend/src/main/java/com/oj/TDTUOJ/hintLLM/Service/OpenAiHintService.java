@@ -9,19 +9,32 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * OpenAI (GPT) implementation of {@link HintService}, registered under the bean
+ * name {@code "openai"} for {@code HintController} routing.
+ *
+ * <p>Unlike the Claude provider (which passes the guardrails via a dedicated
+ * {@code system} field), OpenAI's guard preamble is sent as an explicit
+ * {@code role:"system"} message prepended to the conversation.
+ */
 @Service("openai")
 public class OpenAiHintService implements HintService {
 
     @Value("${openai.api.key}")
     private String openAiApiKey;
 
+    // Reactive HTTP client for the OpenAI Chat Completions API.
     private final WebClient webClient = WebClient.create("https://api.openai.com");
 
+    /**
+     * Prepend the guard system message, replay history, append the built user
+     * prompt, call Chat Completions synchronously, and return the first choice's text.
+     */
     @Override
     public String getHint(HintRequest request) {
         List<Map<String, Object>> messages = new ArrayList<>();
 
-        // System message
+        // Guardrails delivered as a system-role message (OpenAI convention).
         messages.add(Map.of(
                 "role", "system",
                 "content", """
@@ -61,11 +74,17 @@ public class OpenAiHintService implements HintService {
                 .bodyToMono(Map.class)
                 .block();
 
+        // Chat Completions returns a list of choices; take the first message's content.
         List<Map> choices = (List<Map>) response.get("choices");
         Map message = (Map) choices.get(0).get("message");
         return (String) message.get("content");
     }
 
+    /**
+     * Assemble the user-turn prompt: problem title/statement, optional current-code
+     * and error blocks (only when non-blank), then the user's question. The guard
+     * preamble is NOT repeated here — it rides in the system message.
+     */
     private String buildPrompt(HintRequest request) {
         String codeContext = (request.getCurrentCode() != null && !request.getCurrentCode().isBlank())
                 ? """

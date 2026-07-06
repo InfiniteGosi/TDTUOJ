@@ -12,6 +12,12 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * A user's bookmark ("favorite") of a problem — one row per (user, problem) pair.
+ *
+ * <p>The {@code (user_id, problem_id)} unique constraint guarantees a problem can be favorited
+ * at most once by a given user, so the toggle logic can rely on find-or-create semantics.</p>
+ */
 @Entity
 @Data
 @Table(

@@ -18,6 +18,14 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Gemini-backed {@link ProblemAIService}.
+ *
+ * <p>Pipeline for both operations: build a prompt with a strict JSON schema →
+ * call {@code gemini-2.5-flash} (low temperature for deterministic structure, with retries)
+ * → strip any markdown code fences the model wraps around the JSON → deserialize with Jackson.
+ * PDF text is extracted locally via Apache PDFBox before being embedded in the prompt.</p>
+ */
 @Service
 @Slf4j
 public class GeminiProblemAIService implements ProblemAIService {
@@ -29,6 +37,8 @@ public class GeminiProblemAIService implements ProblemAIService {
     private static final int MAX_TEST_CASES = 50;
     private static final int MAX_RETRIES = 3;
 
+    // Raise the in-memory decode buffer above the 256KB default: extraction responses
+    // (full statement + many test cases as JSON) routinely exceed it.
     private final WebClient webClient = WebClient.builder()
             .baseUrl("https://generativelanguage.googleapis.com")
             .codecs(cfg -> cfg.defaultCodecs()
@@ -40,6 +50,11 @@ public class GeminiProblemAIService implements ProblemAIService {
 
     // ─── Public API ───────────────────────────────────────────────────────────
 
+    /**
+     * Validate the upload, extract its text, ask Gemini to structure it, and parse the JSON.
+     * If the PDF contained no usable test cases, falls back to AI-generating five so the
+     * author is never left with zero cases (flagged via {@code testCasesGenerated=true}).
+     */
     @Override
     public ProblemExtractionResult extractFromPdf(MultipartFile pdfFile,
                                                    List<String> availableTagNames) throws IOException {
@@ -73,9 +88,10 @@ public class GeminiProblemAIService implements ProblemAIService {
         return result;
     }
 
+    /** Generate test cases for a statement. Output is a bare JSON array, so it is parsed with a {@code TypeReference}. */
     @Override
     public GenerateTestCasesResult generateTestCases(String problemStatement, int count) {
-        int safeCount = Math.max(1, Math.min(count, MAX_TEST_CASES));
+        int safeCount = Math.max(1, Math.min(count, MAX_TEST_CASES)); // clamp defensively even though callers already do
 
         String prompt = buildGenerationPrompt(problemStatement, safeCount);
         String rawJson = callGemini(prompt);
@@ -97,6 +113,7 @@ public class GeminiProblemAIService implements ProblemAIService {
 
     // ─── Private Helpers ──────────────────────────────────────────────────────
 
+    /** Reject empty, oversized (>4MB), or non-PDF uploads before spending any AI/parse work on them. */
     private void validatePdf(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new RuntimeException("PDF file is required");
@@ -110,6 +127,12 @@ public class GeminiProblemAIService implements ProblemAIService {
         }
     }
 
+    /**
+     * Extract the plain text layer from the PDF using Apache PDFBox.
+     * Try-with-resources closes the {@link PDDocument} to free native buffers.
+     * Note: only extracts embedded text — scanned/image-only PDFs yield blank/garbage
+     * (the caller rejects blank output as "empty or unreadable"; there is no OCR step).
+     */
     private String extractText(MultipartFile file) throws IOException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             PDFTextStripper stripper = new PDFTextStripper();
@@ -117,6 +140,13 @@ public class GeminiProblemAIService implements ProblemAIService {
         }
     }
 
+    /**
+     * POST the prompt to Gemini and return the first candidate's text.
+     * temperature=0.2 keeps output close to the requested JSON schema; retries with
+     * linear backoff (5s/10s/15s) ride out transient errors and rate limits. A
+     * {@code MAX_TOKENS} finish reason is turned into a clear error since the JSON
+     * would be truncated and unparseable.
+     */
     private String callGemini(String prompt) {
         Map<String, Object> body = Map.of(
                 "contents", List.of(Map.of(
@@ -165,6 +195,11 @@ public class GeminiProblemAIService implements ProblemAIService {
         throw new RuntimeException("Gemini API unavailable");
     }
 
+    /**
+     * Unwrap a ```json … ``` (or plain ``` … ```) code fence the model often adds despite
+     * being told not to, leaving raw JSON for Jackson. Returns "{}" for null so parsing
+     * fails cleanly rather than NPE-ing.
+     */
     private String stripMarkdownFences(String raw) {
         if (raw == null) return "{}";
         // Remove ```json ... ``` or ``` ... ``` wrapping
@@ -181,7 +216,14 @@ public class GeminiProblemAIService implements ProblemAIService {
 
     // ─── Prompts ──────────────────────────────────────────────────────────────
 
+    /**
+     * Build the PDF-extraction prompt. Pins the model to a role, an exact Markdown layout
+     * for the statement, difficulty/limit/point defaulting rules, and a JSON output schema.
+     * {@code suggestedTags} is constrained to the whitelist of existing active tag names so
+     * the model can only propose tags the system actually has.
+     */
     private String buildExtractionPrompt(String pdfText, List<String> availableTagNames) {
+        // Inline the allowed tag whitelist into the prompt (or a placeholder when none exist).
         String tagList = (availableTagNames != null && !availableTagNames.isEmpty())
                 ? String.join(", ", availableTagNames)
                 : "(no tags available)";
@@ -260,6 +302,11 @@ public class GeminiProblemAIService implements ProblemAIService {
                 """.formatted(tagList, pdfText);
     }
 
+    /**
+     * Build the test-case generation prompt. Demands edge/typical coverage, marks the first
+     * two as samples, and imposes strict size budgets (≤4KB/case, ≤50KB total) so generated
+     * cases stay small enough to store in S3 and run through Judge0 without blowing memory limits.
+     */
     private String buildGenerationPrompt(String problemStatement, int count) {
         return """
                 You are a competitive programming test case generator.

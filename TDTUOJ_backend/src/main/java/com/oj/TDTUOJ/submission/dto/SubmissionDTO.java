@@ -9,6 +9,12 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * API-facing view of a submission, used both as the create-submission request body and as the
+ * status/result response. On create, clients supply source code, language, problem and optional
+ * contest/lab ids; on read, the judged fields (verdict, status, timing, test-case counts) are
+ * populated. {@code queuePosition} is transient — set only while a submission is still PENDING.
+ */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

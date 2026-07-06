@@ -9,6 +9,11 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * A user's sign-up for a contest. The (user, contest) unique constraint prevents
+ * double registration. Distinct from {@link ContestParticipation}: this records
+ * intent to compete, while participation holds the runtime score/rank.
+ */
 @Entity
 @Data
 @Table(

@@ -7,6 +7,12 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * One row of the leaderboard: a participant's rank, aggregate score and the
+ * per-problem breakdown ({@link ProblemScoreDTO}) that fills the scoreboard grid.
+ * Built from the Redis meta/problem hashes, with display fields refreshed live
+ * from the DB.
+ */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

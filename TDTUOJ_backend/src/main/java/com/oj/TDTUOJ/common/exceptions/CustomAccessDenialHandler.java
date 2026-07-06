@@ -24,6 +24,12 @@ import java.io.IOException;
 //        "message": "Access is denied"
 //       }
 
+/**
+ * Handles authorization failures (403) — the caller <em>is</em> authenticated but lacks the required
+ * role/permission for the target resource. Distinct from {@link CustomAuthenticationEntryPoint},
+ * which fires when there is no valid authentication at all (401). Writes the standard JSON envelope
+ * directly to the response because this runs at the filter layer, outside the @ControllerAdvice path.
+ */
 @Component
 @RequiredArgsConstructor
 public class CustomAccessDenialHandler implements AccessDeniedHandler {

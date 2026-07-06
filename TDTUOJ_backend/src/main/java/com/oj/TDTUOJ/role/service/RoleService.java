@@ -5,6 +5,7 @@ import com.oj.TDTUOJ.role.dto.RoleDTO;
 
 import java.util.List;
 
+/** Admin-only CRUD over the {@link com.oj.TDTUOJ.role.entity.Role} table. */
 public interface RoleService {
     Response<RoleDTO> createRole(RoleDTO roleDTO);
     Response<RoleDTO> updateRole(RoleDTO roleDTO);

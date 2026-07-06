@@ -37,11 +37,23 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * The core judging pipeline, invoked by {@link com.oj.TDTUOJ.submission.worker.SubmissionWorker}
+ * for each dequeued submission.
+ *
+ * <p>Responsibilities, in order: mark the submission RUNNING, run the user's code against every
+ * test case on Judge0, resolve a single final {@link SubmissionVerdict} (first-failure wins),
+ * persist the result, then update per-user activity/statistics and — for accepted contest
+ * submissions — the ICPC leaderboard. Failures inside the Judge0 loop are converted into an
+ * Internal Error (IE) verdict so a submission never stays stuck in the queue, and leaderboard
+ * failures are swallowed so they can never corrupt the judging result.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class SubmissionJudgeService {
 
+    /** ICPC-style time penalty added per wrong attempt made before the accepted submission. */
     private static final int WRONG_ATTEMPT_PENALTY_MINUTES = 20;
 
     private final SubmissionRepository           submissionRepository;
@@ -60,8 +72,19 @@ public class SubmissionJudgeService {
     private final UserRepository                 userRepository;
     private final MeterRegistry                  meterRegistry;
 
+    /**
+     * Judges a single submission end to end.
+     *
+     * <p>Runs in a transaction so the RUNNING → COMPLETED status transition and all downstream
+     * stat/leaderboard writes commit atomically. Test cases are evaluated sequentially and the
+     * loop short-circuits on the first non-AC result, so the reported verdict is that of the
+     * earliest failing case; timing/memory are the maxima observed across the cases that ran.
+     *
+     * @param job the queued submission descriptor (ids, source code, language, optional contest)
+     */
     @Transactional
     public void judge(SubmissionJobDTO job) {
+        // Start the end-to-end latency timer; stopped once the verdict is committed (step 3).
         Timer.Sample judgeSample = Timer.start(meterRegistry);
         Submission submission = submissionRepository.findById(job.getSubmissionId())
                 .orElseThrow(() -> new NotFoundException("Submission not found"));
@@ -76,7 +99,9 @@ public class SubmissionJudgeService {
 
         log.info("Running submissionId={}", submission.getId());
 
-        // 2. Run against every test case
+        // 2. Run against every test case.
+        // Optimistic default: assume AC and downgrade the moment any case fails. `passed`
+        // counts fully-accepted cases; maxTime/maxMemory track the worst resource usage seen.
         List<TestCase> testCases = testCaseRepository.findTestCasesByProblemId(job.getProblemId());
         int passed = 0;
         SubmissionVerdict finalVerdict = SubmissionVerdict.AC;
@@ -86,9 +111,13 @@ public class SubmissionJudgeService {
 
         try {
             for (TestCase tc : testCases) {
+                // Test-case data lives in S3, not the DB — fetch input + expected output per case.
                 String input          = awsS3Service.readFileContent(tc.getInputFileUrl());
                 String expectedOutput = awsS3Service.readFileContent(tc.getExpectedOutputFileUrl());
 
+                // Hand off to Judge0. Per-case time/memory limits override the problem defaults
+                // when set. Judge0Service maps Judge0's raw status codes to a SubmissionVerdict
+                // (AC/WA/TLE/MLE/RE/CE) and returns timing/memory for this run.
                 Judge0Result result = judge0Service.judge(
                         job.getSourceCode(),
                         job.getSubmissionLanguage(),
@@ -98,6 +127,8 @@ public class SubmissionJudgeService {
                         tc.getMemoryLimit() != null ? tc.getMemoryLimit() : problem.getMemoryLimit()
                 );
 
+                // Track the peak time/memory across all cases run so far (Judge0 may omit these
+                // on a compile error, hence the null checks).
                 if (result.executionTime() != null)
                     maxTime   = Math.max(maxTime,   result.executionTime());
                 if (result.memoryUsed() != null)
@@ -106,6 +137,8 @@ public class SubmissionJudgeService {
                 if (result.verdict() == SubmissionVerdict.AC) {
                     passed++;
                 } else {
+                    // First failing case decides the verdict for the whole submission. No point
+                    // running remaining cases — record the verdict + error and bail out.
                     finalVerdict = result.verdict();
                     errorMessage = result.errorMessage();
                     break; // stop on first failure
@@ -125,7 +158,8 @@ public class SubmissionJudgeService {
             return; // skip stats/leaderboard — an infra failure is not a real attempt
         }
 
-        // 3. Update submission with Judge0 results
+        // 3. Update submission with Judge0 results. Reaching here means either every case
+        // passed (finalVerdict stays AC) or the loop broke early on the first failure.
         submission.setSubmissionVerdict(finalVerdict);
         submission.setSubmissionStatus(SubmissionStatus.COMPLETED);
         submission.setTestCasesPassed(passed);
@@ -145,7 +179,9 @@ public class SubmissionJudgeService {
                 .publishPercentileHistogram()
                 .register(meterRegistry));
 
-        // 4. Record activity and statistics
+        // 4. Record activity and statistics.
+        // isPractice: no contestId means a normal practice submission (drives whether the
+        // leaderboard is touched in step 5).
         boolean isAccepted = finalVerdict == SubmissionVerdict.AC;
         boolean isPractice = job.getContestId() == null;
 
@@ -154,13 +190,15 @@ public class SubmissionJudgeService {
         int earnedPoints = 0;
         if (isAccepted) {
             // Global check: has this user ever AC'd this problem before (in any mode)?
+            // Exclude the current submission so it doesn't count itself as a prior solve.
             long priorAcCount = submissionRepository
                     .countByUserIdAndProblemIdAndSubmissionVerdictAndIdNot(
                             job.getUserId(), problem.getId(), SubmissionVerdict.AC, submission.getId()
                     );
 
             if (priorAcCount == 0) {
-                // First time solving this problem — award points once
+                // First time solving this problem — award points once so repeated AC
+                // submissions don't inflate the user's score.
                 earnedPoints = problem.getPoint();
                 userStatisticsService.recordProblemSolved(job.getUserId());
             }

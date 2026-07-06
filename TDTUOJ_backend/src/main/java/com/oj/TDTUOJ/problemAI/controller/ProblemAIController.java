@@ -18,6 +18,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * AI authoring endpoints under {@code /api/problem-ai}, restricted to ADMIN/CREATOR.
+ * Wraps {@link ProblemAIService}; catches its {@link RuntimeException}s and surfaces the
+ * message as a 400 so validation/upstream-AI failures reach the author as readable text.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/problem-ai")
@@ -36,6 +41,7 @@ public class ProblemAIController {
     public ResponseEntity<Response<ProblemExtractionResult>> extractFromPdf(
             @RequestParam("file") MultipartFile file) {
         try {
+            // Only offer ACTIVE tags to the model so it can't suggest disabled/removed tags.
             List<String> activeTagNames = tagRepository.findAll().stream()
                     .filter(t -> Boolean.TRUE.equals(t.getIsActive()))
                     .map(Tag::getName)
@@ -84,6 +90,8 @@ public class ProblemAIController {
                                 .build());
             }
 
+            // Clamp to a sane range regardless of what the client sent (defense in depth;
+            // the service clamps too) to bound the AI output size and cost.
             int safeCount = Math.max(1, Math.min(request.getCount(), 50));
             GenerateTestCasesResult result = problemAIService.generateTestCases(
                     request.getProblemStatement(), safeCount);

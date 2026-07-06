@@ -11,9 +11,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+/** Data access for {@link OrganizationMember} — the membership roster and role lookups. */
 @Repository
 public interface OrganizationMemberRepository extends JpaRepository<OrganizationMember, Long> {
 
+    // Primary role-check lookup: resolves a specific user's membership (and thus role) in an org.
     Optional<OrganizationMember> findByOrganizationIdAndUserId(Long organizationId, Long userId);
 
     boolean existsByOrganizationIdAndUserId(Long organizationId, Long userId);

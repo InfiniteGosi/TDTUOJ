@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/** Default {@link UserActivityService} maintaining one submission-count bucket per user per day. */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -26,10 +27,12 @@ public class UserActivityServiceImpl implements UserActivityService {
 
     private final ModelMapper modelMapper;
 
+    /** Adds one to today's submission count, creating the day's bucket on first submission. */
     @Override
     public void recordSubmission(Long userId) {
         LocalDate today = LocalDate.now();
 
+        // Reuse today's row if present; otherwise start a fresh zero-count bucket for today.
         UserDailyActivity activity = activityRepository
                 .findByUserIdAndActivityDate(userId, today)
                 .orElseGet(() -> UserDailyActivity.builder()
@@ -42,8 +45,10 @@ public class UserActivityServiceImpl implements UserActivityService {
         activityRepository.save(activity);
     }
 
+    /** Returns the last 12 months of daily activity; only days with activity are present (sparse). */
     @Override
     public Response<List<UserDailyActivityDTO>> getActivityForYear(Long userId) {
+        // Rolling one-year window ending today — matches the heatmap's visible range.
         LocalDate end = LocalDate.now();
         LocalDate start = end.minusYears(1);
 
@@ -60,6 +65,7 @@ public class UserActivityServiceImpl implements UserActivityService {
                 .build();
     }
 
+    /** Resolves the username to an id, then delegates to {@link #getActivityForYear}. */
     @Override
     public Response<List<UserDailyActivityDTO>> getActivityForYearByUsername(String username) {
         Long userId = userRepository.findByUsername(username)

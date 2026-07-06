@@ -13,6 +13,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Admin/creator endpoints for managing problem tags. Base path: {@code api/problem-tags}.
+ *
+ * <p>The class-level {@code @PreAuthorize} restricts <b>every</b> route here to ADMIN or CREATOR
+ * authorities — students never manage the tag vocabulary.</p>
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/problem-tags")

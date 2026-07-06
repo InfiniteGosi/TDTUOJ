@@ -15,6 +15,11 @@ import java.util.Base64;
  */
 public final class PythonTracer implements Tracer {
 
+    /**
+     * No AST rewrite: the user source is embedded verbatim as base64 inside the tracer
+     * preamble, which decodes and {@code exec}s it under {@code sys.settrace}. Base64 avoids
+     * any quoting/escaping hazard from arbitrary user source.
+     */
     @Override
     public String instrument(String source) {
         String b64 = Base64.getEncoder().encodeToString(source.getBytes(StandardCharsets.UTF_8));

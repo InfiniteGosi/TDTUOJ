@@ -13,6 +13,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Request/response DTO for problems. Doubles as a multipart form-backing object on
+ * create/update ({@code statementFile}) and carries computed, per-viewer fields
+ * ({@code solved}/{@code attempted}) plus lecturer-only usage badges. {@code NON_NULL}
+ * inclusion keeps optional fields (e.g. usage badges) off responses where they don't apply.
+ */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

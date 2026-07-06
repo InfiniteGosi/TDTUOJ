@@ -19,6 +19,21 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * JWT authentication filter that runs exactly once per request (via {@link OncePerRequestFilter}).
+ * <p>
+ * Registered {@code addFilterBefore(UsernamePasswordAuthenticationFilter)} in {@code SecurityConfig},
+ * so it populates the {@link SecurityContextHolder} before any downstream authorization checks
+ * (and before the rate-limit filter, which reads the resolved principal to pick a tier).
+ * <p>
+ * Design decisions worth noting:
+ * <ul>
+ *   <li>A <em>missing</em> token is not an error — the request simply proceeds unauthenticated so
+ *       that public endpoints keep working. Only a <em>malformed/invalid</em> token short-circuits
+ *       with a 401 via the entry point.</li>
+ *   <li>Authentication is stateless: nothing is stored server-side, the context is rebuilt per request.</li>
+ * </ul>
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -59,10 +74,12 @@ public class AuthFilter extends OncePerRequestFilter {
                 return; // Stop filter chain execution
             }
 
-            // Load user details from DB by email
+            // Load user details from DB by email. The signature was already cryptographically
+            // verified while extracting the subject above, so this lookup is on a trusted email.
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
 
-            // If email exists AND token is valid, authenticate the request
+            // Only trust the token if the subject still matches the loaded user AND it hasn't expired.
+            // Authorities come from the freshly-loaded user, so role changes take effect on next request.
             if (StringUtils.hasText(email) && jwtUtils.isTokenValid(token, userDetails)) {
                 // Create authentication token with user's authorities
                 UsernamePasswordAuthenticationToken authenticationToken =
@@ -81,7 +98,9 @@ public class AuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         }
         catch (Exception ex) {
-            // Log any downstream errors but don’t break the filter chain
+            // Downstream errors are logged but intentionally swallowed here so this auth filter
+            // never turns an unrelated controller failure into an auth-layer crash. The response
+            // has usually already been (partially) committed by the time control returns.
             log.error(ex.getMessage());
         }
     }

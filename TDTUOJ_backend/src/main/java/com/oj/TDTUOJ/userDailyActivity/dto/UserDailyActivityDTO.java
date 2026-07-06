@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 
+/** A single heatmap cell: one day's submission count for a user. */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDailyActivityDTO {

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/** Data access for the durable {@link LeaderboardCache} snapshot (survives Redis restarts). */
 @Repository
 public interface LeaderboardCacheRepository extends JpaRepository<LeaderboardCache, Long> {
 

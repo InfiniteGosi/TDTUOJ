@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/** Default {@link RoleService} implementation backed by {@link RoleRepository}. */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -21,6 +22,7 @@ public class RoleServiceImpl implements RoleService {
     private final RoleRepository roleRepository;
     private final ModelMapper modelMapper;
 
+    /** Persists a brand-new role and echoes it back as a DTO. */
     @Override
     public Response<RoleDTO> createRole(RoleDTO roleDTO) {
         // Convert DTO to entity
@@ -36,6 +38,7 @@ public class RoleServiceImpl implements RoleService {
                 .build();
     }
 
+    /** Renames an existing role, rejecting a name that is already taken. */
     @Override
     public Response<RoleDTO> updateRole(RoleDTO roleDTO) {
         // Fetch the existing role or throw exception if not found
@@ -59,6 +62,7 @@ public class RoleServiceImpl implements RoleService {
                 .build();
     }
 
+    /** Returns every role — used to populate role pickers in the admin UI. */
     @Override
     public Response<List<RoleDTO>> getAllRoles() {
         // Fetch all roles
@@ -75,6 +79,7 @@ public class RoleServiceImpl implements RoleService {
                 .build();
     }
 
+    /** Removes a role by id after confirming it exists. */
     @Override
     public Response<?> deleteRole(Long id) {
         // Check if the role exists, throw exception if not

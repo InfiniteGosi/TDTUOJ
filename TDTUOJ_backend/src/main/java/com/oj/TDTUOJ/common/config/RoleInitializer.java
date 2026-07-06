@@ -7,14 +7,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+/**
+ * Seeds the fixed set of application roles (ADMIN, CREATOR, PARTICIPANT) on first startup.
+ *
+ * <p>Runs as a {@link CommandLineRunner} so the roles exist before any user is created,
+ * since role lookups are required during registration and JWT authorization.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class RoleInitializer implements CommandLineRunner {
     private final RoleRepository roleRepository;
 
+    /** Populates default roles only when the table is empty, making startup idempotent. */
     @Override
     public void run(String... args) throws Exception {
+        // Guard on count so re-deploys against an existing DB don't create duplicate roles.
         if (roleRepository.count() == 0) {
             log.info("No roles found. Initializing default roles...");
 

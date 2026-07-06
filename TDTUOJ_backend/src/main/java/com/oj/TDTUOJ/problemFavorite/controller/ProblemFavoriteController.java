@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST endpoints for the per-user problem bookmark ("favorite") feature.
+ * Base path: {@code /api/favorites}. All routes operate on the authenticated caller.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/favorites")
