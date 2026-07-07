@@ -6,6 +6,7 @@ import LinkedListRenderer from "./LinkedListRenderer";
 import StackRenderer from "./StackRenderer";
 import QueueRenderer from "./QueueRenderer";
 import MatrixRenderer from "./MatrixRenderer";
+import ScatterRenderer from "./ScatterRenderer";
 import { V, MONO, Canvas } from "./vizTheme";
 
 const T = {
@@ -57,6 +58,10 @@ export default function RendererFactory({ frame }) {
     case "grid":
     case "board":
       return <MatrixRenderer frame={frame} />;
+
+    case "scatter":
+    case "plot":
+      return <ScatterRenderer frame={frame} />;
 
     default:
       // Fallback: render raw JSON for debugging

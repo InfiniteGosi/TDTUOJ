@@ -1,21 +1,33 @@
 // src/components/visualizer/renderers/ArrayRenderer.jsx
-// Frame shape: { type: "array", data: any[], highlighted?: number[], sorted?: number[], swapped?: number[] }
-// VisuAlgo-style: solid bars + boxed cells, orange compare / red swap / green sorted.
+// Frame shape: { type: "array", data: any[], highlighted?: number[], sorted?: number[],
+//   swapped?: number[], selected?: number[], patched?: number[] }
+// VisuAlgo-style: solid bars + boxed cells. red swap / orange compare / green sorted /
+// blue selected / magenta patched (last two ported from algorithm-visualizer).
 import { V, MONO, Canvas, Legend, EmptyNote, onColor } from "./vizTheme";
+import { fmt } from "./vizFormat";
 
 export default function ArrayRenderer({ frame }) {
   if (!frame || !Array.isArray(frame.data)) {
     return <EmptyNote>No array data in this frame.</EmptyNote>;
   }
 
-  const { data, highlighted = [], sorted = [], swapped = [] } = frame;
+  const { data, highlighted = [], sorted = [], swapped = [], selected = [], patched = [] } = frame;
   const numeric = data.every((v) => typeof v === "number");
   const maxVal = numeric ? Math.max(...data.map(Math.abs), 1) : 1;
   const n = data.length;
   const cellFont = n > 20 ? 12 : n > 12 ? 14 : 16;
 
+  const activeAt = (i) =>
+    swapped.includes(i) ||
+    patched.includes(i) ||
+    selected.includes(i) ||
+    highlighted.includes(i) ||
+    sorted.includes(i);
+
   const fillOf = (i) => {
     if (swapped.includes(i)) return V.swap;
+    if (patched.includes(i)) return V.patched;
+    if (selected.includes(i)) return V.selected;
     if (highlighted.includes(i)) return V.current;
     if (sorted.includes(i)) return V.sorted;
     return V.bar;
@@ -36,7 +48,7 @@ export default function ArrayRenderer({ frame }) {
         >
           {data.map((val, i) => {
             const fill = fillOf(i);
-            const active = swapped.includes(i) || highlighted.includes(i);
+            const active = activeAt(i);
             const heightPct = Math.max((Math.abs(val) / maxVal) * 100, 5);
             return (
               <div
@@ -61,7 +73,7 @@ export default function ArrayRenderer({ frame }) {
                       fontWeight: 700,
                     }}
                   >
-                    {val}
+                    {fmt(val)}
                   </div>
                 )}
                 <div
@@ -83,7 +95,7 @@ export default function ArrayRenderer({ frame }) {
       {/* Cells with indexes */}
       <div style={{ display: "flex", gap: n > 24 ? 2 : 4 }}>
         {data.map((val, i) => {
-          const active = highlighted.includes(i) || swapped.includes(i) || sorted.includes(i);
+          const active = activeAt(i);
           const fill = fillOf(i);
           return (
             <div
@@ -117,7 +129,7 @@ export default function ArrayRenderer({ frame }) {
                   padding: "0 2px",
                 }}
               >
-                {String(val)}
+                {fmt(val)}
               </div>
               <div style={{ fontSize: 11, color: V.faint, fontFamily: MONO }}>{i}</div>
             </div>
@@ -127,8 +139,10 @@ export default function ArrayRenderer({ frame }) {
 
       <Legend
         items={[
-          highlighted.length > 0 && { color: V.current, label: "Highlighted" },
           swapped.length > 0 && { color: V.swap, label: "Swapped" },
+          patched.length > 0 && { color: V.patched, label: "Changed" },
+          selected.length > 0 && { color: V.selected, label: "Selected" },
+          highlighted.length > 0 && { color: V.current, label: "Highlighted" },
           sorted.length > 0 && { color: V.sorted, label: "Sorted" },
         ]}
       />

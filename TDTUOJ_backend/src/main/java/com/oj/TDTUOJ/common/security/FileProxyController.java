@@ -1,9 +1,12 @@
 package com.oj.TDTUOJ.common.security;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * Server-side proxy that fetches a remote file and returns its body as text. Its purpose is to work
@@ -30,8 +33,14 @@ public class FileProxyController {
     public ResponseEntity<String> fetchFile(@RequestParam String url) {
         try {
             RestTemplate restTemplate = new RestTemplate();
-            String content = restTemplate.getForObject(url, String.class);
-            return ResponseEntity.ok(content);
+            // Fetch raw bytes and decode as UTF-8 explicitly. Reading as String directly lets
+            // StringHttpMessageConverter fall back to ISO-8859-1 when S3 omits a charset in the
+            // Content-Type, which mangles multi-byte UTF-8 chars (×, ≠, — → mojibake).
+            byte[] bytes = restTemplate.getForObject(url, byte[].class);
+            String content = bytes == null ? "" : new String(bytes, StandardCharsets.UTF_8);
+            return ResponseEntity.ok()
+                    .contentType(new MediaType(MediaType.TEXT_PLAIN, StandardCharsets.UTF_8))
+                    .body(content);
         } catch (Exception e) {
             // Collapse any fetch failure (bad URL, timeout, non-2xx) into a single 500 with the reason.
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

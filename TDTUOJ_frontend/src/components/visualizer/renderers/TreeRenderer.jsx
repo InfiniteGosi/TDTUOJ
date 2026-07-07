@@ -1,37 +1,20 @@
 // src/components/visualizer/renderers/TreeRenderer.jsx
-// Frame shape: { type: "tree", nodes: [{id, val, left?, right?}], highlighted?: (id|val)[], current?: id|val }
-// VisuAlgo-style: solid filled circles, thick edges, bold labels.
+// Frame shape: { type: "tree", nodes: [{id, val, left?, right?}],
+//   highlighted?: (id|val)[], current?: id|val, visited?: id[], patched?: id[] }
+// Walker-style layout with multi-root (forest) support + wheel-zoom / drag-pan.
 import { useMemo } from "react";
 import { V, MONO, Canvas, Legend, EmptyNote, onColor } from "./vizTheme";
+import { fmt } from "./vizFormat";
+import { useZoomPan, ZoomPanSvg } from "./useZoomPan";
 
 const NODE_R = 26;
 const V_GAP = 58; // vertical gap between levels
 const H_GAP = 16; // minimum horizontal gap between siblings
 
-// ── Tree layout: Walker's algorithm (simplified) ─────────────────────────────
-function buildLayout(nodes) {
-  if (!nodes || nodes.length === 0)
-    return { positions: {}, width: 0, height: 0, edges: [] };
-
-  const map = {};
-  nodes.forEach((n) => {
-    map[n.id] = n;
-  });
-
-  // Root = node never referenced as a child (id == null guard keeps id 0 valid).
-  const childIds = new Set();
-  nodes.forEach((n) => {
-    if (n.left != null) childIds.add(n.left);
-    if (n.right != null) childIds.add(n.right);
-  });
-  const roots = nodes.filter((n) => !childIds.has(n.id));
-  if (roots.length === 0)
-    return { positions: {}, width: 0, height: 0, edges: [] };
-  const root = roots[0];
-
+// Lay out one subtree rooted at `rootId`, packing X starting at `xOffset`.
+function layoutSubtree(rootId, map, xOffset, positions, order) {
   const depth = {};
   const subtreeW = {};
-  const order = [];
 
   function dfs(id, d) {
     if (id == null || !map[id]) return 0;
@@ -44,7 +27,7 @@ function buildLayout(nodes) {
     subtreeW[id] = w;
     return w;
   }
-  dfs(root.id, 0);
+  const totalW = dfs(rootId, 0);
 
   const x = {};
   function assignX(id, left) {
@@ -55,15 +38,42 @@ function buildLayout(nodes) {
     assignX(node.left, left);
     assignX(node.right, left + lw + H_GAP + NODE_R * 2);
   }
-  assignX(root.id, 0);
+  assignX(rootId, xOffset);
 
-  const positions = {};
-  order.forEach((id) => {
+  const localOrder = order.filter((id) => id in depth);
+  localOrder.forEach((id) => {
+    if (positions[id]) return;
     positions[id] = {
       x: x[id] + NODE_R,
       y: depth[id] * (NODE_R * 2 + V_GAP) + NODE_R + 10,
     };
   });
+
+  return totalW;
+}
+
+// ── Forest layout: every root laid out left-to-right ─────────────────────────
+function buildLayout(nodes) {
+  if (!nodes || nodes.length === 0) return { positions: {}, width: 0, height: 0, edges: [] };
+
+  const map = {};
+  nodes.forEach((n) => (map[n.id] = n));
+
+  const childIds = new Set();
+  nodes.forEach((n) => {
+    if (n.left != null) childIds.add(n.left);
+    if (n.right != null) childIds.add(n.right);
+  });
+  const roots = nodes.filter((n) => !childIds.has(n.id));
+  if (roots.length === 0) return { positions: {}, width: 0, height: 0, edges: [] };
+
+  const positions = {};
+  const order = [];
+  let xCursor = 0;
+  for (const root of roots) {
+    const w = layoutSubtree(root.id, map, xCursor, positions, order);
+    xCursor += w + NODE_R * 2 + H_GAP * 2; // gap between trees in the forest
+  }
 
   const edges = [];
   nodes.forEach((n) => {
@@ -75,50 +85,47 @@ function buildLayout(nodes) {
 
   const allX = Object.values(positions).map((p) => p.x);
   const allY = Object.values(positions).map((p) => p.y);
-  const width = Math.max(...allX) + NODE_R + 20;
-  const height = Math.max(...allY) + NODE_R + 20;
+  const width = (allX.length ? Math.max(...allX) : 0) + NODE_R + 20;
+  const height = (allY.length ? Math.max(...allY) : 0) + NODE_R + 20;
 
   return { positions, width, height, edges };
 }
 
 export default function TreeRenderer({ frame }) {
-  if (!frame || !Array.isArray(frame.nodes) || frame.nodes.length === 0) {
-    return <EmptyNote>No tree data in this frame.</EmptyNote>;
-  }
+  const nodes = frame?.nodes;
+  const isEmpty = !frame || !Array.isArray(nodes) || nodes.length === 0;
 
-  const { nodes, highlighted = [], current = null } = frame;
+  const { highlighted = [], current = null, visited = [], patched = [] } = frame ?? {};
   const { positions, width, height, edges } = useMemo(
-    () => buildLayout(nodes),
-    [JSON.stringify(nodes)],
+    () => (isEmpty ? { positions: {}, width: 0, height: 0, edges: [] } : buildLayout(nodes)),
+    [isEmpty, JSON.stringify(nodes)],
   );
+
+  const zp = useZoomPan();
+
+  if (isEmpty) return <EmptyNote>No tree data in this frame.</EmptyNote>;
+
+  const highlightedSet = new Set(highlighted.map(String));
+  const visitedSet = new Set(visited.map(String));
+  const patchedSet = new Set(patched.map(String));
 
   const fillOf = (id) => {
     if (current != null && String(id) === String(current)) return V.current;
-    if (highlighted.map(String).includes(String(id))) return V.highlight;
+    if (patchedSet.has(String(id))) return V.patched;
+    if (highlightedSet.has(String(id))) return V.highlight;
+    if (visitedSet.has(String(id))) return V.visited;
     return V.node;
   };
 
   return (
     <Canvas>
-      <svg
-        width={Math.max(width, 200)}
-        height={Math.max(height, 100)}
-        style={{ display: "block", margin: "0 auto" }}
-      >
+      <ZoomPanSvg width={Math.max(width, 200)} height={Math.max(height, 100)} zp={zp}>
         {edges.map((e, i) => {
           const from = positions[e.from];
           const to = positions[e.to];
           if (!from || !to) return null;
           return (
-            <line
-              key={i}
-              x1={from.x}
-              y1={from.y}
-              x2={to.x}
-              y2={to.y}
-              stroke={V.edge}
-              strokeWidth={2.5}
-            />
+            <line key={i} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={V.edge} strokeWidth={2.5} />
           );
         })}
 
@@ -127,7 +134,7 @@ export default function TreeRenderer({ frame }) {
           if (!pos) return null;
           const fill = fillOf(n.id);
           const isCurrent = current != null && String(n.id) === String(current);
-          const label = n.val == null ? "·" : String(n.val);
+          const label = n.val == null ? "·" : fmt(n.val);
           return (
             <g key={n.id}>
               <circle
@@ -137,9 +144,7 @@ export default function TreeRenderer({ frame }) {
                 fill={fill}
                 stroke={fill === V.node ? V.nodeBorder : "#ffffff66"}
                 strokeWidth={isCurrent ? 3 : 2}
-                style={{
-                  filter: isCurrent ? `drop-shadow(0 0 8px ${fill}cc)` : "none",
-                }}
+                style={{ filter: isCurrent ? `drop-shadow(0 0 8px ${fill}cc)` : "none" }}
               />
               <text
                 x={pos.x}
@@ -150,18 +155,21 @@ export default function TreeRenderer({ frame }) {
                 fontSize={label.length > 3 ? 12 : label.length > 2 ? 14 : 16}
                 fontFamily={MONO}
                 fontWeight={700}
+                style={{ pointerEvents: "none" }}
               >
                 {label}
               </text>
             </g>
           );
         })}
-      </svg>
+      </ZoomPanSvg>
 
       <Legend
         items={[
           current != null && { color: V.current, label: `Current: ${current}`, round: true },
+          patched.length > 0 && { color: V.patched, label: "Changed", round: true },
           highlighted.length > 0 && { color: V.highlight, label: "Highlighted", round: true },
+          visited.length > 0 && { color: V.visited, label: "Visited", round: true },
         ]}
       />
     </Canvas>

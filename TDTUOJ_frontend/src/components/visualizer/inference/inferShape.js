@@ -31,6 +31,7 @@ export const KINDS = [
   "auto",
   "array",
   "matrix",
+  "scatter",
   "stack",
   "queue",
   "linkedlist",
@@ -53,6 +54,8 @@ const LLM_ROLE_TO_KIND = {
   matrix: "matrix",
   grid: "matrix",
   board: "matrix",
+  scatter: "scatter",
+  points: "scatter",
   array: "array",
   list: "array",
 };
@@ -211,6 +214,29 @@ function isEdgeList(v) {
   );
 }
 
+/**
+ * Rule 5.5 — array of `[x, y]` numeric pairs that look like coordinates
+ * (some value non-integer or negative) ⇒ scatter plot. Checked AFTER the graph
+ * rules so small-int edge lists stay graphs; a pure small-int table is left to
+ * the matrix rule. Coordinate-like values are what separate a plot from a table.
+ */
+function isScatter(v) {
+  if (!Array.isArray(v) || v.length < 3 || v.length > 5000) return false;
+  if (
+    !v.every(
+      (p) =>
+        Array.isArray(p) &&
+        p.length === 2 &&
+        typeof p[0] === "number" &&
+        typeof p[1] === "number" &&
+        Number.isFinite(p[0]) &&
+        Number.isFinite(p[1]),
+    )
+  )
+    return false;
+  return v.some((p) => !Number.isInteger(p[0]) || !Number.isInteger(p[1]) || p[0] < 0 || p[1] < 0);
+}
+
 /** Object-graph analysis for rules 1/2. Works on the RAW heap (refs, not materialized). */
 function analyzeObjectGraph(rootRef, frame) {
   const heap = frame?.heap ?? {};
@@ -318,6 +344,7 @@ export function inferKind(name, value, frame, frames) {
       if (behavioral) return behavioral.kind;
       return "array";                                // rule 9
     }
+    if (isScatter(m)) return "scatter";              // rule 5.5 — coordinate pairs
     if (is2DArray(m)) return "matrix";               // rule 6
     return "memory";                                 // rule 10
   }
@@ -512,12 +539,8 @@ function objectGraphToGraph(value, frame) {
   return { type: "graph", nodes, edges };
 }
 
-/**
- * Build the prop-frame for the semantic renderer of `kind`,
- * or null when the value can't be presented as that kind
- * (caller falls back to the memory view).
- */
-export function buildRendererFrame(name, kind, frame, prevFrame, frames) {
+/** Build the renderer frame for `kind` from a single frame (no cross-frame diff). */
+function buildOnce(name, kind, frame, prevFrame, frames) {
   const value = visibleVariables(frame)[name];
   if (value === undefined) return null;
   const m = materialize(value, frame);
@@ -532,6 +555,11 @@ export function buildRendererFrame(name, kind, frame, prevFrame, frames) {
     case "matrix": {
       if (is2DArray(m)) return { type: "matrix", data: m, label: name };
       if (isPrimitiveArray(m)) return { type: "matrix", data: [m], label: name };
+      return null;
+    }
+    case "scatter": {
+      if (isScatter(m) || (is2DArray(m) && m.every((r) => r.length === 2 && r.every((x) => typeof x === "number"))))
+        return { type: "scatter", points: m, label: name };
       return null;
     }
     case "stack": {
@@ -574,4 +602,161 @@ export function buildRendererFrame(name, kind, frame, prevFrame, frames) {
     default:
       return null;
   }
+}
+
+// ── Per-step highlight from prev→cur diff ────────────────────────────────────
+// array/stack/queue emit their own highlights in buildOnce; these four kinds
+// don't, so without this the ported "changed/current" states never light up.
+const DIFF_KINDS = new Set(["matrix", "tree", "linkedlist", "graph"]);
+
+function decorateDiff(kind, out, prev) {
+  if (!prev) return;
+  if (kind === "matrix") {
+    const patched = [];
+    for (let r = 0; r < out.data.length; r++) {
+      const cur = out.data[r] ?? [];
+      const old = prev.data?.[r] ?? [];
+      for (let c = 0; c < cur.length; c++) {
+        if (cur[c] !== old[c]) patched.push([r, c]);
+      }
+    }
+    if (patched.length > 0 && patched.length <= 256) out.patched = patched;
+    return;
+  }
+  if (kind === "tree" || kind === "linkedlist") {
+    const prevMap = new Map((prev.nodes ?? []).map((n) => [String(n.id), n.val]));
+    const added = [];
+    const changed = [];
+    for (const n of out.nodes ?? []) {
+      const id = String(n.id);
+      if (!prevMap.has(id)) added.push(n.id);
+      else if (prevMap.get(id) !== n.val) changed.push(n.id);
+    }
+    if (kind === "tree") {
+      if (added.length) out.highlighted = added;
+      if (changed.length) out.patched = changed;
+      const focus = [...changed, ...added];
+      if (focus.length === 1) out.current = focus[0];
+    } else {
+      const focus = [...added, ...changed];
+      if (focus.length === 1) out.current = focus[0];
+      else if (focus.length) out.highlighted = focus;
+    }
+    return;
+  }
+  if (kind === "graph") {
+    const prevNodes = new Set((prev.nodes ?? []).map((n) => String(n.id)));
+    const addedNodes = (out.nodes ?? []).filter((n) => !prevNodes.has(String(n.id))).map((n) => n.id);
+    if (addedNodes.length) out.highlighted = addedNodes;
+    const prevEdges = new Set((prev.edges ?? []).map((e) => `${e.from}-${e.to}`));
+    const newEdge = (out.edges ?? []).find((e) => !prevEdges.has(`${e.from}-${e.to}`));
+    if (newEdge) out.activeEdge = [newEdge.from, newEdge.to];
+  }
+}
+
+// Sibling-variable correlation for graph progress. A constant adjacency matrix
+// never changes across frames, so the traversal progress lives in OTHER visible
+// variables: a "current node" scalar (u/v/node/cur…) and a "visited" boolean
+// array or id set. We heuristically pull them into the graph frame so the
+// renderer can animate the walk — the auto-inference analogue of an explicit
+// tracer's graph.visit(u) call.
+const CURRENT_NODE_NAMES = new Set([
+  "u", "v", "w", "node", "cur", "curr", "current", "at", "start", "src", "u1", "x", "top", "front", "vertex",
+]);
+const VISITED_NAMES = new Set([
+  "visited", "seen", "vis", "used", "done", "mark", "marked", "explored", "discovered",
+]);
+
+function attachGraphProgress(out, frame, prevFrame) {
+  if (!out?.nodes?.length) return;
+  const ids = new Set(out.nodes.map((n) => Number(n.id)));
+  const n = out.nodes.length;
+  const vars = visibleVariables(frame);
+  const prevVars = prevFrame ? visibleVariables(prevFrame) : {};
+  const names = Object.keys(vars);
+
+  // ── visited: boolean/0-1 mask of length n, or a named id set/array ─────────
+  let visited = null;
+  for (const nm of names) {
+    const v = materialize(vars[nm], frame);
+    if (!isPrimitiveArray(v)) continue;
+    const named = VISITED_NAMES.has(nm.toLowerCase());
+    // mask form: length n, all boolean (any name) or all 0/1 (named only)
+    if (v.length === n) {
+      const boolMask = v.every((x) => typeof x === "boolean");
+      const intMask = v.every((x) => x === 0 || x === 1);
+      if (boolMask || (intMask && named)) {
+        const idx = [];
+        v.forEach((x, i) => {
+          if (x === true || x === 1) idx.push(out.nodes[i].id);
+        });
+        if (idx.length) {
+          visited = idx;
+          break;
+        }
+      }
+    }
+    // id-list form: named, every value a valid node id (e.g. a "seen" list)
+    if (named && v.length > 0 && v.every((x) => Number.isInteger(x) && ids.has(x))) {
+      visited = v.slice();
+      break;
+    }
+  }
+  if (visited && !out.visited) out.visited = visited;
+
+  // ── current node: integer scalar holding a valid node id ───────────────────
+  let current = null;
+  let currentName = null;
+  let best = 0;
+  for (const nm of names) {
+    const val = vars[nm];
+    if (typeof val !== "number" || !Number.isInteger(val) || !ids.has(val)) continue;
+    let score = 0;
+    if (CURRENT_NODE_NAMES.has(nm.toLowerCase())) score += 2;
+    if (prevVars[nm] !== val) score += 1; // changed this step → likely the cursor
+    if (score > best) {
+      best = score;
+      current = val;
+      currentName = nm;
+    }
+  }
+  if (current != null && best >= 1) {
+    if (out.current == null) out.current = current;
+    // active edge = last hop of the cursor variable
+    const pc = currentName != null ? prevVars[currentName] : undefined;
+    if (typeof pc === "number" && ids.has(pc) && pc !== current && !out.activeEdge) {
+      const edge = (out.edges ?? []).find(
+        (e) =>
+          (Number(e.from) === pc && Number(e.to) === current) ||
+          (Number(e.from) === current && Number(e.to) === pc),
+      );
+      if (edge) out.activeEdge = [edge.from, edge.to];
+    }
+  }
+}
+
+/**
+ * Build the prop-frame for the semantic renderer of `kind`, decorated with a
+ * per-step highlight derived from the previous frame. Returns null when the
+ * value can't be presented as that kind (caller falls back to the memory view).
+ */
+export function buildRendererFrame(name, kind, frame, prevFrame, frames) {
+  const out = buildOnce(name, kind, frame, prevFrame, frames);
+  if (!out) return null;
+  if (prevFrame && DIFF_KINDS.has(kind)) {
+    const prev = buildOnce(name, kind, prevFrame, null, frames);
+    try {
+      decorateDiff(kind, out, prev);
+    } catch {
+      /* highlighting is best-effort — never break the render */
+    }
+  }
+  if (kind === "graph") {
+    try {
+      attachGraphProgress(out, frame, prevFrame);
+    } catch {
+      /* progress correlation is best-effort */
+    }
+  }
+  return out;
 }

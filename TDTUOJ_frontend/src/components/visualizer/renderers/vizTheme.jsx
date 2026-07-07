@@ -26,6 +26,8 @@ export const V = {
   visited: "#9b6dd6",     // violet — already seen (white text)
   sorted: "#2fbf71",      // green — done/sorted (dark text)
   swap: "#ff5252",        // red — swapped/removed (white text)
+  selected: "#3d7bff",    // blue — algorithm-visualizer "selected" (white text)
+  patched: "#e0359e",     // magenta — algorithm-visualizer "patched"/changed (white text)
   darkText: "#15202e",
 
   // bars & edges

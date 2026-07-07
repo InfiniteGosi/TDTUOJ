@@ -24,6 +24,7 @@ const MODE_META = {
 const KIND_LABEL = {
   array: "Array",
   matrix: "Matrix",
+  scatter: "Scatter",
   stack: "Stack",
   queue: "Queue",
   linkedlist: "Linked List",
@@ -49,7 +50,9 @@ export default function VisualizerPlayer({
   const [step, setStep] = useState(0);
   const [mode, setMode] = useState(MODES.SNAPSHOT);
   const [playing, setPlaying] = useState(false);
-  const [delay, setDelay] = useState(600);
+  // exponential speed curve (ported from algorithm-visualizer Player): 0 = slow, 4 = fast
+  const [speed, setSpeed] = useState(2.4);
+  const delay = Math.max(40, Math.round(4000 / Math.exp(speed)));
   const [overrides, setOverrides] = useState({}); // name -> kind ("auto" = clear)
   const timerRef = useRef(null);
   const total = frames.length;
@@ -575,11 +578,11 @@ export default function VisualizerPlayer({
               </span>
               <input
                 type="range"
-                min={50}
-                max={2000}
-                step={50}
-                value={2050 - delay}
-                onChange={(e) => setDelay(2050 - Number(e.target.value))}
+                min={0}
+                max={4}
+                step={0.25}
+                value={speed}
+                onChange={(e) => setSpeed(Number(e.target.value))}
                 style={{
                   width: 72,
                   cursor: "pointer",
@@ -597,7 +600,7 @@ export default function VisualizerPlayer({
                   minWidth: 32,
                 }}
               >
-                {delay < 200 ? "Fast" : delay < 700 ? "Med" : "Slow"}
+                {speed >= 3 ? "Fast" : speed >= 1.5 ? "Med" : "Slow"}
               </span>
             </div>
           )}
@@ -607,9 +610,28 @@ export default function VisualizerPlayer({
   );
 }
 
-// ── Variable card with "view as" override ────────────────────────────────────
+// ── Variable card with "view as" override + resizable body ───────────────────
 function VariableCard({ name, kind, source, overrideValue = "auto", onKindChange, children }) {
   const badge = SOURCE_BADGE[source];
+  const bodyRef = useRef(null);
+  const [height, setHeight] = useState(null); // null = auto (fit content)
+  const drag = useRef(null);
+
+  const onHandleDown = (e) => {
+    const h = bodyRef.current?.getBoundingClientRect().height ?? 200;
+    drag.current = { startY: e.clientY, startH: h };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+  };
+  const onHandleMove = (e) => {
+    if (!drag.current) return;
+    const next = Math.max(80, drag.current.startH + (e.clientY - drag.current.startY));
+    setHeight(next);
+  };
+  const onHandleUp = () => {
+    drag.current = null;
+  };
+
   return (
     <div
       style={{
@@ -695,7 +717,32 @@ function VariableCard({ name, kind, source, overrideValue = "auto", onKindChange
           </label>
         )}
       </div>
-      <div style={{ overflow: "auto" }}>{children}</div>
+      <div
+        ref={bodyRef}
+        style={{ overflow: "auto", height: height ?? "auto", maxHeight: height ? undefined : "70vh" }}
+      >
+        {children}
+      </div>
+      {/* drag to resize this card's height (ported from reference Divider) */}
+      <div
+        onPointerDown={onHandleDown}
+        onPointerMove={onHandleMove}
+        onPointerUp={onHandleUp}
+        onPointerLeave={onHandleUp}
+        title="Drag to resize"
+        style={{
+          height: 8,
+          cursor: "ns-resize",
+          background: T.surface,
+          borderTop: `1px solid ${T.border}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          touchAction: "none",
+        }}
+      >
+        <div style={{ width: 34, height: 3, borderRadius: 2, background: T.border }} />
+      </div>
     </div>
   );
 }
