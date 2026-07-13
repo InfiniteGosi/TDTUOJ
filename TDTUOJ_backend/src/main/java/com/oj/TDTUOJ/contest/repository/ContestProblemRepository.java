@@ -27,6 +27,9 @@ public interface ContestProblemRepository extends JpaRepository<ContestProblem, 
     /** True if the problem is attached to any contest (usage badge). */
     boolean existsByProblemId(Long problemId);
 
+    /** Detach a problem from every contest (clears the FK before deleting the problem). */
+    void deleteByProblemId(Long problemId);
+
     /** True if the problem sits in any contest that hasn't ended yet. */
     @Query("SELECT COUNT(cp) > 0 FROM ContestProblem cp " +
            "WHERE cp.problem.id = :problemId AND cp.contest.endTime > :now")

@@ -17,4 +17,7 @@ public interface LabExerciseRepository extends JpaRepository<LabExercise, Long> 
 
     /** True if the problem is used as an exercise in any lab (students need the statement). */
     boolean existsByProblemId(Long problemId);
+
+    /** Remove a problem from every lab (clears the FK before deleting the problem). */
+    void deleteByProblemId(Long problemId);
 }

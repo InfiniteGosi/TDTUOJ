@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Trophy, ArrowLeft, Save, Plus, Trash2, Search, ChevronDown, AlertTriangle, Clock, CalendarClock, User,
@@ -10,6 +10,79 @@ import DateTimePicker from "../common/DateTimePicker";
 import SuggestiveSearch from "../common/SuggestiveSearch";
 import ProblemPickerModal from "../common/ProblemPickerModal";
 import { FormPageShell, StickyFormBar, SectionCard, Field, ButtonSpinner } from "../common/FormSection";
+
+// ─── NumericStepper ───────────────────────────────────────────────────────────
+
+const NumericStepper = ({ value, onChange, min = 0, max = Infinity, step = 1, presets, disabled = false, unit = "" }) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft]     = useState(String(value ?? ""));
+
+  const clamp = (n) => Math.min(max, Math.max(min, n));
+  const commit = (raw) => { const n = clamp(parseInt(raw) || min); onChange(n); setDraft(String(n)); setEditing(false); };
+  const adjust = (delta) => { const n = clamp((parseInt(value) || 0) + delta); onChange(n); setDraft(String(n)); };
+
+  const btnStyle = (side) => ({
+    width: 30, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+    background: "none", border: "none",
+    borderRight: side === "left"  ? "1px solid var(--border-subtle)" : "none",
+    borderLeft:  side === "right" ? "1px solid var(--border-subtle)" : "none",
+    cursor: disabled ? "not-allowed" : "pointer",
+    color: "var(--text-muted)", transition: "background 0.1s, color 0.1s",
+    opacity: disabled ? 0.4 : 1,
+  });
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+      <div style={{ display: "flex", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", overflow: "hidden", background: disabled ? "var(--bg-overlay)" : "var(--bg-raised)" }}>
+        <button type="button" style={btnStyle("left")} onClick={() => !disabled && adjust(-step)}
+          onMouseEnter={(e) => { if (!disabled) { e.currentTarget.style.background = "var(--bg-overlay)"; e.currentTarget.style.color = "var(--text-primary)"; } }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--text-muted)"; }}>
+          <svg width="10" height="2" viewBox="0 0 10 2"><rect width="10" height="2" rx="1" fill="currentColor"/></svg>
+        </button>
+
+        {editing ? (
+          <input
+            autoFocus type="number" value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => commit(draft)}
+            onKeyDown={(e) => { if (e.key === "Enter") commit(draft); if (e.key === "Escape") { setDraft(String(value)); setEditing(false); } }}
+            style={{ flex: 1, textAlign: "center", background: "none", border: "none", outline: "none", fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--primary)", height: 32, minWidth: 0 }}
+            min={min} max={max}
+          />
+        ) : (
+          <button type="button" onClick={() => { if (!disabled) { setDraft(String(value ?? "")); setEditing(true); } }}
+            title="Click to type"
+            style={{ flex: 1, background: "none", border: "none", cursor: disabled ? "not-allowed" : "text", fontSize: "var(--text-sm)", fontWeight: 700, color: disabled ? "var(--text-muted)" : "var(--primary)", textAlign: "center", height: 32, minWidth: 0 }}>
+            {value !== "" && value !== undefined ? `${value}${unit}` : <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>—</span>}
+          </button>
+        )}
+
+        <button type="button" style={btnStyle("right")} onClick={() => !disabled && adjust(+step)}
+          onMouseEnter={(e) => { if (!disabled) { e.currentTarget.style.background = "var(--bg-overlay)"; e.currentTarget.style.color = "var(--text-primary)"; } }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "var(--text-muted)"; }}>
+          <svg width="10" height="10" viewBox="0 0 10 10"><rect x="4" width="2" height="10" rx="1" fill="currentColor"/><rect y="4" width="10" height="2" rx="1" fill="currentColor"/></svg>
+        </button>
+      </div>
+
+      {presets && !disabled && (
+        <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+          {presets.map((p) => (
+            <button key={p} type="button" onClick={() => { onChange(p); setDraft(String(p)); }}
+              style={{
+                padding: "1px 7px", borderRadius: "var(--radius-pill)",
+                border: `1px solid ${Number(value) === p ? "var(--primary)" : "var(--border-subtle)"}`,
+                background: Number(value) === p ? "var(--primary-subtle)" : "none",
+                color: Number(value) === p ? "var(--primary)" : "var(--text-muted)",
+                fontSize: "var(--text-xs)", fontWeight: 700, cursor: "pointer", transition: "all 0.1s",
+              }}>
+              {p}{unit}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ─── Problem picker dropdown ───────────────────────────────────────────────────
 
@@ -58,15 +131,15 @@ const ProblemPicker = ({ selectedProblems, onChange }) => {
                 <span style={{ fontSize: "var(--text-base)", fontWeight: 600, color: "var(--text-primary)" }}>{p.problemTitle}</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1">
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>pts:</span>
-                  <input
-                    type="number" className="input"
-                    style={{ width: 70, textAlign: "center", padding: "2px 6px", fontSize: "var(--text-sm)" }}
-                    value={p.points}
-                    onChange={(e) => updatePoints(p.problemId, e.target.value)}
-                    min={0}
-                  />
+                  <div style={{ width: 110 }}>
+                    <NumericStepper
+                      value={p.points}
+                      onChange={(n) => updatePoints(p.problemId, n)}
+                      min={0} max={9999} step={10}
+                    />
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -370,18 +443,43 @@ const AdminContestFormPage = () => {
 
             {/* Card 3 — Settings */}
             <SectionCard number={3} title="SETTINGS" delay={120}>
-              <div className="flex flex-col gap-4">
-                <Field label="Max Participants" hint="Leave blank for unlimited">
-                  <input type="number" className="input" placeholder="e.g. 500" value={form.maxParticipant} onChange={(e) => set("maxParticipant", e.target.value)} min={1} style={{ width: 200 }} />
-                </Field>
-                <Field label="Scoreboard Freeze (minutes before end)" hint="ICPC style — public standings stop updating for the final N minutes. Admins still see the live board. 0 or blank = no freeze.">
-                  <input type="number" className="input" placeholder="e.g. 60" value={form.freezeDuration} onChange={(e) => set("freezeDuration", e.target.value)} min={0} style={{ width: 200 }} />
-                </Field>
-                <div className="flex gap-6">
+              <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
+
+                {/* Max Participants */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Max Participants</label>
+                  <div style={{ width: 180 }}>
+                    <NumericStepper
+                      value={form.maxParticipant === "" ? "" : Number(form.maxParticipant)}
+                      onChange={(n) => set("maxParticipant", n)}
+                      min={1} max={10000} step={1}
+                    />
+                  </div>
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>Leave blank for unlimited</span>
+                </div>
+
+                {/* Scoreboard Freeze */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Scoreboard Freeze</label>
+                  <div style={{ width: 180 }}>
+                    <NumericStepper
+                      value={form.freezeDuration === "" ? 0 : Number(form.freezeDuration)}
+                      onChange={(n) => set("freezeDuration", n)}
+                      min={0} max={300} step={5}
+                      unit="m"
+                    />
+                  </div>
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>Minutes before end. 0 = no freeze.</span>
+                </div>
+
+                {/* Rated toggle — pushed to end */}
+                <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", justifyContent: "center", gap: 6, paddingTop: 22 }}>
                   <Toggle value={form.isRated} onChange={(v) => set("isRated", v)} label="Rated contest" />
                 </div>
+
               </div>
             </SectionCard>
+
 
             {/* Card 4 — Problems */}
             <SectionCard number={4} title={`PROBLEMS (${form.problems.length})`} delay={180}>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Building2, Plus, Eye, Trash2, Edit, Search,
+  Building2, Plus, Eye, EyeOff, Trash2, Edit, Search,
   Users, Globe, Lock, X, Copy, Check, Calendar, Save,
 } from "lucide-react";
 import Pagination from "../common/Pagination";
@@ -165,6 +165,7 @@ const AdminOrganizationPage = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  const [revealedId, setRevealedId] = useState(null);
   const [size, setSize] = useState(10);
 
   const isAdmin = ApiService.isAdmin();
@@ -297,8 +298,11 @@ const AdminOrganizationPage = () => {
                       <td>
                         {org.code ? (
                           <div className="flex items-center gap-1">
-                            <span style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--primary)", fontFamily: "monospace", letterSpacing: "0.05em" }}>{org.code}</span>
-                            <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2, borderRadius: 4 }} onClick={() => handleCopyCode(org.code, org.id)}>
+                            <span style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--primary)", fontFamily: "monospace", letterSpacing: "0.05em" }}>{revealedId === org.id ? org.code : "*".repeat(org.code.length)}</span>
+                            <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2, borderRadius: 4 }} title={revealedId === org.id ? "Hide code" : "Show code"} onClick={() => setRevealedId((v) => (v === org.id ? null : org.id))}>
+                              {revealedId === org.id ? <EyeOff size={12} color="var(--text-muted)" /> : <Eye size={12} color="var(--text-muted)" />}
+                            </button>
+                            <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2, borderRadius: 4 }} title="Copy code" onClick={() => handleCopyCode(org.code, org.id)}>
                               {copiedId === org.id ? <Check size={12} color="var(--green-ac)" /> : <Copy size={12} color="var(--text-muted)" />}
                             </button>
                           </div>

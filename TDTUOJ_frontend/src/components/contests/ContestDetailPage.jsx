@@ -95,40 +95,40 @@ const DiffBadge = ({ difficulty }) => {
 
 // ─── Sidebar countdown clock ──────────────────────────────────────────────────
 
-const ClockDigit = ({ val, unit }) => (
-  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+const ClockDigit = ({ val, unit, accent }) => (
+  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
     <div style={{
-      background: "var(--bg-void)", border: "1px solid var(--border-default)",
-      borderRadius: "var(--radius-sm)", padding: "5px 9px",
-      fontFamily: "var(--font-code)", fontSize: "var(--text-xl)", fontWeight: 800,
-      color: "var(--text-primary)", lineHeight: 1, minWidth: 40, textAlign: "center",
+      background: "var(--bg-void)",
+      border: `1px solid ${accent ? "color-mix(in srgb, " + accent + " 30%, var(--border-default))" : "var(--border-default)"}`,
+      borderRadius: "var(--radius-sm)", padding: "6px 10px",
+      fontFamily: "var(--font-code)", fontSize: "var(--text-lg)", fontWeight: 800,
+      color: "var(--text-primary)", lineHeight: 1, minWidth: 38, textAlign: "center",
+      boxShadow: accent ? `0 0 12px -4px ${accent}55` : "none",
+      transition: "box-shadow 0.3s",
     }}>
       {String(val).padStart(2, "0")}
     </div>
-    <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.07em", textTransform: "uppercase" }}>
+    <span style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
       {unit}
     </span>
   </div>
 );
 
-const Sep = () => (
-  <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--border-strong)", paddingBottom: 14, lineHeight: 1 }}>:</span>
+const Sep = ({ accent }) => (
+  <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-base)", fontWeight: 700, color: accent ?? "var(--border-strong)", paddingBottom: 16, lineHeight: 1, opacity: 0.6 }}>:</span>
 );
 
-const SidebarClock = ({ targetDate, label, onExpire }) => {
+const SidebarClock = ({ targetDate, label, onExpire, accent }) => {
   const r = useCountdown(targetDate, onExpire);
   if (!r) return null;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</span>
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 5 }}>
-        {r.days > 0 && <><ClockDigit val={r.days} unit="days" /><Sep /></>}
-        <ClockDigit val={r.hours} unit="hrs" />
-        <Sep />
-        <ClockDigit val={r.minutes} unit="min" />
-        <Sep />
-        <ClockDigit val={r.seconds} unit="sec" />
-      </div>
+    <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+      {r.days > 0 && <><ClockDigit val={r.days} unit="days" accent={accent} /><Sep accent={accent} /></>}
+      <ClockDigit val={r.hours} unit="hrs" accent={accent} />
+      <Sep accent={accent} />
+      <ClockDigit val={r.minutes} unit="min" accent={accent} />
+      <Sep accent={accent} />
+      <ClockDigit val={r.seconds} unit="sec" accent={accent} />
     </div>
   );
 };
@@ -699,8 +699,22 @@ const ContestDetailPage = () => {
 
             {/* ── Countdown ── */}
             {clockTarget && (
-              <div className="oj-card" style={{ padding: "var(--space-4)" }}>
-                <SidebarClock targetDate={clockTarget} label={clockLabel} onExpire={reload} />
+              <div className="oj-card" style={{ overflow: "hidden" }}>
+                <div className="oj-panelhead">
+                  <Clock size={12} style={{ color: status === "RUNNING" ? "var(--green-ac)" : "var(--amber-tle)", flexShrink: 0 }} />
+                  <span className="oj-panelhead-label">{clockLabel}</span>
+                  {status === "RUNNING" && (
+                    <span style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: "var(--green-ac)", display: "inline-block", animation: "pulse 1.5s infinite", flexShrink: 0 }} />
+                  )}
+                </div>
+                <div style={{ padding: "var(--space-4) var(--space-4) var(--space-3)" }}>
+                  <SidebarClock
+                    targetDate={clockTarget}
+                    label={clockLabel}
+                    onExpire={reload}
+                    accent={status === "RUNNING" ? "var(--green-ac)" : undefined}
+                  />
+                </div>
               </div>
             )}
 

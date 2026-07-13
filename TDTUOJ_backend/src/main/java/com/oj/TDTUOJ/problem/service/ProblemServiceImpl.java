@@ -511,6 +511,18 @@ public class ProblemServiceImpl implements ProblemService {
             Problem problem = problemRepository.findById(id)
                     .orElseThrow(() -> new NotFoundException("Problem not found with id: " + id));
 
+            // Contest-fairness: a problem in a contest that has already started (running or ended)
+            // must not be deleted — its submissions and leaderboards still reference it.
+            if (contestProblemRepository.existsStartedContestAttachment(id, LocalDateTime.now())) {
+                throw new BadRequestException(
+                        "This problem belongs to a contest that has already started and cannot be deleted.");
+            }
+
+            // Detach from any remaining references (upcoming contests, labs) so the FK constraints
+            // are clear before the problem row itself is deleted.
+            contestProblemRepository.deleteByProblemId(id);
+            labExerciseRepository.deleteByProblemId(id);
+
             String basePath = String.format("problems/%d-%s", problem.getId(), sanitize(problem.getTitle()));
             List<TestCase> testCases = problem.getTestCases();
 

@@ -17,6 +17,7 @@ import ChangePasswordPage from "./components/profile/ChangePasswordPage";
 import AdminUserPage from "./components/admin/AdminUserPage";
 import AdminDashboardPage from "./components/admin/AdminDashboardPage";
 import AdminEditUserPage from "./components/admin/AdminEditUserPage";
+import AdminRegisterUserPage from "./components/admin/AdminRegisterUserPage";
 import AdminProblemTagPage from "./components/admin/AdminProblemTagPage";
 import ContestPage from "./components/contests/ContestPage";
 import ContestDetailPage from "./components/contests/ContestDetailPage";
@@ -99,6 +100,7 @@ function App() {
                 <Route path="my-problems/new" element={<MyProblemFormPage />} />
                 <Route path="my-problems/:id/edit" element={<MyProblemFormPage />} />
                 <Route path="users" element={<AdminRoute element={<AdminUserPage />} />} />
+                <Route path="/admin/users/register" element={<AdminRoute element={<AdminRegisterUserPage />} />} />
                 <Route path="/admin/users/edit/:userId" element={<AdminRoute element={<AdminEditUserPage />} />} />
               </Route>
               <Route path="*" element={<Navigate to="/home" />} />

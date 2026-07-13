@@ -5,6 +5,7 @@ import {
   Shield, ShieldCheck, Crown, LogOut, UserMinus,
   ChevronLeft, ChevronRight, ArrowLeft, Settings, X,
   Save, KeyRound, LogIn, UserPlus, Search, BookOpen,
+  Eye, EyeOff,
 } from "lucide-react";
 import SuggestiveSearch from "../common/SuggestiveSearch";
 import ApiService from "../../services/ApiService";
@@ -245,6 +246,7 @@ const OrganizationDetailPage = () => {
   const [memberPage, setMemberPage]       = useState(0);
   const [memberTotalPages, setMemberTotalPages] = useState(0);
   const [codeCopied, setCodeCopied]       = useState(false);
+  const [codeRevealed, setCodeRevealed]   = useState(false);
   const [editOpen, setEditOpen]           = useState(false);
   const [joinCodeOpen, setJoinCodeOpen]   = useState(false);
   const [joinLoading, setJoinLoading]     = useState(false);
@@ -673,13 +675,25 @@ const OrganizationDetailPage = () => {
                   <span className="oj-panelhead-label">Invite Code</span>
                 </div>
                 <div style={{ padding: "var(--space-3) var(--space-4)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: "var(--text-xl)", fontWeight: 800, color: "var(--primary)", letterSpacing: "0.12em", fontFamily: "var(--font-code)" }}>{org.code}</span>
-                  <button style={{ background: "transparent", border: "none", cursor: "pointer", padding: 6, borderRadius: "var(--radius-sm)", color: "var(--text-muted)", display: "flex", transition: "color 0.12s" }}
-                    onClick={handleCopyCode}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = "var(--primary)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}>
-                    {codeCopied ? <Check size={16} color="var(--green-ac)" /> : <Copy size={16} />}
-                  </button>
+                  <span style={{ fontSize: "var(--text-xl)", fontWeight: 800, color: "var(--primary)", letterSpacing: "0.12em", fontFamily: "var(--font-code)" }}>
+                    {codeRevealed ? org.code : "*".repeat(org.code.length)}
+                  </span>
+                  <div style={{ display: "flex", gap: 2 }}>
+                    <button style={{ background: "transparent", border: "none", cursor: "pointer", padding: 6, borderRadius: "var(--radius-sm)", color: "var(--text-muted)", display: "flex", transition: "color 0.12s" }}
+                      title={codeRevealed ? "Hide code" : "Show code"}
+                      onClick={() => setCodeRevealed((v) => !v)}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "var(--primary)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}>
+                      {codeRevealed ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                    <button style={{ background: "transparent", border: "none", cursor: "pointer", padding: 6, borderRadius: "var(--radius-sm)", color: "var(--text-muted)", display: "flex", transition: "color 0.12s" }}
+                      title="Copy code"
+                      onClick={handleCopyCode}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "var(--primary)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; }}>
+                      {codeCopied ? <Check size={16} color="var(--green-ac)" /> : <Copy size={16} />}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
