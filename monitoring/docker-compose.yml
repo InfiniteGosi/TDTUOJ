@@ -19,9 +19,25 @@ services:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_RENDERING_SERVER_URL: http://renderer:8081/render
+      GF_RENDERING_CALLBACK_URL: http://grafana:3000/
+      GF_RENDERING_RENDERER_TOKEN: tdtuoj-renderer-secret
+      GF_LOG_FILTERS: rendering:debug
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - prometheus
+      - renderer
     restart: unless-stopped
+
+  renderer:
+    image: grafana/grafana-image-renderer:latest
+    container_name: tdtuoj-renderer
+    ports:
+      - "8081:8081"
+    environment:
+      ENABLE_METRICS: "true"
+      AUTH_TOKEN: tdtuoj-renderer-secret
+    restart: unless-stopped
+

@@ -19,29 +19,29 @@ skinparam nodeBorderColor #000000
 skinparam cloudBackgroundColor #F3E5F5
 skinparam cloudBorderColor #000000
 
-actor "Sinh viên" as student
-actor "Giảng viên /\nQuản trị viên" as creator
+actor "User" as student
+actor "Admin/Creator" as creator
 
-package "Phía giao diện (Frontend)" #E3F2FD {
-  rectangle "Trình duyệt — React SPA (Vite)\nMonaco Editor, Chakra UI, Bootstrap" as spa #FFFFFF
+package "Frontend" #E3F2FD {
+  rectangle "Browser — React SPA (Vite)\nMonaco Editor, Chakra UI, Bootstrap" as spa #FFFFFF
 }
 
-package "Phía máy chủ (Backend) — Spring Boot" #E8F5E9 {
-  rectangle "Bảo mật\nJWT · CORS" as sec #FFFFFF
+package "Backend — Spring Boot" #E8F5E9 {
+  rectangle "Security\nJWT · CORS" as sec #FFFFFF
   rectangle "REST Controllers" as ctrl #FFFFFF
-  rectangle "Service layer\n(nghiệp vụ)" as svc #FFFFFF
+  rectangle "Service layer\n(Business logic)" as svc #FFFFFF
   rectangle "Submission Worker\n(chấm bài bất đồng bộ)" as worker #FFFFFF
   rectangle "WebClient (WebFlux)" as webclient #FFFFFF
 }
 
-package "Lưu trữ & Bộ nhớ đệm" #FFF3E0 {
+package "Storage & Cache" #FFF3E0 {
   database "PostgreSQL" as pg
-  queue "Redis\nhàng đợi + cache" as redis
+  queue "Redis\nqueue + cache" as redis
 }
 
-package "Dịch vụ bên ngoài" #F3E5F5 {
+package "External Services" #F3E5F5 {
   node "Judge0 (Docker)" as judge0
-  cloud "AWS S3\nlưu trữ tập tin" as s3
+  cloud "AWS S3\nstorage" as s3
   cloud "Gemini LLM API" as gemini
 }
 
@@ -51,11 +51,11 @@ spa      --> sec : REST / JSON (HTTPS)
 sec      --> ctrl
 ctrl     --> svc
 svc      --> pg       : JPA / JDBC
-svc      --> redis    : cache + đẩy hàng đợi
-worker   --> redis    : lấy bài nộp
+svc      --> redis    : cache + push queue
+worker   --> redis    : retrieve submissions
 worker   --> webclient
-svc      --> s3       : AWS SDK (đề bài, ảnh)
-webclient --> judge0  : HTTP (biên dịch & chấm)
-webclient --> gemini  : HTTPS (gợi ý, trích xuất PDF)
+svc      --> s3       : AWS SDK (problem statement, test cases)
+webclient --> judge0  : HTTP (compile, judge)
+webclient --> gemini  : HTTPS (suggest, PDF extract)
 
 @enduml

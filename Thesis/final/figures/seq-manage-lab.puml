@@ -21,7 +21,7 @@ skinparam EntityBorderColor #000000
 
 autonumber
 
-actor "Contest creator" as U
+actor "Admin/Creator" as U
 boundary "Lab Page" as UI
 control "LabController" as C
 control "LabService" as S

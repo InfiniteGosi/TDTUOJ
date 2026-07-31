@@ -1,0 +1,1418 @@
+{
+  "info": {
+    "_postman_id": "54b7b0c1-e114-4b1e-b8e6-d4301c7009a3",
+    "name": "TDTUOJ",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "38510801"
+  },
+  "item": [
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"KhangHo\",\r\n    \"email\": \"khangho150@gmail.com\",\r\n    \"password\": \"123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8090/api/auth/register",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"khangho150@gmail.com\",\r\n    \"password\": \"123456\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8090/api/auth/login",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "role",
+      "item": [
+        {
+          "name": "create role",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc1OTY3MzQwOCwiZXhwIjoxNzYyMjY1NDA4fQ.xjEfCul5Jq5HOHAfXYaZH_mq8AwxcNIr1bNZPLHAIjnIRqfUFSN_wxHHibwtU3wT",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"ADMIN\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8090/api/roles",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "roles"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update role",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc1OTY3MzQwOCwiZXhwIjoxNzYyMjY1NDA4fQ.xjEfCul5Jq5HOHAfXYaZH_mq8AwxcNIr1bNZPLHAIjnIRqfUFSN_wxHHibwtU3wT",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"id\": \"3\",\r\n    \"name\": \"PARTICIPANT\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8090/api/roles",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "roles"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get roles",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc3MjM3NjYzNiwiZXhwIjoxNzc0OTY4NjM2fQ.U815KJxkddzNObhBLjJ1t46nsXMyKWdHMZTyRtxT-2p9G456ItLoeDbMbQDJxpsJ",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/roles",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "roles"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete role",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/roles/4",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "roles",
+                "4"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "item": [
+        {
+          "name": "get account own details",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc2ODcyMDc1MiwiZXhwIjoxNzcxMzEyNzUyfQ.DhooEos-iDY1ayC028S7PRggN_xIbdF3dCjV_ODxNXeC7Yes82kSH1WDwYen5ULy",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/users/account",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "users",
+                "account"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get all users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc2OTM0NjE2MSwiZXhwIjoxNzcxOTM4MTYxfQ.4SmNoWlLhFPP9s1oldOH-m_wFmTMdx2ksyh4g4fHPtT0Uh0wjskFNCTTZ6MG1PKe",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/users?limit=10&offset=0&sortField=id&direction=asc",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                },
+                {
+                  "key": "sortField",
+                  "value": "id"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                },
+                {
+                  "key": "username",
+                  "value": "khang",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get user by username",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc2OTM0NjE2MSwiZXhwIjoxNzcxOTM4MTYxfQ.4SmNoWlLhFPP9s1oldOH-m_wFmTMdx2ksyh4g4fHPtT0Uh0wjskFNCTTZ6MG1PKe",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/users/SuperDog12",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "users",
+                "SuperDog12"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null,
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update own account details",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc3MDIxMjgwOCwiZXhwIjoxNzcyODA0ODA4fQ.XYfm4wisGHzyj8EySteF4AxFVAq3x6LZyXsrcsnL3k-odjfNukmwWYrmNm-qPczf",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Chris Ho",
+                  "type": "text",
+                  "uuid": "737fbb3d-9505-4b86-8fca-0c599d874428"
+                },
+                {
+                  "key": "about",
+                  "value": "A German guy",
+                  "type": "text",
+                  "uuid": "3f0832fa-b31e-4dc1-9f26-632d2e0e9436"
+                },
+                {
+                  "key": "imageFile",
+                  "type": "file",
+                  "uuid": "54a512ed-aab9-4a22-aa26-857d479a4328",
+                  "src": "/C:/Users/Admin/Downloads/OJ/person1.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "localhost:8090/api/users/update",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "users",
+                "update"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "deactivate own account",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/users/deactivate",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "users",
+                "deactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "change password",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc3MDIxMjgwOCwiZXhwIjoxNzcyODA0ODA4fQ.XYfm4wisGHzyj8EySteF4AxFVAq3x6LZyXsrcsnL3k-odjfNukmwWYrmNm-qPczf",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"currentPassword\": \"654321\",\r\n    \"newPassword\": \"123456\",\r\n    \"confirmPassword\": \"123456\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8090/api/users/change-password",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "users",
+                "change-password"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "problems",
+      "item": [
+        {
+          "name": "update problem",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc2OTM0NjE2MSwiZXhwIjoxNzcxOTM4MTYxfQ.4SmNoWlLhFPP9s1oldOH-m_wFmTMdx2ksyh4g4fHPtT0Uh0wjskFNCTTZ6MG1PKe",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "id",
+                  "value": "3",
+                  "type": "text",
+                  "uuid": "7033d3d1-4c73-463e-8505-64339dce139c"
+                },
+                {
+                  "key": "title",
+                  "value": "Two Sum",
+                  "type": "text",
+                  "uuid": "d5a966bf-8f40-4370-a4e2-5d26d18ff008"
+                },
+                {
+                  "key": "point",
+                  "value": "100",
+                  "type": "text",
+                  "uuid": "578168df-35df-435c-9862-9adcf882a5f5"
+                },
+                {
+                  "key": "timeLimit",
+                  "value": "1000.0",
+                  "type": "text",
+                  "uuid": "6e3dfd31-23df-4650-99a5-bae301849ea1"
+                },
+                {
+                  "key": "memoryLimit",
+                  "value": "256",
+                  "type": "text",
+                  "uuid": "ded0a04f-413e-4e69-a0c1-9396cb95d1fa"
+                },
+                {
+                  "key": "statementFile",
+                  "type": "file",
+                  "uuid": "4371e6d1-131c-4348-9628-7ccf063e0eb4",
+                  "src": "/C:/Users/Admin/Downloads/OJ/Problem.md"
+                },
+                {
+                  "key": "testCases[0].inputFile",
+                  "type": "file",
+                  "uuid": "87d5a979-d6fc-40f4-8c44-7c85d631019b",
+                  "src": "/C:/Users/Admin/Downloads/OJ/inputs/0.txt"
+                },
+                {
+                  "key": "testCases[0].expectedOutputFile",
+                  "type": "file",
+                  "uuid": "eb284f1f-ec14-41a5-9a5e-912884570c4a",
+                  "src": "/C:/Users/Admin/Downloads/OJ/outputs/0.txt"
+                },
+                {
+                  "key": "testCases[1].inputFile",
+                  "type": "file",
+                  "uuid": "ffb69048-6434-4b27-aaed-cb06997fa78a",
+                  "src": "/C:/Users/Admin/Downloads/OJ/inputs/1.txt"
+                },
+                {
+                  "key": "testCases[1].expectedOutputFile",
+                  "type": "file",
+                  "uuid": "b179e7d4-3339-4b92-bc74-b6b45c17aee5",
+                  "src": "/C:/Users/Admin/Downloads/OJ/outputs/1.txt"
+                },
+                {
+                  "key": "testCases[2].inputFile",
+                  "type": "file",
+                  "uuid": "2e846b12-0178-4c2f-ae16-079a51509f47",
+                  "src": "/C:/Users/Admin/Downloads/OJ/inputs/2.txt"
+                },
+                {
+                  "key": "testCases[2].expectedOutputFile",
+                  "type": "file",
+                  "uuid": "b179e7d4-3339-4b92-bc74-b6b45c17aee5",
+                  "src": "/C:/Users/Admin/Downloads/OJ/outputs/2.txt"
+                },
+                {
+                  "key": "problemDifficulty",
+                  "value": "HARD",
+                  "type": "text",
+                  "uuid": "f363fcfe-c552-4a17-bdd0-e8dc469e0e75"
+                },
+                {
+                  "key": "authorId",
+                  "value": "1",
+                  "type": "text",
+                  "uuid": "b54d5978-438f-41dc-8532-8daaa2d70531"
+                }
+              ]
+            },
+            "url": {
+              "raw": "localhost:8090/api/problems",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "problems"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get all problems",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/problems?limit=10&offset=0&sortField=id&direction=asc&title=Hihi",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "problems"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                },
+                {
+                  "key": "sortField",
+                  "value": "id"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                },
+                {
+                  "key": "title",
+                  "value": "Hihi"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get problem by id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc2OTM0NjE2MSwiZXhwIjoxNzcxOTM4MTYxfQ.4SmNoWlLhFPP9s1oldOH-m_wFmTMdx2ksyh4g4fHPtT0Uh0wjskFNCTTZ6MG1PKe",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/problems/id/3",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "problems",
+                "id",
+                "3"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete problem",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc1OTkyNDA0MCwiZXhwIjoxNzYyNTE2MDQwfQ.NiQYaTTpBfFAxz-rkuxareSieC_h1jo-CAakhwLDWuPVtaDcGMqTWx0ijYu59miE",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/problems/2",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "problems",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get problem by slug",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc3Mjk4MDI4OCwiZXhwIjoxNzc1NTcyMjg4fQ.wvmcEr2KwG67TG_a2ctZAI20qPbDmZGh8Ssw32Qxocmlh6aBd7I28Ueoti8DuQab",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/problems/slug/two-sum-hi",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "problems",
+                "slug",
+                "two-sum-hi"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create problem",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc2OTM0NjE2MSwiZXhwIjoxNzcxOTM4MTYxfQ.4SmNoWlLhFPP9s1oldOH-m_wFmTMdx2ksyh4g4fHPtT0Uh0wjskFNCTTZ6MG1PKe",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Two Sum 2",
+                  "type": "text",
+                  "uuid": "d5a966bf-8f40-4370-a4e2-5d26d18ff008"
+                },
+                {
+                  "key": "point",
+                  "value": "100",
+                  "type": "text",
+                  "uuid": "578168df-35df-435c-9862-9adcf882a5f5"
+                },
+                {
+                  "key": "timeLimit",
+                  "value": "2.0",
+                  "type": "text",
+                  "uuid": "6e3dfd31-23df-4650-99a5-bae301849ea1"
+                },
+                {
+                  "key": "memoryLimit",
+                  "value": "1000",
+                  "type": "text",
+                  "uuid": "ded0a04f-413e-4e69-a0c1-9396cb95d1fa"
+                },
+                {
+                  "key": "statementFile",
+                  "type": "file",
+                  "uuid": "4371e6d1-131c-4348-9628-7ccf063e0eb4",
+                  "src": "/C:/Users/Admin/Downloads/OJ/Problem.md"
+                },
+                {
+                  "key": "testCases[0].inputFile",
+                  "type": "file",
+                  "uuid": "87d5a979-d6fc-40f4-8c44-7c85d631019b",
+                  "src": "/C:/Users/Admin/Downloads/OJ/inputs/0.txt"
+                },
+                {
+                  "key": "testCases[0].expectedOutputFile",
+                  "type": "file",
+                  "uuid": "eb284f1f-ec14-41a5-9a5e-912884570c4a",
+                  "src": "/C:/Users/Admin/Downloads/OJ/outputs/0.txt"
+                },
+                {
+                  "key": "testCases[1].inputFile",
+                  "type": "file",
+                  "uuid": "ffb69048-6434-4b27-aaed-cb06997fa78a",
+                  "src": "/C:/Users/Admin/Downloads/OJ/inputs/1.txt"
+                },
+                {
+                  "key": "testCases[1].expectedOutputFile",
+                  "type": "file",
+                  "uuid": "b179e7d4-3339-4b92-bc74-b6b45c17aee5",
+                  "src": "/C:/Users/Admin/Downloads/OJ/outputs/1.txt"
+                }
+              ]
+            },
+            "url": {
+              "raw": "localhost:8090/api/problems",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "problems"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "admin",
+      "item": [
+        {
+          "name": "get all users as admin",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc2OTM0NjE2MSwiZXhwIjoxNzcxOTM4MTYxfQ.4SmNoWlLhFPP9s1oldOH-m_wFmTMdx2ksyh4g4fHPtT0Uh0wjskFNCTTZ6MG1PKe",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/admin/users?limit=10&offset=0&sortField=id&direction=asc",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                },
+                {
+                  "key": "sortField",
+                  "value": "id"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update user as admin",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc3MDIxMjgwOCwiZXhwIjoxNzcyODA0ODA4fQ.XYfm4wisGHzyj8EySteF4AxFVAq3x6LZyXsrcsnL3k-odjfNukmwWYrmNm-qPczf",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Test Subject 11",
+                  "type": "text",
+                  "uuid": "21d3b09f-90c3-46e3-851b-d65bec48ae43"
+                },
+                {
+                  "key": "about",
+                  "value": "Lorem ipsum simona",
+                  "type": "text",
+                  "uuid": "37ebcb80-9f09-47eb-a384-d276de5a197b"
+                },
+                {
+                  "key": "imageFile",
+                  "type": "file",
+                  "uuid": "5572bec7-c3e4-4623-927d-6a571300554a",
+                  "src": "/C:/Users/Admin/Downloads/OJ/person2.jpg"
+                },
+                {
+                  "key": "id",
+                  "value": "5",
+                  "type": "text",
+                  "uuid": "19e46d39-9b5f-4df0-823c-98d31717471f"
+                }
+              ]
+            },
+            "url": {
+              "raw": "localhost:8090/api/admin/users",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get user by id as admin",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc3MTUwNTM2OCwiZXhwIjoxNzc0MDk3MzY4fQ.PbCsuTXG5fS0FfFbUV-8hWsriShecy9mMke10J3SX1AJ6xkjXsZx-IZpED0UFfzx",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/admin/users/3",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "3"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "test cases",
+      "item": [
+        {
+          "name": "get all test cases",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc3MDIxMjgwOCwiZXhwIjoxNzcyODA0ODA4fQ.XYfm4wisGHzyj8EySteF4AxFVAq3x6LZyXsrcsnL3k-odjfNukmwWYrmNm-qPczf",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/testcases",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "testcases"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "judge0",
+      "item": [
+        {
+          "name": "get language by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:2358/languages/54",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "2358",
+              "path": [
+                "languages",
+                "54"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "judge0 submission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"language_id\": 54,\n    \"source_code\": \"#include <iostream>\\nusing namespace std;\\nint main(){int a,b;cin>>a>>b;cout<<a+b<<endl;return 0;}\",\n    \"stdin\": \"3 7\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:2358/submissions/?base64_encoded=false&wait=true",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "2358",
+              "path": [
+                "submissions",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "base64_encoded",
+                  "value": "false"
+                },
+                {
+                  "key": "wait",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Generated from cURL: curl -X POST \"http://localhost:2358/submissions/?base64_encoded=false&wait=true\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n        \"language_id\": 54,\n        \"source_code\": \"#include <iostream>\\nusing namespace std;\\nint main(){int a,b;cin>>a>>b;cout<<a+b<<endl;return 0;}\",\n        \"stdin\": \"3 7\"\n      }'\n"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "tags",
+      "item": [
+        {
+          "name": "get tag by id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc3MTUwNTM2OCwiZXhwIjoxNzc0MDk3MzY4fQ.PbCsuTXG5fS0FfFbUV-8hWsriShecy9mMke10J3SX1AJ6xkjXsZx-IZpED0UFfzx",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/problem-tags/8",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "problem-tags",
+                "8"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get all tags",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc3MTUwNTM2OCwiZXhwIjoxNzc0MDk3MzY4fQ.PbCsuTXG5fS0FfFbUV-8hWsriShecy9mMke10J3SX1AJ6xkjXsZx-IZpED0UFfzx",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/problem-tags?offset=0&sortField=id&limit=20&direction=asc",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "problem-tags"
+              ],
+              "query": [
+                {
+                  "key": "offset",
+                  "value": "0"
+                },
+                {
+                  "key": "sortField",
+                  "value": "id"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                },
+                {
+                  "key": "name",
+                  "value": "Array",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create tag",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc3MTUwNTM2OCwiZXhwIjoxNzc0MDk3MzY4fQ.PbCsuTXG5fS0FfFbUV-8hWsriShecy9mMke10J3SX1AJ6xkjXsZx-IZpED0UFfzx",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"tt\",\"isActive\":true}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8090/api/problem-tags",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "problem-tags"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update tag",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc3MTUwNTM2OCwiZXhwIjoxNzc0MDk3MzY4fQ.PbCsuTXG5fS0FfFbUV-8hWsriShecy9mMke10J3SX1AJ6xkjXsZx-IZpED0UFfzx",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"id\": \"67\",\r\n    \"name\": \"test2\",\r\n    \"isActive\": false\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8090/api/problem-tags",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "problem-tags"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete tag",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc3MTUwNTM2OCwiZXhwIjoxNzc0MDk3MzY4fQ.PbCsuTXG5fS0FfFbUV-8hWsriShecy9mMke10J3SX1AJ6xkjXsZx-IZpED0UFfzx",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/problem-tags/67",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "problem-tags",
+                "67"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "toggle active",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc3MjQ2Mjg5NywiZXhwIjoxNzc1MDU0ODk3fQ.omup7ZzKiL3j3ZcikzdMULI_8cpxdWtkDcev6lnawvZP95CeOGozrmvDvgsOCsgF",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/problem-tags/toggle-active/1",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "problem-tags",
+                "toggle-active",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "submissions",
+      "item": [
+        {
+          "name": "create submission",
+          "request": {
+            "method": "POST",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "get my submissions",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJraGFuZ2hvMTUwQGdtYWlsLmNvbSIsImlhdCI6MTc3MjQ2Mjg5NywiZXhwIjoxNzc1MDU0ODk3fQ.omup7ZzKiL3j3ZcikzdMULI_8cpxdWtkDcev6lnawvZP95CeOGozrmvDvgsOCsgF",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8090/api/submissions/me",
+              "host": [
+                "localhost"
+              ],
+              "port": "8090",
+              "path": [
+                "api",
+                "submissions",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "problem favorite",
+      "item": [
+        {
+          "name": "get favorite problems",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "toggle favorite problem",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "hints",
+      "item": [
+        {
+          "name": "get hint (LLM)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"problemTitle\": \"Two Sum\",\n    \"problemStatement\": \"Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\",\n    \"userCode\": \"def twoSum(nums, target):\\n    pass\",\n    \"language\": \"python\",\n    \"model\": \"gemini\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "localhost:8090/api/hints",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "hints"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "problem AI",
+      "item": [
+        {
+          "name": "extract problem from PDF",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/C:/Users/Admin/Downloads/problem.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "localhost:8090/api/problem-ai/extract-pdf",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "problem-ai", "extract-pdf"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "generate test cases",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"problemStatement\": \"Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\",\n    \"count\": 5\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "localhost:8090/api/problem-ai/generate-test-cases",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "problem-ai", "generate-test-cases"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "visualizer",
+      "item": [
+        {
+          "name": "visualize code",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"sourceCode\": \"a = [3, 1, 4, 1, 5]\\na.sort()\\nprint(a)\",\n    \"languageId\": 71\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "localhost:8090/api/visualize",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "visualize"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

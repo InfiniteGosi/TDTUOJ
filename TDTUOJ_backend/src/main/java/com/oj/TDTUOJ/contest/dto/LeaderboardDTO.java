@@ -26,6 +26,9 @@ public class LeaderboardDTO {
     /** Total number of participants who have at least one submission. */
     private Integer totalParticipants;
 
+    /** Scoring mode — "ICPC" or "IOI" — used by the frontend to switch leaderboard column layout. */
+    private String contestStyle;
+
     /** Ordered list starting from rank 1. */
     private List<ScoreboardEntryDTO> entries;
 

@@ -21,7 +21,7 @@ skinparam EntityBorderColor #000000
 
 autonumber
 
-actor "Contest creator" as U
+actor "Admin/Creator" as U
 boundary "Problem Form" as UI
 control "ProblemAIController" as AIC
 control "ProblemController" as C

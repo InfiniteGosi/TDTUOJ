@@ -2,10 +2,10 @@
 \contentsline {chapter}{LỜI CẢM ƠN}{}{chapter*.1}%
 \contentsline {chapter}{LỜI CAM ĐOAN}{}{chapter*.2}%
 \contentsline {chapter}{TÓM TẮT}{}{chapter*.3}%
-\contentsline {chapter}{ABSTRACT}{}{chapter*.6}%
-\contentsline {chapter}{DANH MỤC HÌNH VẼ}{vi}{chapter*.8}%
-\contentsline {chapter}{DANH MỤC BẢNG BIỂU}{vii}{chapter*.10}%
-\contentsline {chapter}{DANH MỤC CÁC CHỮ VIẾT TẮT}{viii}{chapter*.11}%
+\contentsline {chapter}{ABSTRACT}{}{chapter*.9}%
+\contentsline {chapter}{DANH MỤC HÌNH VẼ}{vi}{chapter*.11}%
+\contentsline {chapter}{DANH MỤC BẢNG BIỂU}{vii}{chapter*.13}%
+\contentsline {chapter}{DANH MỤC CÁC CHỮ VIẾT TẮT}{viii}{chapter*.14}%
 \contentsline {chapter}{\numberline {1}Mở đầu và tổng quan đề tài}{1}{chapter.1}%
 \contentsline {section}{\numberline {1.1}Lý do chọn đề tài}{1}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Khảo sát}{1}{section.1.2}%
@@ -25,7 +25,7 @@
 \contentsline {subsection}{\numberline {2.2.8}Tích hợp LLM}{9}{subsection.2.2.8}%
 \contentsline {subsection}{\numberline {2.2.9}Hạ tầng đám mây: Microsoft Azure}{9}{subsection.2.2.9}%
 \contentsline {subsection}{\numberline {2.2.10}Tích hợp và triển khai liên tục: GitHub Actions}{10}{subsection.2.2.10}%
-\contentsline {subsection}{\numberline {2.2.11}Kiểm thử tải và giám sát: k6, Prometheus và Grafana}{11}{subsection.2.2.11}%
+\contentsline {subsection}{\numberline {2.2.11}Kiểm thử tải và giám sát: k6, Prometheus và Grafana}{10}{subsection.2.2.11}%
 \contentsline {chapter}{\numberline {3}Phân tích hệ thống}{12}{chapter.3}%
 \contentsline {section}{\numberline {3.1}Thu thập yêu cầu}{12}{section.3.1}%
 \contentsline {section}{\numberline {3.2}Xử lý nghiệp vụ}{12}{section.3.2}%
@@ -84,6 +84,9 @@
 \contentsline {subsection}{\numberline {5.4.2}Chức năng hỗ trợ bằng mô hình ngôn ngữ lớn}{84}{subsection.5.4.2}%
 \contentsline {section}{\numberline {5.5}Kiểm thử đơn vị}{85}{section.5.5}%
 \contentsline {section}{\numberline {5.6}Kiểm thử tải và giám sát}{86}{section.5.6}%
+\contentsline {subsection}{\numberline {5.6.1}Môi trường kiểm thử}{88}{subsection.5.6.1}%
+\contentsline {subsection}{\numberline {5.6.2}Các kịch bản kiểm thử}{88}{subsection.5.6.2}%
+\contentsline {subsection}{\numberline {5.6.3}Kết quả kiểm thử}{89}{subsection.5.6.3}%
 \contentsline {chapter}{\numberline {6}Triển khai hệ thống}{91}{chapter.6}%
 \contentsline {section}{\numberline {6.1}Hạ tầng và công cụ triển khai}{91}{section.6.1}%
 \contentsline {section}{\numberline {6.2}Quy trình triển khai và tích hợp liên tục}{92}{section.6.2}%

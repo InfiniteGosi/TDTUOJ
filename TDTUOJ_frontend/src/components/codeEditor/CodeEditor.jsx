@@ -2,8 +2,9 @@ import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from "re
 import { createPortal } from "react-dom";
 import Editor from "@monaco-editor/react";
 import LanguageSelector from "./LanguageSelector";
-import { CODE_SNIPPETS } from "./constants";
-import { Settings, X, Type, AlignJustify, Zap } from "lucide-react";
+import { CODE_SNIPPETS, EXTENSION_TO_LANGUAGE, LANGUAGE_NAMES } from "./constants";
+import { Settings, X, Type, AlignJustify, Zap, Upload } from "lucide-react";
+import { useToast } from "../common/ToastMessage";
 
 // ─── Monaco theme definitions ─────────────────────────────────────────────────
 const ARENA_DARK = {
@@ -123,6 +124,9 @@ const CodeEditor = forwardRef(({ rightHeaderContent }, ref) => {
   const editorRef      = useRef(null);
   const panelRef       = useRef(null);
   const settingsBtnRef = useRef(null);
+  const fileInputRef   = useRef(null);
+
+  const { showMessage } = useToast();
 
   const [value, setValue]     = useState(CODE_SNIPPETS["c"]);
   const [language, setLanguage] = useState("c");
@@ -214,8 +218,45 @@ const CodeEditor = forwardRef(({ rightHeaderContent }, ref) => {
     setSettingsOpen((v) => !v);
   };
 
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Size guard — reject files over 256 KB
+    if (file.size > 256 * 1024) {
+      showMessage("File too large (max 256 KB)", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    // Detect language from extension
+    const ext = "." + file.name.split(".").pop().toLowerCase();
+    const detectedLang = EXTENSION_TO_LANGUAGE[ext];
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const contents = evt.target.result;
+      const lang = detectedLang || language; // fallback to current language
+      setValue(contents);
+      setLanguage(lang);
+      if (!detectedLang) {
+        showMessage(`Unrecognized file type "${ext}". Using current language.`, "warning");
+      } else {
+        showMessage(`Loaded ${file.name} as ${LANGUAGE_NAMES[lang]}`, "success");
+      }
+    };
+    reader.onerror = () => {
+      showMessage("Failed to read file", "error");
+    };
+    reader.readAsText(file);
+
+    // Reset so re-selecting the same file fires onChange again
+    e.target.value = "";
+  };
+
   useImperativeHandle(ref, () => ({
     getCodeAndLanguage: () => ({ code: value, language }),
+    setCodeAndLanguage: (code, lang) => { setValue(code); setLanguage(lang); },
   }));
 
   // ─── Settings panel (portal so it escapes Panel overflow:hidden) ──────────
@@ -318,6 +359,23 @@ const CodeEditor = forwardRef(({ rightHeaderContent }, ref) => {
             onMouseLeave={(e) => { if (!settingsOpen) { e.currentTarget.style.borderColor = "var(--border-default)"; e.currentTarget.style.color = "var(--text-secondary)"; } }}
           >
             <Settings size={13} />
+          </button>
+          {/* ── Upload source file ── */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".c,.cpp,.cc,.cxx,.h,.hpp,.py,.java,.cs,.js,.mjs"
+            style={{ display: "none" }}
+            onChange={handleFileUpload}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            title="Upload source file"
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, borderRadius: "var(--radius-sm)", background: "transparent", border: "1px solid var(--border-default)", color: "var(--text-secondary)", cursor: "pointer", outline: "none", transition: "all 0.12s" }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border-strong)"; e.currentTarget.style.color = "var(--text-primary)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-default)"; e.currentTarget.style.color = "var(--text-secondary)"; }}
+          >
+            <Upload size={13} />
           </button>
         </div>
         <div>{rightHeaderContent}</div>

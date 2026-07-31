@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.3.14)  7 JUL 2026 16:37
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.3.14)  17 JUL 2026 15:13
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1257,7 +1257,7 @@ Package biblatex Info: ... file 'thesis.bbl' found.
 (thesis.bbl)
 Package biblatex Info: Reference section=0 on input line 139.
 Package biblatex Info: Reference segment=0 on input line 139.
-<figures/logo.png, id=315, 1204.5pt x 665.48625pt>
+<figures/logo.png, id=327, 1204.5pt x 665.48625pt>
 File: figures/logo.png Graphic file (type png)
 <use figures/logo.png>
 Package pdftex.def Info: figures/logo.png  used on input line 153.
@@ -1323,21 +1323,27 @@ l.281 \newpage
 
 ]
 Package acronym Info: Label `acro:LLM' newly defined as it shall be overridden
-although it is yet undefined on input line 298.
-Package acronym Info: Label `acro:API' newly defined as it shall be overridden
-although it is yet undefined on input line 304.
+although it is yet undefined on input line 295.
+Package acronym Info: Label `acro:ICPC' newly defined as it shall be overridden
+although it is yet undefined on input line 299.
+Package acronym Info: Label `acro:PDF' newly defined as it shall be overridden
+although it is yet undefined on input line 305.
+Package acronym Info: Label `acro:HTTPS' newly defined as it shall be overridden
+although it is yet undefined on input line 309.
+Package acronym Info: Label `acro:CI/CD' newly defined as it shall be overridden
+although it is yet undefined on input line 309.
 
 pdfTeX warning (ext4): destination with the same identifier (name{page.}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.308 \newpage
+l.311 \newpage
                [3
 
 ]
 pdfTeX warning (ext4): destination with the same identifier (name{page.}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.335 \newpage
+l.341 \newpage
                [4
 
 ] (thesis.toc [1
@@ -1363,100 +1369,93 @@ although it is yet undefined on input line 32.
 
 ]
 
-LaTeX Warning: Hyper reference `acro:CNTT' on page viii undefined on input line 364.
+LaTeX Warning: Hyper reference `acro:CNTT' on page viii undefined on input line 370.
 
 
-LaTeX Warning: Hyper reference `acro:CNTT' on page viii undefined on input line 364.
+LaTeX Warning: Hyper reference `acro:CNTT' on page viii undefined on input line 370.
 
 
-LaTeX Warning: Hyper reference `acro:CSS' on page viii undefined on input line 366.
+LaTeX Warning: Hyper reference `acro:CSS' on page viii undefined on input line 372.
 
 
-LaTeX Warning: Hyper reference `acro:CSS' on page viii undefined on input line 366.
+LaTeX Warning: Hyper reference `acro:CSS' on page viii undefined on input line 372.
 
 [8
 
 ]
 
-LaTeX Warning: Hyper reference `acro:UI' on page ix undefined on input line 392.
+LaTeX Warning: Hyper reference `acro:UI' on page ix undefined on input line 398.
 
 
-LaTeX Warning: Hyper reference `acro:UI' on page ix undefined on input line 392.
+LaTeX Warning: Hyper reference `acro:UI' on page ix undefined on input line 398.
 
 
-LaTeX Warning: Hyper reference `acro:UX' on page ix undefined on input line 393.
+LaTeX Warning: Hyper reference `acro:UX' on page ix undefined on input line 399.
 
 
-LaTeX Warning: Hyper reference `acro:UX' on page ix undefined on input line 393.
+LaTeX Warning: Hyper reference `acro:UX' on page ix undefined on input line 399.
 
 
-LaTeX Warning: Hyper reference `acro:VM' on page ix undefined on input line 394.
+LaTeX Warning: Hyper reference `acro:VM' on page ix undefined on input line 400.
 
 
-LaTeX Warning: Hyper reference `acro:VM' on page ix undefined on input line 394.
+LaTeX Warning: Hyper reference `acro:VM' on page ix undefined on input line 400.
 
 [9]
 CHƯƠNG 1.
 Package acronym Info: Label `acro:OJ' newly defined as it shall be overridden
-although it is yet undefined on input line 423.
-Package acronym Info: Label `acro:PDF' newly defined as it shall be overridden
-although it is yet undefined on input line 440.
+although it is yet undefined on input line 429.
 [1
 
 ]
 Package acronym Info: Label `acro:AI' newly defined as it shall be overridden
-although it is yet undefined on input line 445.
+although it is yet undefined on input line 451.
 Package acronym Info: Label `acro:REST' newly defined as it shall be overridden
-although it is yet undefined on input line 471.
+although it is yet undefined on input line 477.
+Package acronym Info: Label `acro:API' newly defined as it shall be overridden
+although it is yet undefined on input line 477.
  [2]
 Package acronym Info: Label `acro:TDTU' newly defined as it shall be overridden
-although it is yet undefined on input line 495.
+although it is yet undefined on input line 501.
  [3]
 CHƯƠNG 2.
 Package acronym Info: Label `acro:JPA' newly defined as it shall be overridden
-although it is yet undefined on input line 537.
+although it is yet undefined on input line 543.
 [4
 
 ]
 Package acronym Info: Label `acro:MVC' newly defined as it shall be overridden
-although it is yet undefined on input line 539.
+although it is yet undefined on input line 545.
 Package acronym Info: Label `acro:HTTP' newly defined as it shall be overridden
-although it is yet undefined on input line 540.
+although it is yet undefined on input line 546.
  [5] [6]
 Package acronym Info: Label `acro:AC' newly defined as it shall be overridden
-although it is yet undefined on input line 613.
+although it is yet undefined on input line 619.
 Package acronym Info: Label `acro:WA' newly defined as it shall be overridden
-although it is yet undefined on input line 613.
+although it is yet undefined on input line 619.
 Package acronym Info: Label `acro:TLE' newly defined as it shall be overridden
-although it is yet undefined on input line 613.
+although it is yet undefined on input line 619.
 Package acronym Info: Label `acro:MLE' newly defined as it shall be overridden
-although it is yet undefined on input line 613.
+although it is yet undefined on input line 619.
 Package acronym Info: Label `acro:SF' newly defined as it shall be overridden
-although it is yet undefined on input line 614.
+although it is yet undefined on input line 620.
 Package acronym Info: Label `acro:CE' newly defined as it shall be overridden
-although it is yet undefined on input line 614.
+although it is yet undefined on input line 620.
 Package acronym Info: Label `acro:IE' newly defined as it shall be overridden
-although it is yet undefined on input line 614.
+although it is yet undefined on input line 620.
  [7]
 Package acronym Info: Label `acro:JSON' newly defined as it shall be overridden
-although it is yet undefined on input line 628.
+although it is yet undefined on input line 634.
  [8] [9]
-Package acronym Info: Label `acro:HTTPS' newly defined as it shall be overridden
-although it is yet undefined on input line 687.
-Package acronym Info: Label `acro:CI/CD' newly defined as it shall be overridden
-although it is yet undefined on input line 695.
 Package acronym Info: Label `acro:JDK' newly defined as it shall be overridden
-although it is yet undefined on input line 699.
+although it is yet undefined on input line 705.
 Package acronym Info: Label `acro:SSH' newly defined as it shall be overridden
-although it is yet undefined on input line 701.
+although it is yet undefined on input line 707.
  [10] [11]
 CHƯƠNG 3.
 [12
 
-]
-Package acronym Info: Label `acro:ICPC' newly defined as it shall be overridden
-although it is yet undefined on input line 789.
- [13] [14]
+] [13] [14]
 ignored: Infinite glue shrinkage found in box being split [15]
 ignored: Infinite glue shrinkage found in box being split [16]
 ignored: Infinite glue shrinkage found in box being split [17]
@@ -1467,359 +1466,359 @@ ignored: Infinite glue shrinkage found in box being split [21]
 ignored: Infinite glue shrinkage found in box being split [22]
 ignored: Infinite glue shrinkage found in box being split [23]
 ignored: Infinite glue shrinkage found in box being split [24]
-<figures/usecase.png, id=901, 1453.43pt x 2048.65375pt>
+<figures/usecase.png, id=922, 1453.43pt x 2048.65375pt>
 File: figures/usecase.png Graphic file (type png)
 <use figures/usecase.png>
-Package pdftex.def Info: figures/usecase.png  used on input line 1147.
+Package pdftex.def Info: figures/usecase.png  used on input line 1153.
 (pdftex.def)             Requested size: 405.7355pt x 571.89986pt.
  [25] [26 <./figures/usecase.png>]
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1166--1169
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1172--1175
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1169--1171
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1175--1177
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1171--1173
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1177--1179
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1173--1174
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1179--1180
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1174--1214
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1180--1220
  [] [] [] 
  []
 
 
 ignored: Infinite glue shrinkage found in box being split [27]
-<figures/activity-submit.png, id=928, 578.16pt x 1240.635pt>
+<figures/activity-submit.png, id=949, 578.16pt x 1240.635pt>
 File: figures/activity-submit.png Graphic file (type png)
 <use figures/activity-submit.png>
-Package pdftex.def Info: figures/activity-submit.png  used on input line 1220.
+Package pdftex.def Info: figures/activity-submit.png  used on input line 1226.
 (pdftex.def)             Requested size: 252.24744pt x 541.28098pt.
  [28]
-<figures/seq-submit.png, id=935, 1480.53125pt x 831.105pt>
+<figures/seq-submit.png, id=956, 1480.53125pt x 831.105pt>
 File: figures/seq-submit.png Graphic file (type png)
 <use figures/seq-submit.png>
-Package pdftex.def Info: figures/seq-submit.png  used on input line 1229.
+Package pdftex.def Info: figures/seq-submit.png  used on input line 1235.
 (pdftex.def)             Requested size: 441.01773pt x 247.57068pt.
  [29 <./figures/activity-submit.png (PNG copy)>]
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1247--1250
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1253--1256
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1250--1252
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1256--1258
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1252--1254
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1258--1260
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1254--1255
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1260--1261
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1255--1298
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1261--1304
  [] [] [] 
  []
 
 
 ignored: Infinite glue shrinkage found in box being split [30 <./figures/seq-submit.png (PNG copy)>]
 ignored: Infinite glue shrinkage found in box being split [31]
-<figures/activity-create-problem.png, id=960, 727.71875pt x 1418.29875pt>
+<figures/activity-create-problem.png, id=981, 727.71875pt x 1418.29875pt>
 File: figures/activity-create-problem.png Graphic file (type png)
 <use figures/activity-create-problem.png>
-Package pdftex.def Info: figures/activity-create-problem.png  used on input line 1304.
+Package pdftex.def Info: figures/activity-create-problem.png  used on input line 1310.
 (pdftex.def)             Requested size: 277.73523pt x 541.29642pt.
  [32]
-<figures/seq-create-problem.png, id=966, 1580.90625pt x 838.13126pt>
+<figures/seq-create-problem.png, id=987, 1580.90625pt x 838.13126pt>
 File: figures/seq-create-problem.png Graphic file (type png)
 <use figures/seq-create-problem.png>
-Package pdftex.def Info: figures/seq-create-problem.png  used on input line 1313.
+Package pdftex.def Info: figures/seq-create-problem.png  used on input line 1319.
 (pdftex.def)             Requested size: 441.01773pt x 233.80551pt.
  [33 <./figures/activity-create-problem.png (PNG copy)>]
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1331--1334
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1337--1340
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1334--1336
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1340--1342
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1336--1338
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1342--1344
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1338--1339
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1344--1345
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1339--1377
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1345--1383
  [] [] [] 
  []
 
 
 ignored: Infinite glue shrinkage found in box being split [34 <./figures/seq-create-problem.png (PNG copy)>]
 ignored: Infinite glue shrinkage found in box being split [35]
-<figures/activity-visualize.png, id=983, 853.1875pt x 1175.39125pt>
+<figures/activity-visualize.png, id=1004, 853.1875pt x 1175.39125pt>
 File: figures/activity-visualize.png Graphic file (type png)
 <use figures/activity-visualize.png>
-Package pdftex.def Info: figures/activity-visualize.png  used on input line 1383.
+Package pdftex.def Info: figures/activity-visualize.png  used on input line 1389.
 (pdftex.def)             Requested size: 308.70949pt x 425.29274pt.
  [36]
-<figures/seq-visualize.png, id=989, 1757.56625pt x 1104.125pt>
+<figures/seq-visualize.png, id=1010, 1757.56625pt x 1104.125pt>
 File: figures/seq-visualize.png Graphic file (type png)
 <use figures/seq-visualize.png>
-Package pdftex.def Info: figures/seq-visualize.png  used on input line 1392.
+Package pdftex.def Info: figures/seq-visualize.png  used on input line 1398.
 (pdftex.def)             Requested size: 441.01773pt x 277.04143pt.
  [37 <./figures/activity-visualize.png (PNG copy)>]
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1412--1415
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1418--1421
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1415--1417
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1421--1423
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1417--1419
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1423--1425
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1419--1420
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1425--1426
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1420--1465
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1426--1471
  [] [] [] 
  []
 
 [38 <./figures/seq-visualize.png (PNG copy)>]
 ignored: Infinite glue shrinkage found in box being split [39]
-<figures/activity-participate-contest.png, id=1009, 681.54625pt x 1275.76625pt>
+<figures/activity-participate-contest.png, id=1030, 681.54625pt x 1275.76625pt>
 File: figures/activity-participate-contest.png Graphic file (type png)
 <use figures/activity-participate-contest.png>
-Package pdftex.def Info: figures/activity-participate-contest.png  used on input line 1471.
+Package pdftex.def Info: figures/activity-participate-contest.png  used on input line 1477.
 (pdftex.def)             Requested size: 289.16974pt x 541.2883pt.
  [40]
-<figures/seq-participate-contest.png, id=1015, 1542.76375pt x 1076.02pt>
+<figures/seq-participate-contest.png, id=1036, 1542.76375pt x 1076.02pt>
 File: figures/seq-participate-contest.png Graphic file (type png)
 <use figures/seq-participate-contest.png>
-Package pdftex.def Info: figures/seq-participate-contest.png  used on input line 1480.
+Package pdftex.def Info: figures/seq-participate-contest.png  used on input line 1486.
 (pdftex.def)             Requested size: 441.01773pt x 307.58833pt.
  [41 <./figures/activity-participate-contest.png (PNG copy)>]
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1496--1499
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1502--1505
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1499--1501
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1505--1507
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1501--1503
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1507--1509
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1503--1504
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1509--1510
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1504--1542
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1510--1548
  [] [] [] 
  []
 
 
 ignored: Infinite glue shrinkage found in box being split [42 <./figures/seq-participate-contest.png (PNG copy)>]
 ignored: Infinite glue shrinkage found in box being split [43]
-<figures/activity-hint.png, id=1038, 556.0775pt x 884.30376pt>
+<figures/activity-hint.png, id=1059, 556.0775pt x 884.30376pt>
 File: figures/activity-hint.png Graphic file (type png)
 <use figures/activity-hint.png>
-Package pdftex.def Info: figures/activity-hint.png  used on input line 1548.
+Package pdftex.def Info: figures/activity-hint.png  used on input line 1554.
 (pdftex.def)             Requested size: 308.71152pt x 490.92934pt.
  [44]
-<figures/seq-hint.png, id=1046, 1239.63126pt x 675.52374pt>
+<figures/seq-hint.png, id=1067, 1239.63126pt x 675.52374pt>
 File: figures/seq-hint.png Graphic file (type png)
 <use figures/seq-hint.png>
-Package pdftex.def Info: figures/seq-hint.png  used on input line 1557.
+Package pdftex.def Info: figures/seq-hint.png  used on input line 1563.
 (pdftex.def)             Requested size: 441.01773pt x 240.32283pt.
  [45 <./figures/activity-hint.png (PNG copy)>]
 Package acronym Info: Label `acro:CSV' newly defined as it shall be overridden
-although it is yet undefined on input line 1573.
+although it is yet undefined on input line 1579.
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1577--1580
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1583--1586
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1580--1582
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1586--1588
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1582--1584
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1588--1590
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1584--1585
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1590--1591
  [] [] [] 
  []
 
 
-Overfull \hbox (2.43767pt too wide) in alignment at lines 1585--1630
+Overfull \hbox (2.43767pt too wide) in alignment at lines 1591--1636
  [] [] [] 
  []
 
 [46 <./figures/seq-hint.png (PNG copy)>]
 ignored: Infinite glue shrinkage found in box being split [47]
-<figures/activity-manage-lab.png, id=1066, 681.54625pt x 1405.25pt>
+<figures/activity-manage-lab.png, id=1087, 681.54625pt x 1405.25pt>
 File: figures/activity-manage-lab.png Graphic file (type png)
 <use figures/activity-manage-lab.png>
-Package pdftex.def Info: figures/activity-manage-lab.png  used on input line 1636.
+Package pdftex.def Info: figures/activity-manage-lab.png  used on input line 1642.
 (pdftex.def)             Requested size: 262.53651pt x 541.3124pt.
  [48]
-<figures/seq-manage-lab.png, id=1072, 1285.80376pt x 1290.8225pt>
+<figures/seq-manage-lab.png, id=1093, 1285.80376pt x 1290.8225pt>
 File: figures/seq-manage-lab.png Graphic file (type png)
 <use figures/seq-manage-lab.png>
-Package pdftex.def Info: figures/seq-manage-lab.png  used on input line 1645.
+Package pdftex.def Info: figures/seq-manage-lab.png  used on input line 1651.
 (pdftex.def)             Requested size: 441.01773pt x 442.73433pt.
  [49 <./figures/activity-manage-lab.png (PNG copy)>] [50 <./figures/seq-manage-lab.png (PNG copy)>]
 Package acronym Info: Label `acro:CORS' newly defined as it shall be overridden
-although it is yet undefined on input line 1683.
+although it is yet undefined on input line 1689.
  [51] [52]
 CHƯƠNG 4.
-<figures/architecture.png, id=1105, 801.99625pt x 790.955pt>
+<figures/architecture.png, id=1126, 801.99625pt x 790.955pt>
 File: figures/architecture.png Graphic file (type png)
 <use figures/architecture.png>
-Package pdftex.def Info: figures/architecture.png  used on input line 1732.
+Package pdftex.def Info: figures/architecture.png  used on input line 1738.
 (pdftex.def)             Requested size: 418.97397pt x 413.20587pt.
 [53
 
 ]
 Package acronym Info: Label `acro:ERD' newly defined as it shall be overridden
-although it is yet undefined on input line 1748.
+although it is yet undefined on input line 1754.
  [54 <./figures/architecture.png (PNG copy)>]
 Package acronym Info: Label `acro:PK' newly defined as it shall be overridden
-although it is yet undefined on input line 1756.
+although it is yet undefined on input line 1762.
 Package acronym Info: Label `acro:FK' newly defined as it shall be overridden
-although it is yet undefined on input line 1756.
+although it is yet undefined on input line 1762.
  [55]
-<figures/erd.png, id=1123, 6101.79625pt x 3224.045pt>
+<figures/erd.png, id=1144, 6101.79625pt x 3224.045pt>
 File: figures/erd.png Graphic file (type png)
 <use figures/erd.png>
-Package pdftex.def Info: figures/erd.png  used on input line 1766.
+Package pdftex.def Info: figures/erd.png  used on input line 1772.
 (pdftex.def)             Requested size: 660.02698pt x 348.74266pt.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1768.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1774.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <9> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1768.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1774.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <7> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1768.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1774.
  [56 <./figures/erd.png (PNG copy)>]
-<figures/erd-user.png, id=1130, 512.91624pt x 442.65375pt>
+<figures/erd-user.png, id=1151, 512.91624pt x 442.65375pt>
 File: figures/erd-user.png Graphic file (type png)
 <use figures/erd-user.png>
-Package pdftex.def Info: figures/erd-user.png  used on input line 1781.
+Package pdftex.def Info: figures/erd-user.png  used on input line 1787.
 (pdftex.def)             Requested size: 418.96614pt x 361.5735pt.
 
 ignored: Infinite glue shrinkage found in box being split [57
 
 
  <./figures/erd-user.png (PNG copy)>] [58]
-<figures/erd-problem.png, id=1144, 755.82375pt x 810.02625pt>
+<figures/erd-problem.png, id=1165, 755.82375pt x 810.02625pt>
 File: figures/erd-problem.png Graphic file (type png)
 <use figures/erd-problem.png>
-Package pdftex.def Info: figures/erd-problem.png  used on input line 1840.
+Package pdftex.def Info: figures/erd-problem.png  used on input line 1846.
 (pdftex.def)             Requested size: 369.57263pt x 396.07585pt.
 
 ignored: Infinite glue shrinkage found in box being split [59 <./figures/erd-problem.png (PNG copy)>]
 ignored: Infinite glue shrinkage found in box being split [60]
-<figures/erd-submission.png, id=1155, 585.18625pt x 415.5525pt>
+<figures/erd-submission.png, id=1176, 585.18625pt x 415.5525pt>
 File: figures/erd-submission.png Graphic file (type png)
 <use figures/erd-submission.png>
-Package pdftex.def Info: figures/erd-submission.png  used on input line 1907.
+Package pdftex.def Info: figures/erd-submission.png  used on input line 1913.
 (pdftex.def)             Requested size: 418.9854pt x 297.52994pt.
 
 ignored: Infinite glue shrinkage found in box being split [61 <./figures/erd-submission.png (PNG copy)>]
-<figures/erd-contest.png, id=1164, 721.69624pt x 737.75626pt>
+<figures/erd-contest.png, id=1185, 721.69624pt x 737.75626pt>
 File: figures/erd-contest.png Graphic file (type png)
 <use figures/erd-contest.png>
-Package pdftex.def Info: figures/erd-contest.png  used on input line 1966.
+Package pdftex.def Info: figures/erd-contest.png  used on input line 1972.
 (pdftex.def)             Requested size: 387.44167pt x 396.06346pt.
  [62]
 ignored: Infinite glue shrinkage found in box being split [63 <./figures/erd-contest.png (PNG copy)>]
 ignored: Infinite glue shrinkage found in box being split [64]
-<figures/erd-organization.png, id=1182, 377.41pt x 473.77pt>
+<figures/erd-organization.png, id=1203, 377.41pt x 473.77pt>
 File: figures/erd-organization.png Graphic file (type png)
 <use figures/erd-organization.png>
-Package pdftex.def Info: figures/erd-organization.png  used on input line 2037.
+Package pdftex.def Info: figures/erd-organization.png  used on input line 2043.
 (pdftex.def)             Requested size: 315.51918pt x 396.07729pt.
  [65 <./figures/erd-organization.png (PNG copy)>]
-<figures/erd-lab.png, id=1190, 390.45876pt x 501.875pt>
+<figures/erd-lab.png, id=1211, 390.45876pt x 501.875pt>
 File: figures/erd-lab.png Graphic file (type png)
 <use figures/erd-lab.png>
-Package pdftex.def Info: figures/erd-lab.png  used on input line 2084.
+Package pdftex.def Info: figures/erd-lab.png  used on input line 2090.
 (pdftex.def)             Requested size: 308.15518pt x 396.08633pt.
  [66]
 ignored: Infinite glue shrinkage found in box being split [67 <./figures/erd-lab.png (PNG copy)>] [68]
-<figures/ui-problem-detail.png, id=1205, 1144.87724pt x 519.1395pt>
+<figures/ui-problem-detail.png, id=1226, 1144.87724pt x 519.1395pt>
 File: figures/ui-problem-detail.png Graphic file (type png)
 <use figures/ui-problem-detail.png>
-Package pdftex.def Info: figures/ui-problem-detail.png  used on input line 2149.
+Package pdftex.def Info: figures/ui-problem-detail.png  used on input line 2155.
 (pdftex.def)             Requested size: 441.01773pt x 199.97626pt.
-<figures/ui-contest.png, id=1207, 1145.4795pt x 522.15076pt>
+<figures/ui-contest.png, id=1228, 1145.4795pt x 522.15076pt>
 File: figures/ui-contest.png Graphic file (type png)
 <use figures/ui-contest.png>
-Package pdftex.def Info: figures/ui-contest.png  used on input line 2164.
+Package pdftex.def Info: figures/ui-contest.png  used on input line 2170.
 (pdftex.def)             Requested size: 441.01773pt x 201.03264pt.
  [69 <./figures/ui-problem-detail.png>]
-<figures/ui-admin.png, id=1215, 1150.2975pt x 524.55975pt>
+<figures/ui-admin.png, id=1236, 1150.2975pt x 524.55975pt>
 File: figures/ui-admin.png Graphic file (type png)
 <use figures/ui-admin.png>
-Package pdftex.def Info: figures/ui-admin.png  used on input line 2177.
+Package pdftex.def Info: figures/ui-admin.png  used on input line 2183.
 (pdftex.def)             Requested size: 441.01773pt x 201.11168pt.
  [70 <./figures/ui-contest.png> <./figures/ui-admin.png>]
-<figures/ui-visualizer.png, id=1223, 1150.2975pt x 523.9575pt>
+<figures/ui-visualizer.png, id=1244, 1150.2975pt x 523.9575pt>
 File: figures/ui-visualizer.png Graphic file (type png)
 <use figures/ui-visualizer.png>
-Package pdftex.def Info: figures/ui-visualizer.png  used on input line 2192.
+Package pdftex.def Info: figures/ui-visualizer.png  used on input line 2198.
 (pdftex.def)             Requested size: 441.01773pt x 200.8808pt.
-<figures/ui-lab-progress.png, id=1226, 1147.8885pt x 523.9575pt>
+<figures/ui-lab-progress.png, id=1247, 1147.8885pt x 523.9575pt>
 File: figures/ui-lab-progress.png Graphic file (type png)
 <use figures/ui-lab-progress.png>
-Package pdftex.def Info: figures/ui-lab-progress.png  used on input line 2207.
+Package pdftex.def Info: figures/ui-lab-progress.png  used on input line 2213.
 (pdftex.def)             Requested size: 441.01773pt x 201.30452pt.
  [71 <./figures/ui-visualizer.png>] [72 <./figures/ui-lab-progress.png>]
-<figures/jwt-flow.png, id=1241, 1194.4625pt x 1047.915pt>
+<figures/jwt-flow.png, id=1262, 1194.4625pt x 1047.915pt>
 File: figures/jwt-flow.png Graphic file (type png)
 <use figures/jwt-flow.png>
-Package pdftex.def Info: figures/jwt-flow.png  used on input line 2234.
+Package pdftex.def Info: figures/jwt-flow.png  used on input line 2240.
 (pdftex.def)             Requested size: 441.01773pt x 386.907pt.
  [73 <./figures/jwt-flow.png (PNG copy)>]
-Overfull \hbox (21.23645pt too wide) in paragraph at lines 2265--2288
+Overfull \hbox (21.23645pt too wide) in paragraph at lines 2271--2294
  [][] 
  []
 
@@ -1828,41 +1827,41 @@ CHƯƠNG 5.
 [76
 
 ] [77] [78{C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}]
-LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 2430.
+LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 2436.
  (C:\Users\Admin\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 ) [79] [80]
 ignored: Infinite glue shrinkage found in box being split [81] [82] [83]
-Overfull \hbox (13.7138pt too wide) in paragraph at lines 2617--2637
+Overfull \hbox (13.7138pt too wide) in paragraph at lines 2623--2643
  [][] 
  []
 
 [84] [85] [86]
-<figures/grafana-dashboard.png, id=1359, 3212.0pt x 2007.5pt>
+<figures/grafana-dashboard.png, id=1380, 3212.0pt x 2007.5pt>
 File: figures/grafana-dashboard.png Graphic file (type png)
 <use figures/grafana-dashboard.png>
-Package pdftex.def Info: figures/grafana-dashboard.png  used on input line 2731.
+Package pdftex.def Info: figures/grafana-dashboard.png  used on input line 2737.
 (pdftex.def)             Requested size: 441.01773pt x 275.62624pt.
 Package acronym Info: Label `acro:JVM' newly defined as it shall be overridden
-although it is yet undefined on input line 2735.
- [87 <./figures/grafana-dashboard.png (PNG copy)>]
-<figures/grafana-ratelimit.png, id=1372, 3212.0pt x 2007.5pt>
+although it is yet undefined on input line 2741.
+ [87 <./figures/grafana-dashboard.png (PNG copy)>] [88]
+<figures/grafana-ratelimit.png, id=1397, 3212.0pt x 2007.5pt>
 File: figures/grafana-ratelimit.png Graphic file (type png)
 <use figures/grafana-ratelimit.png>
-Package pdftex.def Info: figures/grafana-ratelimit.png  used on input line 2776.
+Package pdftex.def Info: figures/grafana-ratelimit.png  used on input line 2808.
 (pdftex.def)             Requested size: 441.01773pt x 275.62624pt.
- [88]
-<figures/grafana-submit.png, id=1380, 3212.0pt x 2007.5pt>
+ [89 <./figures/grafana-ratelimit.png (PNG copy)>]
+<figures/grafana-submit.png, id=1405, 3212.0pt x 2007.5pt>
 File: figures/grafana-submit.png Graphic file (type png)
 <use figures/grafana-submit.png>
-Package pdftex.def Info: figures/grafana-submit.png  used on input line 2788.
+Package pdftex.def Info: figures/grafana-submit.png  used on input line 2819.
 (pdftex.def)             Requested size: 441.01773pt x 275.62624pt.
- [89 <./figures/grafana-ratelimit.png (PNG copy)>] [90 <./figures/grafana-submit.png (PNG copy)>]
+ [90 <./figures/grafana-submit.png (PNG copy)>]
 CHƯƠNG 6.
 Package acronym Info: Label `acro:TLS' newly defined as it shall be overridden
-although it is yet undefined on input line 2823.
+although it is yet undefined on input line 2852.
 Package acronym Info: Label `acro:DNS' newly defined as it shall be overridden
-although it is yet undefined on input line 2831.
+although it is yet undefined on input line 2860.
 [91
 
 ] [92] [93] [94]
@@ -1872,11 +1871,11 @@ CHƯƠNG 7.
 ] [96]
 
 Package csquotes Warning: No space factor codes for 'T5' encoding.
-(csquotes)                Punctuation tracker may fail on input line 2986.
+(csquotes)                Punctuation tracker may fail on input line 3015.
 
 
-Underfull \hbox (badness 1406) in paragraph at lines 2989--2989
-[][]\T5/ptm/m/n/12 Do[]silovi[]c, H. Z. (2024). Judge0: Open-source on-line judge sys-tem [Truy c�p ng�y
+Underfull \hbox (badness 1406) in paragraph at lines 3018--3018
+[][]\T5/ptm/m/n/12 Do[]silovi[]c, H. Z. (2026). Judge0: Open-source on-line judge sys-tem [Truy c�p ng�y
  []
 
 [97
@@ -1894,23 +1893,23 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 LaTeX Warning: There were undefined references.
 
 Package rerunfilecheck Info: File `thesis.out' has not changed.
-(rerunfilecheck)             Checksum: 1A70A82A2E06F99B1832E50EC4C456EE;16019.
+(rerunfilecheck)             Checksum: D880241A22946464066AECE1D371F63E;16558.
 Package logreq Info: Writing requests to 'thesis.run.xml'.
 \openout1 = `thesis.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 25736 strings out of 467867
- 447993 string characters out of 5418334
- 1474855 words of memory out of 5000000
- 53918 multiletter control sequences out of 15000+600000
+ 25748 strings out of 467867
+ 448357 string characters out of 5418334
+ 1474771 words of memory out of 5000000
+ 53926 multiletter control sequences out of 15000+600000
  687721 words of font info for 128 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  75i,12n,83p,714b,5054s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/urw/symbol/usyr.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmb8v.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmr8v.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/urwvn/utmri8v.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX/fonts/type1/vntex/vnr/vntt12.pfb>
-Output written on thesis.pdf (113 pages, 4965718 bytes).
+Output written on thesis.pdf (113 pages, 4971316 bytes).
 PDF statistics:
- 1582 PDF objects out of 1728 (max. 8388607)
- 338 named destinations out of 1000 (max. 500000)
- 780 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 1606 PDF objects out of 1728 (max. 8388607)
+ 342 named destinations out of 1000 (max. 500000)
+ 804 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -64,3 +64,17 @@ class Program {
 greet();
 `,
 };
+
+export const EXTENSION_TO_LANGUAGE = {
+  ".c":    "c",
+  ".cpp":  "cpp",
+  ".cc":   "cpp",
+  ".cxx":  "cpp",
+  ".hpp":  "cpp",
+  ".h":    "c",       // ambiguous — default to C; user can override
+  ".py":   "python",
+  ".java": "java",
+  ".cs":   "csharp",
+  ".js":   "javascript",
+  ".mjs":  "javascript",
+};

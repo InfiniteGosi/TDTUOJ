@@ -287,23 +287,26 @@ tác quyền, bản quyền do tôi gây ra trong quá trình thực hiện (n�
 \addcontentsline{toc}{chapter}{TÓM TẮT}
 \begin{center}\textbf{TÓM TẮT}\end{center}
 
-\noindent Dự án này trình bày quá trình nghiên cứu, thiết kế và triển khai ban đầu của Hệ
-thống Chấm bài Trực tuyến TDTUOJ, một nền tảng được xây dựng nhằm tự động hóa quy trình
-chấm bài lập trình và hỗ trợ tổ chức thi cử cho sinh viên Khoa Công nghệ Thông tin, Trường
-Đại học Tôn Đức Thắng.
+\noindent Đề tài trình bày quá trình nghiên cứu, thiết kế và xây dựng hoàn chỉnh Hệ thống
+Chấm bài Trực tuyến TDTUOJ — một nền tảng tự động hóa quy trình chấm bài lập trình và hỗ
+trợ tổ chức thi cử cho sinh viên Khoa Công nghệ Thông tin, Trường Đại học Tôn Đức Thắng.
+Hệ thống phục vụ ba nhóm người dùng chính gồm sinh viên, giảng viên và quản trị viên, với
+kiến trúc phân tầng tách biệt giữa phía máy chủ (backend) bằng Java Spring Boot và phía
+giao diện người dùng (frontend) bằng React, tích hợp Judging Service (Judge0) và \ac{LLM}.
 
-\noindent Hệ thống được thiết kế để phục vụ ba nhóm người dùng chính gồm sinh viên, giảng
-viên và quản trị viên, với các chức năng cốt lõi bao gồm nộp và chấm bài tự động cho nhiều
-ngôn ngữ lập trình, quản lý cuộc thi và bài toán, và phân tích hỗ trợ học tập thông minh
-bằng \ac{LLM}. Kiến trúc hệ thống được xây dựng theo mô hình hai lớp tách biệt rõ ràng
-giữa phía máy chủ (backend) và phía giao diện người dùng (frontend), tích hợp với hai dịch
-vụ bên ngoài gồm Judging Service (Judge0) và \ac{LLM}.
+\noindent Các chức năng cốt lõi bao gồm: nộp và chấm bài tự động bất đồng bộ qua Judge0
+cho sáu ngôn ngữ lập trình; quản lý kho bài toán với phân quyền công khai/riêng tư; tổ chức
+cuộc thi theo thể thức \ac{ICPC} kèm bảng xếp hạng thời gian thực và cơ chế đóng băng bảng
+xếp hạng; và mô hình bài thực hành phục vụ quản lý lớp học của giảng viên. Bên cạnh đó, đề
+tài đóng góp hai nhóm tính năng hỗ trợ học tập đặc thù: trình minh họa cấu trúc dữ liệu
+dựa trên kỹ thuật chèn mã đo đạc kết hợp \ac{LLM} phân loại ngữ nghĩa biến, cho phép trực
+quan hóa từng bước chạy của thuật toán trên các cấu trúc thường gặp; và lớp hỗ trợ bằng
+\ac{LLM} gồm gợi ý hướng giải có kiểm soát, phân tích độ phức tạp thuật toán, trích xuất
+đề bài tự động từ tập tin \ac{PDF} kèm sinh trường hợp kiểm thử.
 
-\noindent Đến thời điểm báo cáo giữa kỳ, hệ thống đã hoàn thành phần lớn các chức năng cốt
-lõi. Phía backend được xây dựng bằng Java với Spring Boot, đã hiện thực hóa đầy đủ các
-\ac{API} quản lý người dùng, quản lý bài toán và luồng xử lý bài nộp tích hợp Judge0. Phía
-frontend được xây dựng bằng React, đã hoàn thiện giao diện xem chi tiết bài toán theo
-slug, quản lý người dùng, tính năng nộp bài và hỗ trợ học tập bằng \ac{LLM}.
+\noindent Hệ thống được kiểm chứng qua 101 trường hợp kiểm thử đơn vị và các kịch bản kiểm
+thử tải bằng k6, đã triển khai thành công lên môi trường trực tuyến thực tế với kết nối mã
+hóa \ac{HTTPS} và quy trình tích hợp, triển khai liên tục (\ac{CI/CD}).
 
 \newpage
 
@@ -314,23 +317,26 @@ slug, quản lý người dùng, tính năng nộp bài và hỗ trợ học t�
 \addcontentsline{toc}{chapter}{ABSTRACT}
 \begin{center}\textbf{ABSTRACT}\end{center}
 
-\noindent This project presents the research, design, and initial implementation of the
-TDTUOJ Online Judge System, a platform built to automate programming submission grading
-and support examination organization for students of the Faculty of Information Technology
-at Ton Duc Thang University.
+\noindent This thesis presents the research, design, and complete implementation of the
+TDTUOJ Online Judge System — a platform that automates programming submission grading and
+supports examination organization for students of the Faculty of Information Technology at
+Ton Duc Thang University. The system serves three user groups — students, lecturers, and
+administrators — through a layered architecture separating a Java Spring Boot backend from
+a React frontend, integrated with Judging Service (Judge0) and \ac{LLM}.
 
-\noindent The system is designed to serve three main user groups: students, lecturers, and
-administrators, with core features including automatic submission judging for multiple
-programming languages via Judge0, contest and problem management, and AI-powered learning
-support via \ac{LLM} integration. The system architecture follows a clear two-layer
-separation between a Java Spring Boot backend and a React frontend, integrated with two
-external services: Judging Service (Judge0) and \ac{LLM}.
+\noindent Core features include asynchronous submission judging via Judge0 for six
+programming languages; problem repository management with public/private access control;
+\ac{ICPC}-style contests with real-time leaderboard and scoreboard freeze; and a
+lab/assignment model for classroom management. Beyond these, the thesis contributes two
+learning-support capabilities: a data structure visualizer that automatically instruments
+user code to capture per-line execution traces and combines \ac{LLM} semantic variable
+classification to animate algorithm steps across common structures; and an \ac{LLM}-powered
+learning layer providing controlled hint generation, complexity analysis, and automatic
+\ac{PDF} problem extraction with test case generation.
 
-\noindent As of the midterm report, the majority of core features have been implemented.
-The backend provides complete \ac{API} coverage for user management, problem management,
-and Judge0-integrated submission processing. The frontend has completed the problem detail
-view by slug, user management interface, submission functionality, and \ac{LLM}-powered
-hint and code explanation features.
+\noindent The system is verified by 101 unit tests and load-testing scenarios with k6, and
+has been deployed to a live environment accessible via a dedicated domain with end-to-end
+\ac{HTTPS} encryption and a \ac{CI/CD} pipeline.
 
 \newpage
 
@@ -2761,10 +2767,36 @@ và lớp nghiệp vụ. Bảng~\ref{tab:metrics} mô tả ý nghĩa của các 
   \caption{Các chỉ số giám sát chính}\label{tab:metrics}
 \end{table}
 
-Quá trình kiểm thử tải sử dụng ba kịch bản. Kịch bản thứ nhất mô phỏng việc duyệt bài với
-số người dùng ảo (virtual user) tăng dần truy cập các endpoint công khai. Kịch bản thứ hai
-mô phỏng nộp bài liên tục để quan sát hoạt động của hàng đợi và tiến trình chấm. Kịch bản
-thứ ba dồn dập gửi request vượt ngưỡng cho phép nhằm kiểm chứng cơ chế giới hạn tần suất.
+\subsection{Môi trường kiểm thử}
+
+Toàn bộ quá trình kiểm thử được thực hiện trên một máy tính cá nhân với bộ xử lý 10 nhân
+và 16 gigabyte bộ nhớ. Máy chủ ứng dụng, Judge0, công cụ sinh tải k6, Prometheus và Grafana
+đều chạy đồng thời trên cùng máy này và chia sẻ chung tài nguyên phần cứng. Do đó, các số
+liệu thu được mang tính so sánh tương đối, phản ánh xu hướng và hành vi của hệ thống dưới
+tải, thay vì năng lực tuyệt đối trong môi trường triển khai thực tế.
+
+\subsection{Các kịch bản kiểm thử}
+
+Quá trình kiểm thử tải sử dụng ba kịch bản, mỗi kịch bản tập trung vào một khía cạnh khác
+nhau của hệ thống.
+
+Kịch bản thứ nhất mô phỏng việc duyệt nội dung với số người dùng ảo tăng dần. Cụ thể, số
+người dùng ảo tăng từ 0 lên 100 trong vòng một phút, duy trì ở mức đó trong hai phút, rồi
+giảm về 0 trong 30 giây. Mỗi người dùng ảo lần lượt truy vấn danh sách bài toán, trang chi
+tiết một bài toán và danh sách cuộc thi. Ngưỡng chấp nhận được đặt ở tỉ lệ lỗi dưới 5\%
+và độ trễ phân vị 95 dưới một giây.
+
+Kịch bản thứ hai mô phỏng nộp bài liên tục để quan sát hoạt động của hàng đợi và tiến trình
+chấm bài. Tốc độ nộp bài tăng dần từ 1 lên 20 bài mỗi giây trong 30 giây, duy trì ở mức
+đỉnh trong một phút, rồi giảm về 0 trong 30 giây. Kịch bản sử dụng tối đa 200 người dùng ảo
+và theo dõi độ sâu hàng đợi cùng thông lượng chấm bài qua Grafana.
+
+Kịch bản thứ ba dồn dập gửi request vượt ngưỡng cho phép nhằm kiểm chứng cơ chế giới hạn
+tần suất. Năm mươi người dùng ảo liên tục gửi request đến endpoint đăng nhập trong 90 giây
+với thông tin đăng nhập không hợp lệ, qua đó chỉ kích hoạt bộ đếm tần suất truy cập mà không tạo
+phiên đăng nhập hợp lệ.
+
+\subsection{Kết quả kiểm thử}
 
 Trong kịch bản giới hạn tần suất, kết quả đo cho thấy số lượt request được chấp nhận duy trì
 ở mức trần đã cấu hình, trong khi số lượt bị từ chối tăng vọt khi lưu lượng vượt ngưỡng, như
@@ -2777,10 +2809,9 @@ khi hệ thống bị truy cập dồn dập.
   \caption{Số lượt chấp nhận và từ chối theo tầng khi bị dồn tần suất}\label{fig:grafana-ratelimit}
 \end{figure}
 
-Trong kịch bản nộp bài, mỗi người dùng bị ràng buộc bởi một khoảng chờ tối thiểu giữa hai lần
-nộp để chống tình trạng nộp bài quá nhanh trong một khoảng thời gian nhất định. Nhờ vậy, tiến trình chấm luôn xử lý kịp và độ sâu hàng đợi được giữ
-ở mức thấp. Các biểu đồ thông lượng và độ trễ chấm bài phản ánh đúng hoạt động chấm thực tế;
-đồng thời, lưu lượng \ac{HTTP} và mức tiêu thụ tài nguyên \ac{JVM} đều ổn định, như trình bày ở
+Trong kịch bản nộp bài, hàng đợi chấm bài tích lũy khi tải tăng rồi thoát dần ổn định khi
+tốc độ nộp giảm, không xảy ra tình trạng nghẽn kéo dài. Lưu lượng \ac{HTTP} và mức tiêu thụ
+tài nguyên \ac{JVM} đều ổn định trong suốt quá trình, như trình bày ở
 Hình~\ref{fig:grafana-submit}.
 
 \begin{figure}[H]
@@ -2789,11 +2820,9 @@ Hình~\ref{fig:grafana-submit}.
   \caption{Giám sát hệ thống trong kịch bản nộp bài}\label{fig:grafana-submit}
 \end{figure}
 
-Nhìn chung, kết quả kiểm thử tải cho thấy hệ thống đáp ứng ổn định dưới lưu lượng cao và cơ
-chế giới hạn tần suất bảo vệ hiệu quả. Cần lưu ý rằng các phép đo được thực hiện trên một
-máy tính cá nhân, nơi máy chủ, công cụ sinh tải và Judge0 cùng chia sẻ tài nguyên, do đó các
-con số mang tính so sánh tương đối thay vì phản ánh năng lực tuyệt đối trong môi trường
-triển khai thực tế.
+Nhìn chung, kết quả kiểm thử tải cho thấy hệ thống đáp ứng ổn định dưới lưu lượng cao,
+tỉ lệ lỗi và độ trễ nằm trong ngưỡng chấp nhận, và cơ chế giới hạn tần suất bảo vệ hiệu
+quả khi bị tấn công dồn dập.
 
 % ============================================================
 % CHƯƠNG 6 – TRIỂN KHAI HỆ THỐNG

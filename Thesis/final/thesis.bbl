@@ -40,9 +40,9 @@
       \true{uniqueprimaryauthor}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{note}{Truy cập ngày 01/06/2026}
+      \field{note}{Truy cập ngày 05/05/2026}
       \field{title}{Docker Documentation}
-      \field{year}{2024}
+      \field{year}{2026}
       \true{nocite}
       \verb{urlraw}
       \verb https://docs.docker.com
@@ -75,9 +75,9 @@
       \true{uniqueprimaryauthor}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{note}{Truy cập ngày 01/06/2026}
+      \field{note}{Truy cập ngày 15/03/2026}
       \field{title}{Judge0: Open-Source Online Judge System}
-      \field{year}{2024}
+      \field{year}{2026}
       \true{nocite}
       \verb{urlraw}
       \verb https://judge0.com
@@ -109,9 +109,9 @@
       \true{uniqueprimaryauthor}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{note}{Truy cập ngày 01/06/2026}
+      \field{note}{Truy cập ngày 18/06/2026}
       \field{title}{Grafana Documentation}
-      \field{year}{2024}
+      \field{year}{2026}
       \true{nocite}
       \verb{urlraw}
       \verb https://grafana.com/docs
@@ -143,9 +143,9 @@
       \true{uniqueprimaryauthor}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{note}{Truy cập ngày 01/06/2026}
+      \field{note}{Truy cập ngày 01/07/2026}
       \field{title}{k6 -- Load Testing for Engineering Teams}
-      \field{year}{2024}
+      \field{year}{2026}
       \true{nocite}
       \verb{urlraw}
       \verb https://grafana.com/docs/k6
@@ -175,9 +175,9 @@
       \true{uniqueprimaryauthor}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{note}{Truy cập ngày 01/06/2026}
+      \field{note}{Truy cập ngày 31/01/2026}
       \field{title}{React -- A JavaScript Library for Building User Interfaces}
-      \field{year}{2024}
+      \field{year}{2026}
       \true{nocite}
       \verb{urlraw}
       \verb https://react.dev
@@ -200,22 +200,58 @@
       \strng{authornamehash}{5931ee9e163586335d0830f3e4a0df39}
       \strng{authorfullhash}{5931ee9e163586335d0830f3e4a0df39}
       \strng{authorfullhashraw}{5931ee9e163586335d0830f3e4a0df39}
+      \field{extraname}{1}
       \field{sortinit}{R}
       \field{sortinithash}{5e1c39a9d46ffb6bebd8f801023a9486}
+      \field{extradate}{1}
       \field{extradatescope}{labelyear}
       \field{labeldatesource}{}
       \true{uniqueprimaryauthor}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{note}{Truy cập ngày 01/06/2026}
+      \field{note}{Truy cập ngày 10/04/2026}
       \field{title}{Redis Documentation}
-      \field{year}{2024}
+      \field{year}{2026}
       \true{nocite}
       \verb{urlraw}
       \verb https://redis.io/docs
       \endverb
       \verb{url}
       \verb https://redis.io/docs
+      \endverb
+    \endentry
+    \entry{redis_leaderboards}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=5931ee9e163586335d0830f3e4a0df39}{%
+           family={{Redis Ltd.}},
+           familyi={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{fullhash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{fullhashraw}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{bibnamehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authorbibnamehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authornamehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authorfullhash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authorfullhashraw}{5931ee9e163586335d0830f3e4a0df39}
+      \field{extraname}{2}
+      \field{sortinit}{R}
+      \field{sortinithash}{5e1c39a9d46ffb6bebd8f801023a9486}
+      \field{extradate}{2}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 28/05/2026}
+      \field{title}{Redis for Leaderboards}
+      \field{year}{2026}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://redis.io/solutions/leaderboards/
+      \endverb
+      \verb{url}
+      \verb https://redis.io/solutions/leaderboards/
       \endverb
     \endentry
     \entry{postgresql_docs}{misc}{}{}
@@ -239,9 +275,9 @@
       \true{uniqueprimaryauthor}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{note}{Truy cập ngày 01/06/2026}
+      \field{note}{Truy cập ngày 22/02/2026}
       \field{title}{PostgreSQL 16 Documentation}
-      \field{year}{2024}
+      \field{year}{2023}
       \true{nocite}
       \verb{urlraw}
       \verb https://www.postgresql.org/docs/16/
@@ -367,9 +403,9 @@
       \true{uniqueprimaryauthor}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{note}{Truy cập ngày 01/06/2026}
+      \field{note}{Truy cập ngày 05/05/2026}
       \field{title}{Docker Documentation}
-      \field{year}{2024}
+      \field{year}{2026}
       \true{nocite}
       \verb{urlraw}
       \verb https://docs.docker.com
@@ -402,9 +438,9 @@
       \true{uniqueprimaryauthor}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{note}{Truy cập ngày 01/06/2026}
+      \field{note}{Truy cập ngày 15/03/2026}
       \field{title}{Judge0: Open-Source Online Judge System}
-      \field{year}{2024}
+      \field{year}{2026}
       \true{nocite}
       \verb{urlraw}
       \verb https://judge0.com
@@ -436,9 +472,9 @@
       \true{uniqueprimaryauthor}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{note}{Truy cập ngày 01/06/2026}
+      \field{note}{Truy cập ngày 18/06/2026}
       \field{title}{Grafana Documentation}
-      \field{year}{2024}
+      \field{year}{2026}
       \true{nocite}
       \verb{urlraw}
       \verb https://grafana.com/docs
@@ -470,9 +506,9 @@
       \true{uniqueprimaryauthor}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{note}{Truy cập ngày 01/06/2026}
+      \field{note}{Truy cập ngày 01/07/2026}
       \field{title}{k6 -- Load Testing for Engineering Teams}
-      \field{year}{2024}
+      \field{year}{2026}
       \true{nocite}
       \verb{urlraw}
       \verb https://grafana.com/docs/k6
@@ -502,9 +538,9 @@
       \true{uniqueprimaryauthor}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{note}{Truy cập ngày 01/06/2026}
+      \field{note}{Truy cập ngày 31/01/2026}
       \field{title}{React -- A JavaScript Library for Building User Interfaces}
-      \field{year}{2024}
+      \field{year}{2026}
       \true{nocite}
       \verb{urlraw}
       \verb https://react.dev
@@ -527,22 +563,58 @@
       \strng{authornamehash}{5931ee9e163586335d0830f3e4a0df39}
       \strng{authorfullhash}{5931ee9e163586335d0830f3e4a0df39}
       \strng{authorfullhashraw}{5931ee9e163586335d0830f3e4a0df39}
+      \field{extraname}{1}
       \field{sortinit}{R}
       \field{sortinithash}{5e1c39a9d46ffb6bebd8f801023a9486}
+      \field{extradate}{1}
       \field{extradatescope}{labelyear}
       \field{labeldatesource}{}
       \true{uniqueprimaryauthor}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{note}{Truy cập ngày 01/06/2026}
+      \field{note}{Truy cập ngày 10/04/2026}
       \field{title}{Redis Documentation}
-      \field{year}{2024}
+      \field{year}{2026}
       \true{nocite}
       \verb{urlraw}
       \verb https://redis.io/docs
       \endverb
       \verb{url}
       \verb https://redis.io/docs
+      \endverb
+    \endentry
+    \entry{redis_leaderboards}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=5931ee9e163586335d0830f3e4a0df39}{%
+           family={{Redis Ltd.}},
+           familyi={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{fullhash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{fullhashraw}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{bibnamehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authorbibnamehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authornamehash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authorfullhash}{5931ee9e163586335d0830f3e4a0df39}
+      \strng{authorfullhashraw}{5931ee9e163586335d0830f3e4a0df39}
+      \field{extraname}{2}
+      \field{sortinit}{R}
+      \field{sortinithash}{5e1c39a9d46ffb6bebd8f801023a9486}
+      \field{extradate}{2}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Truy cập ngày 28/05/2026}
+      \field{title}{Redis for Leaderboards}
+      \field{year}{2026}
+      \true{nocite}
+      \verb{urlraw}
+      \verb https://redis.io/solutions/leaderboards/
+      \endverb
+      \verb{url}
+      \verb https://redis.io/solutions/leaderboards/
       \endverb
     \endentry
     \entry{postgresql_docs}{misc}{}{}
@@ -566,9 +638,9 @@
       \true{uniqueprimaryauthor}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{note}{Truy cập ngày 01/06/2026}
+      \field{note}{Truy cập ngày 22/02/2026}
       \field{title}{PostgreSQL 16 Documentation}
-      \field{year}{2024}
+      \field{year}{2023}
       \true{nocite}
       \verb{urlraw}
       \verb https://www.postgresql.org/docs/16/

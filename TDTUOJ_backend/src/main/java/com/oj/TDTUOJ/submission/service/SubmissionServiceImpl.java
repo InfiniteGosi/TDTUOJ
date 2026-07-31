@@ -90,7 +90,7 @@ public class SubmissionServiceImpl implements SubmissionService {
             Long contestId = submissionDTO.getContestId();
             Contest contest = contestRepository.findById(contestId).orElse(null);
             if (contest != null) {
-                boolean isAdmin   = currentUser.getRoles().stream()
+                boolean isAdmin = currentUser.getRoles().stream()
                         .anyMatch(r -> r.getName().equalsIgnoreCase("ADMIN"));
                 boolean isCreator = contest.getCreator() != null
                         && contest.getCreator().getId().equals(currentUser.getId());

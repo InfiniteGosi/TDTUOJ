@@ -73,6 +73,19 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
             Long userId, Long problemId, Long contestId, SubmissionVerdict verdict
     );
 
+    /** IOI: best test-case count for a user+problem in a contest, excluding a given submission. */
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT MAX(s.testCasesPassed) FROM Submission s " +
+        "WHERE s.userId = :userId AND s.problem.id = :problemId " +
+        "AND s.contestId = :contestId AND s.id <> :excludeId " +
+        "AND s.submissionStatus = com.oj.TDTUOJ.common.enums.SubmissionStatus.COMPLETED")
+    Integer findMaxTestCasesPassedForUserProblemContest(
+        @org.springframework.data.repository.query.Param("userId") Long userId,
+        @org.springframework.data.repository.query.Param("problemId") Long problemId,
+        @org.springframework.data.repository.query.Param("contestId") Long contestId,
+        @org.springframework.data.repository.query.Param("excludeId") Long excludeId);
+
+
     // Full (unpaged) list used by the backfill path in UserStatisticsServiceImpl.
     List<Submission> findAllByUserId(Long userId);
 

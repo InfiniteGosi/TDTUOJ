@@ -135,7 +135,8 @@ const SidebarClock = ({ targetDate, label, onExpire, accent }) => {
 
 // ─── Leaderboard table ─────────────────────────────────────────────────────────
 
-const LeaderboardTable = ({ contestId, problems }) => {
+const LeaderboardTable = ({ contestId, problems, contestStyle }) => {
+
   const { showMessage } = useToast();
   const navigate = useNavigate();
   const [data, setData]         = useState(null);
@@ -204,8 +205,18 @@ const LeaderboardTable = ({ contestId, problems }) => {
             <tr style={{ background: "var(--bg-overlay)" }}>
               <th style={{ width: "6%", textAlign: "center", padding: "10px 8px", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.05em" }}>RANK</th>
               <th style={{ padding: "10px 8px", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.05em" }}>PARTICIPANT</th>
-              <th style={{ width: "10%", textAlign: "center", padding: "10px 8px", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--green-ac)", letterSpacing: "0.05em" }}>SOLVED</th>
-              <th style={{ width: "12%", textAlign: "center", padding: "10px 8px", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.05em" }}>PENALTY</th>
+              {(data?.contestStyle || contestStyle) === "IOI" ? (
+                <>
+                  <th style={{ width: "10%", textAlign: "center", padding: "10px 8px", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.05em" }}>SCORE</th>
+                  <th style={{ width: "10%", textAlign: "center", padding: "10px 8px", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--green-ac)", letterSpacing: "0.05em" }}>SOLVED</th>
+                </>
+              ) : (
+                <>
+                  <th style={{ width: "10%", textAlign: "center", padding: "10px 8px", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--green-ac)", letterSpacing: "0.05em" }}>SOLVED</th>
+                  <th style={{ width: "12%", textAlign: "center", padding: "10px 8px", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.05em" }}>PENALTY</th>
+                </>
+              )}
+
               {(problems ?? []).map((p) => (
                 <th key={p.problemId} style={{ width: "7%", textAlign: "center", padding: "10px 8px", fontSize: "var(--text-xs)", fontWeight: 800, color: "var(--cyan)", letterSpacing: "0.05em" }}>
                   {String.fromCharCode(64 + (p.problemOrder ?? 1))}
@@ -242,18 +253,40 @@ const LeaderboardTable = ({ contestId, problems }) => {
                         onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-primary)"; e.currentTarget.style.textDecoration = "none"; }}
                       >{entry.name || entry.username}</span>
                     </td>
-                    <td style={{ textAlign: "center", padding: "10px 8px" }}>
-                      <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-sm)", fontWeight: 800, color: "var(--green-ac)" }}>{entry.problemsSolved ?? 0}</span>
-                    </td>
-                    <td style={{ textAlign: "center", padding: "10px 8px" }}>
-                      <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-sm)", color: "var(--text-secondary)" }}>{fmtMins(entry.penaltyTime)}</span>
-                    </td>
+                    {(data?.contestStyle || contestStyle) === "IOI" ? (
+                      <>
+                        <td style={{ textAlign: "center", padding: "10px 8px" }}>
+                          <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-sm)", fontWeight: 800, color: "var(--primary)" }}>{entry.pointsEarned ?? entry.score ?? 0}</span>
+                        </td>
+                        <td style={{ textAlign: "center", padding: "10px 8px" }}>
+                          <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-sm)", fontWeight: 800, color: "var(--green-ac)" }}>{entry.problemsSolved ?? 0}</span>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td style={{ textAlign: "center", padding: "10px 8px" }}>
+                          <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-sm)", fontWeight: 800, color: "var(--green-ac)" }}>{entry.problemsSolved ?? 0}</span>
+                        </td>
+                        <td style={{ textAlign: "center", padding: "10px 8px" }}>
+                          <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-sm)", color: "var(--text-secondary)" }}>{fmtMins(entry.penaltyTime)}</span>
+                        </td>
+                      </>
+                    )}
+
                     {(problems ?? []).map((p) => {
                       const ps = (entry.problemScores ?? []).find((s) => s.problemId === p.problemId);
                       return (
                         <td key={p.problemId} style={{ textAlign: "center", padding: "10px 8px" }}>
                           {ps ? (
-                            ps.solved ? (
+                            (data?.contestStyle || contestStyle) === "IOI" ? (
+                              <span style={{
+                                fontFamily: "var(--font-code)", fontSize: "var(--text-xs)", fontWeight: 700,
+                                color: ps.pointsEarned === (p.points ?? 100) ? "var(--green-ac)"
+                                     : ps.pointsEarned > 0 ? "var(--amber-tle)" : "var(--red-wa)",
+                              }}>
+                                {ps.pointsEarned ?? 0}/{p.points ?? 100}
+                              </span>
+                            ) : ps.solved ? (
                               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
                                 <CheckCircle size={14} color="var(--green-ac)" />
                                 <span style={{ fontFamily: "var(--font-code)", fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>
@@ -640,7 +673,8 @@ const ContestDetailPage = () => {
             {/* ── Leaderboard tab ── */}
             {activeTab === "leaderboard" && (
               <div className="oj-card" style={{ padding: "var(--space-5)" }}>
-                <LeaderboardTable contestId={contest.id} problems={problems} />
+              <LeaderboardTable contestId={contest.id} problems={problems} contestStyle={contest.contestStyle} />
+
               </div>
             )}
           </div>

@@ -241,7 +241,7 @@ const MD_STYLE = `
   .cpmd p{margin-bottom:.9rem;color:var(--text-secondary)}
   .cpmd code{background:var(--bg-void);padding:.15rem .45rem;border-radius:4px;font-size:.85em;font-family:var(--font-code);color:var(--primary);border:1px solid var(--border-default)}
   .cpmd pre{background:var(--bg-void);padding:1rem 1.2rem;border-radius:8px;overflow-x:auto;margin-bottom:1rem;border:1px solid var(--border-default)}
-  .cpmd pre code{background:transparent;padding:0;color:#e2e8f0;border:none;font-size:.85rem}
+  .cpmd pre code{background:transparent;padding:0;color:var(--text-primary);border:none;font-size:.85rem}
   .cpmd ul,.cpmd ol{padding-left:1.4rem;margin-bottom:.9rem}
   .cpmd li{margin-bottom:.35rem;color:var(--text-secondary)}
   .cpmd strong{font-weight:700;color:var(--text-primary)}

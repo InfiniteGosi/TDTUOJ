@@ -1,6 +1,7 @@
 package com.oj.TDTUOJ.submission.service;
 import com.oj.TDTUOJ.common.aws.AwsS3Service;
 import com.oj.TDTUOJ.common.enums.ContestRegistrationStatus;
+import com.oj.TDTUOJ.common.enums.ContestStyle;
 import com.oj.TDTUOJ.common.enums.SubmissionStatus;
 import com.oj.TDTUOJ.common.enums.SubmissionVerdict;
 import com.oj.TDTUOJ.common.exceptions.NotFoundException;
@@ -92,6 +93,13 @@ public class SubmissionJudgeService {
         Problem problem = problemRepository.findById(job.getProblemId())
                 .orElseThrow(() -> new NotFoundException("Problem not found"));
 
+        // Resolve contest style (IOI needs all test cases to run for partial scoring)
+        ContestStyle contestStyle = null;
+        if (job.getContestId() != null) {
+            contestStyle = contestRepository.findById(job.getContestId())
+                    .map(Contest::getContestStyle).orElse(null);
+        }
+
         // 1. Mark as RUNNING — worker has picked it up, Judge0 is about to execute
         submission.setSubmissionStatus(SubmissionStatus.RUNNING);
         submissionRepository.save(submission);
@@ -137,11 +145,12 @@ public class SubmissionJudgeService {
                 if (result.verdict() == SubmissionVerdict.AC) {
                     passed++;
                 } else {
-                    // First failing case decides the verdict for the whole submission. No point
-                    // running remaining cases — record the verdict + error and bail out.
                     finalVerdict = result.verdict();
                     errorMessage = result.errorMessage();
-                    break; // stop on first failure
+                    // ICPC: stop on first failure. IOI: keep running all test cases for partial scoring.
+                    if (contestStyle != ContestStyle.IOI) {
+                        break;
+                    }
                 }
             }
         } catch (Exception e) {
@@ -156,6 +165,11 @@ public class SubmissionJudgeService {
             submissionRepository.save(submission);
             meterRegistry.counter("submissions.judged", "verdict", SubmissionVerdict.IE.name()).increment();
             return; // skip stats/leaderboard — an infra failure is not a real attempt
+        }
+
+        // IOI: final verdict is AC only if ALL test cases passed
+        if (contestStyle == ContestStyle.IOI && passed == testCases.size()) {
+            finalVerdict = SubmissionVerdict.AC;
         }
 
         // 3. Update submission with Judge0 results. Reaching here means either every case
@@ -211,8 +225,12 @@ public class SubmissionJudgeService {
         );
 
         // 5. Update the real-time leaderboard for contest submissions
-        if (isAccepted && !isPractice) {
-            updateContestLeaderboard(job, submission, problem);
+        if (!isPractice) {
+            if (contestStyle == ContestStyle.IOI) {
+                updateIOILeaderboard(job, submission, problem, passed, testCases.size());
+            } else if (isAccepted) {
+                updateContestLeaderboard(job, submission, problem);
+            }
         }
     }
 
@@ -343,6 +361,88 @@ public class SubmissionJudgeService {
         } catch (Exception e) {
             // Leaderboard update must never break the judging flow
             log.error("Failed to update leaderboard for contestId={} userId={}",
+                    contestId, job.getUserId(), e);
+        }
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // IOI Leaderboard update
+    // ────────────────────────────────────────────────────────────────────────
+
+    /**
+     * IOI leaderboard update — called after EVERY completed contest submission.
+     * Score = (passed / total) × contestProblem.points. Keeps the best score per problem.
+     */
+    private void updateIOILeaderboard(
+            SubmissionJobDTO job, Submission submission, Problem problem,
+            int passed, int totalTestCases) {
+        Long contestId = job.getContestId();
+        try {
+            Contest contest = contestRepository.findById(contestId)
+                    .orElseThrow(() -> new NotFoundException("Contest not found: " + contestId));
+            User user = userRepository.findById(job.getUserId())
+                    .orElseThrow(() -> new NotFoundException("User not found: " + job.getUserId()));
+
+            LocalDateTime now = LocalDateTime.now();
+            if (now.isBefore(contest.getStartTime()) || now.isAfter(contest.getEndTime())) return;
+
+            boolean isRegistered = contestRegistrationRepository
+                    .existsByContestIdAndUserIdAndStatus(
+                            contestId, job.getUserId(), ContestRegistrationStatus.APPROVED);
+            if (!isRegistered) return;
+
+            ContestProblem contestProblem = contestProblemRepository
+                    .findByContestIdAndProblemId(contestId, problem.getId()).orElse(null);
+            if (contestProblem == null) return;
+
+            int maxPoints = contestProblem.getPoints() != null ? contestProblem.getPoints() : 100;
+            int earnedPoints = totalTestCases > 0
+                    ? (int) Math.round((double) passed * maxPoints / totalTestCases) : 0;
+
+            ContestParticipation participation = contestParticipationRepository
+                    .findByContestIdAndUserId(contestId, job.getUserId())
+                    .orElseGet(() -> contestParticipationRepository.save(
+                            ContestParticipation.builder().contest(contest).user(user).build()));
+
+            // Best prior score for this problem in this contest
+            Integer bestPriorPassed = submissionRepository
+                    .findMaxTestCasesPassedForUserProblemContest(
+                            job.getUserId(), problem.getId(), contestId, submission.getId());
+            int bestPriorPoints = bestPriorPassed != null && totalTestCases > 0
+                    ? (int) Math.round((double) bestPriorPassed * maxPoints / totalTestCases) : 0;
+
+            int improvement = earnedPoints - bestPriorPoints;
+            if (improvement <= 0 && bestPriorPassed != null) return; // no improvement
+
+            int currentPoints = participation.getPointsEarned() != null ? participation.getPointsEarned() : 0;
+            int currentSolved = participation.getProblemsSolved() != null ? participation.getProblemsSolved() : 0;
+            int newTotalPoints = currentPoints + improvement;
+            int newSolved = currentSolved
+                    + (earnedPoints == maxPoints && bestPriorPoints < maxPoints ? 1 : 0);
+
+            participation.setPointsEarned(newTotalPoints);
+            participation.setScore(newTotalPoints);
+            participation.setProblemsSolved(newSolved);
+            participation.setPenaltyTime(0);
+            contestParticipationRepository.save(participation);
+
+            ScoreboardEntryDTO.ProblemScoreDTO probStatus = new ScoreboardEntryDTO.ProblemScoreDTO();
+            probStatus.setProblemId(problem.getId());
+            probStatus.setProblemOrder(contestProblem.getProblemOrder());
+            probStatus.setSolved(earnedPoints == maxPoints);
+            probStatus.setAttempts(0);
+            probStatus.setPenaltyMinutes(0);
+            probStatus.setPointsEarned(earnedPoints);
+
+            leaderboardService.recordIOISubmission(
+                    contestId, job.getUserId(), user.getUsername(), user.getProfileUrl(),
+                    problem.getId(), contestProblem.getProblemOrder(),
+                    newTotalPoints, newSolved, probStatus);
+
+            log.info("IOI leaderboard updated: contestId={} userId={} points={} total={}",
+                    contestId, job.getUserId(), earnedPoints, newTotalPoints);
+        } catch (Exception e) {
+            log.error("Failed to update IOI leaderboard for contestId={} userId={}",
                     contestId, job.getUserId(), e);
         }
     }

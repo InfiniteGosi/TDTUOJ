@@ -169,6 +169,41 @@ public class ContestLeaderboardService {
     }
 
     /**
+     * IOI leaderboard update. Called after every score-improving contest submission.
+     * ZSET score = total points (no penalty component).
+     */
+    public void recordIOISubmission(
+            Long contestId, Long userId,
+            String username, String profileUrl,
+            Long problemId, Integer problemOrder,
+            Integer totalPoints, Integer problemsSolved,
+            ScoreboardEntryDTO.ProblemScoreDTO problemMeta) {
+
+        String zsetKey = LB_ZSET_KEY + contestId;
+        if (!Boolean.TRUE.equals(redisTemplate.hasKey(zsetKey))) {
+            initLeaderboard(contestId);
+        }
+
+        double score = totalPoints != null ? totalPoints : 0;
+        redisTemplate.opsForZSet().add(zsetKey, userId.toString(), score);
+
+        HashOperations<String, String, String> hops = redisTemplate.opsForHash();
+        writeMeta(hops, contestId, userId, username, profileUrl,
+                0, problemsSolved, ContestParticipationType.CONTESTANT);
+
+        // Store total points in the meta hash for IOI display
+        String metaKey = META_HASH_KEY + contestId + ":" + userId;
+        hops.put(metaKey, "pointsEarned", String.valueOf(totalPoints != null ? totalPoints : 0));
+
+        writeProblemStatus(hops, contestId, userId, problemId, problemMeta);
+        redisTemplate.delete(CACHE_KEY + contestId);
+
+        log.info("IOI leaderboard updated: contestId={} userId={} totalPoints={}",
+                contestId, userId, totalPoints);
+
+        persistRankAsync(contestId, userId, problemsSolved, 0, (long) score);
+    }
+    /**
      * Returns the leaderboard for a contest, using a 30-second Redis cache.
      *
      * <p>Freeze semantics: while the contest's freeze window is active
@@ -354,6 +389,7 @@ public class ContestLeaderboardService {
                 .contestId(contest.getId())
                 .contestName(contest.getName())
                 .contestSlug(contest.getSlug())
+                .contestStyle(contest.getContestStyle() != null ? contest.getContestStyle().name() : "ICPC")
                 .totalParticipants((int) totalParticipants)
                 .entries(entries)
                 .lastUpdated(LocalDateTime.now())
@@ -379,7 +415,15 @@ public class ContestLeaderboardService {
 
         // Derive score from composite (reverse the formula)
         int solved  = entry.getProblemsSolved() == null ? 0 : entry.getProblemsSolved();
-        entry.setScore(solved); // In ICPC, "score" = problems solved
+        entry.setScore(solved); // ICPC default: "score" = problems solved
+
+        // IOI: override score with pointsEarned if present in meta
+        String pointsStr = meta.get("pointsEarned");
+        if (pointsStr != null) {
+            int pts = parseInt(pointsStr);
+            entry.setPointsEarned(pts);
+            entry.setScore(pts); // IOI: score = total points
+        }
 
         // Per-problem statuses
         String probKey = PROB_HASH_KEY + contestId + ":" + userId;

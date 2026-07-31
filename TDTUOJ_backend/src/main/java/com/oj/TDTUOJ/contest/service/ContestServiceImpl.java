@@ -186,6 +186,11 @@ public class ContestServiceImpl implements ContestService {
         if (dto.getRegistrationEnd()   != null) contest.setRegistrationEnd(dto.getRegistrationEnd());
         if (dto.getContestStyle()      != null) {
             validateContestStyle(dto.getContestStyle());
+            if (dto.getContestStyle() != contest.getContestStyle()
+                    && submissionRepository.countByContestId(contest.getId()) > 0) {
+                throw new BadRequestException(
+                        "Cannot change contest style after submissions have been made");
+            }
             contest.setContestStyle(dto.getContestStyle());
         }
 
@@ -446,8 +451,8 @@ public class ContestServiceImpl implements ContestService {
     }
 
     private void validateContestStyle(ContestStyle style) {
-        if (style != null && style != ContestStyle.ICPC) {
-            throw new BadRequestException("Only ICPC style contests are supported");
+        if (style != null && style != ContestStyle.ICPC && style != ContestStyle.IOI) {
+            throw new BadRequestException("Only ICPC and IOI style contests are supported");
         }
     }
 

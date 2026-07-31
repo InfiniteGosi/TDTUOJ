@@ -66,11 +66,11 @@ public class Judge0Service {
         Map<String, Object> body = new HashMap<>();
         body.put("source_code", encode(sourceCode));
         body.put("language_id", LANGUAGE_MAP.get(language));
-        body.put("stdin",           encode(stdin != null ? stdin : ""));
+        body.put("stdin", encode(stdin != null ? stdin : ""));
         body.put("expected_output", encode(expectedOutput != null ? expectedOutput : ""));
-        body.put("cpu_time_limit",  timeLimit != null ? timeLimit : 2.0);
+        body.put("cpu_time_limit", timeLimit != null ? timeLimit : 2.0);
         // Judge0 expects memory in KB; the domain limit is MB, hence *1024 (default 256MB = 262144KB).
-        body.put("memory_limit",    memoryLimit != null ? memoryLimit * 1024 : 262144);
+        body.put("memory_limit", memoryLimit != null ? memoryLimit * 1024 : 262144);
 
         log.info("Submitting to Judge0: language={}, timeLimit={}, memoryLimit={}",
                 language, timeLimit, memoryLimit);
@@ -112,14 +112,14 @@ public class Judge0Service {
         };
 
         String compileOutput = decode(response.get("compile_output"));
-        String stderr        = decode(response.get("stderr"));
+        String stderr = decode(response.get("stderr"));
 
         // Prefer compile output (it explains a CE); otherwise fall back to stderr (runtime error).
         String errorMessage = compileOutput != null ? compileOutput
-                : stderr != null        ? stderr
+                : stderr != null ? stderr
                 : null;
 
-        Double time    = response.get("time") != null
+        Double time = response.get("time") != null
                 ? Double.parseDouble(response.get("time").toString()) : null;
         Integer memory = response.get("memory") != null
                 ? (Integer) response.get("memory") : null;

@@ -325,7 +325,8 @@ const AdminContestFormPage = () => {
       startTime: toIsoString(form.startTime), endTime: toIsoString(form.endTime),
       registrationStart: toIsoString(form.registrationStart), registrationEnd: toIsoString(form.startTime),
       maxParticipant: form.maxParticipant ? parseInt(form.maxParticipant) : null,
-      isPublic: true, isRated: form.isRated, contestStyle: "ICPC",
+      isPublic: true, isRated: form.isRated, contestStyle: form.contestStyle,
+
       freezeDurationMinutes: form.freezeDuration === "" ? 0 : Math.max(0, parseInt(form.freezeDuration, 10) || 0),
       problems: form.problems.map((p) => ({ problemId: p.problemId, problemOrder: p.problemOrder, points: p.points })),
     };
@@ -364,8 +365,9 @@ const AdminContestFormPage = () => {
             background: "var(--primary-subtle)", color: "var(--primary)",
             fontFamily: "var(--font-display)", fontSize: "var(--text-xs)", fontWeight: 700, letterSpacing: "0.1em",
           }}>
-            ICPC STYLE
+            {form.contestStyle} STYLE
           </span>
+
           <button
             type="button"
             className="btn btn-primary"
@@ -471,6 +473,30 @@ const AdminContestFormPage = () => {
                   </div>
                   <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>Minutes before end. 0 = no freeze.</span>
                 </div>
+
+                {/* Contest Style */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Contest Style</label>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {["ICPC", "IOI"].map((style) => (
+                      <button key={style} type="button" onClick={() => set("contestStyle", style)}
+                        style={{
+                          padding: "7px 18px", borderRadius: "var(--radius-md)", cursor: "pointer",
+                          fontFamily: "var(--font-display)", fontSize: "var(--text-sm)", fontWeight: 700,
+                          letterSpacing: "0.05em", transition: "all 0.12s",
+                          background: form.contestStyle === style ? "var(--primary)" : "var(--bg-raised)",
+                          color: form.contestStyle === style ? "var(--bg-void)" : "var(--text-muted)",
+                          border: `1px solid ${form.contestStyle === style ? "var(--primary)" : "var(--border-default)"}`,
+                        }}>
+                        {style}
+                      </button>
+                    ))}
+                  </div>
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>
+                    {form.contestStyle === "IOI" ? "Partial scoring — points per test case passed" : "All-or-nothing — must pass every test case"}
+                  </span>
+                </div>
+
 
                 {/* Rated toggle — pushed to end */}
                 <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", justifyContent: "center", gap: 6, paddingTop: 22 }}>

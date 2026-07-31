@@ -6,6 +6,7 @@ import com.oj.TDTUOJ.contest.entity.RatingHistory;
 import com.oj.TDTUOJ.contest.repository.ContestParticipationRepository;
 import com.oj.TDTUOJ.contest.repository.ContestRepository;
 import com.oj.TDTUOJ.contest.repository.RatingHistoryRepository;
+import com.oj.TDTUOJ.common.enums.ContestStyle;
 import com.oj.TDTUOJ.user.entity.User;
 import com.oj.TDTUOJ.userStatistics.entity.UserStatistics;
 import com.oj.TDTUOJ.userStatistics.repository.UserStatisticsRepository;
@@ -87,16 +88,29 @@ public class ContestRatingService {
         log.info("Computing ratings for contestId={} '{}' with {} participant(s)",
                 contest.getId(), contest.getName(), n);
 
-        // 1. Sort participations by ICPC rules: most problems solved DESC, then lowest penalty ASC.
+        // 1. Sort participations by contest style.
         //    We do NOT trust cp.getRank() because it is updated asynchronously and may be stale.
-        participations.sort((a, b) -> {
-            int solvedA = a.getProblemsSolved() != null ? a.getProblemsSolved() : 0;
-            int solvedB = b.getProblemsSolved() != null ? b.getProblemsSolved() : 0;
-            if (solvedA != solvedB) return Integer.compare(solvedB, solvedA); // desc
-            int penaltyA = a.getPenaltyTime() != null ? a.getPenaltyTime() : 0;
-            int penaltyB = b.getPenaltyTime() != null ? b.getPenaltyTime() : 0;
-            return Integer.compare(penaltyA, penaltyB); // asc
-        });
+        if (contest.getContestStyle() == ContestStyle.IOI) {
+            // IOI: highest total points DESC, tiebreak by most problems solved DESC
+            participations.sort((a, b) -> {
+                int ptsA = a.getPointsEarned() != null ? a.getPointsEarned() : 0;
+                int ptsB = b.getPointsEarned() != null ? b.getPointsEarned() : 0;
+                if (ptsA != ptsB) return Integer.compare(ptsB, ptsA);
+                int solvedA = a.getProblemsSolved() != null ? a.getProblemsSolved() : 0;
+                int solvedB = b.getProblemsSolved() != null ? b.getProblemsSolved() : 0;
+                return Integer.compare(solvedB, solvedA);
+            });
+        } else {
+            // ICPC: most problems solved DESC, then lowest penalty ASC
+            participations.sort((a, b) -> {
+                int solvedA = a.getProblemsSolved() != null ? a.getProblemsSolved() : 0;
+                int solvedB = b.getProblemsSolved() != null ? b.getProblemsSolved() : 0;
+                if (solvedA != solvedB) return Integer.compare(solvedB, solvedA); // desc
+                int penaltyA = a.getPenaltyTime() != null ? a.getPenaltyTime() : 0;
+                int penaltyB = b.getPenaltyTime() != null ? b.getPenaltyTime() : 0;
+                return Integer.compare(penaltyA, penaltyB); // asc
+            });
+        }
 
         // 2. Resolve oldRating from the chain: prior RatingHistory row by end-time,
         //    or DEFAULT_RATING if user has none.
