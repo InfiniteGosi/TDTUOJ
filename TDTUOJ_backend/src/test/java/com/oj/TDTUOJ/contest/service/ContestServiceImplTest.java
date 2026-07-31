@@ -150,15 +150,47 @@ class ContestServiceImplTest {
     }
 
     @Test
-    void createContest_NonIcpc_ThrowsBadRequest() {
+    void createContest_IOI_Succeeds() {
         ContestDTO dto = new ContestDTO();
-        dto.setName("X");
+        dto.setName("IOI Round");
         dto.setContestStyle(ContestStyle.IOI);
+
+        User creator = user(1L, "CREATOR");
+        when(userService.getCurrentLoggedInUser()).thenReturn(creator);
+        when(contestRepository.existsBySlug("ioi-round")).thenReturn(false);
+        when(contestRepository.save(any(Contest.class))).thenAnswer(inv -> {
+            Contest c = inv.getArgument(0);
+            c.setId(10L);
+            return c;
+        });
+        when(modelMapper.map(any(Contest.class), eq(ContestDTO.class))).thenReturn(new ContestDTO());
+
+        Response<ContestDTO> resp = contestService.createContest(dto);
+
+        assertEquals(HttpStatus.CREATED.value(), resp.getStatusCode());
+        ArgumentCaptor<Contest> cap = ArgumentCaptor.forClass(Contest.class);
+        verify(contestRepository).save(cap.capture());
+        assertEquals(ContestStyle.IOI, cap.getValue().getContestStyle());
+    }
+
+    @Test
+    void updateContest_StyleChangeAfterSubmissions_ThrowsBadRequest() {
+        User creator = user(1L, "CREATOR");
+        Contest c = baseContest(1L, creator);
+        c.setContestStyle(ContestStyle.ICPC);
+        when(contestRepository.findById(1L)).thenReturn(Optional.of(c));
+        when(userService.getCurrentLoggedInUser()).thenReturn(creator);
+        when(submissionRepository.countByContestId(1L)).thenReturn(5L);
+
+        ContestDTO dto = new ContestDTO();
+        dto.setContestStyle(ContestStyle.IOI);
+
         BadRequestException ex = assertThrows(BadRequestException.class,
-                () -> contestService.createContest(dto));
-        assertEquals("Only ICPC style contests are supported", ex.getMessage());
+                () -> contestService.updateContest(1L, dto));
+        assertEquals("Cannot change contest style after submissions have been made", ex.getMessage());
         verify(contestRepository, never()).save(any());
     }
+
 
     @Test
     void registerForContest_Success() {
