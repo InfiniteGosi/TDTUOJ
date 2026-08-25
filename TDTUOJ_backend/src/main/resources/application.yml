@@ -17,9 +17,15 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 500MB
 
 server:
   port: 8090
+  tomcat:
+    max-http-form-post-size: -1
 
 secretJwtString: ${SECRET_JWT_STRING}
 
